@@ -116,7 +116,7 @@ struct TodayView: View {
                     FlowLayout(spacing: 8) {
                         ForEach(todaysSymptoms) { symptom in
                             SymptomChip(
-                                name: SymptomType(rawValue: symptom.symptomType)?.displayName ?? symptom.symptomType,
+                                name: symptom.symptomType.displayName,
                                 severity: symptom.severity
                             )
                         }
