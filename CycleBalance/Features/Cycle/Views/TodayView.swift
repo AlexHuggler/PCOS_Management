@@ -6,15 +6,7 @@ struct TodayView: View {
     @State private var viewModel: CycleViewModel?
     @State private var showingLogPeriod = false
     @State private var showingLogSymptoms = false
-
-    @Query(
-        filter: #Predicate<SymptomEntry> { entry in
-            entry.date >= Date().addingTimeInterval(-86400)
-        },
-        sort: \SymptomEntry.date,
-        order: .reverse
-    )
-    private var todaysSymptoms: [SymptomEntry]
+    @State private var todaysSymptoms: [SymptomEntry] = []
 
     var body: some View {
         NavigationStack {
@@ -47,8 +39,23 @@ struct TodayView: View {
                     vm.loadData()
                     viewModel = vm
                 }
+                refreshTodaysSymptoms()
             }
         }
+    }
+
+    private func refreshTodaysSymptoms() {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        let descriptor = FetchDescriptor<SymptomEntry>(
+            predicate: #Predicate<SymptomEntry> { entry in
+                entry.date >= startOfDay && entry.date < endOfDay
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        todaysSymptoms = (try? modelContext.fetch(descriptor)) ?? []
     }
 
     // MARK: - Subviews
@@ -107,7 +114,7 @@ struct TodayView: View {
                         .font(.headline)
 
                     FlowLayout(spacing: 8) {
-                        ForEach(todaysSymptoms, id: \.id) { symptom in
+                        ForEach(todaysSymptoms) { symptom in
                             SymptomChip(
                                 name: SymptomType(rawValue: symptom.symptomType)?.displayName ?? symptom.symptomType,
                                 severity: symptom.severity

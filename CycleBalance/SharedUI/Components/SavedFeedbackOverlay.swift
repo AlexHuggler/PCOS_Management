@@ -7,7 +7,7 @@ struct SavedFeedbackOverlay: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
+                .font(.system(.largeTitle))
                 .foregroundStyle(.white)
                 .symbolEffect(.bounce, value: appeared)
 

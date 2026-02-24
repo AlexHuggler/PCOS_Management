@@ -1,12 +1,16 @@
 import SwiftUI
 
 /// Horizontal picker for selecting menstrual flow intensity.
+/// Excludes `.none` since this picker is used when actively logging a period day.
 struct FlowIntensityPicker: View {
     @Binding var selection: FlowIntensity
 
+    /// Flow intensities relevant for period logging (excludes `.none`).
+    private static let pickableCases = FlowIntensity.allCases.filter { $0 != .none }
+
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(FlowIntensity.allCases) { intensity in
+            ForEach(Self.pickableCases) { intensity in
                 Button {
                     selection = intensity
                 } label: {

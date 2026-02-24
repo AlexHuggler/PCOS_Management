@@ -33,7 +33,7 @@ struct SeverityPicker: View {
 
             if severity > 0 {
                 Text(Self.shortLabels[severity - 1])
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(colorForLevel(severity))
             }
         }

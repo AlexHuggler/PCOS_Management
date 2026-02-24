@@ -63,10 +63,11 @@ struct CyclePredictionEngine: Sendable {
             return nil
         }
 
-        // Confidence decreases with higher variance and fewer data points
+        // Confidence decreases with higher variance and fewer data points.
+        // Capped at 0.9 — cycle prediction should never claim certainty.
         let dataPointFactor = min(Double(lengths.count) / 6.0, 1.0)
         let varianceFactor = max(0.0, 1.0 - (standardDeviation / 20.0))
-        let confidence = dataPointFactor * varianceFactor
+        let confidence = min(dataPointFactor * varianceFactor, 0.9)
 
         return Prediction(
             earliestDate: earliestDate,
