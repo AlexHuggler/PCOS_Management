@@ -95,11 +95,9 @@ final class SymptomViewModel {
         guard !yesterdaysEntries.isEmpty else { return }
 
         for entry in yesterdaysEntries {
-            if let type = SymptomType(rawValue: entry.symptomType) {
-                symptomSeverities[type] = entry.severity
-                if let notes = entry.notes {
-                    symptomNotes[type] = notes
-                }
+            symptomSeverities[entry.symptomType] = entry.severity
+            if let notes = entry.notes {
+                symptomNotes[entry.symptomType] = notes
             }
         }
     }
@@ -129,11 +127,9 @@ final class SymptomViewModel {
     func prefillTodaysSymptoms() {
         let todaysEntries = fetchTodaysSymptoms()
         for entry in todaysEntries {
-            if let type = SymptomType(rawValue: entry.symptomType) {
-                symptomSeverities[type] = entry.severity
-                if let notes = entry.notes {
-                    symptomNotes[type] = notes
-                }
+            symptomSeverities[entry.symptomType] = entry.severity
+            if let notes = entry.notes {
+                symptomNotes[entry.symptomType] = notes
             }
         }
     }

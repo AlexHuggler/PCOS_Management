@@ -7,6 +7,7 @@ import os
 final class CycleViewModel {
     private let modelContext: ModelContext
     private let predictionEngine = CyclePredictionEngine()
+    private lazy var logService = CycleLogService(modelContext: modelContext)
 
     var cycles: [Cycle] = []
     var currentCycleEntries: [CycleEntry] = []
@@ -61,42 +62,22 @@ final class CycleViewModel {
         }
     }
 
-    // MARK: - Period Logging
+    // MARK: - Period Logging (delegates to CycleLogService)
 
     func logPeriodDay() throws {
-        let entry = CycleEntry(
+        try logService.logPeriodDay(
             date: selectedDate,
             flowIntensity: selectedFlowIntensity,
-            isPeriodDay: true,
-            cyclePhase: .menstrual,
-            notes: periodNotes.isEmpty ? nil : periodNotes
+            notes: periodNotes.isEmpty ? nil : periodNotes,
+            existingCycles: cycles,
+            recentEntries: currentCycleEntries
         )
-
-        modelContext.insert(entry)
-        assignEntryToCycle(entry)
-
-        try modelContext.save()
         resetLogForm()
         loadData()
     }
 
     func logSkippedPeriod() throws {
-        // Close the current cycle without an end period
-        if let lastCycle = cycles.last, lastCycle.endDate == nil {
-            lastCycle.endDate = Date()
-            let daysBetween = Calendar.current.dateComponents(
-                [.day],
-                from: lastCycle.startDate,
-                to: Date()
-            ).day
-            lastCycle.lengthDays = daysBetween
-        }
-
-        // Start a new cycle from today
-        let newCycle = Cycle(startDate: Date(), isPredicted: false)
-        modelContext.insert(newCycle)
-
-        try modelContext.save()
+        try logService.logSkippedPeriod(existingCycles: cycles)
         loadData()
     }
 
@@ -117,45 +98,7 @@ final class CycleViewModel {
         statistics = predictionEngine.cycleStatistics(cycles: cycles)
     }
 
-    // MARK: - Cycle Management
-
-    private func assignEntryToCycle(_ entry: CycleEntry) {
-        if let currentCycle = cycles.last, currentCycle.endDate == nil {
-            // Check if this entry is part of the current period or a new one
-            let lastPeriodEntry = currentCycleEntries.last { $0.isPeriodDay }
-            if let lastEntry = lastPeriodEntry {
-                let daysSinceLastPeriod = Calendar.current.dateComponents(
-                    [.day],
-                    from: lastEntry.date,
-                    to: entry.date
-                ).day ?? 0
-
-                if daysSinceLastPeriod > 10 {
-                    // New period started — close old cycle, create new one
-                    currentCycle.endDate = entry.date
-                    let length = Calendar.current.dateComponents(
-                        [.day],
-                        from: currentCycle.startDate,
-                        to: entry.date
-                    ).day
-                    currentCycle.lengthDays = length
-
-                    let newCycle = Cycle(startDate: entry.date)
-                    modelContext.insert(newCycle)
-                    entry.cycle = newCycle
-                    return
-                }
-            }
-            entry.cycle = currentCycle
-        } else {
-            // No open cycle — start a new one
-            let newCycle = Cycle(startDate: entry.date)
-            modelContext.insert(newCycle)
-            entry.cycle = newCycle
-        }
-    }
-
-    // MARK: - Helpers
+    // MARK: - Computed Helpers
 
     var currentCycleDayCount: Int? {
         guard let lastCycle = cycles.last, lastCycle.endDate == nil else { return nil }

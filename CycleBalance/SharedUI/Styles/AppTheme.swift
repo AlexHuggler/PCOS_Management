@@ -43,6 +43,21 @@ enum AppTheme {
         }
     }
 
+    // MARK: - Spacing Scale
+
+    /// 4pt — tight inner spacing (icon gaps, dot grids)
+    static let spacing4: CGFloat = 4
+    /// 8pt — standard inner spacing (chip padding, grid gaps)
+    static let spacing8: CGFloat = 8
+    /// 12pt — component spacing (card content gaps)
+    static let spacing12: CGFloat = 12
+    /// 16pt — section spacing (screen-edge padding, between cards)
+    static let spacing16: CGFloat = 16
+    /// 24pt — large spacing (card vertical padding)
+    static let spacing24: CGFloat = 24
+    /// 32pt — hero spacing (hero card padding)
+    static let spacing32: CGFloat = 32
+
     // MARK: - Typography Helpers
 
     static func sectionHeader(_ text: String) -> some View {
