@@ -19,13 +19,14 @@ struct SymptomGridItem: View {
                 .fontWeight(.medium)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.8)
                 .frame(height: 28)
 
             // Severity dots
             SeverityPicker(severity: severity, onSeverityChange: onSeverityChange)
         }
         .padding(.vertical, 12)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 6)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -41,6 +42,10 @@ struct SymptomGridItem: View {
             let next = severity >= 5 ? 0 : severity + 1
             onSeverityChange(next)
         }
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: severity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.labels[severity - 1] : "none")")
+        .accessibilityHint("Tap to cycle severity. Currently \(severity) of 5.")
     }
 
     private var severityColor: Color {

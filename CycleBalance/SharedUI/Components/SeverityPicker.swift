@@ -1,24 +1,40 @@
 import SwiftUI
 
-/// Compact 1-5 severity picker using tappable dots.
+/// Compact 1-5 severity picker using tappable dots with text labels.
 struct SeverityPicker: View {
     let severity: Int
     let onSeverityChange: (Int) -> Void
 
+    static let labels = ["Mild", "Low", "Moderate", "High", "Severe"]
+    private static let shortLabels = ["Mild", "Low", "Med", "High", "Severe"]
+
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(1...5, id: \.self) { level in
-                Circle()
-                    .fill(level <= severity ? colorForLevel(level) : Color(.tertiarySystemFill))
-                    .frame(width: 10, height: 10)
-                    .onTapGesture {
-                        // Tapping the current severity deselects (sets to 0)
-                        if level == severity {
-                            onSeverityChange(0)
-                        } else {
-                            onSeverityChange(level)
+        VStack(spacing: 2) {
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { level in
+                    Circle()
+                        .fill(level <= severity ? colorForLevel(level) : Color(.tertiarySystemFill))
+                        .frame(width: 14, height: 14)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if level == severity {
+                                onSeverityChange(0)
+                            } else {
+                                onSeverityChange(level)
+                            }
                         }
-                    }
+                        .accessibilityLabel("\(Self.labels[level - 1]) severity")
+                        .accessibilityAddTraits(level == severity ? .isSelected : [])
+                        .accessibilityHint(level == severity ? "Double tap to deselect" : "Double tap to select")
+                }
+            }
+            .sensoryFeedback(.selection, trigger: severity)
+
+            if severity > 0 {
+                Text(Self.shortLabels[severity - 1])
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(colorForLevel(severity))
             }
         }
     }
@@ -31,8 +47,6 @@ struct SeverityPicker: View {
 /// Larger severity picker for detail views with labels.
 struct SeveritySlider: View {
     @Binding var severity: Int
-
-    private let labels = ["Mild", "Low", "Moderate", "High", "Severe"]
 
     var body: some View {
         VStack(spacing: 8) {
@@ -48,7 +62,7 @@ struct SeveritySlider: View {
                                       : Color(.tertiarySystemFill))
                                 .frame(width: 28, height: 28)
 
-                            Text(labels[level - 1])
+                            Text(SeverityPicker.labels[level - 1])
                                 .font(.caption2)
                                 .foregroundStyle(level == severity ? .primary : .secondary)
                         }
@@ -57,6 +71,7 @@ struct SeveritySlider: View {
                     .frame(maxWidth: .infinity)
                 }
             }
+            .sensoryFeedback(.selection, trigger: severity)
         }
     }
 }

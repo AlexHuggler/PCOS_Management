@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -17,8 +18,13 @@ struct SettingsView: View {
 
                 Section("Data") {
                     Label("Export Data", systemImage: "square.and.arrow.up")
-                    Label("Delete All Data", systemImage: "trash")
-                        .foregroundStyle(.red)
+
+                    Button {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete All Data", systemImage: "trash")
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section("Health") {
@@ -52,6 +58,14 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
+                Button("Delete Everything", role: .destructive) {
+                    // TODO: Implement data deletion
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone.")
+            }
         }
     }
 }

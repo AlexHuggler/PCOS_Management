@@ -9,6 +9,8 @@ struct CycleLogView: View {
     @State private var selectedDate = Date()
     @State private var selectedFlow: FlowIntensity = .medium
     @State private var notes = ""
+    @State private var showSkipConfirmation = false
+    @State private var showSavedFeedback = false
 
     var body: some View {
         NavigationStack {
@@ -20,7 +22,7 @@ struct CycleLogView: View {
                         in: ...Date(),
                         displayedComponents: .date
                     )
-                    .datePickerStyle(.graphical)
+                    .datePickerStyle(.compact)
                     .tint(AppTheme.accentColor)
                 }
 
@@ -47,7 +49,7 @@ struct CycleLogView: View {
                     .tint(AppTheme.coralAccent)
 
                     Button {
-                        skipPeriod()
+                        showSkipConfirmation = true
                     } label: {
                         HStack {
                             Spacer()
@@ -65,6 +67,19 @@ struct CycleLogView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .alert("Skip Period?", isPresented: $showSkipConfirmation) {
+                Button("Skip Period", role: .destructive) {
+                    skipPeriod()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will close your current cycle and start a new one from today. This action cannot be undone.")
+            }
+            .overlay {
+                if showSavedFeedback {
+                    SavedFeedbackOverlay()
+                }
+            }
             .onAppear {
                 viewModel = CycleViewModel(modelContext: modelContext)
             }
@@ -77,13 +92,23 @@ struct CycleLogView: View {
         viewModel.selectedFlowIntensity = selectedFlow
         viewModel.periodNotes = notes
         viewModel.logPeriodDay()
-        dismiss()
+
+        showSavedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
+            dismiss()
+        }
     }
 
     private func skipPeriod() {
         guard let viewModel else { return }
         viewModel.logSkippedPeriod()
-        dismiss()
+
+        showSavedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
+            dismiss()
+        }
     }
 }
 
