@@ -11,6 +11,7 @@ struct CycleLogView: View {
     @State private var notes = ""
     @State private var showSkipConfirmation = false
     @State private var showSavedFeedback = false
+    @State private var saveError: String?
 
     var body: some View {
         NavigationStack {
@@ -80,6 +81,14 @@ struct CycleLogView: View {
                     SavedFeedbackOverlay()
                 }
             }
+            .alert("Save Failed", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "An unknown error occurred.")
+            }
             .onAppear {
                 viewModel = CycleViewModel(modelContext: modelContext)
             }
@@ -91,23 +100,31 @@ struct CycleLogView: View {
         viewModel.selectedDate = selectedDate
         viewModel.selectedFlowIntensity = selectedFlow
         viewModel.periodNotes = notes
-        viewModel.logPeriodDay()
 
-        showSavedFeedback = true
-        Task {
-            try? await Task.sleep(for: .seconds(0.8))
-            dismiss()
+        do {
+            try viewModel.logPeriodDay()
+            showSavedFeedback = true
+            Task {
+                try? await Task.sleep(for: .seconds(0.8))
+                dismiss()
+            }
+        } catch {
+            saveError = "Could not log period: \(error.localizedDescription)"
         }
     }
 
     private func skipPeriod() {
         guard let viewModel else { return }
-        viewModel.logSkippedPeriod()
 
-        showSavedFeedback = true
-        Task {
-            try? await Task.sleep(for: .seconds(0.8))
-            dismiss()
+        do {
+            try viewModel.logSkippedPeriod()
+            showSavedFeedback = true
+            Task {
+                try? await Task.sleep(for: .seconds(0.8))
+                dismiss()
+            }
+        } catch {
+            saveError = "Could not skip period: \(error.localizedDescription)"
         }
     }
 }

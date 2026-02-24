@@ -24,9 +24,11 @@ struct CycleDetailView: View {
         }
         .navigationTitle("Cycle Details")
         .onAppear {
-            let vm = CycleViewModel(modelContext: modelContext)
-            vm.loadData()
-            viewModel = vm
+            if viewModel == nil {
+                let vm = CycleViewModel(modelContext: modelContext)
+                vm.loadData()
+                viewModel = vm
+            }
         }
     }
 
@@ -36,7 +38,7 @@ struct CycleDetailView: View {
         VStack(spacing: 8) {
             if let dayCount = viewModel?.currentCycleDayCount {
                 Text("Day \(dayCount)")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.accentColor)
                 Text("of current cycle")
                     .font(.subheadline)
@@ -154,10 +156,14 @@ struct CycleDetailView: View {
         }
     }
 
-    private func formatDate(_ date: Date) -> String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import os
 
 @Observable
 @MainActor
@@ -47,8 +48,15 @@ final class SymptomViewModel {
         symptomSeverities.count
     }
 
-    /// Save all logged symptoms
-    func saveSymptoms() {
+    /// Save all logged symptoms, replacing any existing entries for the same day.
+    func saveSymptoms() throws {
+        // Delete today's existing entries to prevent duplicates
+        let existingEntries = fetchTodaysSymptoms()
+        for entry in existingEntries {
+            modelContext.delete(entry)
+        }
+
+        // Insert fresh entries for all selected symptoms
         for (symptomType, severity) in symptomSeverities {
             let entry = SymptomEntry(
                 date: logDate,
@@ -59,7 +67,7 @@ final class SymptomViewModel {
             modelContext.insert(entry)
         }
 
-        try? modelContext.save()
+        try modelContext.save()
         reset()
     }
 
@@ -77,9 +85,14 @@ final class SymptomViewModel {
             }
         )
 
-        guard let yesterdaysEntries = try? modelContext.fetch(descriptor), !yesterdaysEntries.isEmpty else {
+        let yesterdaysEntries: [SymptomEntry]
+        do {
+            yesterdaysEntries = try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch yesterday's symptoms: \(error.localizedDescription)")
             return
         }
+        guard !yesterdaysEntries.isEmpty else { return }
 
         for entry in yesterdaysEntries {
             if let type = SymptomType(rawValue: entry.symptomType) {
@@ -104,7 +117,12 @@ final class SymptomViewModel {
             sortBy: [SortDescriptor(\.category.rawValue)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch today's symptoms: \(error.localizedDescription)")
+            return []
+        }
     }
 
     /// Pre-fill the form with today's already-logged symptoms for editing

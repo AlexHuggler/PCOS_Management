@@ -6,6 +6,7 @@ struct SymptomLogView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SymptomViewModel?
     @State private var showSavedFeedback = false
+    @State private var saveError: String?
 
     var body: some View {
         NavigationStack {
@@ -61,6 +62,14 @@ struct SymptomLogView: View {
                 if showSavedFeedback {
                     SavedFeedbackOverlay()
                 }
+            }
+            .alert("Save Failed", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "An unknown error occurred.")
             }
             .onAppear {
                 let vm = SymptomViewModel(modelContext: modelContext)
@@ -165,11 +174,15 @@ struct SymptomLogView: View {
     }
 
     private func saveSymptoms() {
-        viewModel?.saveSymptoms()
-        showSavedFeedback = true
-        Task {
-            try? await Task.sleep(for: .seconds(0.8))
-            dismiss()
+        do {
+            try viewModel?.saveSymptoms()
+            showSavedFeedback = true
+            Task {
+                try? await Task.sleep(for: .seconds(0.8))
+                dismiss()
+            }
+        } catch {
+            saveError = "Could not save symptoms: \(error.localizedDescription)"
         }
     }
 }

@@ -42,9 +42,11 @@ struct TodayView: View {
                 SymptomLogView()
             }
             .onAppear {
-                let vm = CycleViewModel(modelContext: modelContext)
-                vm.loadData()
-                viewModel = vm
+                if viewModel == nil {
+                    let vm = CycleViewModel(modelContext: modelContext)
+                    vm.loadData()
+                    viewModel = vm
+                }
             }
         }
     }
@@ -55,7 +57,7 @@ struct TodayView: View {
         VStack(spacing: 12) {
             if let dayCount = viewModel?.currentCycleDayCount {
                 Text("Day \(dayCount)")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.accentColor)
                 Text("of current cycle")
                     .font(.subheadline)
