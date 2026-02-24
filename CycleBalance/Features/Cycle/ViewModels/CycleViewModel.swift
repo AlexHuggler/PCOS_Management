@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import os
 
 @Observable
 @MainActor
@@ -35,7 +36,12 @@ final class CycleViewModel {
         let descriptor = FetchDescriptor<Cycle>(
             sortBy: [SortDescriptor(\.startDate, order: .forward)]
         )
-        cycles = (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            cycles = try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch cycles: \(error.localizedDescription)")
+            cycles = []
+        }
     }
 
     private func fetchCurrentCycleEntries() {
@@ -47,12 +53,17 @@ final class CycleViewModel {
             },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
-        currentCycleEntries = (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            currentCycleEntries = try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch current cycle entries: \(error.localizedDescription)")
+            currentCycleEntries = []
+        }
     }
 
     // MARK: - Period Logging
 
-    func logPeriodDay() {
+    func logPeriodDay() throws {
         let entry = CycleEntry(
             date: selectedDate,
             flowIntensity: selectedFlowIntensity,
@@ -64,12 +75,12 @@ final class CycleViewModel {
         modelContext.insert(entry)
         assignEntryToCycle(entry)
 
-        try? modelContext.save()
+        try modelContext.save()
         resetLogForm()
         loadData()
     }
 
-    func logSkippedPeriod() {
+    func logSkippedPeriod() throws {
         // Close the current cycle without an end period
         if let lastCycle = cycles.last, lastCycle.endDate == nil {
             lastCycle.endDate = Date()
@@ -85,7 +96,7 @@ final class CycleViewModel {
         let newCycle = Cycle(startDate: Date(), isPredicted: false)
         modelContext.insert(newCycle)
 
-        try? modelContext.save()
+        try modelContext.save()
         loadData()
     }
 
@@ -155,12 +166,16 @@ final class CycleViewModel {
         ).day.map { $0 + 1 }
     }
 
-    var predictionRangeText: String? {
-        guard let prediction else { return nil }
+    private static let dateRangeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
-        let start = formatter.string(from: prediction.earliestDate)
-        let end = formatter.string(from: prediction.latestDate)
+        return formatter
+    }()
+
+    var predictionRangeText: String? {
+        guard let prediction else { return nil }
+        let start = Self.dateRangeFormatter.string(from: prediction.earliestDate)
+        let end = Self.dateRangeFormatter.string(from: prediction.latestDate)
         return "Your period may arrive between \(start)–\(end)"
     }
 
@@ -196,12 +211,17 @@ final class CycleViewModel {
             sortBy: [SortDescriptor(\.date)]
         )
 
-        let entries = (try? modelContext.fetch(descriptor)) ?? []
-        var result: [Int: CycleEntry] = [:]
-        for entry in entries {
-            let day = calendar.component(.day, from: entry.date)
-            result[day] = entry
+        do {
+            let entries = try modelContext.fetch(descriptor)
+            var result: [Int: CycleEntry] = [:]
+            for entry in entries {
+                let day = calendar.component(.day, from: entry.date)
+                result[day] = entry
+            }
+            return result
+        } catch {
+            Logger.database.error("Failed to fetch entries for \(year)-\(month): \(error.localizedDescription)")
+            return [:]
         }
-        return result
     }
 }

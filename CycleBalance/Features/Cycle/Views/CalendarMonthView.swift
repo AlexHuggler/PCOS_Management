@@ -9,8 +9,14 @@ struct CalendarMonthView: View {
     @State private var showingLogSheet = false
 
     private let calendar = Calendar.current
-    private let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+
+    /// Locale-aware short weekday symbols starting from the calendar's first weekday
+    private var orderedWeekdaySymbols: [String] {
+        let symbols = calendar.shortWeekdaySymbols
+        let firstIndex = calendar.firstWeekday - 1
+        return Array(symbols[firstIndex...]) + Array(symbols[..<firstIndex])
+    }
 
     var body: some View {
         NavigationStack {
@@ -44,9 +50,11 @@ struct CalendarMonthView: View {
                 CycleLogView()
             }
             .onAppear {
-                let vm = CycleViewModel(modelContext: modelContext)
-                vm.loadData()
-                viewModel = vm
+                if viewModel == nil {
+                    let vm = CycleViewModel(modelContext: modelContext)
+                    vm.loadData()
+                    viewModel = vm
+                }
                 loadMonthEntries()
             }
             .onChange(of: displayedMonth) { _, _ in
@@ -65,6 +73,7 @@ struct CalendarMonthView: View {
                 Image(systemName: "chevron.left")
                     .font(.title3)
             }
+            .accessibilityLabel("Previous month")
 
             Spacer()
 
@@ -80,13 +89,14 @@ struct CalendarMonthView: View {
                 Image(systemName: "chevron.right")
                     .font(.title3)
             }
+            .accessibilityLabel("Next month")
         }
         .padding(.horizontal)
     }
 
     private var daysOfWeekHeader: some View {
         LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(daysOfWeek, id: \.self) { day in
+            ForEach(orderedWeekdaySymbols, id: \.self) { day in
                 Text(day)
                     .font(.caption)
                     .fontWeight(.medium)
@@ -109,7 +119,8 @@ struct CalendarMonthView: View {
                 CalendarDayCell(
                     day: day,
                     isToday: isToday(day: day),
-                    entry: entries[day]
+                    entry: entries[day],
+                    monthDate: displayedMonth
                 )
             }
         }
@@ -158,10 +169,14 @@ struct CalendarMonthView: View {
     private var year: Int { calendar.component(.year, from: displayedMonth) }
     private var month: Int { calendar.component(.month, from: displayedMonth) }
 
-    private var monthYearString: String {
+    private static let monthYearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: displayedMonth)
+        return formatter
+    }()
+
+    private var monthYearString: String {
+        Self.monthYearFormatter.string(from: displayedMonth)
     }
 
     private var firstWeekdayOffset: Int {
@@ -170,7 +185,9 @@ struct CalendarMonthView: View {
         components.month = month
         components.day = 1
         guard let firstDay = calendar.date(from: components) else { return 0 }
-        return calendar.component(.weekday, from: firstDay) - 1
+        let weekday = calendar.component(.weekday, from: firstDay)
+        // Offset relative to the calendar's configured first weekday
+        return (weekday - calendar.firstWeekday + 7) % 7
     }
 
     private var daysInMonth: Int {
@@ -207,6 +224,13 @@ struct CalendarDayCell: View {
     let day: Int
     let isToday: Bool
     let entry: CycleEntry?
+    let monthDate: Date
+
+    private static let accessibilityDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        return formatter
+    }()
 
     var body: some View {
         ZStack {
@@ -225,6 +249,28 @@ struct CalendarDayCell: View {
                 .foregroundStyle(entry?.isPeriodDay == true ? .white : .primary)
         }
         .frame(height: 44)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month], from: monthDate)
+        components.day = day
+        let dateString: String
+        if let date = calendar.date(from: components) {
+            dateString = Self.accessibilityDateFormatter.string(from: date)
+        } else {
+            dateString = "Day \(day)"
+        }
+
+        var parts = [dateString]
+        if isToday { parts.append("today") }
+        if let entry, entry.isPeriodDay {
+            let flowName = entry.flowIntensity?.displayName ?? "period"
+            parts.append("\(flowName) flow")
+        }
+        return parts.joined(separator: ", ")
     }
 
     private func colorForFlow(_ intensity: FlowIntensity?) -> Color {
