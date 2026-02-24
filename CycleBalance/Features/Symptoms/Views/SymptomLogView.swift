@@ -5,6 +5,7 @@ struct SymptomLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SymptomViewModel?
+    @State private var showSavedFeedback = false
 
     var body: some View {
         NavigationStack {
@@ -16,13 +17,12 @@ struct SymptomLogView: View {
                 if let viewModel {
                     ScrollView {
                         VStack(spacing: 16) {
-                            // "Same as yesterday" button
-                            sameAsYesterdayButton
+                            // Quick actions row
+                            quickActionsRow
 
-                            // Symptom grid
+                            // Symptom grid — 2 columns for better touch targets
                             LazyVGrid(
                                 columns: [
-                                    GridItem(.flexible(), spacing: 12),
                                     GridItem(.flexible(), spacing: 12),
                                     GridItem(.flexible(), spacing: 12),
                                 ],
@@ -43,7 +43,7 @@ struct SymptomLogView: View {
                     }
                 } else {
                     Spacer()
-                    ProgressView()
+                    ProgressView("Loading symptoms...")
                     Spacer()
                 }
 
@@ -57,8 +57,15 @@ struct SymptomLogView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .overlay {
+                if showSavedFeedback {
+                    SavedFeedbackOverlay()
+                }
+            }
             .onAppear {
-                viewModel = SymptomViewModel(modelContext: modelContext)
+                let vm = SymptomViewModel(modelContext: modelContext)
+                vm.prefillTodaysSymptoms()
+                viewModel = vm
             }
         }
     }
@@ -90,22 +97,37 @@ struct SymptomLogView: View {
         .background(Color(.systemGroupedBackground))
     }
 
-    private var sameAsYesterdayButton: some View {
-        Button {
-            viewModel?.copyYesterdaysSymptoms()
-        } label: {
-            Label("Same as yesterday", systemImage: "arrow.counterclockwise")
-                .font(.subheadline)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(AppTheme.accentColor.opacity(0.12))
-                )
-                .foregroundStyle(AppTheme.accentColor)
+    private var quickActionsRow: some View {
+        HStack(spacing: 12) {
+            Button {
+                viewModel?.copyYesterdaysSymptoms()
+            } label: {
+                Label("Same as yesterday", systemImage: "arrow.counterclockwise")
+                    .font(.subheadline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(
+                        Capsule()
+                            .fill(AppTheme.accentColor.opacity(0.12))
+                    )
+                    .foregroundStyle(AppTheme.accentColor)
+            }
+            .buttonStyle(.plain)
+            .sensoryFeedback(.impact(flexibility: .soft), trigger: viewModel?.selectionCount ?? 0)
+
+            Spacer()
+
+            if let count = viewModel?.selectionCount, count > 0 {
+                Button {
+                    viewModel?.reset()
+                } label: {
+                    Text("Clear all")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var saveBar: some View {
@@ -121,8 +143,7 @@ struct SymptomLogView: View {
                 Spacer()
 
                 Button {
-                    viewModel?.saveSymptoms()
-                    dismiss()
+                    saveSymptoms()
                 } label: {
                     Text("Save")
                         .font(.headline)
@@ -142,6 +163,15 @@ struct SymptomLogView: View {
         }
         .background(Color(.systemBackground))
     }
+
+    private func saveSymptoms() {
+        viewModel?.saveSymptoms()
+        showSavedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
+            dismiss()
+        }
+    }
 }
 
 // MARK: - Category Chip
@@ -157,7 +187,7 @@ struct CategoryChip: View {
                 .font(.subheadline)
                 .fontWeight(isSelected ? .semibold : .regular)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 6)
+                .padding(.vertical, 8)
                 .background(
                     Capsule()
                         .fill(isSelected ? AppTheme.accentColor : Color(.tertiarySystemFill))
@@ -165,6 +195,7 @@ struct CategoryChip: View {
                 .foregroundStyle(isSelected ? .white : .primary)
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 }
 

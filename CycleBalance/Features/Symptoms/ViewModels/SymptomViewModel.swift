@@ -107,6 +107,19 @@ final class SymptomViewModel {
         return (try? modelContext.fetch(descriptor)) ?? []
     }
 
+    /// Pre-fill the form with today's already-logged symptoms for editing
+    func prefillTodaysSymptoms() {
+        let todaysEntries = fetchTodaysSymptoms()
+        for entry in todaysEntries {
+            if let type = SymptomType(rawValue: entry.symptomType) {
+                symptomSeverities[type] = entry.severity
+                if let notes = entry.notes {
+                    symptomNotes[type] = notes
+                }
+            }
+        }
+    }
+
     func reset() {
         symptomSeverities = [:]
         symptomNotes = [:]

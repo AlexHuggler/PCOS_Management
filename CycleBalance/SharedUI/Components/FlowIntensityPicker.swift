@@ -12,7 +12,6 @@ struct FlowIntensityPicker: View {
                 } label: {
                     VStack(spacing: 6) {
                         flowIcon(for: intensity)
-                            .font(.title3)
                             .frame(height: 28)
 
                         Text(intensity.displayName)
@@ -27,13 +26,23 @@ struct FlowIntensityPicker: View {
                                   ? flowColor(for: intensity).opacity(0.15)
                                   : .clear)
                     )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(selection == intensity
+                                          ? flowColor(for: intensity).opacity(0.4)
+                                          : .clear, lineWidth: 1.5)
+                    )
                     .foregroundStyle(selection == intensity
                                     ? flowColor(for: intensity)
                                     : .secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(intensity.displayName) flow")
+                .accessibilityAddTraits(selection == intensity ? .isSelected : [])
+                .accessibilityHint("Double tap to select \(intensity.displayName) flow intensity")
             }
         }
+        .sensoryFeedback(.selection, trigger: selection)
     }
 
     @ViewBuilder
@@ -41,18 +50,25 @@ struct FlowIntensityPicker: View {
         switch intensity {
         case .none:
             Image(systemName: "drop")
+                .font(.body)
         case .spotting:
             Image(systemName: "drop.fill")
                 .font(.caption)
+                .opacity(0.6)
         case .light:
             Image(systemName: "drop.fill")
                 .font(.subheadline)
+                .opacity(0.75)
         case .medium:
             Image(systemName: "drop.fill")
                 .font(.body)
         case .heavy:
-            Image(systemName: "drop.fill")
-                .font(.title3)
+            HStack(spacing: 2) {
+                Image(systemName: "drop.fill")
+                    .font(.caption2)
+                Image(systemName: "drop.fill")
+                    .font(.subheadline)
+            }
         }
     }
 
