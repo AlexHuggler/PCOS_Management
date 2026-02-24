@@ -28,7 +28,7 @@ struct InsightsView: View {
 
     private var insightsList: some View {
         List {
-            ForEach(insights, id: \.id) { insight in
+            ForEach(insights) { insight in
                 InsightCard(insight: insight)
             }
         }
@@ -58,7 +58,7 @@ struct InsightCard: View {
             Text(insight.title)
                 .font(.headline)
 
-            Text(insight.body)
+            Text(insight.content)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 

@@ -130,7 +130,7 @@ struct CycleDetailView: View {
                     Text("Recent Cycles")
                         .font(.headline)
 
-                    ForEach(completedCycles.suffix(6).reversed(), id: \.id) { cycle in
+                    ForEach(completedCycles.suffix(6).reversed()) { cycle in
                         HStack {
                             Text(formatDate(cycle.startDate))
                                 .font(.subheadline)

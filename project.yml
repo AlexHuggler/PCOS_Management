@@ -41,7 +41,6 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
         INFOPLIST_KEY_CFBundleDisplayName: CycleBalance
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "CycleBalance reads your health data (weight, activity, sleep, heart rate, blood glucose) to help you track and understand your PCOS symptoms."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "CycleBalance uses your photo library to save and compare hair growth/loss progress photos."
         INFOPLIST_KEY_NSCameraUsageDescription: "CycleBalance uses your camera to capture hair growth/loss progress photos for tracking."
       configs:
@@ -54,8 +53,6 @@ targets:
     entitlements:
       path: CycleBalance/CycleBalance.entitlements
       properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
         com.apple.developer.icloud-container-identifiers:
           - "iCloud.com.cyclebalance.app"
         com.apple.developer.icloud-services:
