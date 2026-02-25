@@ -5,7 +5,7 @@ struct SavedFeedbackOverlay: View {
     @State private var appeared = false
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppTheme.spacing12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(.largeTitle))
                 .foregroundStyle(.white)
@@ -15,7 +15,7 @@ struct SavedFeedbackOverlay: View {
                 .font(.headline)
                 .foregroundStyle(.white)
         }
-        .padding(32)
+        .padding(AppTheme.spacing32)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(.ultraThinMaterial)

@@ -27,10 +27,31 @@ final class CycleViewModel {
     // MARK: - Data Loading
 
     func loadData() {
+        cleanUpOrphanedEntries()
         fetchCycles()
         fetchCurrentCycleEntries()
         updatePrediction()
         updateStatistics()
+    }
+
+    private func cleanUpOrphanedEntries() {
+        let descriptor = FetchDescriptor<CycleEntry>(
+            predicate: #Predicate<CycleEntry> { entry in
+                entry.cycle == nil
+            }
+        )
+        do {
+            let orphans = try modelContext.fetch(descriptor)
+            for orphan in orphans {
+                modelContext.delete(orphan)
+            }
+            if !orphans.isEmpty {
+                try modelContext.save()
+                Logger.database.info("Cleaned up \(orphans.count) orphaned cycle entries")
+            }
+        } catch {
+            Logger.database.error("Failed to clean up orphaned entries: \(error.localizedDescription)")
+        }
     }
 
     private func fetchCycles() {

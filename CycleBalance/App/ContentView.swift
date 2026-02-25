@@ -85,8 +85,13 @@ struct TrackingCard: View {
     let color: Color
     let action: () -> Void
 
+    @State private var tapped = false
+
     var body: some View {
-        Button(action: action) {
+        Button {
+            tapped.toggle()
+            action()
+        } label: {
             HStack(spacing: AppTheme.spacing16) {
                 Image(systemName: systemImage)
                     .font(.title)
@@ -119,7 +124,10 @@ struct TrackingCard: View {
             )
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: false)
+        .sensoryFeedback(.selection, trigger: tapped)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(subtitle)")
+        .accessibilityAddTraits(.isButton)
     }
 }
 

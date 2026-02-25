@@ -9,7 +9,7 @@ final class Cycle {
     var lengthDays: Int?
     var isPredicted: Bool
 
-    @Relationship(deleteRule: .nullify)
+    @Relationship(deleteRule: .cascade)
     var entries: [CycleEntry] = []
 
     init(

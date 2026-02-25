@@ -6,13 +6,16 @@ struct OnboardingCompletionView: View {
     let onFinish: () -> Void
 
     @State private var appeared = false
+    @State private var dismissTask: Task<Void, Never>?
+
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 72
 
     var body: some View {
         VStack(spacing: AppTheme.spacing24) {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 72))
+                .font(.system(size: iconSize))
                 .foregroundStyle(AppTheme.accentColor)
                 .symbolEffect(.bounce, value: appeared)
                 .accessibilityHidden(true)
@@ -28,6 +31,7 @@ struct OnboardingCompletionView: View {
             Spacer()
 
             Button {
+                dismissTask?.cancel()
                 onFinish()
             } label: {
                 Text("Continue")
@@ -47,10 +51,15 @@ struct OnboardingCompletionView: View {
         .background(AppTheme.warmNeutral.ignoresSafeArea())
         .onAppear {
             appeared = true
-            Task {
+            dismissTask?.cancel()
+            dismissTask = Task {
                 try? await Task.sleep(for: .seconds(1.8))
+                guard !Task.isCancelled else { return }
                 onFinish()
             }
+        }
+        .onDisappear {
+            dismissTask?.cancel()
         }
     }
 }

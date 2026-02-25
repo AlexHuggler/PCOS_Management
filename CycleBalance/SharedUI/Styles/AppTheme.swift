@@ -66,3 +66,24 @@ enum AppTheme {
             .foregroundStyle(.primary)
     }
 }
+
+// MARK: - Card Style ViewModifier
+
+struct CardStyle: ViewModifier {
+    var cornerRadius: CGFloat = 12
+
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(AppTheme.cardBackground)
+            )
+    }
+}
+
+extension View {
+    func cardStyle(cornerRadius: CGFloat = 12) -> some View {
+        modifier(CardStyle(cornerRadius: cornerRadius))
+    }
+}

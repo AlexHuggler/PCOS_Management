@@ -7,12 +7,14 @@ struct WelcomePageView: View {
     let headline: String
     let bodyText: String
 
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 72
+
     var body: some View {
         VStack(spacing: AppTheme.spacing24) {
             Spacer()
 
             Image(systemName: systemImage)
-                .font(.system(size: 72))
+                .font(.system(size: iconSize))
                 .foregroundStyle(AppTheme.accentColor)
                 .symbolEffect(.pulse, options: .repeating)
                 .accessibilityHidden(true)
