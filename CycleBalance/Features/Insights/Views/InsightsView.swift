@@ -29,10 +29,11 @@ struct InsightsView: View {
     private var emptyState: some View {
         ContentUnavailableView {
             Label("No Insights Yet", systemImage: "chart.line.uptrend.xyaxis")
+                .symbolEffect(.pulse, options: .repeating)
         } description: {
-            Text("Keep logging your symptoms and period data. CycleBalance will identify patterns and correlations as your data grows.")
+            Text("CycleBalance identifies patterns after you've logged at least 2 complete cycles. Keep tracking — your first insights are on the way!")
         } actions: {
-            HStack(spacing: 12) {
+            HStack(spacing: AppTheme.spacing12) {
                 Button {
                     showingLogPeriod = true
                 } label: {

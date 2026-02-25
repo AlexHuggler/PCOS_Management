@@ -14,7 +14,7 @@ struct FlowIntensityPicker: View {
                 Button {
                     selection = intensity
                 } label: {
-                    VStack(spacing: 6) {
+                    VStack(spacing: AppTheme.spacing8) {
                         flowIcon(for: intensity)
                             .frame(height: 28)
 
@@ -47,6 +47,7 @@ struct FlowIntensityPicker: View {
             }
         }
         .sensoryFeedback(.selection, trigger: selection)
+        .animation(.easeInOut(duration: 0.2), value: selection)
     }
 
     @ViewBuilder

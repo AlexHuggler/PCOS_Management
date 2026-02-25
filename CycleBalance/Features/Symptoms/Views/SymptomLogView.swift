@@ -31,17 +31,17 @@ struct SymptomLogView: View {
                 // Symptom grid
                 if let viewModel {
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(spacing: AppTheme.spacing16) {
                             // Quick actions row
                             quickActionsRow
 
                             // Symptom grid — 2 columns for better touch targets
                             LazyVGrid(
                                 columns: [
-                                    GridItem(.flexible(), spacing: 12),
-                                    GridItem(.flexible(), spacing: 12),
+                                    GridItem(.flexible(), spacing: AppTheme.spacing12),
+                                    GridItem(.flexible(), spacing: AppTheme.spacing12),
                                 ],
-                                spacing: 12
+                                spacing: AppTheme.spacing12
                             ) {
                                 ForEach(viewModel.visibleSymptomTypes) { symptomType in
                                     SymptomGridItem(
@@ -57,9 +57,20 @@ struct SymptomLogView: View {
                         .padding()
                     }
                 } else {
-                    Spacer()
-                    ProgressView("Loading symptoms...")
-                    Spacer()
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible(), spacing: AppTheme.spacing12),
+                                GridItem(.flexible(), spacing: AppTheme.spacing12),
+                            ],
+                            spacing: AppTheme.spacing12
+                        ) {
+                            ForEach(0..<6, id: \.self) { _ in
+                                SkeletonCard()
+                            }
+                        }
+                        .padding()
+                    }
                 }
 
                 // Save button
@@ -96,6 +107,7 @@ struct SymptomLogView: View {
                 }
             }
             .sensoryFeedback(.success, trigger: showSavedFeedback)
+            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if showSavedFeedback {
                     SavedFeedbackOverlay()
@@ -117,7 +129,7 @@ struct SymptomLogView: View {
 
     private var categoryFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: AppTheme.spacing8) {
                 CategoryChip(
                     title: "All",
                     isSelected: viewModel?.selectedCategory == nil
@@ -135,42 +147,105 @@ struct SymptomLogView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, AppTheme.spacing8)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.groupedBackground)
     }
 
     private var quickActionsRow: some View {
-        HStack(spacing: 12) {
-            Button {
-                viewModel?.copyYesterdaysSymptoms()
-            } label: {
-                Label(yesterdayButtonLabel, systemImage: "arrow.counterclockwise")
-                    .font(.subheadline)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(AppTheme.accentColor.opacity(0.12))
-                    )
-                    .foregroundStyle(AppTheme.accentColor)
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel?.yesterdaySymptomCount == 0)
-            .opacity(viewModel?.yesterdaySymptomCount == 0 ? 0.5 : 1)
-            .sensoryFeedback(.impact(flexibility: .soft), trigger: viewModel?.selectionCount ?? 0)
-
-            Spacer()
-
-            if let count = viewModel?.selectionCount, count > 0 {
+        VStack(spacing: AppTheme.spacing12) {
+            // Prominent "Same as yesterday" card when yesterday has data and nothing selected yet
+            if let vm = viewModel, vm.yesterdaySymptomCount > 0, vm.selectionCount == 0 {
                 Button {
-                    viewModel?.reset()
+                    vm.copyYesterdaysSymptoms()
                 } label: {
-                    Text("Clear all")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: AppTheme.spacing12) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.title3)
+                            .foregroundStyle(AppTheme.accentColor)
+
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text("Same as yesterday")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Text("\(vm.yesterdaySymptomCount) symptom\(vm.yesterdaySymptomCount == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .cardStyle()
                 }
                 .buttonStyle(.plain)
+                .sensoryFeedback(.impact(flexibility: .soft), trigger: vm.selectionCount)
+            }
+
+            // Frequent symptoms suggestion row
+            if let vm = viewModel, vm.selectionCount == 0 {
+                let frequent = vm.frequentSymptoms()
+                if !frequent.isEmpty {
+                    VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                        Text("Frequent this cycle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        FlowLayout(spacing: AppTheme.spacing8) {
+                            ForEach(frequent) { type in
+                                Button {
+                                    vm.setSeverity(2, for: type)
+                                } label: {
+                                    Label(type.displayName, systemImage: type.systemImage)
+                                        .font(.caption)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(Capsule().fill(AppTheme.accentColor.opacity(0.12)))
+                                        .foregroundStyle(AppTheme.accentColor)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Compact row when symptoms are already selected
+            HStack(spacing: AppTheme.spacing12) {
+                if let vm = viewModel, vm.selectionCount > 0 || vm.yesterdaySymptomCount == 0 {
+                    Button {
+                        viewModel?.copyYesterdaysSymptoms()
+                    } label: {
+                        Label(yesterdayButtonLabel, systemImage: "arrow.counterclockwise")
+                            .font(.subheadline)
+                            .padding(.horizontal, AppTheme.spacing16)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(AppTheme.accentColor.opacity(0.12))
+                            )
+                            .foregroundStyle(AppTheme.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel?.yesterdaySymptomCount == 0)
+                    .opacity(viewModel?.yesterdaySymptomCount == 0 ? 0.5 : 1)
+                }
+
+                Spacer()
+
+                if let count = viewModel?.selectionCount, count > 0 {
+                    Button {
+                        viewModel?.reset()
+                    } label: {
+                        Text("Clear all")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -183,6 +258,11 @@ struct SymptomLogView: View {
                     Text("\(count) symptom\(count == 1 ? "" : "s") selected")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                } else {
+                    Text("Tap a symptom to get started")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
 
                 Spacer()
@@ -258,6 +338,44 @@ struct CategoryChip: View {
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+}
+
+// MARK: - Skeleton Card
+
+private struct SkeletonCard: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(.tertiarySystemFill))
+                .frame(width: 32, height: 32)
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(.tertiarySystemFill))
+                .frame(height: 12)
+                .padding(.horizontal, AppTheme.spacing8)
+
+            HStack(spacing: 2) {
+                ForEach(0..<5, id: \.self) { _ in
+                    Circle()
+                        .fill(Color(.tertiarySystemFill))
+                        .frame(width: 18, height: 18)
+                }
+            }
+        }
+        .padding(.vertical, AppTheme.spacing12)
+        .padding(.horizontal, AppTheme.spacing8)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.tertiarySystemFill).opacity(0.5))
+        )
+        .opacity(isAnimating ? 0.4 : 1.0)
+        .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isAnimating)
+        .onAppear { isAnimating = true }
     }
 }
 

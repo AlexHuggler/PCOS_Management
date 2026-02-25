@@ -102,7 +102,7 @@ struct TrackingCard: View {
                             .fill(color.opacity(0.12))
                     )
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                     Text(title)
                         .font(.headline)
                         .foregroundStyle(.primary)

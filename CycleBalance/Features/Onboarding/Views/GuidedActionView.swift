@@ -63,7 +63,7 @@ struct GuidedActionView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button("I'll do this later", action: onSkip)
+                Button("Skip", action: onSkip)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .accessibilityHint("Skip this step and go to the dashboard")

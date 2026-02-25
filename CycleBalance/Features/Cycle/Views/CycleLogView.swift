@@ -56,6 +56,8 @@ struct CycleLogView: View {
                 Section("Notes") {
                     TextField("e.g., clotting, mood changes, spotting duration...", text: $notes, axis: .vertical)
                         .lineLimit(3...6)
+                        .submitLabel(.done)
+                        .textInputAutocapitalization(.sentences)
                 }
 
                 Section {
@@ -119,6 +121,7 @@ struct CycleLogView: View {
                 }
             }
             .sensoryFeedback(.success, trigger: showSavedFeedback)
+            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if showSavedFeedback {
                     SavedFeedbackOverlay()

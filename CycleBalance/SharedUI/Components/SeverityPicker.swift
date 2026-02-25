@@ -30,13 +30,16 @@ struct SeverityPicker: View {
                 }
             }
             .sensoryFeedback(.selection, trigger: severity)
+            .animation(.easeInOut(duration: 0.15), value: severity)
 
             if severity > 0 {
                 Text(Self.shortLabels[severity - 1])
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(colorForLevel(severity))
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: severity)
     }
 
     private func colorForLevel(_ level: Int) -> Color {
