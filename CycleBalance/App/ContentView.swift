@@ -4,29 +4,36 @@ struct ContentView: View {
     @State private var appState = AppState()
 
     var body: some View {
-        TabView(selection: $appState.selectedTab) {
-            Tab("Today", systemImage: AppTab.today.systemImage, value: .today) {
-                TodayView()
-            }
+        if appState.hasCompletedOnboarding {
+            TabView(selection: $appState.selectedTab) {
+                Tab("Today", systemImage: AppTab.today.systemImage, value: .today) {
+                    TodayView()
+                }
 
-            Tab("Calendar", systemImage: AppTab.calendar.systemImage, value: .calendar) {
-                CalendarMonthView()
-            }
+                Tab("Calendar", systemImage: AppTab.calendar.systemImage, value: .calendar) {
+                    CalendarMonthView()
+                }
 
-            Tab("Track", systemImage: AppTab.track.systemImage, value: .track) {
-                TrackingHubView()
-            }
+                Tab("Track", systemImage: AppTab.track.systemImage, value: .track) {
+                    TrackingHubView()
+                }
 
-            Tab("Insights", systemImage: AppTab.insights.systemImage, value: .insights) {
-                InsightsView()
-            }
+                Tab("Insights", systemImage: AppTab.insights.systemImage, value: .insights) {
+                    InsightsView()
+                }
 
-            Tab("Settings", systemImage: AppTab.settings.systemImage, value: .settings) {
-                SettingsView()
+                Tab("Settings", systemImage: AppTab.settings.systemImage, value: .settings) {
+                    SettingsView()
+                }
             }
+            .tint(AppTheme.accentColor)
+            .environment(appState)
+        } else {
+            OnboardingContainerView {
+                appState.hasCompletedOnboarding = true
+            }
+            .environment(appState)
         }
-        .tint(AppTheme.accentColor)
-        .environment(appState)
     }
 }
 
