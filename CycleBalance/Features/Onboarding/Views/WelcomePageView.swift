@@ -16,7 +16,7 @@ struct WelcomePageView: View {
             Image(systemName: systemImage)
                 .font(.system(size: iconSize))
                 .foregroundStyle(AppTheme.accentColor)
-                .symbolEffect(.pulse, options: .repeating)
+                .symbolEffect(.pulse)
                 .accessibilityHidden(true)
 
             VStack(spacing: AppTheme.spacing12) {
