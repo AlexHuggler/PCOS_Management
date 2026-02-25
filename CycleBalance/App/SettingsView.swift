@@ -41,6 +41,13 @@ struct SettingsView: View {
                     }
                     Label("Privacy Policy", systemImage: "hand.raised")
                     Label("Terms of Service", systemImage: "doc.text")
+
+                    Button {
+                        appState.onboardingProfile.resetOnboarding()
+                        appState.hasCompletedOnboarding = false
+                    } label: {
+                        Label("Replay Welcome Tour", systemImage: "arrow.counterclockwise")
+                    }
                 }
 
                 Section {

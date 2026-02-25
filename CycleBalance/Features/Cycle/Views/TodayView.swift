@@ -3,28 +3,44 @@ import SwiftData
 
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
     @State private var showingLogPeriod = false
     @State private var showingLogSymptoms = false
     @State private var todaysSymptoms: [SymptomEntry] = []
+    @State private var activeHint: String?
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Cycle status card
-                    cycleStatusCard
+            ZStack {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Cycle status card
+                        cycleStatusCard
 
-                    // Quick actions
-                    quickActionsSection
+                        // Quick actions
+                        quickActionsSection
 
-                    // Today's logged symptoms
-                    todaysSymptomsSection
+                        // Today's logged symptoms
+                        todaysSymptomsSection
 
-                    // Prediction card
-                    predictionSection
+                        // Prediction card
+                        predictionSection
+                    }
+                    .padding()
                 }
-                .padding()
+
+                // Post-onboarding contextual hint
+                if let hint = activeHint {
+                    VStack {
+                        Spacer()
+                        TooltipOverlay(message: hint) {
+                            dismissActiveHint()
+                        }
+                        .padding(.horizontal, AppTheme.spacing24)
+                        .padding(.bottom, AppTheme.spacing32)
+                    }
+                }
             }
             .navigationTitle("Today")
             .sheet(isPresented: $showingLogPeriod) {
@@ -40,6 +56,7 @@ struct TodayView: View {
                     viewModel = vm
                 }
                 refreshTodaysSymptoms()
+                showNextHintIfNeeded()
             }
         }
     }
@@ -73,7 +90,7 @@ struct TodayView: View {
                 Text("Welcome")
                     .font(.title)
                     .fontWeight(.semibold)
-                Text("Start tracking by logging your period")
+                Text(personalizedWelcomeText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -129,6 +146,47 @@ struct TodayView: View {
                         .fill(AppTheme.cardBackground)
                 )
             }
+        }
+    }
+
+    private var personalizedWelcomeText: String {
+        switch appState.onboardingProfile.primaryGoal {
+        case .trackCycles:
+            "Log your period to start tracking your cycle"
+        case .understandSymptoms:
+            "Log symptoms to start finding patterns"
+        case nil:
+            "Start tracking by logging your period"
+        }
+    }
+
+    private func showNextHintIfNeeded() {
+        let profile = appState.onboardingProfile
+        guard appState.hasCompletedOnboarding else { return }
+
+        if profile.shouldShowHint(OnboardingProfile.hintCalendarTab) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                activeHint = "Check the Calendar tab to see your cycle at a glance"
+            }
+        } else if todaysSymptoms.isEmpty,
+                  profile.shouldShowHint(OnboardingProfile.hintLogSymptoms) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                activeHint = "Logging symptoms helps find patterns with your cycle"
+            }
+        }
+    }
+
+    private func dismissActiveHint() {
+        let profile = appState.onboardingProfile
+        if activeHint != nil {
+            if profile.shouldShowHint(OnboardingProfile.hintCalendarTab) {
+                profile.dismissHint(OnboardingProfile.hintCalendarTab)
+            } else if profile.shouldShowHint(OnboardingProfile.hintLogSymptoms) {
+                profile.dismissHint(OnboardingProfile.hintLogSymptoms)
+            }
+        }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            activeHint = nil
         }
     }
 
@@ -263,6 +321,7 @@ struct FlowLayout: Layout {
 
 #Preview {
     TodayView()
+        .environment(AppState())
         .modelContainer(for: [
             CycleEntry.self,
             Cycle.self,

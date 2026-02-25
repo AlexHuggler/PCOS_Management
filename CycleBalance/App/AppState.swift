@@ -35,4 +35,16 @@ enum AppTab: String, CaseIterable, Identifiable {
 final class AppState {
     var selectedTab: AppTab = .today
     var isPremium: Bool = false
+
+    let onboardingProfile = OnboardingProfile()
+
+    var hasCompletedOnboarding: Bool {
+        didSet {
+            UserDefaults.standard.set(hasCompletedOnboarding, forKey: "onboarding.hasCompletedOnboarding")
+        }
+    }
+
+    init() {
+        hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "onboarding.hasCompletedOnboarding")
+    }
 }
