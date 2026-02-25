@@ -23,22 +23,26 @@ struct CalendarMonthView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                // Month navigation header
-                monthHeader
+            ScrollView {
+                VStack(spacing: AppTheme.spacing16) {
+                    // Month navigation header
+                    monthHeader
 
-                // Days of week header
-                daysOfWeekHeader
+                    // Days of week header
+                    daysOfWeekHeader
 
-                // Calendar grid
-                calendarGrid
+                    // Calendar grid
+                    calendarGrid
 
-                // Cycle info section
-                cycleInfoSection
-
-                Spacer()
+                    // Cycle info section
+                    cycleInfoSection
+                }
+                .padding()
             }
-            .padding()
+            .refreshable {
+                viewModel?.loadData()
+                loadMonthEntries()
+            }
             .navigationTitle("Calendar")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -105,10 +109,11 @@ struct CalendarMonthView: View {
         }
         .padding(.horizontal)
         .sensoryFeedback(.selection, trigger: displayedMonth)
+        .sensoryFeedback(.selection, trigger: showingDayLogSheet)
     }
 
     private var daysOfWeekHeader: some View {
-        LazyVGrid(columns: columns, spacing: 4) {
+        LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
             ForEach(orderedWeekdaySymbols, id: \.self) { day in
                 Text(day)
                     .font(.caption)
@@ -148,37 +153,52 @@ struct CalendarMonthView: View {
     }
 
     private var cycleInfoSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let dayCount = viewModel?.currentCycleDayCount {
-                HStack {
-                    Image(systemName: "calendar.badge.clock")
-                        .foregroundStyle(AppTheme.accentColor)
-                    Text("Day \(dayCount) of current cycle")
-                        .font(.subheadline)
+        NavigationLink {
+            CycleDetailView()
+        } label: {
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                if let dayCount = viewModel?.currentCycleDayCount {
+                    HStack {
+                        Image(systemName: "calendar.badge.clock")
+                            .foregroundStyle(AppTheme.accentColor)
+                        Text("Day \(dayCount) of current cycle")
+                            .font(.subheadline)
+                    }
                 }
-            }
 
-            if let predictionText = viewModel?.predictionRangeText {
-                HStack {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(AppTheme.coralAccent)
-                    Text(predictionText)
-                        .font(.subheadline)
+                if let predictionText = viewModel?.predictionRangeText {
+                    HStack {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(AppTheme.coralAccent)
+                        Text(predictionText)
+                            .font(.subheadline)
+                    }
                 }
-            }
 
-            if let avgText = viewModel?.averageCycleLengthText {
+                if let avgText = viewModel?.averageCycleLengthText {
+                    HStack {
+                        Image(systemName: "chart.bar")
+                            .foregroundStyle(.secondary)
+                        Text(avgText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 HStack {
-                    Image(systemName: "chart.bar")
-                        .foregroundStyle(.secondary)
-                    Text(avgText)
+                    Text("Cycle Details")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.accentColor)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
+        .buttonStyle(.plain)
     }
 
     // MARK: - Helpers

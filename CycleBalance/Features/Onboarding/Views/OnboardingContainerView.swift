@@ -8,7 +8,35 @@ struct OnboardingContainerView: View {
     @Environment(AppState.self) private var appState
     @State private var phase: OnboardingPhase = .welcome
 
+    private var stepNumber: Int {
+        switch phase {
+        case .welcome: 1
+        case .questionnaire: 2
+        case .guidedAction: 3
+        case .completion: 4
+        }
+    }
+
     var body: some View {
+        VStack(spacing: 0) {
+            // Progress indicator
+            HStack(spacing: AppTheme.spacing8) {
+                ForEach(1...4, id: \.self) { step in
+                    Capsule()
+                        .fill(step <= stepNumber ? AppTheme.accentColor : Color(.tertiarySystemFill))
+                        .frame(height: 4)
+                        .animation(.easeInOut(duration: 0.3), value: stepNumber)
+                }
+            }
+            .padding(.horizontal, AppTheme.spacing24)
+            .padding(.top, AppTheme.spacing8)
+
+            Text("Step \(stepNumber) of 4")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.top, AppTheme.spacing4)
+        }
+
         Group {
             switch phase {
             case .welcome:

@@ -5,6 +5,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
+    @State private var symptomViewModel: SymptomViewModel?
     @State private var showingLogPeriod = false
     @State private var showingLogSymptoms = false
     @State private var todaysSymptoms: [SymptomEntry] = []
@@ -13,6 +14,8 @@ struct TodayView: View {
     @State private var showQuickLogSaved = false
     @State private var quickLogResetTask: Task<Void, Never>?
     @State private var fetchError: String?
+    @State private var lastQuickLogEntryID: PersistentIdentifier?
+    @State private var streakDays: Int = 0
 
     var body: some View {
         NavigationStack {
@@ -21,6 +24,9 @@ struct TodayView: View {
                     VStack(spacing: AppTheme.spacing16) {
                         // Cycle status card
                         cycleStatusCard
+
+                        // Logging streak
+                        streakBadge
 
                         // Quick period log inline
                         quickPeriodLogRow
@@ -36,6 +42,11 @@ struct TodayView: View {
                     }
                     .padding()
                 }
+                .refreshable {
+                    viewModel?.loadData()
+                    refreshTodaysSymptoms()
+                    refreshStreak()
+                }
 
                 // Post-onboarding contextual hint
                 if let hint = activeHint {
@@ -50,13 +61,18 @@ struct TodayView: View {
                 }
             }
             .navigationTitle("Today")
+            .sensoryFeedback(.selection, trigger: quickLogFlow)
+            .sensoryFeedback(.selection, trigger: showingLogPeriod)
+            .sensoryFeedback(.selection, trigger: showingLogSymptoms)
             .sheet(isPresented: $showingLogPeriod, onDismiss: {
                 viewModel?.loadData()
+                refreshStreak()
             }) {
                 CycleLogView()
             }
             .sheet(isPresented: $showingLogSymptoms, onDismiss: {
                 refreshTodaysSymptoms()
+                refreshStreak()
             }) {
                 SymptomLogView()
             }
@@ -67,35 +83,29 @@ struct TodayView: View {
                     viewModel = vm
                 }
                 refreshTodaysSymptoms()
+                refreshStreak()
                 showNextHintIfNeeded()
             }
         }
     }
 
     private func refreshTodaysSymptoms() {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-
-        let descriptor = FetchDescriptor<SymptomEntry>(
-            predicate: #Predicate<SymptomEntry> { entry in
-                entry.date >= startOfDay && entry.date < endOfDay
-            },
-            sortBy: [SortDescriptor(\.date, order: .reverse)]
-        )
-        do {
-            todaysSymptoms = try modelContext.fetch(descriptor)
-            fetchError = nil
-        } catch {
-            todaysSymptoms = []
-            fetchError = "Could not load today's symptoms."
+        if symptomViewModel == nil {
+            symptomViewModel = SymptomViewModel(modelContext: modelContext)
         }
+        todaysSymptoms = symptomViewModel?.fetchTodaysSymptoms() ?? []
+        fetchError = nil
+    }
+
+    private func refreshStreak() {
+        let service = StreakService(modelContext: modelContext)
+        streakDays = service.currentStreak()
     }
 
     // MARK: - Subviews
 
     private var cycleStatusCard: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppTheme.spacing12) {
             if let dayCount = viewModel?.currentCycleDayCount {
                 Text("Day \(dayCount)")
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
@@ -114,12 +124,25 @@ struct TodayView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(AppTheme.cardBackground)
-        )
+        .padding(.vertical, AppTheme.spacing32)
+        .cardStyle(cornerRadius: 20)
         .animation(.easeInOut(duration: 0.3), value: viewModel?.currentCycleDayCount)
+    }
+
+    @ViewBuilder
+    private var streakBadge: some View {
+        if streakDays > 1 {
+            HStack(spacing: AppTheme.spacing8) {
+                Image(systemName: "flame.fill")
+                    .foregroundStyle(.orange)
+                    .symbolEffect(.bounce, value: streakDays >= 7)
+                Text("\(streakDays)-day logging streak")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppTheme.spacing8)
+        }
     }
 
     private var quickActionsSection: some View {
@@ -155,11 +178,11 @@ struct TodayView: View {
             }
 
             if !todaysSymptoms.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Text("Today's Symptoms")
                         .font(.headline)
 
-                    FlowLayout(spacing: 8) {
+                    FlowLayout(spacing: AppTheme.spacing8) {
                         ForEach(todaysSymptoms) { symptom in
                             SymptomChip(
                                 name: symptom.symptomType.displayName,
@@ -216,39 +239,62 @@ struct TodayView: View {
     }
 
     private var quickPeriodLogRow: some View {
-        HStack(spacing: AppTheme.spacing12) {
-            Image(systemName: "drop.fill")
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.coralAccent)
+        VStack(spacing: AppTheme.spacing8) {
+            HStack(spacing: AppTheme.spacing12) {
+                Image(systemName: "drop.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.coralAccent)
 
-            Text("Period today?")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                Text("Period today?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
 
-            Spacer()
+                Spacer()
 
-            ForEach([FlowIntensity.light, .medium, .heavy], id: \.self) { intensity in
-                Button {
-                    quickLogPeriod(intensity: intensity)
-                } label: {
-                    Text(intensity.displayName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule()
-                                .fill(quickLogFlow == intensity
-                                      ? AppTheme.coralAccent
-                                      : AppTheme.coralAccent.opacity(0.12))
-                        )
-                        .foregroundStyle(quickLogFlow == intensity ? .white : AppTheme.coralAccent)
+                ForEach([FlowIntensity.light, .medium, .heavy], id: \.self) { intensity in
+                    Button {
+                        quickLogPeriod(intensity: intensity)
+                    } label: {
+                        Text(intensity.displayName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(quickLogFlow == intensity
+                                          ? AppTheme.coralAccent
+                                          : AppTheme.coralAccent.opacity(0.12))
+                            )
+                            .foregroundStyle(quickLogFlow == intensity ? .white : AppTheme.coralAccent)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+            }
+
+            // Undo banner
+            if let flow = quickLogFlow {
+                HStack {
+                    Text("Logged \(flow.displayName) flow for today")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        undoQuickLog()
+                    } label: {
+                        Text("Undo")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(AppTheme.coralAccent)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .cardStyle()
         .sensoryFeedback(.success, trigger: showQuickLogSaved)
+        .animation(.easeInOut(duration: 0.25), value: quickLogFlow)
     }
 
     private func quickLogPeriod(intensity: FlowIntensity) {
@@ -259,24 +305,49 @@ struct TodayView: View {
 
         do {
             try viewModel.logPeriodDay()
+            // Store the last entry ID for undo
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: Date())
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+            let descriptor = FetchDescriptor<CycleEntry>(
+                predicate: #Predicate<CycleEntry> { entry in
+                    entry.date >= startOfDay && entry.date < endOfDay && entry.isPeriodDay
+                },
+                sortBy: [SortDescriptor(\.date, order: .reverse)]
+            )
+            lastQuickLogEntryID = (try? modelContext.fetch(descriptor))?.first?.persistentModelID
+
             UserDefaults.standard.set(intensity.rawValue, forKey: "cycle.lastFlowIntensity")
             quickLogFlow = intensity
             showQuickLogSaved.toggle()
             quickLogResetTask?.cancel()
             quickLogResetTask = Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(4))
                 guard !Task.isCancelled else { return }
                 quickLogFlow = nil
+                lastQuickLogEntryID = nil
             }
         } catch {
             // Quick log is best-effort; full form available via sheet
         }
     }
 
+    private func undoQuickLog() {
+        guard let entryID = lastQuickLogEntryID else { return }
+        if let entry = modelContext.model(for: entryID) as? CycleEntry {
+            modelContext.delete(entry)
+            try? modelContext.save()
+        }
+        quickLogResetTask?.cancel()
+        quickLogFlow = nil
+        lastQuickLogEntryID = nil
+        viewModel?.loadData()
+    }
+
     private var predictionSection: some View {
         Group {
             if let predictionText = viewModel?.predictionRangeText {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label("Period Estimate", systemImage: "sparkles")
                         .font(.headline)
                         .foregroundStyle(AppTheme.coralAccent)
@@ -300,7 +371,7 @@ struct QuickActionButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: AppTheme.spacing8) {
                 Image(systemName: systemImage)
                     .font(.title2)
                 Text(title)
@@ -308,7 +379,7 @@ struct QuickActionButton: View {
                     .fontWeight(.medium)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, AppTheme.spacing16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(color.opacity(0.12))
@@ -358,51 +429,6 @@ struct SymptomChip: View {
         case 4, 5: AppTheme.coralAccent
         default: .secondary
         }
-    }
-}
-
-// MARK: - Flow Layout
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
-            )
-        }
-    }
-
-    private func arrangeSubviews(proposal: ProposedViewSize, subviews: Subviews) -> (positions: [CGPoint], size: CGSize) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-        var totalHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if currentX + size.width > maxWidth && currentX > 0 {
-                currentX = 0
-                currentY += lineHeight + spacing
-                lineHeight = 0
-            }
-            positions.append(CGPoint(x: currentX, y: currentY))
-            lineHeight = max(lineHeight, size.height)
-            currentX += size.width + spacing
-            totalHeight = max(totalHeight, currentY + lineHeight)
-        }
-
-        return (positions, CGSize(width: maxWidth, height: totalHeight))
     }
 }
 

@@ -83,6 +83,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sensoryFeedback(.warning, trigger: showDeleteConfirmation)
             .sensoryFeedback(.success, trigger: showDeletedFeedback)
+            .sensoryFeedback(.success, trigger: exportURL)
             .alert("Export Failed", isPresented: Binding(
                 get: { exportError != nil },
                 set: { if !$0 { exportError = nil } }

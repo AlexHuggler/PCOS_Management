@@ -7,7 +7,7 @@ struct CycleDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: AppTheme.spacing24) {
                 // Current cycle day counter
                 currentCycleCard
 
@@ -22,6 +22,9 @@ struct CycleDetailView: View {
             }
             .padding()
         }
+        .refreshable {
+            viewModel?.loadData()
+        }
         .navigationTitle("Cycle Details")
         .onAppear {
             if viewModel == nil {
@@ -35,7 +38,7 @@ struct CycleDetailView: View {
     // MARK: - Cards
 
     private var currentCycleCard: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.spacing8) {
             if let dayCount = viewModel?.currentCycleDayCount {
                 Text("Day \(dayCount)")
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
@@ -54,18 +57,15 @@ struct CycleDetailView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppTheme.cardBackground)
-        )
+        .padding(.vertical, AppTheme.spacing24)
+        .cardStyle(cornerRadius: 16)
     }
 
     private var predictionCard: some View {
         Group {
             if let predictionText = viewModel?.predictionRangeText,
                let prediction = viewModel?.prediction {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label("Next Period Estimate", systemImage: "sparkles")
                         .font(.headline)
                         .foregroundStyle(AppTheme.coralAccent)
@@ -82,11 +82,7 @@ struct CycleDetailView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(AppTheme.cardBackground)
-                )
+                .cardStyle()
             }
         }
     }
@@ -94,11 +90,11 @@ struct CycleDetailView: View {
     private var statisticsCard: some View {
         Group {
             if let stats = viewModel?.statistics {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                     Text("Cycle Statistics")
                         .font(.headline)
 
-                    HStack(spacing: 16) {
+                    HStack(spacing: AppTheme.spacing16) {
                         StatisticItem(
                             title: "Average",
                             value: "\(stats.formattedAverage) days"
@@ -114,11 +110,7 @@ struct CycleDetailView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(AppTheme.cardBackground)
-                )
+                .cardStyle()
             }
         }
     }
@@ -127,7 +119,7 @@ struct CycleDetailView: View {
         Group {
             let completedCycles = viewModel?.cycles.filter { $0.lengthDays != nil } ?? []
             if !completedCycles.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Text("Recent Cycles")
                         .font(.headline)
 
@@ -143,16 +135,12 @@ struct CycleDetailView: View {
                                     .foregroundStyle(AppTheme.accentColor)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, AppTheme.spacing4)
                         Divider()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(AppTheme.cardBackground)
-                )
+                .cardStyle()
             }
         }
     }

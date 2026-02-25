@@ -6,7 +6,7 @@ struct SymptomGridItem: View {
     let onSeverityChange: (Int) -> Void
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: AppTheme.spacing8) {
             // Icon
             Image(systemName: symptomType.systemImage)
                 .font(.title2)
@@ -59,6 +59,8 @@ struct SymptomGridItem: View {
                 }
             }
         }
+        .scaleEffect(severity > 0 ? 1.0 : 0.98)
+        .animation(.easeInOut(duration: 0.2), value: severity)
         .sensoryFeedback(.impact(flexibility: .soft), trigger: severity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.labels[severity - 1] : "none")")

@@ -7,13 +7,27 @@ import os
 final class SymptomViewModel {
     private let modelContext: ModelContext
 
-    var selectedCategory: SymptomCategory? = nil
+    var selectedCategory: SymptomCategory? {
+        didSet {
+            if let category = selectedCategory {
+                UserDefaults.standard.set(category.rawValue, forKey: "symptom.selectedCategory")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "symptom.selectedCategory")
+            }
+        }
+    }
     var symptomSeverities: [SymptomType: Int] = [:]
     var symptomNotes: [SymptomType: String] = [:]
     var logDate: Date = Date()
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        if let raw = UserDefaults.standard.string(forKey: "symptom.selectedCategory"),
+           let category = SymptomCategory(rawValue: raw) {
+            self.selectedCategory = category
+        } else {
+            self.selectedCategory = nil
+        }
     }
 
     /// All symptom types for the currently selected category, or all types if no category selected
@@ -142,10 +156,27 @@ final class SymptomViewModel {
         }
     }
 
+    /// Top symptom types logged in the last 30 days, by frequency.
+    func frequentSymptoms(limit: Int = 5) -> [SymptomType] {
+        let calendar = Calendar.current
+        guard let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: Date()) else { return [] }
+
+        let descriptor = FetchDescriptor<SymptomEntry>(
+            predicate: #Predicate<SymptomEntry> { $0.date >= thirtyDaysAgo }
+        )
+
+        guard let entries = try? modelContext.fetch(descriptor) else { return [] }
+
+        let counts = Dictionary(grouping: entries, by: \.symptomType)
+            .mapValues { $0.count }
+            .sorted { $0.value > $1.value }
+
+        return Array(counts.prefix(limit).map(\.key))
+    }
+
     func reset() {
         symptomSeverities = [:]
         symptomNotes = [:]
-        selectedCategory = nil
         logDate = Date()
     }
 }
