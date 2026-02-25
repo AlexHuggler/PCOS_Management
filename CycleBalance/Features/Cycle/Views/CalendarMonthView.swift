@@ -177,12 +177,8 @@ struct CalendarMonthView: View {
                 }
             }
         }
-        .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(AppTheme.cardBackground)
-        )
+        .cardStyle()
     }
 
     // MARK: - Helpers
@@ -295,10 +291,18 @@ struct CalendarDayCell: View {
                     .strokeBorder(AppTheme.accentColor, lineWidth: 2)
             }
 
-            Text("\(day)")
-                .font(.subheadline)
-                .fontWeight(isToday ? .bold : .regular)
-                .foregroundStyle(entry?.isPeriodDay == true ? .white : isPredicted ? AppTheme.coralAccent : .primary)
+            VStack(spacing: 0) {
+                Text("\(day)")
+                    .font(.subheadline)
+                    .fontWeight(isToday ? .bold : .regular)
+                    .foregroundStyle(entry?.isPeriodDay == true ? .white : isPredicted ? AppTheme.coralAccent : .primary)
+
+                if let entry, entry.isPeriodDay, let intensity = entry.flowIntensity {
+                    Text(intensity.shortLabel)
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundStyle(entry.isPeriodDay ? .white.opacity(0.8) : .secondary)
+                }
+            }
         }
         .frame(height: 44)
         .accessibilityElement(children: .ignore)

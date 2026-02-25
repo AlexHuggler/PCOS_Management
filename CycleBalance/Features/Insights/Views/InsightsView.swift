@@ -101,6 +101,8 @@ struct InsightCard: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(insight.insightType.displayName): \(insight.title). \(insight.content)")
     }
 }
 

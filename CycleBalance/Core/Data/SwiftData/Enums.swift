@@ -30,6 +30,17 @@ enum FlowIntensity: String, Codable, CaseIterable, Identifiable {
         case .heavy: "drop.fill"
         }
     }
+
+    /// Single-character label for calendar cells (colorblind accessibility).
+    var shortLabel: String {
+        switch self {
+        case .none: ""
+        case .spotting: "S"
+        case .light: "L"
+        case .medium: "M"
+        case .heavy: "H"
+        }
+    }
 }
 
 enum CyclePhase: String, Codable, CaseIterable, Identifiable {

@@ -6,9 +6,21 @@ struct SymptomLogView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SymptomViewModel?
     @State private var showSavedFeedback = false
-    @State private var showCancelConfirmation = false
-    @State private var saveError: String?
+    @State private var activeAlert: ActiveAlert?
     @State private var initialSelectionCount = 0
+    @State private var dismissTask: Task<Void, Never>?
+
+    private enum ActiveAlert: Identifiable {
+        case cancel
+        case error(String)
+
+        var id: String {
+            switch self {
+            case .cancel: "cancel"
+            case .error: "error"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -59,7 +71,7 @@ struct SymptomLogView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         if hasUnsavedChanges {
-                            showCancelConfirmation = true
+                            activeAlert = .cancel
                         } else {
                             dismiss()
                         }
@@ -67,11 +79,21 @@ struct SymptomLogView: View {
                 }
             }
             .interactiveDismissDisabled(hasUnsavedChanges)
-            .alert("Discard Changes?", isPresented: $showCancelConfirmation) {
-                Button("Discard", role: .destructive) { dismiss() }
-                Button("Keep Editing", role: .cancel) {}
-            } message: {
-                Text("You have unsaved changes that will be lost.")
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .cancel:
+                    Button("Discard", role: .destructive) { dismiss() }
+                    Button("Keep Editing", role: .cancel) {}
+                case .error:
+                    Button("OK", role: .cancel) {}
+                }
+            } message: { alert in
+                switch alert {
+                case .cancel:
+                    Text("You have unsaved changes that will be lost.")
+                case .error(let message):
+                    Text(message)
+                }
             }
             .sensoryFeedback(.success, trigger: showSavedFeedback)
             .overlay {
@@ -79,19 +101,14 @@ struct SymptomLogView: View {
                     SavedFeedbackOverlay()
                 }
             }
-            .alert("Save Failed", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(saveError ?? "An unknown error occurred.")
-            }
             .onAppear {
                 let vm = SymptomViewModel(modelContext: modelContext)
                 vm.prefillTodaysSymptoms()
                 initialSelectionCount = vm.selectionCount
                 viewModel = vm
+            }
+            .onDisappear {
+                dismissTask?.cancel()
             }
         }
     }
@@ -207,12 +224,14 @@ struct SymptomLogView: View {
         do {
             try viewModel?.saveSymptoms()
             showSavedFeedback = true
-            Task {
+            dismissTask?.cancel()
+            dismissTask = Task {
                 try? await Task.sleep(for: .seconds(0.8))
+                guard !Task.isCancelled else { return }
                 dismiss()
             }
         } catch {
-            saveError = "Could not save symptoms: \(error.localizedDescription)"
+            activeAlert = .error("Could not save symptoms: \(error.localizedDescription)")
         }
     }
 }

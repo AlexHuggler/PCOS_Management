@@ -11,6 +11,8 @@ struct TodayView: View {
     @State private var activeHint: String?
     @State private var quickLogFlow: FlowIntensity?
     @State private var showQuickLogSaved = false
+    @State private var quickLogResetTask: Task<Void, Never>?
+    @State private var fetchError: String?
 
     var body: some View {
         NavigationStack {
@@ -81,7 +83,13 @@ struct TodayView: View {
             },
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        todaysSymptoms = (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            todaysSymptoms = try modelContext.fetch(descriptor)
+            fetchError = nil
+        } catch {
+            todaysSymptoms = []
+            fetchError = "Could not load today's symptoms."
+        }
     }
 
     // MARK: - Subviews
@@ -136,6 +144,16 @@ struct TodayView: View {
 
     private var todaysSymptomsSection: some View {
         Group {
+            if let fetchError {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle")
+                    Text(fetchError)
+                }
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .padding()
+            }
+
             if !todaysSymptoms.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Today's Symptoms")
@@ -151,11 +169,7 @@ struct TodayView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(AppTheme.cardBackground)
-                )
+                .cardStyle()
             }
         }
     }
@@ -233,11 +247,7 @@ struct TodayView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(AppTheme.cardBackground)
-        )
+        .cardStyle()
         .sensoryFeedback(.success, trigger: showQuickLogSaved)
     }
 
@@ -252,8 +262,10 @@ struct TodayView: View {
             UserDefaults.standard.set(intensity.rawValue, forKey: "cycle.lastFlowIntensity")
             quickLogFlow = intensity
             showQuickLogSaved.toggle()
-            Task {
+            quickLogResetTask?.cancel()
+            quickLogResetTask = Task {
                 try? await Task.sleep(for: .seconds(1.5))
+                guard !Task.isCancelled else { return }
                 quickLogFlow = nil
             }
         } catch {
@@ -272,11 +284,7 @@ struct TodayView: View {
                         .font(.subheadline)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(AppTheme.cardBackground)
-                )
+                .cardStyle()
             }
         }
     }
@@ -308,6 +316,8 @@ struct QuickActionButton: View {
             .foregroundStyle(color)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -321,7 +331,7 @@ struct SymptomChip: View {
         HStack(spacing: 4) {
             Text(name)
                 .font(.caption)
-            Text("(\(severity))")
+            Text(severityLabel)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -332,6 +342,12 @@ struct SymptomChip: View {
                 .fill(severityColor.opacity(0.15))
         )
         .foregroundStyle(severityColor)
+        .accessibilityLabel("\(name), severity \(severity) of 5, \(severityLabel)")
+    }
+
+    private var severityLabel: String {
+        guard severity >= 1 && severity <= 5 else { return "" }
+        return SeverityPicker.labels[severity - 1]
     }
 
     private var severityColor: Color {

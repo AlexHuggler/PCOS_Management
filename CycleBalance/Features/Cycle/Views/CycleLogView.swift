@@ -17,10 +17,23 @@ struct CycleLogView: View {
         return .medium
     }()
     @State private var notes = ""
-    @State private var showSkipConfirmation = false
-    @State private var showCancelConfirmation = false
     @State private var showSavedFeedback = false
-    @State private var saveError: String?
+    @State private var activeAlert: ActiveAlert?
+    @State private var dismissTask: Task<Void, Never>?
+
+    private enum ActiveAlert: Identifiable {
+        case cancel
+        case skip
+        case error(String)
+
+        var id: String {
+            switch self {
+            case .cancel: "cancel"
+            case .skip: "skip"
+            case .error: "error"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -59,7 +72,7 @@ struct CycleLogView: View {
                     .tint(AppTheme.coralAccent)
 
                     Button {
-                        showSkipConfirmation = true
+                        activeAlert = .skip
                     } label: {
                         HStack {
                             Spacer()
@@ -76,7 +89,7 @@ struct CycleLogView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         if hasUnsavedChanges {
-                            showCancelConfirmation = true
+                            activeAlert = .cancel
                         } else {
                             dismiss()
                         }
@@ -84,19 +97,26 @@ struct CycleLogView: View {
                 }
             }
             .interactiveDismissDisabled(hasUnsavedChanges)
-            .alert("Discard Changes?", isPresented: $showCancelConfirmation) {
-                Button("Discard", role: .destructive) { dismiss() }
-                Button("Keep Editing", role: .cancel) {}
-            } message: {
-                Text("You have unsaved changes that will be lost.")
-            }
-            .alert("Skip Period?", isPresented: $showSkipConfirmation) {
-                Button("Skip Period", role: .destructive) {
-                    skipPeriod()
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .cancel:
+                    Button("Discard", role: .destructive) { dismiss() }
+                    Button("Keep Editing", role: .cancel) {}
+                case .skip:
+                    Button("Skip Period", role: .destructive) { skipPeriod() }
+                    Button("Cancel", role: .cancel) {}
+                case .error:
+                    Button("OK", role: .cancel) {}
                 }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This will close your current cycle and start a new one from today. This action cannot be undone.")
+            } message: { alert in
+                switch alert {
+                case .cancel:
+                    Text("You have unsaved changes that will be lost.")
+                case .skip:
+                    Text("This will close your current cycle and start a new one from today. This action cannot be undone.")
+                case .error(let message):
+                    Text(message)
+                }
             }
             .sensoryFeedback(.success, trigger: showSavedFeedback)
             .overlay {
@@ -104,19 +124,16 @@ struct CycleLogView: View {
                     SavedFeedbackOverlay()
                 }
             }
-            .alert("Save Failed", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(saveError ?? "An unknown error occurred.")
-            }
             .onAppear {
-                viewModel = CycleViewModel(modelContext: modelContext)
+                if viewModel == nil {
+                    viewModel = CycleViewModel(modelContext: modelContext)
+                }
                 if let initialDate {
                     selectedDate = initialDate
                 }
+            }
+            .onDisappear {
+                dismissTask?.cancel()
             }
         }
     }
@@ -135,12 +152,14 @@ struct CycleLogView: View {
             try viewModel.logPeriodDay()
             UserDefaults.standard.set(selectedFlow.rawValue, forKey: "cycle.lastFlowIntensity")
             showSavedFeedback = true
-            Task {
+            dismissTask?.cancel()
+            dismissTask = Task {
                 try? await Task.sleep(for: .seconds(0.8))
+                guard !Task.isCancelled else { return }
                 dismiss()
             }
         } catch {
-            saveError = "Could not log period: \(error.localizedDescription)"
+            activeAlert = .error("Could not log period: \(error.localizedDescription)")
         }
     }
 
@@ -150,12 +169,14 @@ struct CycleLogView: View {
         do {
             try viewModel.logSkippedPeriod()
             showSavedFeedback = true
-            Task {
+            dismissTask?.cancel()
+            dismissTask = Task {
                 try? await Task.sleep(for: .seconds(0.8))
+                guard !Task.isCancelled else { return }
                 dismiss()
             }
         } catch {
-            saveError = "Could not skip period: \(error.localizedDescription)"
+            activeAlert = .error("Could not skip period: \(error.localizedDescription)")
         }
     }
 }

@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var showDeletedFeedback = false
     @State private var exportURL: URL?
     @State private var showShareSheet = false
+    @State private var exportError: String?
 
     var body: some View {
         NavigationStack {
@@ -82,6 +83,14 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sensoryFeedback(.warning, trigger: showDeleteConfirmation)
             .sensoryFeedback(.success, trigger: showDeletedFeedback)
+            .alert("Export Failed", isPresented: Binding(
+                get: { exportError != nil },
+                set: { if !$0 { exportError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(exportError ?? "An unknown error occurred.")
+            }
             .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
                 Button("Delete Everything", role: .destructive) {
                     deleteAllData()
@@ -129,8 +138,12 @@ struct SettingsView: View {
 
         // Write to temp file
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("CycleBalance_Export.csv")
-        try? csv.write(to: tempURL, atomically: true, encoding: .utf8)
-        exportURL = tempURL
+        do {
+            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
+            exportURL = tempURL
+        } catch {
+            exportError = "Could not create export file: \(error.localizedDescription)"
+        }
     }
 
     private func deleteAllData() {

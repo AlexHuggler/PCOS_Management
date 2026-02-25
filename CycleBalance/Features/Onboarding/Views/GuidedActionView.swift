@@ -9,6 +9,8 @@ struct GuidedActionView: View {
 
     @State private var showingSheet = false
 
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
+
     private var isLogPeriod: Bool {
         profile.suggestedFirstAction == .logPeriod
     }
@@ -18,7 +20,7 @@ struct GuidedActionView: View {
             Spacer()
 
             Image(systemName: isLogPeriod ? "drop.fill" : "list.bullet.clipboard")
-                .font(.system(size: 56))
+                .font(.system(size: iconSize))
                 .foregroundStyle(isLogPeriod ? AppTheme.coralAccent : AppTheme.accentColor)
                 .symbolEffect(.bounce, value: showingSheet)
                 .accessibilityHidden(true)
