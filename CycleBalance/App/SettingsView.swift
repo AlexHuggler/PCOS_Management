@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var exportURL: URL?
     @State private var showShareSheet = false
     @State private var exportError: String?
+    @State private var exportSuccessToggle = false
 
     var body: some View {
         NavigationStack {
@@ -67,7 +68,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    VStack(alignment: .center, spacing: 4) {
+                    VStack(alignment: .center, spacing: AppTheme.spacing4) {
                         Text("CycleBalance")
                             .font(.footnote)
                             .fontWeight(.medium)
@@ -83,7 +84,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sensoryFeedback(.warning, trigger: showDeleteConfirmation)
             .sensoryFeedback(.success, trigger: showDeletedFeedback)
-            .sensoryFeedback(.success, trigger: exportURL)
+            .sensoryFeedback(.success, trigger: exportSuccessToggle)
             .alert("Export Failed", isPresented: Binding(
                 get: { exportError != nil },
                 set: { if !$0 { exportError = nil } }
@@ -142,6 +143,7 @@ struct SettingsView: View {
         do {
             try csv.write(to: tempURL, atomically: true, encoding: .utf8)
             exportURL = tempURL
+            exportSuccessToggle.toggle()
         } catch {
             exportError = "Could not create export file: \(error.localizedDescription)"
         }

@@ -23,13 +23,15 @@ struct InsightsView: View {
             .sheet(isPresented: $showingLogSymptoms) {
                 SymptomLogView()
             }
+            .sensoryFeedback(.selection, trigger: showingLogPeriod)
+            .sensoryFeedback(.selection, trigger: showingLogSymptoms)
         }
     }
 
     private var emptyState: some View {
         ContentUnavailableView {
             Label("No Insights Yet", systemImage: "chart.line.uptrend.xyaxis")
-                .symbolEffect(.pulse, options: .repeating)
+                .symbolEffect(.pulse)
         } description: {
             Text("CycleBalance identifies patterns after you've logged at least 2 complete cycles. Keep tracking — your first insights are on the way!")
         } actions: {
@@ -67,7 +69,7 @@ struct InsightCard: View {
     let insight: Insight
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             HStack {
                 Image(systemName: insight.insightType.systemImage)
                     .foregroundStyle(AppTheme.accentColor)

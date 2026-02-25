@@ -23,6 +23,7 @@ struct CycleDetailView: View {
             .padding()
         }
         .refreshable {
+            await Task.yield()
             viewModel?.loadData()
         }
         .navigationTitle("Cycle Details")
@@ -161,7 +162,7 @@ struct StatisticItem: View {
     let value: String
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: AppTheme.spacing4) {
             Text(value)
                 .font(.title3)
                 .fontWeight(.semibold)
