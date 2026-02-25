@@ -4,6 +4,8 @@ import SwiftData
 struct InsightsView: View {
     @Query(sort: \Insight.generatedDate, order: .reverse)
     private var insights: [Insight]
+    @State private var showingLogPeriod = false
+    @State private var showingLogSymptoms = false
 
     var body: some View {
         NavigationStack {
@@ -15,6 +17,12 @@ struct InsightsView: View {
                 }
             }
             .navigationTitle("Insights")
+            .sheet(isPresented: $showingLogPeriod) {
+                CycleLogView()
+            }
+            .sheet(isPresented: $showingLogSymptoms) {
+                SymptomLogView()
+            }
         }
     }
 
@@ -22,7 +30,25 @@ struct InsightsView: View {
         ContentUnavailableView {
             Label("No Insights Yet", systemImage: "chart.line.uptrend.xyaxis")
         } description: {
-            Text("Keep logging your symptoms, meals, and supplements. CycleBalance will identify patterns and correlations as your data grows.")
+            Text("Keep logging your symptoms and period data. CycleBalance will identify patterns and correlations as your data grows.")
+        } actions: {
+            HStack(spacing: 12) {
+                Button {
+                    showingLogPeriod = true
+                } label: {
+                    Label("Log Period", systemImage: "drop.fill")
+                }
+                .buttonStyle(.bordered)
+                .tint(AppTheme.coralAccent)
+
+                Button {
+                    showingLogSymptoms = true
+                } label: {
+                    Label("Log Symptoms", systemImage: "list.bullet.clipboard")
+                }
+                .buttonStyle(.bordered)
+                .tint(AppTheme.accentColor)
+            }
         }
     }
 

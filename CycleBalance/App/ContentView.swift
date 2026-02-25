@@ -37,25 +37,89 @@ struct ContentView: View {
     }
 }
 
-/// Hub view for the Track tab, providing access to all logging features
+/// Hub view for the Track tab — direct sheet presentation for quick logging
 struct TrackingHubView: View {
+    @State private var showingLogPeriod = false
+    @State private var showingLogSymptoms = false
+
     var body: some View {
         NavigationStack {
-            List {
-                NavigationLink {
-                    CycleLogView()
-                } label: {
-                    Label("Log Period", systemImage: "drop.fill")
+            ScrollView {
+                VStack(spacing: AppTheme.spacing16) {
+                    TrackingCard(
+                        title: "Log Period",
+                        subtitle: "Record flow intensity and notes",
+                        systemImage: "drop.fill",
+                        color: AppTheme.coralAccent
+                    ) {
+                        showingLogPeriod = true
+                    }
+
+                    TrackingCard(
+                        title: "Log Symptoms",
+                        subtitle: "Track how you're feeling today",
+                        systemImage: "list.bullet.clipboard",
+                        color: AppTheme.accentColor
+                    ) {
+                        showingLogSymptoms = true
+                    }
+                }
+                .padding()
+            }
+            .background(AppTheme.groupedBackground)
+            .navigationTitle("Track")
+            .sheet(isPresented: $showingLogPeriod) {
+                CycleLogView()
+            }
+            .sheet(isPresented: $showingLogSymptoms) {
+                SymptomLogView()
+            }
+        }
+    }
+}
+
+struct TrackingCard: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppTheme.spacing16) {
+                Image(systemName: systemImage)
+                    .font(.title)
+                    .foregroundStyle(color)
+                    .frame(width: 48, height: 48)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(color.opacity(0.12))
+                    )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
 
-                NavigationLink {
-                    SymptomLogView()
-                } label: {
-                    Label("Log Symptoms", systemImage: "list.bullet.clipboard")
-                }
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.subheadline)
+                    .foregroundStyle(.tertiary)
             }
-            .navigationTitle("Track")
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppTheme.cardBackground)
+            )
         }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: false)
     }
 }
 

@@ -71,11 +71,28 @@ final class SymptomViewModel {
         reset()
     }
 
+    /// Number of symptoms logged yesterday (for button label preview)
+    var yesterdaySymptomCount: Int {
+        fetchYesterdaysSymptoms().count
+    }
+
     /// Copy yesterday's symptoms
     func copyYesterdaysSymptoms() {
+        let yesterdaysEntries = fetchYesterdaysSymptoms()
+        guard !yesterdaysEntries.isEmpty else { return }
+
+        for entry in yesterdaysEntries {
+            symptomSeverities[entry.symptomType] = entry.severity
+            if let notes = entry.notes {
+                symptomNotes[entry.symptomType] = notes
+            }
+        }
+    }
+
+    private func fetchYesterdaysSymptoms() -> [SymptomEntry] {
         let calendar = Calendar.current
         guard let yesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: Date())) else {
-            return
+            return []
         }
         let endOfYesterday = calendar.date(byAdding: .day, value: 1, to: yesterday)!
 
@@ -85,20 +102,11 @@ final class SymptomViewModel {
             }
         )
 
-        let yesterdaysEntries: [SymptomEntry]
         do {
-            yesterdaysEntries = try modelContext.fetch(descriptor)
+            return try modelContext.fetch(descriptor)
         } catch {
             Logger.database.error("Failed to fetch yesterday's symptoms: \(error.localizedDescription)")
-            return
-        }
-        guard !yesterdaysEntries.isEmpty else { return }
-
-        for entry in yesterdaysEntries {
-            symptomSeverities[entry.symptomType] = entry.severity
-            if let notes = entry.notes {
-                symptomNotes[entry.symptomType] = notes
-            }
+            return []
         }
     }
 

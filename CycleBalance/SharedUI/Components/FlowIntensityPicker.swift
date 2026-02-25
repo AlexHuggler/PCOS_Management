@@ -23,7 +23,7 @@ struct FlowIntensityPicker: View {
                             .fontWeight(selection == intensity ? .semibold : .regular)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 14)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
                             .fill(selection == intensity

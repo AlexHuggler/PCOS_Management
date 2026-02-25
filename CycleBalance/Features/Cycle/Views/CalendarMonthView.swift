@@ -6,10 +6,13 @@ struct CalendarMonthView: View {
     @State private var viewModel: CycleViewModel?
     @State private var displayedMonth = Date()
     @State private var entries: [Int: CycleEntry] = [:]
+    @State private var predictedDays: Set<Int> = []
     @State private var showingLogSheet = false
+    @State private var showingDayLogSheet = false
+    @State private var selectedDayDate: Date?
 
     private let calendar = Calendar.current
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppTheme.spacing4), count: 7)
 
     /// Locale-aware short weekday symbols starting from the calendar's first weekday
     private var orderedWeekdaySymbols: [String] {
@@ -46,8 +49,17 @@ struct CalendarMonthView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingLogSheet) {
+            .sheet(isPresented: $showingLogSheet, onDismiss: {
+                viewModel?.loadData()
+                loadMonthEntries()
+            }) {
                 CycleLogView()
+            }
+            .sheet(isPresented: $showingDayLogSheet, onDismiss: {
+                viewModel?.loadData()
+                loadMonthEntries()
+            }) {
+                CycleLogView(initialDate: selectedDayDate)
             }
             .onAppear {
                 if viewModel == nil {
@@ -92,6 +104,7 @@ struct CalendarMonthView: View {
             .accessibilityLabel("Next month")
         }
         .padding(.horizontal)
+        .sensoryFeedback(.selection, trigger: displayedMonth)
     }
 
     private var daysOfWeekHeader: some View {
@@ -120,8 +133,16 @@ struct CalendarMonthView: View {
                     day: day,
                     isToday: isToday(day: day),
                     entry: entries[day],
+                    isPredicted: predictedDays.contains(day),
                     monthDate: displayedMonth
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let date = dateForDay(day), date <= Date() {
+                        selectedDayDate = date
+                        showingDayLogSheet = true
+                    }
+                }
             }
         }
     }
@@ -213,8 +234,35 @@ struct CalendarMonthView: View {
         }
     }
 
+    private func dateForDay(_ day: Int) -> Date? {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        return calendar.date(from: components)
+    }
+
     private func loadMonthEntries() {
         entries = viewModel?.entriesForMonth(year: year, month: month) ?? [:]
+        loadPredictedDays()
+    }
+
+    private func loadPredictedDays() {
+        guard let prediction = viewModel?.prediction else {
+            predictedDays = []
+            return
+        }
+        var days = Set<Int>()
+        var date = prediction.earliestDate
+        while date <= prediction.latestDate {
+            if calendar.component(.year, from: date) == year &&
+               calendar.component(.month, from: date) == month {
+                days.insert(calendar.component(.day, from: date))
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
+            date = next
+        }
+        predictedDays = days
     }
 }
 
@@ -224,6 +272,7 @@ struct CalendarDayCell: View {
     let day: Int
     let isToday: Bool
     let entry: CycleEntry?
+    var isPredicted: Bool = false
     let monthDate: Date
 
     private static let accessibilityDateFormatter: DateFormatter = {
@@ -238,6 +287,9 @@ struct CalendarDayCell: View {
             if let entry, entry.isPeriodDay {
                 Circle()
                     .fill(colorForFlow(entry.flowIntensity))
+            } else if isPredicted {
+                Circle()
+                    .strokeBorder(AppTheme.coralAccent.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
             } else if isToday {
                 Circle()
                     .strokeBorder(AppTheme.accentColor, lineWidth: 2)
@@ -246,7 +298,7 @@ struct CalendarDayCell: View {
             Text("\(day)")
                 .font(.subheadline)
                 .fontWeight(isToday ? .bold : .regular)
-                .foregroundStyle(entry?.isPeriodDay == true ? .white : .primary)
+                .foregroundStyle(entry?.isPeriodDay == true ? .white : isPredicted ? AppTheme.coralAccent : .primary)
         }
         .frame(height: 44)
         .accessibilityElement(children: .ignore)
@@ -269,6 +321,8 @@ struct CalendarDayCell: View {
         if let entry, entry.isPeriodDay {
             let flowName = entry.flowIntensity?.displayName ?? "period"
             parts.append("\(flowName) flow")
+        } else if isPredicted {
+            parts.append("predicted period")
         }
         return parts.joined(separator: ", ")
     }
