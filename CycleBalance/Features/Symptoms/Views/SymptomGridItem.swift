@@ -42,10 +42,27 @@ struct SymptomGridItem: View {
             let next = severity >= 5 ? 0 : severity + 1
             onSeverityChange(next)
         }
+        .contextMenu {
+            ForEach(1...5, id: \.self) { level in
+                Button {
+                    onSeverityChange(level)
+                } label: {
+                    Label(SeverityPicker.labels[level - 1], systemImage: level <= severity ? "circle.fill" : "circle")
+                }
+            }
+            if severity > 0 {
+                Divider()
+                Button(role: .destructive) {
+                    onSeverityChange(0)
+                } label: {
+                    Label("Clear", systemImage: "xmark.circle")
+                }
+            }
+        }
         .sensoryFeedback(.impact(flexibility: .soft), trigger: severity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.labels[severity - 1] : "none")")
-        .accessibilityHint("Tap to cycle severity. Currently \(severity) of 5.")
+        .accessibilityHint("Tap to cycle severity, long press for direct selection. Currently \(severity) of 5.")
     }
 
     private var severityColor: Color {

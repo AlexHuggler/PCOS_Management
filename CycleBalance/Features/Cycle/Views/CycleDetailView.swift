@@ -40,6 +40,7 @@ struct CycleDetailView: View {
                 Text("Day \(dayCount)")
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.accentColor)
+                    .contentTransition(.numericText())
                 Text("of current cycle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

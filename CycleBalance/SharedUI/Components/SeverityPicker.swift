@@ -14,8 +14,8 @@ struct SeverityPicker: View {
                 ForEach(1...5, id: \.self) { level in
                     Circle()
                         .fill(level <= severity ? colorForLevel(level) : Color(.tertiarySystemFill))
-                        .frame(width: 14, height: 14)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 18, height: 18)
+                        .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             if level == severity {

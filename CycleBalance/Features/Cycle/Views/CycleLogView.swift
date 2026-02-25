@@ -6,10 +6,19 @@ struct CycleLogView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: CycleViewModel?
 
+    var initialDate: Date?
+
     @State private var selectedDate = Date()
-    @State private var selectedFlow: FlowIntensity = .medium
+    @State private var selectedFlow: FlowIntensity = {
+        if let raw = UserDefaults.standard.string(forKey: "cycle.lastFlowIntensity"),
+           let intensity = FlowIntensity(rawValue: raw) {
+            return intensity
+        }
+        return .medium
+    }()
     @State private var notes = ""
     @State private var showSkipConfirmation = false
+    @State private var showCancelConfirmation = false
     @State private var showSavedFeedback = false
     @State private var saveError: String?
 
@@ -32,7 +41,7 @@ struct CycleLogView: View {
                 }
 
                 Section("Notes") {
-                    TextField("How are you feeling?", text: $notes, axis: .vertical)
+                    TextField("e.g., clotting, mood changes, spotting duration...", text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
 
@@ -65,8 +74,21 @@ struct CycleLogView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        if hasUnsavedChanges {
+                            showCancelConfirmation = true
+                        } else {
+                            dismiss()
+                        }
+                    }
                 }
+            }
+            .interactiveDismissDisabled(hasUnsavedChanges)
+            .alert("Discard Changes?", isPresented: $showCancelConfirmation) {
+                Button("Discard", role: .destructive) { dismiss() }
+                Button("Keep Editing", role: .cancel) {}
+            } message: {
+                Text("You have unsaved changes that will be lost.")
             }
             .alert("Skip Period?", isPresented: $showSkipConfirmation) {
                 Button("Skip Period", role: .destructive) {
@@ -76,6 +98,7 @@ struct CycleLogView: View {
             } message: {
                 Text("This will close your current cycle and start a new one from today. This action cannot be undone.")
             }
+            .sensoryFeedback(.success, trigger: showSavedFeedback)
             .overlay {
                 if showSavedFeedback {
                     SavedFeedbackOverlay()
@@ -91,8 +114,15 @@ struct CycleLogView: View {
             }
             .onAppear {
                 viewModel = CycleViewModel(modelContext: modelContext)
+                if let initialDate {
+                    selectedDate = initialDate
+                }
             }
         }
+    }
+
+    private var hasUnsavedChanges: Bool {
+        !notes.isEmpty
     }
 
     private func logPeriod() {
@@ -103,6 +133,7 @@ struct CycleLogView: View {
 
         do {
             try viewModel.logPeriodDay()
+            UserDefaults.standard.set(selectedFlow.rawValue, forKey: "cycle.lastFlowIntensity")
             showSavedFeedback = true
             Task {
                 try? await Task.sleep(for: .seconds(0.8))

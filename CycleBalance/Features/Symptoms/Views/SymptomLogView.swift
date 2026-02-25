@@ -6,7 +6,9 @@ struct SymptomLogView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SymptomViewModel?
     @State private var showSavedFeedback = false
+    @State private var showCancelConfirmation = false
     @State private var saveError: String?
+    @State private var initialSelectionCount = 0
 
     var body: some View {
         NavigationStack {
@@ -55,9 +57,23 @@ struct SymptomLogView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        if hasUnsavedChanges {
+                            showCancelConfirmation = true
+                        } else {
+                            dismiss()
+                        }
+                    }
                 }
             }
+            .interactiveDismissDisabled(hasUnsavedChanges)
+            .alert("Discard Changes?", isPresented: $showCancelConfirmation) {
+                Button("Discard", role: .destructive) { dismiss() }
+                Button("Keep Editing", role: .cancel) {}
+            } message: {
+                Text("You have unsaved changes that will be lost.")
+            }
+            .sensoryFeedback(.success, trigger: showSavedFeedback)
             .overlay {
                 if showSavedFeedback {
                     SavedFeedbackOverlay()
@@ -74,6 +90,7 @@ struct SymptomLogView: View {
             .onAppear {
                 let vm = SymptomViewModel(modelContext: modelContext)
                 vm.prefillTodaysSymptoms()
+                initialSelectionCount = vm.selectionCount
                 viewModel = vm
             }
         }
@@ -111,7 +128,7 @@ struct SymptomLogView: View {
             Button {
                 viewModel?.copyYesterdaysSymptoms()
             } label: {
-                Label("Same as yesterday", systemImage: "arrow.counterclockwise")
+                Label(yesterdayButtonLabel, systemImage: "arrow.counterclockwise")
                     .font(.subheadline)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -122,6 +139,8 @@ struct SymptomLogView: View {
                     .foregroundStyle(AppTheme.accentColor)
             }
             .buttonStyle(.plain)
+            .disabled(viewModel?.yesterdaySymptomCount == 0)
+            .opacity(viewModel?.yesterdaySymptomCount == 0 ? 0.5 : 1)
             .sensoryFeedback(.impact(flexibility: .soft), trigger: viewModel?.selectionCount ?? 0)
 
             Spacer()
@@ -171,6 +190,17 @@ struct SymptomLogView: View {
             .padding()
         }
         .background(Color(.systemBackground))
+    }
+
+    private var hasUnsavedChanges: Bool {
+        (viewModel?.selectionCount ?? 0) != initialSelectionCount
+    }
+
+    private var yesterdayButtonLabel: String {
+        if let count = viewModel?.yesterdaySymptomCount, count > 0 {
+            return "Same as yesterday (\(count))"
+        }
+        return "Same as yesterday"
     }
 
     private func saveSymptoms() {

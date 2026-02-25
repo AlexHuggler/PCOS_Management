@@ -9,14 +9,19 @@ struct TodayView: View {
     @State private var showingLogSymptoms = false
     @State private var todaysSymptoms: [SymptomEntry] = []
     @State private var activeHint: String?
+    @State private var quickLogFlow: FlowIntensity?
+    @State private var showQuickLogSaved = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppTheme.spacing16) {
                         // Cycle status card
                         cycleStatusCard
+
+                        // Quick period log inline
+                        quickPeriodLogRow
 
                         // Quick actions
                         quickActionsSection
@@ -43,10 +48,14 @@ struct TodayView: View {
                 }
             }
             .navigationTitle("Today")
-            .sheet(isPresented: $showingLogPeriod) {
+            .sheet(isPresented: $showingLogPeriod, onDismiss: {
+                viewModel?.loadData()
+            }) {
                 CycleLogView()
             }
-            .sheet(isPresented: $showingLogSymptoms) {
+            .sheet(isPresented: $showingLogSymptoms, onDismiss: {
+                refreshTodaysSymptoms()
+            }) {
                 SymptomLogView()
             }
             .onAppear {
@@ -83,6 +92,7 @@ struct TodayView: View {
                 Text("Day \(dayCount)")
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.accentColor)
+                    .contentTransition(.numericText())
                 Text("of current cycle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -101,10 +111,11 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: 20)
                 .fill(AppTheme.cardBackground)
         )
+        .animation(.easeInOut(duration: 0.3), value: viewModel?.currentCycleDayCount)
     }
 
     private var quickActionsSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppTheme.spacing12) {
             QuickActionButton(
                 title: "Log Period",
                 systemImage: "drop.fill",
@@ -187,6 +198,66 @@ struct TodayView: View {
         }
         withAnimation(.easeInOut(duration: 0.2)) {
             activeHint = nil
+        }
+    }
+
+    private var quickPeriodLogRow: some View {
+        HStack(spacing: AppTheme.spacing12) {
+            Image(systemName: "drop.fill")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.coralAccent)
+
+            Text("Period today?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            ForEach([FlowIntensity.light, .medium, .heavy], id: \.self) { intensity in
+                Button {
+                    quickLogPeriod(intensity: intensity)
+                } label: {
+                    Text(intensity.displayName)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(quickLogFlow == intensity
+                                      ? AppTheme.coralAccent
+                                      : AppTheme.coralAccent.opacity(0.12))
+                        )
+                        .foregroundStyle(quickLogFlow == intensity ? .white : AppTheme.coralAccent)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(AppTheme.cardBackground)
+        )
+        .sensoryFeedback(.success, trigger: showQuickLogSaved)
+    }
+
+    private func quickLogPeriod(intensity: FlowIntensity) {
+        guard let viewModel else { return }
+        viewModel.selectedDate = Date()
+        viewModel.selectedFlowIntensity = intensity
+        viewModel.periodNotes = ""
+
+        do {
+            try viewModel.logPeriodDay()
+            UserDefaults.standard.set(intensity.rawValue, forKey: "cycle.lastFlowIntensity")
+            quickLogFlow = intensity
+            showQuickLogSaved.toggle()
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                quickLogFlow = nil
+            }
+        } catch {
+            // Quick log is best-effort; full form available via sheet
         }
     }
 
