@@ -52,13 +52,13 @@ struct SeveritySlider: View {
     @Binding var severity: Int
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.spacing8) {
             HStack {
                 ForEach(1...5, id: \.self) { level in
                     Button {
                         severity = level
                     } label: {
-                        VStack(spacing: 4) {
+                        VStack(spacing: AppTheme.spacing4) {
                             Circle()
                                 .fill(level <= severity
                                       ? AppTheme.severityColor(for: level)

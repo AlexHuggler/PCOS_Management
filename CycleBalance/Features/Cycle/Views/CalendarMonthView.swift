@@ -40,6 +40,7 @@ struct CalendarMonthView: View {
                 .padding()
             }
             .refreshable {
+                await Task.yield()
                 viewModel?.loadData()
                 loadMonthEntries()
             }
@@ -125,7 +126,7 @@ struct CalendarMonthView: View {
     }
 
     private var calendarGrid: some View {
-        LazyVGrid(columns: columns, spacing: 4) {
+        LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
             // Blank cells for offset
             ForEach(0..<firstWeekdayOffset, id: \.self) { _ in
                 Color.clear

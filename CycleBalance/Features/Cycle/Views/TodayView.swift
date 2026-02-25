@@ -43,6 +43,7 @@ struct TodayView: View {
                     .padding()
                 }
                 .refreshable {
+                    await Task.yield()
                     viewModel?.loadData()
                     refreshTodaysSymptoms()
                     refreshStreak()
@@ -399,7 +400,7 @@ struct SymptomChip: View {
     let severity: Int
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: AppTheme.spacing4) {
             Text(name)
                 .font(.caption)
             Text(severityLabel)
