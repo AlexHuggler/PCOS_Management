@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Two-question profiling flow that determines the user's primary goal and PCOS experience level.
+/// Three-question profiling flow that determines the user's primary goal,
+/// PCOS experience level, and symptom focus areas.
 struct QuestionnaireView: View {
     let profile: OnboardingProfile
     let onContinue: () -> Void
@@ -9,16 +10,25 @@ struct QuestionnaireView: View {
     @State private var questionIndex = 0
     @State private var selectedGoal: PrimaryGoal?
     @State private var selectedExperience: PCOSExperience?
+    @State private var selectedFocusAreas: Set<SymptomFocusArea> = []
+
+    private static let totalQuestions = 3
+    private static let maxFocusSelections = 3
 
     private var canContinue: Bool {
-        questionIndex == 0 ? selectedGoal != nil : selectedExperience != nil
+        switch questionIndex {
+        case 0: selectedGoal != nil
+        case 1: selectedExperience != nil
+        case 2: !selectedFocusAreas.isEmpty
+        default: false
+        }
     }
 
     var body: some View {
         VStack(spacing: AppTheme.spacing24) {
             // Progress dots
             HStack(spacing: AppTheme.spacing8) {
-                ForEach(0..<2, id: \.self) { index in
+                ForEach(0..<Self.totalQuestions, id: \.self) { index in
                     Circle()
                         .fill(index <= questionIndex ? AppTheme.accentColor : Color(.tertiarySystemFill))
                         .frame(width: 8, height: 8)
@@ -27,19 +37,20 @@ struct QuestionnaireView: View {
             }
             .padding(.top, AppTheme.spacing24)
 
-            if questionIndex == 0 {
-                goalQuestion
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
-            } else {
-                experienceQuestion
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
+            Group {
+                switch questionIndex {
+                case 0:
+                    goalQuestion
+                case 1:
+                    experienceQuestion
+                default:
+                    focusQuestion
+                }
             }
+            .transition(.asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            ))
 
             Spacer()
 
@@ -81,7 +92,7 @@ struct QuestionnaireView: View {
                 Text("What brings you to CycleBalance?")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("This helps us personalize your experience.")
+                Text("This helps us focus on what matters most to you.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -108,7 +119,7 @@ struct QuestionnaireView: View {
                 Text("How long have you been managing PCOS?")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("No wrong answers here.")
+                Text("No wrong answers \u{2014} this helps us set the right pace.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -129,16 +140,57 @@ struct QuestionnaireView: View {
         }
     }
 
+    private var focusQuestion: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text("Which symptoms matter most to you?")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Text("We'll highlight these on your dashboard. You can always change this later.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, AppTheme.spacing24)
+
+            if !selectedFocusAreas.isEmpty {
+                Text("\(selectedFocusAreas.count) of \(Self.maxFocusSelections) selected")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.accentColor)
+                    .padding(.horizontal, AppTheme.spacing24)
+            }
+
+            VStack(spacing: AppTheme.spacing12) {
+                ForEach(SymptomFocusArea.allCases) { area in
+                    MultiSelectableCard(
+                        systemImage: area.systemImage,
+                        title: area.displayName,
+                        subtitle: area.subtitle,
+                        value: area,
+                        selection: $selectedFocusAreas,
+                        maxSelection: Self.maxFocusSelections
+                    )
+                }
+            }
+            .padding(.horizontal, AppTheme.spacing24)
+        }
+    }
+
     // MARK: - Actions
 
     private func advanceOrComplete() {
-        if questionIndex == 0 {
+        switch questionIndex {
+        case 0:
             profile.primaryGoal = selectedGoal
             withAnimation(.easeInOut(duration: 0.3)) {
                 questionIndex = 1
             }
-        } else {
+        case 1:
             profile.pcosExperience = selectedExperience
+            withAnimation(.easeInOut(duration: 0.3)) {
+                questionIndex = 2
+            }
+        default:
+            profile.symptomFocusAreas = Array(selectedFocusAreas)
             profile.hasCompletedQuestionnaire = true
             onContinue()
         }

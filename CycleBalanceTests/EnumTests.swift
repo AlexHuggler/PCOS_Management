@@ -34,4 +34,33 @@ struct EnumTests {
     func cyclePhaseCount() {
         #expect(CyclePhase.allCases.count == 4)
     }
+
+    @Test("PrimaryGoal has displayName, subtitle, and systemImage")
+    func primaryGoalProperties() {
+        for goal in PrimaryGoal.allCases {
+            #expect(!goal.displayName.isEmpty)
+            #expect(!goal.subtitle.isEmpty)
+            #expect(!goal.systemImage.isEmpty)
+        }
+    }
+
+    @Test("PCOSExperience has displayName, subtitle, and systemImage")
+    func pcosExperienceProperties() {
+        for exp in PCOSExperience.allCases {
+            #expect(!exp.displayName.isEmpty)
+            #expect(!exp.subtitle.isEmpty)
+            #expect(!exp.systemImage.isEmpty)
+        }
+    }
+
+    @Test("SymptomFocusArea relatedCategories covers real categories")
+    func focusAreaCategoriesValid() {
+        let allCats = Set(SymptomCategory.allCases)
+        for area in SymptomFocusArea.allCases {
+            for cat in area.relatedCategories {
+                #expect(allCats.contains(cat),
+                        "\(area) maps to unknown category \(cat)")
+            }
+        }
+    }
 }

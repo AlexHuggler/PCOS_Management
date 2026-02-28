@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// Brief celebratory screen shown after completing onboarding.
-/// Auto-advances after 1.8 seconds, with a manual button for accessibility.
+/// Celebratory screen shown after completing onboarding.
+/// Displays a personalized goal message based on the user's questionnaire answers.
 struct OnboardingCompletionView: View {
+    let profile: OnboardingProfile
     let onFinish: () -> Void
 
     @State private var appeared = false
-    @State private var dismissTask: Task<Void, Never>?
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 72
 
@@ -24,17 +24,18 @@ struct OnboardingCompletionView: View {
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("Your CycleBalance journey starts now.")
+            Text(personalizedMessage)
                 .font(.body)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, AppTheme.spacing24)
 
             Spacer()
 
             Button {
-                dismissTask?.cancel()
                 onFinish()
             } label: {
-                Text("Continue")
+                Text("Start Exploring")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppTheme.spacing12)
@@ -51,19 +52,21 @@ struct OnboardingCompletionView: View {
         .background(AppTheme.warmNeutral.ignoresSafeArea())
         .onAppear {
             appeared = true
-            dismissTask?.cancel()
-            dismissTask = Task {
-                try? await Task.sleep(for: .seconds(1.8))
-                guard !Task.isCancelled else { return }
-                onFinish()
-            }
         }
-        .onDisappear {
-            dismissTask?.cancel()
+    }
+
+    private var personalizedMessage: String {
+        switch profile.primaryGoal {
+        case .trackCycles:
+            "Log your period when it arrives and CycleBalance will start predicting your next one."
+        case .understandSymptoms:
+            "Log how you feel each day. After 2 cycles, you'll see your first insights."
+        case nil:
+            "Your CycleBalance journey starts now."
         }
     }
 }
 
 #Preview {
-    OnboardingCompletionView(onFinish: {})
+    OnboardingCompletionView(profile: OnboardingProfile(), onFinish: {})
 }
