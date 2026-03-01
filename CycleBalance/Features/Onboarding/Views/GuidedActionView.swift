@@ -15,6 +15,11 @@ struct GuidedActionView: View {
         profile.suggestedFirstAction == .logPeriod
     }
 
+    /// First category from the user's symptom focus areas, used to pre-filter SymptomLogView.
+    private var suggestedCategory: SymptomCategory? {
+        profile.preferredSymptomCategories.first
+    }
+
     var body: some View {
         VStack(spacing: AppTheme.spacing24) {
             Spacer()
@@ -79,7 +84,7 @@ struct GuidedActionView: View {
             if isLogPeriod {
                 CycleLogView()
             } else {
-                SymptomLogView()
+                SymptomLogView(initialCategory: suggestedCategory)
             }
         }
     }

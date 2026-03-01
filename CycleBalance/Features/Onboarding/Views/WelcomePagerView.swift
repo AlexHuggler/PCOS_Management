@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Horizontal pager showing three welcome screens introducing CycleBalance.
+/// Horizontal pager showing two welcome screens introducing CycleBalance.
 struct WelcomePagerView: View {
     let onContinue: () -> Void
     let onSkip: () -> Void
@@ -12,11 +12,6 @@ struct WelcomePagerView: View {
             "calendar.badge.clock",
             "Your Cycle, Your Way",
             "PCOS makes every cycle unique. CycleBalance tracks your patterns without assuming regularity."
-        ),
-        (
-            "chart.xyaxis.line",
-            "Spot the Patterns",
-            "Log symptoms alongside your cycle. Over time, you'll see connections your doctor will appreciate."
         ),
         (
             "lock.shield",

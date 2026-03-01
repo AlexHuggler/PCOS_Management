@@ -62,6 +62,51 @@ enum PCOSExperience: String, CaseIterable, Identifiable {
     }
 }
 
+enum SymptomFocusArea: String, CaseIterable, Identifiable {
+    case moodEnergy
+    case painCramps
+    case skinHair
+    case digestionWeight
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .moodEnergy: "Mood & energy"
+        case .painCramps: "Pain & cramps"
+        case .skinHair: "Skin & hair"
+        case .digestionWeight: "Digestion & weight"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .moodEnergy: "Track mood swings, anxiety, and energy crashes."
+        case .painCramps: "See how cramps and pain relate to your cycle."
+        case .skinHair: "Monitor acne, hair changes, and skin patterns."
+        case .digestionWeight: "Spot trends in bloating, cravings, and weight."
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .moodEnergy: "brain.head.profile"
+        case .painCramps: "bolt.heart"
+        case .skinHair: "comb.fill"
+        case .digestionWeight: "fork.knife"
+        }
+    }
+
+    var relatedCategories: [SymptomCategory] {
+        switch self {
+        case .moodEnergy: [.mood, .metabolic]
+        case .painCramps: [.pain, .physical]
+        case .skinHair: [.skin, .hair]
+        case .digestionWeight: [.digestive, .metabolic]
+        }
+    }
+}
+
 enum SuggestedFirstAction: Sendable {
     case logPeriod
     case logSymptoms
@@ -80,6 +125,7 @@ final class OnboardingProfile {
 
     // MARK: - Hint IDs
 
+    static let hintQuickLogIntro = "hint.quick_log_intro"
     static let hintCalendarTab = "hint.calendar_tab"
     static let hintLogSymptoms = "hint.log_symptoms"
     static let hintFirstPrediction = "hint.first_prediction"
@@ -93,6 +139,7 @@ final class OnboardingProfile {
         static let hasCompletedOnboarding = "onboarding.hasCompletedOnboarding"
         static let primaryGoal = "onboarding.primaryGoal"
         static let pcosExperience = "onboarding.pcosExperience"
+        static let symptomFocusAreas = "onboarding.symptomFocusAreas"
         static let dismissedHints = "onboarding.dismissedHints"
     }
 
@@ -162,7 +209,26 @@ final class OnboardingProfile {
         }
     }
 
+    var symptomFocusAreas: [SymptomFocusArea] {
+        get {
+            access(keyPath: \.symptomFocusAreas)
+            guard let rawValues = defaults.stringArray(forKey: Keys.symptomFocusAreas) else {
+                return []
+            }
+            return rawValues.compactMap(SymptomFocusArea.init(rawValue:))
+        }
+        set {
+            withMutation(keyPath: \.symptomFocusAreas) {
+                defaults.set(newValue.map(\.rawValue), forKey: Keys.symptomFocusAreas)
+            }
+        }
+    }
+
     // MARK: - Derived State
+
+    var preferredSymptomCategories: [SymptomCategory] {
+        symptomFocusAreas.flatMap(\.relatedCategories)
+    }
 
     var suggestedFirstAction: SuggestedFirstAction {
         switch primaryGoal {
@@ -175,6 +241,43 @@ final class OnboardingProfile {
         switch pcosExperience {
         case .experienced: .brief
         default: .educational
+        }
+    }
+
+    var quickLogHintMessage: String {
+        switch primaryGoal {
+        case .trackCycles:
+            "Tap Light, Medium, or Heavy to log today's flow in one tap."
+        case .understandSymptoms:
+            "You can quickly log your period here — even if that's not your main focus."
+        case nil:
+            "Tap Light, Medium, or Heavy to log today's flow in one tap."
+        }
+    }
+
+    var calendarHintMessage: String {
+        switch pcosExperience {
+        case .experienced:
+            "Your Calendar is in the second tab."
+        default:
+            "Check the Calendar tab to see your cycle at a glance."
+        }
+    }
+
+    var symptomHintMessage: String {
+        if let firstFocus = symptomFocusAreas.first {
+            switch firstFocus {
+            case .moodEnergy:
+                "Log how you're feeling each day — patterns emerge within a cycle or two."
+            case .painCramps:
+                "Tracking pain alongside your cycle helps spot which days hit hardest."
+            case .skinHair:
+                "Start logging skin or hair changes to track patterns over time."
+            case .digestionWeight:
+                "Log digestive symptoms daily to surface connections with your cycle."
+            }
+        } else {
+            "Logging symptoms daily helps surface patterns with your cycle."
         }
     }
 
@@ -202,6 +305,7 @@ final class OnboardingProfile {
             Keys.hasCompletedOnboarding,
             Keys.primaryGoal,
             Keys.pcosExperience,
+            Keys.symptomFocusAreas,
             Keys.dismissedHints,
         ]
         for key in keysToRemove {

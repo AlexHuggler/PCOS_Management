@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct SymptomLogView: View {
+    var initialCategory: SymptomCategory? = nil
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SymptomViewModel?
@@ -115,6 +117,10 @@ struct SymptomLogView: View {
             }
             .onAppear {
                 let vm = SymptomViewModel(modelContext: modelContext)
+                if let initialCategory,
+                   UserDefaults.standard.string(forKey: "symptom.selectedCategory") == nil {
+                    vm.selectedCategory = initialCategory
+                }
                 vm.prefillTodaysSymptoms()
                 initialSelectionCount = vm.selectionCount
                 viewModel = vm

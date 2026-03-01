@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Root container that orchestrates the onboarding flow:
-/// welcome pages -> questionnaire -> guided first action -> completion.
+/// welcome pages -> 3-question questionnaire -> guided first action -> completion.
 struct OnboardingContainerView: View {
     let onComplete: () -> Void
 
@@ -70,7 +70,7 @@ struct OnboardingContainerView: View {
                 }
 
             case .completion:
-                OnboardingCompletionView {
+                OnboardingCompletionView(profile: appState.onboardingProfile) {
                     completeOnboarding()
                 }
             }

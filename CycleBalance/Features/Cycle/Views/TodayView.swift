@@ -10,6 +10,7 @@ struct TodayView: View {
     @State private var showingLogSymptoms = false
     @State private var todaysSymptoms: [SymptomEntry] = []
     @State private var activeHint: String?
+    @State private var activeHintID: String?
     @State private var quickLogFlow: FlowIntensity?
     @State private var showQuickLogSaved = false
     @State private var quickLogResetTask: Task<Void, Never>?
@@ -199,43 +200,60 @@ struct TodayView: View {
     }
 
     private var personalizedWelcomeText: String {
-        switch appState.onboardingProfile.primaryGoal {
-        case .trackCycles:
+        let profile = appState.onboardingProfile
+        switch (profile.primaryGoal, profile.symptomFocusAreas.first) {
+        case (.trackCycles, _):
             "Log your period to start tracking your cycle"
-        case .understandSymptoms:
+        case (.understandSymptoms, .moodEnergy?):
+            "Log how you're feeling to start finding patterns"
+        case (.understandSymptoms, .skinHair?):
+            "Log skin and hair changes to start spotting patterns"
+        case (.understandSymptoms, .painCramps?):
+            "Log symptoms to start tracking pain patterns"
+        case (.understandSymptoms, _):
             "Log symptoms to start finding patterns"
-        case nil:
+        case (nil, _):
             "Start tracking by logging your period"
         }
     }
+
+    // MARK: - Hint Sequencing
 
     private func showNextHintIfNeeded() {
         let profile = appState.onboardingProfile
         guard appState.hasCompletedOnboarding else { return }
 
-        if profile.shouldShowHint(OnboardingProfile.hintCalendarTab) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                activeHint = "Check the Calendar tab to see your cycle at a glance"
-            }
+        // Priority order: quick log intro → calendar → symptoms → first prediction
+        if profile.shouldShowHint(OnboardingProfile.hintQuickLogIntro) {
+            showHint(id: OnboardingProfile.hintQuickLogIntro, message: profile.quickLogHintMessage)
+        } else if profile.shouldShowHint(OnboardingProfile.hintCalendarTab) {
+            showHint(id: OnboardingProfile.hintCalendarTab, message: profile.calendarHintMessage)
         } else if todaysSymptoms.isEmpty,
                   profile.shouldShowHint(OnboardingProfile.hintLogSymptoms) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                activeHint = "Logging symptoms helps find patterns with your cycle"
-            }
+            showHint(id: OnboardingProfile.hintLogSymptoms, message: profile.symptomHintMessage)
+        } else if viewModel?.prediction != nil,
+                  profile.shouldShowHint(OnboardingProfile.hintFirstPrediction) {
+            showHint(
+                id: OnboardingProfile.hintFirstPrediction,
+                message: "Your first period estimate is here! It'll get more accurate as you log more cycles."
+            )
+        }
+    }
+
+    private func showHint(id: String, message: String) {
+        activeHintID = id
+        withAnimation(.easeInOut(duration: 0.3)) {
+            activeHint = message
         }
     }
 
     private func dismissActiveHint() {
-        let profile = appState.onboardingProfile
-        if activeHint != nil {
-            if profile.shouldShowHint(OnboardingProfile.hintCalendarTab) {
-                profile.dismissHint(OnboardingProfile.hintCalendarTab)
-            } else if profile.shouldShowHint(OnboardingProfile.hintLogSymptoms) {
-                profile.dismissHint(OnboardingProfile.hintLogSymptoms)
-            }
+        if let hintID = activeHintID {
+            appState.onboardingProfile.dismissHint(hintID)
         }
         withAnimation(.easeInOut(duration: 0.2)) {
             activeHint = nil
+            activeHintID = nil
         }
     }
 
