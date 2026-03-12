@@ -2,70 +2,38 @@
 
 Date: 2026-03-12
 Working branch: `codex/dirty-tree-reconcile-20260312`
-Canonical app lineage base: `claude/cyclebalance-ios-app-V9Pz9` (local base; old remote upstream is gone)
+Historical app lineage base: `claude/cyclebalance-ios-app-V9Pz9` (local stale branch pruned)
 
-## Ahead/Behind Matrix (vs current HEAD)
+## Current Branch Matrix (vs current HEAD)
 
 `HEAD-only` = commits in current branch not in target branch.
 `Branch-only` = commits in target branch not in current branch.
 
-| Branch | HEAD-only | Branch-only | Status |
-|---|---:|---:|---|
-| `origin/main` | 0 | 10 | Diverged to docs-site history |
-| `origin/claude/cleanup-github-pages-uxZPG` | 0 | 6 | Docs-site cleanup stream |
-| `origin/claude/design-app-ux-ui-ivOdh` | 1 | 0 | Subsumed (feature commit already merged) |
-| `origin/claude/design-app-ux-ui-nfLxl` | 10 | 0 | Subsumed |
-| `origin/claude/parallel-task-agents-Mz4jG` | 3 | 0 | Subsumed |
-| `origin/claude/review-and-plan-ux-lsimB` | 20 | 0 | Subsumed |
+| Branch | HEAD-only | Branch-only | Status | Recommendation |
+|---|---:|---:|---|---|
+| `origin/codex/dirty-tree-reconcile-20260312` | 0 | 0 | In sync | Keep |
+| `origin/main` | 4 | 10 | Docs-site history diverges from app lineage | Keep for repository default/history; exclude from app merge path |
+| `origin/claude/cleanup-github-pages-uxZPG` | 4 | 6 | Docs-site cleanup branch | Keep as historical record; exclude from app merge path |
 
-## Unique Commit Summaries and Recommendations
+## Pruned Branches (Completed)
 
-### `origin/main`
-Branch-only commits include a pivot from iOS app source to GitHub Pages (`docs/index.html`, `docs/CNAME`) and large-scale app-source deletion.
+Pruned on 2026-03-12 after confirming no app-lineage dependency.
 
-- Representative commits:
-  - `1abfcee` Remove iOS app source, keep only GitHub Pages files
-  - `72c09fe` Move `index.html` and `CNAME` into `/docs`
-  - `ee579cc` Switch form backend from Formspree to FormSubmit.co
-- Recommendation: **Exclude from app merge path**.
-- Rationale: conflicts with app branch intent (would delete/replace app codebase).
+| Branch | Scope | Reason |
+|---|---|---|
+| `claude/cyclebalance-ios-app-V9Pz9` | Local | Stale local fallback branch; replaced by codex reconciliation branch |
+| `origin/claude/design-app-ux-ui-ivOdh` | Remote | Fully subsumed by app lineage |
+| `origin/claude/design-app-ux-ui-nfLxl` | Remote | Fully subsumed by app lineage |
+| `origin/claude/parallel-task-agents-Mz4jG` | Remote | Fully subsumed by app lineage |
+| `origin/claude/review-and-plan-ux-lsimB` | Remote | Fully subsumed by app lineage |
 
-### `origin/claude/cleanup-github-pages-uxZPG`
-Branch-only commits are the docs-site cleanup chain that feeds `origin/main`.
+## Docs-Site Branch Rationale (Retained, Not Merged)
 
-- Representative commits:
-  - `1abfcee` Remove iOS app source, keep only GitHub Pages files
-  - `72c09fe` Move website files to `/docs`
-  - `ee579cc` Form backend switch in website page
-- Recommendation: **Exclude from app merge path**.
-- Rationale: same website-only pivot and app-code deletion pattern.
-
-### `origin/claude/design-app-ux-ui-ivOdh`
-No branch-only commits versus current HEAD.
-
-- Recommendation: **No action (already subsumed)**.
-- Rationale: feature content is already merged into current lineage.
-
-### `origin/claude/design-app-ux-ui-nfLxl`
-No branch-only commits versus current HEAD.
-
-- Recommendation: **No action (already subsumed)**.
-- Rationale: current lineage already includes this branch’s feature/fix chain.
-
-### `origin/claude/parallel-task-agents-Mz4jG`
-No branch-only commits versus current HEAD.
-
-- Recommendation: **No action (already subsumed)**.
-- Rationale: manual test plan/doc commit already merged in current lineage.
-
-### `origin/claude/review-and-plan-ux-lsimB`
-No branch-only commits versus current HEAD.
-
-- Recommendation: **No action (already subsumed)**.
-- Rationale: review/refactor commits are already integrated in current lineage.
+- `origin/main` and `origin/claude/cleanup-github-pages-uxZPG` include website-oriented commits (for `docs/` and related page flow) and are intentionally excluded from app code merge decisions.
+- App development continues on `origin/codex/dirty-tree-reconcile-20260312`.
 
 ## Cleanup Policy Decision Log
 
-- Canonical code line remains app-first branch history (`claude/cyclebalance-ios-app-V9Pz9` lineage).
-- Docs-site branches are intentionally excluded from app merge decisions.
-- Dirty tree cleanup proceeds as staged triage (keep bucket, discard bucket, parity-guarded).
+- Tree state is clean for further app development.
+- Canonical active development line is the `codex/dirty-tree-reconcile-20260312` branch.
+- Dual-tree parity policy remains enforced via `./scripts/check_tree_parity.sh`.
