@@ -1,0 +1,137 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "PCOS-STOREKIT-CONFIG-001",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "PCOS_PREMIUM_GROUP",
+      "localizations" : [
+
+      ],
+      "name" : "pcos_premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "PCOS_PREMIUM_MONTHLY_INTERNAL",
+          "localizations" : [
+            {
+              "description" : "Unlock all CycleBalance premium features billed monthly.",
+              "displayName" : "CycleBalance Premium Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cyclebalance.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "CycleBalance Premium Monthly",
+          "subscriptionGroupID" : "PCOS_PREMIUM_GROUP",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "79.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "PCOS_PREMIUM_YEARLY_INTERNAL",
+          "localizations" : [
+            {
+              "description" : "Unlock all CycleBalance premium features billed annually.",
+              "displayName" : "CycleBalance Premium Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cyclebalance.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "CycleBalance Premium Yearly",
+          "subscriptionGroupID" : "PCOS_PREMIUM_GROUP",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleDisplayName</key>
+	<string>CycleBalance</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>CycleBalance uses your camera to capture hair growth/loss progress photos for tracking.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CycleBalance uses your photo library to save and compare hair growth/loss progress photos.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>CycleBalance reads your Apple Health data to populate wellness trends and daily summaries.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>CycleBalance may write selected wellness records to Apple Health when you explicitly enable sync.</string>
+	<key>PREMIUM_BILLING_MODE</key>
+	<string>$(PREMIUM_BILLING_MODE)</string>
+	<key>REVENUECAT_ENTITLEMENT_ID</key>
+	<string>$(REVENUECAT_ENTITLEMENT_ID)</string>
+	<key>REVENUECAT_OFFERING_ID</key>
+	<string>$(REVENUECAT_OFFERING_ID)</string>
+	<key>REVENUECAT_PUBLIC_SDK_KEY</key>
+	<string>$(REVENUECAT_PUBLIC_SDK_KEY)</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>
