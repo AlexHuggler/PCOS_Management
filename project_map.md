@@ -1,223 +1,260 @@
-# CycleBalance — Project Architecture Map
+# PCOS Project Map
 
-> Generated 2026-02-24. 28 Swift files, 0 external dependencies.
+Audit snapshot date: 2026-03-11  
+Evidence refresh run date: 2026-03-12  
+Scope: current dirty working tree under `PCOS_Management` (modified + untracked files included).
 
----
+## Baseline
 
-## 1. Architectural Overview
-
-| Aspect | Choice |
+| Area | Current State |
 |---|---|
-| **UI Framework** | SwiftUI (pure — no UIKit imports) |
-| **Architecture Pattern** | MVVM with `@Observable` (Swift 5.9 macro) |
-| **Persistence** | SwiftData (`@Model`, `ModelContainer`, `ModelContext`) |
-| **Networking** | None implemented yet |
-| **Dependency Management** | None — zero third-party packages |
-| **Concurrency Model** | Swift 6 Structured Concurrency (`SWIFT_STRICT_CONCURRENCY: complete`) |
-| **Deployment Target** | iOS 17.0 |
-| **Swift Version** | 6.0 |
-| **CloudKit** | Configured in entitlements + ModelConfiguration (private database) |
-| **HealthKit** | Entitlement declared, not yet imported/used |
+| Primary framework | SwiftUI-first (`@main` app + SwiftUI feature views) |
+| UIKit usage | Hybrid edge bridges only (`PDFReportGenerator`, camera/image picker bridge, haptics via `UINotificationFeedbackGenerator`) |
+| Dependency management | XcodeGen (`project.yml`) + Swift Package Manager |
+| Third-party dependencies | RevenueCat via SPM (`purchases-ios-spm`, resolved at 5.61.0 in current builds) |
+| Pattern strategy | MVVM-style feature view models (`@Observable`) + focused service layer |
+| Persistence | SwiftData (`@Model`, `ModelContext`, `ModelContainer`) with CloudKit private DB intent and debug/test fallbacks |
+| Networking/billing stack | No first-party REST client layer; subscription/network flows via RevenueCat + StoreKit abstraction |
+| Concurrency model | Swift 6 strict concurrency (`SWIFT_STRICT_CONCURRENCY = complete`), async/await, task-based listeners |
+| Test stack | Swift Testing + XCTest UI tests |
 
----
+## Entry Point And Runtime Flow
 
-## 2. Entry Point
+- Application entry point: `PCOS/PCOS/App/CycleBalanceApp.swift` (`@main CycleBalanceApp`).
+- `CycleBalanceApp` creates shared SwiftData container and injects it into the scene.
+- Root UI: `ContentView` gates onboarding and hosts the tab shell (`Today`, `Calendar`, `Track`, `Insights`, `Settings`).
 
-```
-@main CycleBalanceApp               (CycleBalance/App/CycleBalanceApp.swift)
-  │
-  ├─ ModelContainer(schema: 9 models, cloudKitDatabase: .private)
-  │
-  └─ ContentView                    (CycleBalance/App/ContentView.swift)
-       └─ TabView (5 tabs, bound to AppState.selectedTab)
-```
-
----
-
-## 3. Module Dependency Graph
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  APP LAYER                                                          │
-│                                                                     │
-│  CycleBalanceApp ──→ ModelContainer(9 models) ──→ ContentView       │
-│                                                    │                │
-│  AppState (@Observable)  ◄── @Environment ──── SettingsView         │
-│  ├ selectedTab: AppTab                                              │
-│  └ isPremium: Bool                                                  │
-└─────────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  FEATURE LAYER (Tab-based)                                          │
-│                                                                     │
-│  Tab 1: TODAY ─────────────────────────────────────────────────     │
-│  ┌─────────────────┐     ┌──────────────────┐                      │
-│  │   TodayView     │────▶│ CycleViewModel   │                      │
-│  │   @Query Symptom │     │ @Observable      │                      │
-│  │   QuickAction×2  │     │ @MainActor       │                      │
-│  │   SymptomChip    │     │                  │                      │
-│  │   FlowLayout     │     │ ► loadData()     │                      │
-│  └────────┬─────────┘     │ ► logPeriodDay() │                      │
-│           │sheet          │ ► predictions    │                      │
-│           ▼               └────────┬─────────┘                      │
-│  CycleLogView                      │                                │
-│  SymptomLogView                    ▼                                │
-│                          CyclePredictionEngine (Sendable struct)     │
-│                          ├ Prediction                               │
-│                          └ CycleStatistics                          │
-│                                                                     │
-│  Tab 2: CALENDAR ──────────────────────────────────────────────     │
-│  ┌──────────────────┐     ┌──────────────────┐                      │
-│  │CalendarMonthView │────▶│ CycleViewModel   │                      │
-│  │ CalendarDayCell   │     │ (new instance)   │                      │
-│  └──────────────────┘     └──────────────────┘                      │
-│                                                                     │
-│  Tab 3: TRACK ─────────────────────────────────────────────────     │
-│  ┌──────────────────┐                                               │
-│  │ TrackingHubView  │──▶ CycleLogView ──▶ CycleViewModel           │
-│  │                  │──▶ SymptomLogView ──▶ SymptomViewModel        │
-│  └──────────────────┘                                               │
-│                                                                     │
-│  Tab 4: INSIGHTS ──────────────────────────────────────────────     │
-│  ┌──────────────────┐                                               │
-│  │  InsightsView    │  @Query Insight (no ViewModel)                │
-│  │  InsightCard     │                                               │
-│  └──────────────────┘                                               │
-│                                                                     │
-│  Tab 5: SETTINGS ──────────────────────────────────────────────     │
-│  ┌──────────────────┐                                               │
-│  │  SettingsView    │  @Environment(AppState.self)                  │
-│  └──────────────────┘                                               │
-└─────────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  SHARED UI LAYER                                                    │
-│                                                                     │
-│  AppTheme            ── Design tokens (colors, severity, flow)      │
-│  FlowIntensityPicker ── Horizontal 5-option flow selector           │
-│  SeverityPicker      ── 5-dot compact picker + text label           │
-│  SeveritySlider      ── Larger picker with per-dot labels           │
-│  SavedFeedbackOverlay── Checkmark toast after save                  │
-└─────────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  DATA LAYER (SwiftData @Model)                                      │
-│                                                                     │
-│  ┌────────────┐     ┌──────────────┐     ┌───────────────┐         │
-│  │   Cycle    │◄───▶│  CycleEntry  │◄───▶│ SymptomEntry  │         │
-│  │            │ 1:N │              │ 1:N │               │         │
-│  │ startDate  │     │ date         │     │ date          │         │
-│  │ endDate?   │     │ flowIntensity│     │ symptomType   │         │
-│  │ lengthDays?│     │ isPeriodDay  │     │ severity      │         │
-│  │ isPredicted│     │ cyclePhase?  │     │ notes?        │         │
-│  └────────────┘     │ notes?       │     └───────────────┘         │
-│                     └──────────────┘                                │
-│                                                                     │
-│  ┌──────────────────┐  ┌──────────────┐  ┌────────────────┐        │
-│  │BloodSugarReading │  │SupplementLog │  │   MealEntry    │        │
-│  │ glucoseValue     │  │ supplementName│  │ mealType       │        │
-│  │ readingType      │  │ dosageMg?    │  │ glycemicImpact │        │
-│  │ fromHealthKit    │  │ taken: Bool  │  │ photoData? 📦  │        │
-│  └──────────────────┘  └──────────────┘  └────────────────┘        │
-│                                                                     │
-│  ┌──────────────────┐  ┌──────────────┐                             │
-│  │ HairPhotoEntry   │  │  DailyLog    │   📦 = @externalStorage    │
-│  │ photoType        │  │ weight?      │                             │
-│  │ photoData 📦     │  │ sleepHours?  │  ┌──────────────┐          │
-│  │ analysisResult?  │  │ stressLevel? │  │   Insight    │          │
-│  └──────────────────┘  │ energyLevel? │  │ insightType  │          │
-│                        └──────────────┘  │ confidence   │          │
-│                                          │ actionable   │          │
-│                                          └──────────────┘          │
-│                                                                     │
-│  ENUMS (10 types, all Codable + CaseIterable + Identifiable):       │
-│  FlowIntensity · CyclePhase · SymptomCategory · SymptomType         │
-│  GlucoseReadingType · MealType · GlycemicImpact                    │
-│  HairPhotoType · InsightType · AppTab                               │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+  A["CycleBalanceApp (@main)"] --> B["ModelContainer (SwiftData + CloudKit policy)"]
+  A --> C["ContentView"]
+  C --> D["AppState"]
+  C --> E["PremiumStateBridge"]
+  C --> F["Tab Shell"]
+  F --> G["Feature Views + ViewModels"]
+  G --> H["Feature/Core Services"]
+  H --> I["SwiftData Models"]
 ```
 
----
+## Module Dependency Visualization
 
-## 4. View ↔ ViewModel ↔ Model Dependency Matrix
+```mermaid
+graph LR
+  subgraph App
+    A1["CycleBalanceApp"]
+    A2["ContentView"]
+    A3["SettingsView"]
+  end
 
-| View | ViewModel | Models Touched | Data Access |
+  subgraph Features
+    F1["Cycle"]
+    F2["Symptoms"]
+    F3["BloodSugar"]
+    F4["Supplements"]
+    F5["Meals"]
+    F6["PhotoJournal"]
+    F7["Insights"]
+    F8["Reports"]
+    F9["Onboarding"]
+  end
+
+  subgraph Core
+    C1["SwiftData Models"]
+    C2["HealthKitManager (UI coordinator)"]
+    C2W["HealthKitSyncWorker (actor)"]
+    C3["NotificationManager"]
+    C4["StoreKit/RevenueCat Clients"]
+    C5["InsightEngine"]
+    C6["Utilities + Extensions"]
+  end
+
+  subgraph External
+    X1["CloudKit"]
+    X2["HealthKit"]
+    X3["UserNotifications"]
+    X4["StoreKit"]
+    X5["RevenueCat SDK"]
+  end
+
+  A1 --> C1
+  A2 --> F1
+  A2 --> F7
+  A2 --> A3
+
+  F1 --> C1
+  F1 --> C6
+  F2 --> C1
+  F3 --> C1
+  F4 --> C1
+  F5 --> C1
+  F6 --> C1
+  F7 --> C5
+  F8 --> C1
+  F9 --> C6
+
+  C2 --> C2W
+  C2W --> C1
+  C1 --> X1
+  C2W --> X2
+  C3 --> X3
+  C4 --> X4
+  C4 --> X5
+```
+
+## Persistence And Networking Stack
+
+- Persistence implementation:
+  - SwiftData models in `Core/Data/SwiftData`.
+  - CloudKit container target: `iCloud.com.cyclebalance.app`.
+  - Startup policy supports in-memory test mode and debug local fallback.
+- Networking and subscription implementation:
+  - No app-owned `URLSession` endpoint layer was found.
+  - Billing and entitlement updates are delegated to `RevenueCatBillingClient` and `StoreKitBillingClient`.
+
+## App Store Configuration Status
+
+| Artifact | Active Location | Status | Notes |
 |---|---|---|---|
-| TodayView | CycleViewModel (created in onAppear) | Cycle, CycleEntry | `@Query` for SymptomEntry |
-| CalendarMonthView | CycleViewModel (created in onAppear) | Cycle, CycleEntry | ViewModel fetch |
-| CycleLogView | CycleViewModel (created in onAppear) | CycleEntry, Cycle | ViewModel insert+save |
-| CycleDetailView | CycleViewModel (created in onAppear) | Cycle, CycleEntry | ViewModel compute |
-| SymptomLogView | SymptomViewModel (created in onAppear) | SymptomEntry | ViewModel insert+save |
-| InsightsView | — (no ViewModel) | Insight | `@Query` directly |
-| SettingsView | — (no ViewModel) | — | `@Environment(AppState.self)` |
-| ContentView | — | — | `@State AppState` |
+| App Info.plist | `PCOS/PCOS/Info.plist` | Present | Contains camera/photo/HealthKit usage strings and launch screen dictionary. |
+| Background mode declaration (`UIBackgroundModes`) | `PCOS/PCOS/Info.plist` | Compliant for current scope | `remote-notification` declaration removed in H-1 remediation; app currently targets local notifications only. |
+| Active app entitlements | `PCOS/PCOS.entitlements` | Present | This is the Xcode build input (`ProcessProductPackaging ... PCOS/PCOS.entitlements`). |
+| Duplicate entitlements (non-active) | `PCOS/PCOS/PCOS.entitlements` | Present (non-active) | Traceability artifact; not current build input. |
+| Mirror entitlements (non-active tree) | `CycleBalance/CycleBalance.entitlements` | Present (non-active) | Kept for parity workflow only. |
+| App privacy manifest | `PCOS/PCOS/PrivacyInfo.xcprivacy` | Present | Declares `NSPrivacyAccessedAPICategoryUserDefaults` reason `CA92.1`. |
+| Mirror privacy manifest (non-active tree) | `CycleBalance/PrivacyInfo.xcprivacy` | Present (non-active) | Kept for parity workflow. |
+| Active asset catalog | `PCOS/PCOS/Assets.xcassets` | Present | Catalog contains accent + app icon set. |
+| Active app icon set | `PCOS/PCOS/Assets.xcassets/AppIcon.appiconset` | Present and populated | `Contents.json` now maps concrete default/dark/tinted 1024 PNG files. |
+| Mirror app icon set (non-active tree) | `CycleBalance/Resources/Assets.xcassets/AppIcon.appiconset` | Present and populated | Mirrored icon assets and manifest entries are in sync. |
+| Launch screen config | `PCOS/PCOS/Info.plist` (`UILaunchScreen`) | Present | Empty launch-screen dict configured. |
+| Dependency manager config | `project.yml` | Present | XcodeGen source of truth for targets, entitlements, and SPM package wiring. |
+| CocoaPods/Carthage manifests | repo root scan (`Podfile`, `Cartfile`) | Not found | Confirms SPM-only external dependency path in current tree. |
 
----
+## Built Artifact Validation (Icon + Background Mode Readiness)
 
-## 5. File Inventory (28 files)
+- Release app metadata check passed (2026-03-12): built `PCOS.app/Info.plist` contains `CFBundleIcons`, `CFBundlePrimaryIcon`, and `CFBundleIconName = AppIcon`.
+- Release app metadata check passed (2026-03-12): built `PCOS.app/Info.plist` does not contain `UIBackgroundModes` / `remote-notification`.
+- Release asset catalog check passed (2026-03-12): `assetutil --info PCOS.app/Assets.car` includes `AssetType: Icon Image` entries with `Name: AppIcon`.
 
-### App Layer (4)
-| File | Type | Responsibility |
-|---|---|---|
-| `App/CycleBalanceApp.swift` | `@main App` | Entry point, ModelContainer setup |
-| `App/AppState.swift` | `@Observable` | Tab selection, premium state |
-| `App/ContentView.swift` | `View` | Tab navigation + TrackingHubView |
-| `App/SettingsView.swift` | `View` | Settings, delete confirmation |
+## H-2 Verification Note (Insight Error Handling)
 
-### Core/Data (10)
-| File | Type | Responsibility |
-|---|---|---|
-| `Core/Data/SwiftData/Enums.swift` | Enums | 10 enum types (72 cases total) |
-| `Core/Data/SwiftData/Cycle.swift` | `@Model` | Cycle period tracking |
-| `Core/Data/SwiftData/CycleEntry.swift` | `@Model` | Individual period day entry |
-| `Core/Data/SwiftData/SymptomEntry.swift` | `@Model` | Individual symptom record |
-| `Core/Data/SwiftData/BloodSugarReading.swift` | `@Model` | Glucose readings |
-| `Core/Data/SwiftData/SupplementLog.swift` | `@Model` | Supplement tracking |
-| `Core/Data/SwiftData/MealEntry.swift` | `@Model` | Meal logging with photos |
-| `Core/Data/SwiftData/HairPhotoEntry.swift` | `@Model` | Hair progress photos |
-| `Core/Data/SwiftData/DailyLog.swift` | `@Model` | Daily wellness metrics |
-| `Core/Data/SwiftData/Insight.swift` | `@Model` | Generated health insights |
+- Insight generation now uses fail-fast fetch behavior (throwing `InsightEngine.generateInsights`) instead of silent SwiftData fetch fallbacks.
+- UI propagation now includes `InsightsViewModel.errorMessage` with rollback on refresh failure plus inline error banner rendering in `InsightsView`.
+- Guardrail and behavior tests passed in active and mirrored trees:
+  - no `try? modelContext.fetch` silent fallback pattern in `InsightEngine.swift`,
+  - refresh failure surfaces error and does not persist insights,
+  - successful refresh clears stale error and persists insights.
 
-### Features/Cycle (5)
-| File | Type | Responsibility |
-|---|---|---|
-| `Features/Cycle/ViewModels/CycleViewModel.swift` | `@Observable` | Cycle data + prediction logic |
-| `Features/Cycle/Models/CyclePredictionEngine.swift` | `Sendable struct` | Weighted-average prediction |
-| `Features/Cycle/Views/TodayView.swift` | `View` | Dashboard + quick actions |
-| `Features/Cycle/Views/CalendarMonthView.swift` | `View` | Month grid display |
-| `Features/Cycle/Views/CycleLogView.swift` | `View` | Period logging form |
-| `Features/Cycle/Views/CycleDetailView.swift` | `View` | Cycle statistics |
+## H-3 Verification Note (HealthKit Full-Sync Isolation)
 
-### Features/Symptoms (3)
-| File | Type | Responsibility |
-|---|---|---|
-| `Features/Symptoms/ViewModels/SymptomViewModel.swift` | `@Observable` | Symptom selection + save |
-| `Features/Symptoms/Views/SymptomLogView.swift` | `View` | Symptom grid + categories |
-| `Features/Symptoms/Views/SymptomGridItem.swift` | `View` | Individual symptom tile |
+- `HealthKitManager` remains `@MainActor` for observable UI state, but full-sync execution now delegates via injected sync operation:
+  - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:14`
+  - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:57-84`
+  - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:119-140`
+- Dedicated `HealthKitSyncWorker` actor now owns full-sync HealthKit fetch and SwiftData fetch/upsert on a worker `ModelContext`:
+  - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:16`
+  - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:47-76`
+  - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:80-185`
+- Guardrail and behavior tests passed in active and mirrored trees:
+  - manager no longer contains direct `modelContext.fetch/save` sync-loop patterns,
+  - success path updates `lastSyncDate`, clears stale `lastError`, and resets `isSyncing`,
+  - failure path sets `lastError` and resets `isSyncing` without corrupting sync state,
+  - worker upsert/dedup behavior passes with in-memory SwiftData.
 
-### Features/Insights (1)
-| File | Type | Responsibility |
-|---|---|---|
-| `Features/Insights/Views/InsightsView.swift` | `View` | Insights list + cards |
+## M-5 Verification Note (StoreKit Observer Teardown)
 
-### SharedUI (4)
-| File | Type | Responsibility |
-|---|---|---|
-| `SharedUI/Styles/AppTheme.swift` | `enum` | Design tokens + colors |
-| `SharedUI/Components/FlowIntensityPicker.swift` | `View` | Flow intensity selector |
-| `SharedUI/Components/SeverityPicker.swift` | `View` | Severity dot picker + slider |
-| `SharedUI/Components/SavedFeedbackOverlay.swift` | `View` | Save confirmation toast |
+- `PremiumStateBridge` now exposes explicit lifecycle teardown with `stop()` and deinit cancellation:
+  - `PCOS/PCOS/Core/StoreKit/PremiumStateBridge.swift:20`
+  - `PCOS/PCOS/Core/StoreKit/PremiumStateBridge.swift:37-39`
+- Root app shell now invokes bridge stop on disappearance:
+  - `PCOS/PCOS/App/ContentView.swift:53-55`
+- `SubscriptionManager` now exposes `stopEntitlementListener()` and deinit teardown:
+  - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:67-69`
+  - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:172-174`
+- Entitlement listener now avoids `self.billingClient` strong-loop pattern by consuming captured `billingClient` in the async stream loop:
+  - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:188-193`
+- Guardrail and behavior tests passed in active and mirrored trees:
+  - `StoreKit Lifecycle Regressions` source guardrails in both test trees,
+  - `PremiumStateBridgeTests` verifies stop prevents post-stop notification refresh,
+  - `SubscriptionManagerTests` verifies listener updates stop deterministically after explicit stop.
 
----
+## M-4 Verification Note (InsightEngine Responsibility Split)
 
-## 6. Key Observations
+- `InsightEngine` remains the public coordinator with unchanged throwing API (`generateInsights() throws -> [Insight]`), while internal concerns are now delegated:
+  - `PCOS/PCOS/Core/ML/InsightEngine.swift:6-7`
+  - `PCOS/PCOS/Core/ML/InsightEngine.swift:54-79`
+- Dedicated internal units now own fetch, dedup/cleanup, and domain analyzers:
+  - `InsightDataFetcher` (`PCOS/PCOS/Core/ML/InsightEngine.swift:90`)
+  - `InsightDeduplicator` (`PCOS/PCOS/Core/ML/InsightEngine.swift:109`)
+  - `CyclePatternInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:186`)
+  - `SymptomCorrelationInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:291`)
+  - `SupplementEfficacyInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:475`)
+  - `DietImpactInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:571`)
+  - `SleepActivityInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:692`)
+- Architecture guardrails now enforce split boundaries in both test trees:
+  - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:96-126`
+  - `CycleBalanceTests/SilentFailureRegressionTests.swift:96-126`
+- Existing insight behavior/error suites continue to pass with the split coordinator structure.
 
-1. **No external dependencies** — Pure Apple stack (SwiftUI + SwiftData + planned HealthKit/CloudKit).
-2. **9 models defined, 3 actively used** — CycleEntry/Cycle/SymptomEntry have full UI. BloodSugarReading, SupplementLog, MealEntry, HairPhotoEntry, DailyLog, and Insight are modeled but lack dedicated ViewModels/Views.
-3. **ViewModel creation pattern** — Each view creates a fresh ViewModel in `.onAppear`, not shared across tabs. This means navigating away and back creates a new instance each time.
-4. **Prediction engine is pure** — `CyclePredictionEngine` is a `Sendable` struct with no side effects; safe to call from any context.
-5. **CloudKit configured but untested** — The `ModelConfiguration` sets `cloudKitDatabase: .private(...)` but there is no sync status UI or conflict resolution logic.
-6. **HealthKit declared but unused** — Entitlement and Info.plist keys exist but no `import HealthKit` or `HKHealthStore` usage anywhere.
+## M-3 Verification Note (Dynamic Type Resilience)
+
+- Supplement adherence rings now use scaled, clamped sizing instead of fixed `120x120` dimensions:
+  - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:6`
+  - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:76`
+  - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:85`
+  - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:138`
+- Blood sugar history time column now uses adaptive single-line sizing (`minWidth`/`idealWidth`) with scale-down support:
+  - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:6`
+  - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:72`
+  - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:73`
+- Calendar blank-offset cells now use minimum-height behavior (`minHeight: 44`) instead of fixed height:
+  - `PCOS/PCOS/Features/Cycle/Views/CalendarMonthView.swift:137`
+- Guardrail tests now enforce adaptive replacements and block prior fixed-size patterns in both test trees:
+  - `PCOS/PCOSTests/InterfaceResilienceTests.swift:47-77`
+  - `CycleBalanceTests/InterfaceResilienceTests.swift:47-77`
+
+## M-2 Verification Note (Quick-Log Error Surfacing)
+
+- Quick period logging in `TodayView` no longer uses silent fallback fetch for undo anchor lookup and no longer suppresses save errors:
+  - `PCOS/PCOS/Features/Cycle/Views/TodayView.swift:341-349`
+  - `PCOS/PCOS/Features/Cycle/Views/TodayView.swift:376-399`
+- `CycleLogService.logPeriodDay` and `CycleViewModel.logPeriodDay` now return `PersistentIdentifier`, and quick-log undo state is sourced from this deterministic result:
+  - `PCOS/PCOS/Features/Cycle/Models/CycleLogService.swift:16-35`
+  - `PCOS/PCOS/Features/Cycle/ViewModels/CycleViewModel.swift:69-80`
+- Quick-log failures now log diagnostics and surface a concise inline non-modal banner without replacing card layout structure.
+- Guardrail and behavior tests passed in active and mirrored trees:
+  - `SilentFailureRegressionTests` enforces no silent `try? modelContext.fetch(descriptor)` fallback and no silent quick-log catch suppression,
+  - `CycleLogServiceTests` validates returned identifier maps to persisted period entries.
+
+## M-1 Verification Note (Media Import Error Surfacing)
+
+- Meal and photo journal library imports now use explicit `do/try/catch` instead of silent `try?` fallbacks:
+  - `PCOS/PCOS/Features/Meals/Views/MealLogView.swift:208-220`
+  - `PCOS/PCOS/Features/PhotoJournal/Views/PhotoCaptureView.swift:128-145`
+- Import failures now route through the existing alert pathway (`activeAlert = .error(...)`) with error haptics and without replacing existing view layouts.
+- Non-selection/cancel paths remain non-error (no alert).
+- Guardrail tests now enforce no silent import fallback patterns in both active and mirrored trees:
+  - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:140-164`
+  - `CycleBalanceTests/SilentFailureRegressionTests.swift:140-164`
+
+## Verification Baseline (Current Tree)
+
+- Parity gate: `./scripts/check_tree_parity.sh` -> passed.
+- Focused resource gate (`PCOSTests/PrivacyManifestTests`, `PCOSTests/AppIconAssetTests`, `PCOSTests/AppStoreConfigTests`) -> passed.
+- Focused H-2 gate (`PCOSTests/InsightErrorHandlingRegressionTests`, `PCOSTests/InsightsViewModelErrorPropagationTests`, `PCOSTests/InsightEngineTests`) -> passed.
+- Focused H-3 gate (`PCOSTests/HealthKitSyncConcurrencyRegressionTests`, `PCOSTests/HealthKitManagerTests`, `PCOSTests/HealthKitSyncWorkerTests`) -> passed (`15 tests in 3 suites passed`).
+- Focused M-5 gate (`PCOSTests/StoreKitLifecycleRegressionTests`, `PCOSTests/PremiumStateBridgeTests`, `PCOSTests/SubscriptionManagerTests`) -> passed (`17 tests in 3 suites passed`).
+- Focused M-4 gate (`PCOSTests/InsightArchitectureRegressionTests`, `PCOSTests/InsightEngineTests`, `PCOSTests/InsightErrorHandlingRegressionTests`, `PCOSTests/InsightsViewModelErrorPropagationTests`) -> passed (`19 tests in 4 suites passed`).
+- Focused M-3 gate (`PCOSTests/InterfaceResilienceTests`) -> passed (`4 tests in 1 suite passed`).
+- Focused M-2 gate (`PCOSTests/SilentFailureRegressionTests`, `PCOSTests/CycleLogServiceTests`) -> passed (`18 tests in 2 suites passed`).
+- Focused M-1 gates (`PCOSTests/SilentFailureRegressionTests`; plus `PCOSTests/MealViewModelTests` and `PCOSTests/PhotoJournalViewModelTests`) -> passed.
+- Full simulator test gate (`scheme PCOS`, iPhone 17 / iOS 26.2) -> passed (`223 tests in 43 suites` + UI tests).
+- Release no-sign build gate (`CODE_SIGNING_ALLOWED=NO`) -> passed (`BUILD SUCCEEDED`).
+
+## Traceability: Non-Active Duplicate Config Artifacts
+
+- `PCOS/PCOS/PCOS.entitlements`
+- `CycleBalance/CycleBalance.entitlements`
+- `CycleBalance/PrivacyInfo.xcprivacy`
+- `CycleBalance/Resources/Assets.xcassets/**`
+
+These exist for mirror/parity workflow traceability and are not the active build input for the current `PCOS` app target.

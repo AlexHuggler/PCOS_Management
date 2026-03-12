@@ -1,212 +1,300 @@
-# CycleBalance — Issue Log
+# PCOS Issue Log
 
-> Generated 2026-02-24 from full codebase audit (28 Swift files).
-> Ranked: **Critical** (crashes / data loss) → **High** (performance / UX) → **Medium** (tech debt).
+Audit date: 2026-03-11  
+Evidence refresh run date: 2026-03-12  
+Scope: current dirty working tree (`PCOS/PCOS`, `PCOS/PCOSTests`, `PCOS/PCOSUITests`) with parity mirror context in `CycleBalance`.
 
----
+Severity policy:
+- Critical: crash, data loss, or guaranteed App Store rejection
+- High: likely App Review / performance / UX risk
+- Medium: maintainability and quality debt with lower immediate user impact
 
-## Critical — Crashes / Data Loss
+## Critical (Open)
 
-### C-1. Duplicate symptom entries on re-save
+No open Critical findings.
 
-| | |
-|---|---|
-| **File** | `SymptomViewModel.swift:51-64`, `SymptomViewModel.swift:111-121` |
-| **Root Cause** | `prefillTodaysSymptoms()` loads existing entries into the form; `saveSymptoms()` always inserts **new** `SymptomEntry` records without deleting the old ones. |
-| **Impact** | Every time a user opens SymptomLogView, edits anything, and taps Save, the entire set of today's symptoms is duplicated. Repeat opens = exponential duplication. |
-| **Reproduction** | Log 3 symptoms → close → reopen SymptomLogView → tap Save without changes → query shows 6 entries. |
-| **Fix Strategy** | Before inserting new entries in `saveSymptoms()`, delete today's existing `SymptomEntry` records. Or switch to an upsert pattern keyed on `(date, symptomType)`. |
+Critical queue status: **empty** after closing C-ICON-1 in this cycle. Per workflow, pause at this boundary before beginning High-item remediation.
 
-### C-2. Silent `modelContext.save()` — data may not persist
+## High (Open)
 
-| | |
-|---|---|
-| **Files** | `CycleViewModel.swift:67`, `CycleViewModel.swift:88`, `SymptomViewModel.swift:62` |
-| **Root Cause** | `try? modelContext.save()` swallows errors. If the save fails (e.g., CloudKit conflict, disk full, schema migration), the user sees the "Saved" feedback overlay but data is lost. |
-| **Impact** | Silent data loss. User believes period/symptoms were recorded; they were not. |
-| **Fix Strategy** | Replace `try?` with `do/try/catch`. Propagate error state to the view. Show an error alert on failure instead of the checkmark overlay. |
+No open High findings.
 
-### C-3. Silent `modelContext.fetch()` — empty state masks database errors
+## Medium (Open)
 
-| | |
-|---|---|
-| **Files** | `CycleViewModel.swift:38, 50, 199`, `SymptomViewModel.swift:80, 107` |
-| **Root Cause** | `(try? modelContext.fetch(descriptor)) ?? []` returns an empty array on any fetch error. |
-| **Impact** | A corrupted store or CloudKit issue causes the app to display "No data" rather than an error, making the problem invisible to both user and developer. |
-| **Fix Strategy** | Use `do/try/catch`, log errors via `os.Logger`, surface a user-facing error state. |
+No open Medium findings.
 
----
+## Medium Remediation Cycle (Completed This Pass)
 
-## High — Performance / UX
+### M-5. Long-lived observer tasks lacked explicit teardown hooks -- RESOLVED (2026-03-12)
 
-### H-1. No error logging infrastructure
+- Category: Memory safety
+- Before:
+  - `PremiumStateBridge` did not expose an explicit stop hook and had no deinit teardown for its notification observer task.
+  - `SubscriptionManager` started an entitlement listener task without an explicit lifecycle stop method and used a strong self-locking listener loop pattern.
+- After:
+  - `PremiumStateBridge` now exposes idempotent `stop()` and explicit teardown via deinit:
+    - `PCOS/PCOS/Core/StoreKit/PremiumStateBridge.swift:20`
+    - `PCOS/PCOS/Core/StoreKit/PremiumStateBridge.swift:37-39`
+  - Root app shell now invokes bridge lifecycle stop on disappearance:
+    - `PCOS/PCOS/App/ContentView.swift:53-55`
+  - `SubscriptionManager` now exposes idempotent `stopEntitlementListener()` and teardown via deinit:
+    - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:67-69`
+    - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:172-174`
+  - Entitlement listener loop now consumes `billingClient` without `self.billingClient` strong-loop capture pattern:
+    - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:188-193`
+  - Added M-5 guardrail and behavior coverage in both test trees:
+    - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:114-146`
+    - `CycleBalanceTests/SilentFailureRegressionTests.swift:114-146`
+    - `PCOS/PCOSTests/PremiumStateBridgeTests.swift:52-81`
+    - `CycleBalanceTests/PremiumStateBridgeTests.swift:52-81`
+    - `PCOS/PCOSTests/SubscriptionManagerTests.swift:166-196`
+    - `CycleBalanceTests/SubscriptionManagerTests.swift:166-196`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/StoreKitLifecycleRegressionTests test`
+    - Failure assertions: missing `stop` hooks and `self.billingClient` listener-loop capture pattern.
+  - Post-fix focused run passed:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/StoreKitLifecycleRegressionTests -only-testing:PCOSTests/PremiumStateBridgeTests -only-testing:PCOSTests/SubscriptionManagerTests test` (`17 tests in 3 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`223 tests in 43 suites passed`, plus UI tests).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-| | |
-|---|---|
-| **Files** | Entire codebase |
-| **Root Cause** | No `os.Logger`, no `print()` guards, no crash reporting. Zero observability. |
-| **Impact** | Production issues are undiagnosable. CloudKit sync failures, data corruption, and edge-case crashes leave no trace. |
-| **Fix Strategy** | Add `import os` and create a shared `Logger` extension. Replace all `try?` with logged `do/catch`. |
+### M-4. `InsightEngine` responsibility split into focused internal components -- RESOLVED (2026-03-12)
 
-### H-2. ViewModel recreated on every `.onAppear`
+- Category: Protocol/object design
+- Before:
+  - `InsightEngine` mixed coordinator orchestration, SwiftData fetch helper logic, all analyzer domain logic, and dedup/cleanup concerns in one large unit.
+  - This concentration increased review surface and made behavior-preserving changes riskier.
+- After:
+  - Coordinator/public API remained stable:
+    - `InsightGenerating` and `generateInsights() throws -> [Insight]` are unchanged:
+      - `PCOS/PCOS/Core/ML/InsightEngine.swift:6-7`
+      - `PCOS/PCOS/Core/ML/InsightEngine.swift:54`
+  - `InsightEngine` now delegates to focused internal components:
+    - `InsightDataFetcher` (`PCOS/PCOS/Core/ML/InsightEngine.swift:90`)
+    - `InsightDeduplicator` (`PCOS/PCOS/Core/ML/InsightEngine.swift:109`)
+    - `CyclePatternInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:186`)
+    - `SymptomCorrelationInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:291`)
+    - `SupplementEfficacyInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:475`)
+    - `DietImpactInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:571`)
+    - `SleepActivityInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:692`)
+  - Added architecture guardrails in both test trees:
+    - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:96-126`
+    - `CycleBalanceTests/SilentFailureRegressionTests.swift:96-126`
+  - Updated insight dedup test seam usage in both test trees:
+    - `PCOS/PCOSTests/InsightEngineTests.swift:82-83`
+    - `CycleBalanceTests/InsightEngineTests.swift:82-83`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/InsightArchitectureRegressionTests test`
+    - Failure assertions: coordinator still contained analyzer/fetch helper bodies before split.
+  - Post-fix focused run passed:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/InsightArchitectureRegressionTests -only-testing:PCOSTests/InsightEngineTests -only-testing:PCOSTests/InsightErrorHandlingRegressionTests -only-testing:PCOSTests/InsightsViewModelErrorPropagationTests test` (`19 tests in 4 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-| | |
-|---|---|
-| **Files** | `TodayView.swift:44-48`, `CalendarMonthView.swift:46-51`, `CycleLogView.swift:83-85`, `CycleDetailView.swift:26-30` |
-| **Root Cause** | Each view creates `CycleViewModel(modelContext:)` inside `.onAppear`. SwiftUI can call `.onAppear` multiple times (e.g., tab switches, sheet dismissals). This triggers redundant `loadData()` fetches. |
-| **Impact** | Wasted work on every tab switch. Noticeable on devices with large datasets or slow CloudKit sync. |
-| **Fix Strategy** | Guard with `if viewModel == nil { … }` or use a lazy-init pattern. Better: inject a shared ViewModel via `.environment()` or move to `@Query`. |
+### M-3. Dynamic Type resilience gaps in supplement history, blood sugar history, and calendar offsets -- RESOLVED (2026-03-12)
 
-### H-3. DateFormatter created per render cycle
+- Category: Interface resilience
+- Before:
+  - Supplement adherence rings used fixed `120x120` sizing, blood sugar history used a fixed `70pt` time column, and calendar blank offsets used fixed `44pt` height.
+  - These fixed dimensions risk clipping/crowding at large Dynamic Type sizes and narrow split-screen widths.
+- After:
+  - Supplement history now uses scaled, clamped ring sizing:
+    - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:6`
+    - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:76`
+    - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:85`
+    - `PCOS/PCOS/Features/Supplements/Views/SupplementHistoryView.swift:138`
+  - Blood sugar time column now uses adaptive single-line width behavior (`minWidth` + `idealWidth` + scale factor):
+    - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:6`
+    - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:72`
+    - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:73`
+  - Calendar blank-offset cells now use minimum height behavior (`minHeight: 44`) instead of rigid fixed height:
+    - `PCOS/PCOS/Features/Cycle/Views/CalendarMonthView.swift:137`
+  - Parity mirrors were applied to matching `CycleBalance` files.
+  - Added/updated M-3 guardrails in both test trees:
+    - `PCOS/PCOSTests/InterfaceResilienceTests.swift:47-77`
+    - `CycleBalanceTests/InterfaceResilienceTests.swift:47-77`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/InterfaceResilienceTests test`
+    - Failure assertions targeted fixed-size hotspots (`120x120` rings, `width: 70`, `height: 44`).
+  - Post-fix focused run passed with same command (`4 tests in 1 suite passed`).
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-| | |
-|---|---|
-| **Files** | `CalendarMonthView.swift:161-165`, `CycleDetailView.swift:157-161` |
-| **Root Cause** | `DateFormatter()` is allocated inside computed properties (`monthYearString`, `formatDate`), called on every SwiftUI render. `DateFormatter` is expensive to create. |
-| **Impact** | Micro-stutters during calendar month navigation and cycle list rendering. |
-| **Fix Strategy** | Move `DateFormatter` instances to `static let` on the type or a shared cache. |
+### M-2. Quick-log silent failure path in `TodayView` -- RESOLVED (2026-03-12)
 
-### H-4. Hardcoded font sizes break Dynamic Type
+- Category: Error handling
+- Before:
+  - Quick-log used a silent fallback fetch for undo-anchor lookup and suppressed quick-log save errors via empty catch behavior.
+  - Users could lose quick-log actions without inline/error visibility in the quick-log row.
+- After:
+  - `CycleLogService.logPeriodDay` now returns the persisted entry identifier (`PersistentIdentifier`) and `CycleViewModel.logPeriodDay` now threads this return value:
+    - `PCOS/PCOS/Features/Cycle/Models/CycleLogService.swift:16-35`
+    - `PCOS/PCOS/Features/Cycle/ViewModels/CycleViewModel.swift:69-80`
+  - `TodayView` quick-log now uses explicit `do/try/catch`, derives undo state from returned identifier, logs failures, and shows an inline non-modal error banner:
+    - `PCOS/PCOS/Features/Cycle/Views/TodayView.swift:341-349`
+    - `PCOS/PCOS/Features/Cycle/Views/TodayView.swift:376-399`
+  - Added M-2 guardrail tests for no silent fetch fallback/no silent catch suppression in both test trees:
+    - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:184-208`
+    - `CycleBalanceTests/SilentFailureRegressionTests.swift:184-208`
+  - Added `CycleLogService` return-identifier behavior test in both test trees:
+    - `PCOS/PCOSTests/CycleLogServiceTests.swift:58-76`
+    - `CycleBalanceTests/CycleLogServiceTests.swift:58-76`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/SilentFailureRegressionTests test`
+    - Failure assertions: silent undo-anchor fetch fallback and silent quick-log catch suppression.
+  - Post-fix focused run passed:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/SilentFailureRegressionTests -only-testing:PCOSTests/CycleLogServiceTests test` (`18 tests in 2 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-| | |
-|---|---|
-| **Files** | `TodayView.swift:58` (`.system(size: 56)`), `CycleDetailView.swift:39` (`.system(size: 48)`), `SeverityPicker.swift:36` (`.system(size: 9)`), `SavedFeedbackOverlay.swift:11` (`.system(size: 48)`) |
-| **Root Cause** | Fixed-point font sizes ignore the user's Dynamic Type setting. |
-| **Impact** | Users with accessibility text sizes see unchanged hero numbers — breaks Apple's HIG and accessibility guidelines. |
-| **Fix Strategy** | Use `@ScaledMetric` for dynamic sizing, or use semantic text styles (`.largeTitle`, `.title`) with font design overrides. |
+### M-1. Media import silent failures in photo-selection flows -- RESOLVED (2026-03-12)
 
-### H-5. CycleViewModel is a God Object
+- Category: Error handling
+- Before:
+  - Library photo imports in meal logging and photo journal flows used silent `try? await ...loadTransferable(...)` paths, which dropped import failures without user feedback.
+- After:
+  - Meal import handler now uses explicit `do/try/catch` and alerts on import failure while preserving existing form state:
+    - `PCOS/PCOS/Features/Meals/Views/MealLogView.swift:208-220`
+  - Photo journal import handler now uses explicit `do/try/catch` and alerts on import failure while preserving existing form state:
+    - `PCOS/PCOS/Features/PhotoJournal/Views/PhotoCaptureView.swift:128-145`
+  - Added source-guardrail tests for both handlers:
+    - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:140-164`
+    - `CycleBalanceTests/SilentFailureRegressionTests.swift:140-164`
+  - Mirrored parity updates were applied to matching `CycleBalance` view files.
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/SilentFailureRegressionTests test`
+  - Post-fix focused run passed with same command (`11 tests in 1 suite passed`).
+  - Focused regression pass:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/SilentFailureRegressionTests -only-testing:PCOSTests/MealViewModelTests -only-testing:PCOSTests/PhotoJournalViewModelTests test` (`27 tests in 3 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-| | |
-|---|---|
-| **File** | `CycleViewModel.swift` (207 lines, 15+ methods) |
-| **Root Cause** | Single class handles: data loading, period logging, cycle management, prediction orchestration, form state, and calendar query helpers. |
-| **Impact** | Hard to test, hard to reason about, single points of failure. Changes to logging affect prediction. |
-| **Fix Strategy** | Extract `CycleLogService` (insert/save), `CycleQueryService` (fetch/filter), and keep ViewModel as thin orchestrator. |
+## High Remediation Cycle (Completed This Pass)
 
-### H-6. CalendarMonthView assumes Sunday-start week
+### H-3. HealthKit full-sync main-actor isolation risk -- RESOLVED (2026-03-12)
 
-| | |
-|---|---|
-| **File** | `CalendarMonthView.swift:12, 167-174` |
-| **Root Cause** | `daysOfWeek = ["Sun", "Mon", …]` is hardcoded and `firstWeekdayOffset` uses `calendar.component(.weekday, …) - 1` which assumes weekday 1 = Sunday. Locales with Monday-start weeks (most of Europe) will misalign. |
-| **Impact** | Wrong day-of-week alignment for non-US locale users. |
-| **Fix Strategy** | Use `calendar.firstWeekday` and `calendar.shortWeekdaySymbols` to generate the header dynamically. |
+- Category: Modern concurrency
+- Before:
+  - `HealthKitManager` (main-actor isolated) contained direct sync orchestration that mixed UI-state coordination with persistence-heavy full-sync logic.
+  - Sync boundary did not enforce delegation away from manager-owned code paths.
+- After:
+  - Introduced off-main actor worker extraction:
+    - `HealthKitSyncWorker` actor with worker-owned `ModelContext` for fetch/upsert paths:
+      - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:16`
+      - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:47-76`
+      - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:80-185`
+  - `HealthKitManager` now acts as UI coordinator with injected sync operation seam and delegates full-sync execution:
+    - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:14`
+    - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:57-84`
+    - `PCOS/PCOS/Core/HealthKit/HealthKitManager.swift:119-140`
+  - Mirrored parity implementation in canonical tree:
+    - `CycleBalance/Core/HealthKit/HealthKitManager.swift`
+    - `CycleBalance/Core/HealthKit/HealthKitSyncWorker.swift`
+  - Added/updated guardrail + behavior coverage in both test trees:
+    - `PCOS/PCOSTests/HealthKitManagerTests.swift:348-363`
+    - `PCOS/PCOSTests/HealthKitManagerTests.swift:192-345`
+    - `CycleBalanceTests/HealthKitManagerTests.swift:348-363`
+    - `CycleBalanceTests/HealthKitManagerTests.swift:192-345`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected (delegation boundary guardrail):
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/HealthKitSyncConcurrencyRegressionTests test`
+  - Post-fix focused run passed:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/HealthKitSyncConcurrencyRegressionTests -only-testing:PCOSTests/HealthKitManagerTests -only-testing:PCOSTests/HealthKitSyncWorkerTests test` (`15 tests in 3 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-### H-7. `@Query` predicate captures stale `Date()`
+### H-2. Insight generation silent fetch failures -- RESOLVED (2026-03-12)
 
-| | |
-|---|---|
-| **File** | `TodayView.swift:10-17` |
-| **Root Cause** | `#Predicate { entry.date >= Date().addingTimeInterval(-86400) }` — the `Date()` is captured when the `@Query` property wrapper initializes. If the view stays alive (e.g., app in foreground across midnight), the predicate never updates. |
-| **Impact** | "Today's Symptoms" section shows stale data after midnight until user force-restarts or navigates away and back. |
-| **Fix Strategy** | Move the query into the ViewModel with an explicit refresh trigger, or use `.onAppear` to reset the date. |
+- Category: Error handling
+- Before:
+  - `InsightEngine` used silent SwiftData fetch fallbacks `(try? modelContext.fetch(...)) ?? []` in analyzer paths, which made persistence failures look like "no data/no insights".
+  - `InsightsViewModel` had no dedicated error state for generation failures, so UI could not show an explicit inline failure state.
+- After:
+  - `InsightEngine.generateInsights` now throws and engine fetches use fail-fast stage-aware typed errors via `InsightDataFetcher.fetch(...)`:
+    - `PCOS/PCOS/Core/ML/InsightEngine.swift:6-29`
+    - `PCOS/PCOS/Core/ML/InsightEngine.swift:54-79`
+    - `PCOS/PCOS/Core/ML/InsightEngine.swift:90-103`
+  - `InsightsViewModel` now exposes `errorMessage`, wraps refresh in `do/try/catch`, and rolls back on failure:
+    - `PCOS/PCOS/Features/Insights/ViewModels/InsightsViewModel.swift:15`
+    - `PCOS/PCOS/Features/Insights/ViewModels/InsightsViewModel.swift:31-49`
+  - `InsightsView` now renders an inline error banner when `errorMessage` is set:
+    - `PCOS/PCOS/Features/Insights/Views/InsightsView.swift:14-23`
+  - Parity mirror updates were applied for matching CycleBalance files and tests.
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed as expected (silent fallback guardrail):
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/InsightErrorHandlingRegressionTests test`
+  - Post-fix focused run passed:
+    - `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/InsightErrorHandlingRegressionTests -only-testing:PCOSTests/InsightsViewModelErrorPropagationTests -only-testing:PCOSTests/InsightEngineTests test` (`18 tests in 3 suites passed`)
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
 
-### H-8. No accessibility labels on CalendarDayCell
+### H-1. `UIBackgroundModes` remote-notification mismatch -- RESOLVED (2026-03-12)
 
-| | |
-|---|---|
-| **File** | `CalendarMonthView.swift:206-239` |
-| **Root Cause** | `CalendarDayCell` shows only a number and a colored circle. No `.accessibilityLabel`, no `.accessibilityHint`. VoiceOver users hear only the day number. |
-| **Impact** | VoiceOver users cannot determine: whether a day has period data, what the flow intensity was, or that today is highlighted. Calendar is effectively unusable for blind users. |
-| **Fix Strategy** | Add `.accessibilityLabel("February 24, heavy flow")` composed from the entry data. |
+- Category: App Store rejection risk
+- Before:
+  - App metadata declared `UIBackgroundModes = remote-notification` in the active app plist (March 11 snapshot), but app code only implemented local notification flows.
+  - This created a metadata/implementation mismatch for background push capability claims.
+- After:
+  - Removed `UIBackgroundModes` / `remote-notification` declaration from `PCOS/PCOS/Info.plist`.
+  - Added parity test coverage in both test trees:
+    - `PCOS/PCOSTests/PrivacyManifestTests.swift:85-107`
+    - `CycleBalanceTests/PrivacyManifestTests.swift:85-107`
+  - Current plist evidence shows no `UIBackgroundModes` entry: `PCOS/PCOS/Info.plist:39-45`.
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed: `xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' -only-testing:PCOSTests/AppStoreConfigTests test`
+  - Post-fix focused run passed with same command.
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator regression gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build gate passed (`BUILD SUCCEEDED`).
+  - Built release metadata sanity check passed: release `PCOS.app/Info.plist` no longer declares `UIBackgroundModes` and retains icon metadata.
 
----
+## Critical Remediation Cycle (Completed This Pass)
 
-## Medium — Tech Debt
+### C-ICON-1. Missing App Icon image assets in active icon set -- RESOLVED (2026-03-11)
 
-### M-1. `SymptomEntry.symptomType` stored as `String`, not `SymptomType` enum
+- Category: App Store rejection risk
+- Before:
+  - Active `AppIcon.appiconset/Contents.json` did not map required image entries to concrete files.
+  - No concrete icon PNGs were present for required default/dark/tinted variants.
+- After:
+  - Added production-valid temporary icon files in active and mirror trees:
+    - `appicon-default-1024.png`
+    - `appicon-dark-1024.png`
+    - `appicon-tinted-1024.png`
+  - Wired filenames in both icon manifests:
+    - `PCOS/PCOS/Assets.xcassets/AppIcon.appiconset/Contents.json:4`, `:16`, `:28`
+    - `CycleBalance/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json`
+  - Added resource validation test suite in both trees:
+    - `PCOS/PCOSTests/PrivacyManifestTests.swift:45-83`
+    - `CycleBalanceTests/PrivacyManifestTests.swift:45-83`
+- Test-first sequence and verification evidence:
+  - Pre-fix focused run failed on missing `filename` entries in app icon manifest assertions.
+  - Post-fix focused resource gate passed.
+  - Parity gate passed: `./scripts/check_tree_parity.sh`.
+  - Full simulator test gate passed (`TEST SUCCEEDED`).
+  - Release no-sign build passed (`BUILD SUCCEEDED`).
+  - Built artifact checks passed:
+    - release `Info.plist` includes `CFBundleIcons` + `CFBundleIconName = AppIcon`
+    - release `Assets.car` contains `AppIcon` icon-image renditions via `assetutil`.
 
-| | |
-|---|---|
-| **File** | `SymptomEntry.swift:9` |
-| **Root Cause** | `var symptomType: String` stores the raw value. Every consumer must call `SymptomType(rawValue: entry.symptomType)` and handle `nil`. |
-| **Impact** | Boilerplate, fragile — if a `SymptomType` raw value changes, existing data becomes orphaned. The convenience init papers over this but doesn't fix it. |
-| **Fix Strategy** | Store `SymptomType` directly (SwiftData supports `Codable` enums). Add a lightweight migration. |
+## Open Findings Summary
 
-### M-2. `Insight.body` property name shadows SwiftUI convention
+| Severity | Open |
+|---|---:|
+| Critical | 0 |
+| High | 0 |
+| Medium | 0 |
+| Total | 0 |
 
-| | |
-|---|---|
-| **File** | `Insight.swift:10` |
-| **Root Cause** | Property named `body` on a class. While it compiles (no protocol conformance conflict), it creates cognitive overhead since `body` is the canonical SwiftUI View entry point. |
-| **Impact** | Developer confusion, especially in code review or when an AI assistant reads the code. |
-| **Fix Strategy** | Rename to `content` or `description`. Requires schema migration. |
-
-### M-3. Six SwiftData models with no UI
-
-| | |
-|---|---|
-| **Files** | `BloodSugarReading.swift`, `SupplementLog.swift`, `MealEntry.swift`, `HairPhotoEntry.swift`, `DailyLog.swift`, `Insight.swift` (partial — has `InsightsView` but no write path) |
-| **Root Cause** | Models defined in the schema and registered in the `ModelContainer`, but no corresponding ViewModels or data-entry Views exist. |
-| **Impact** | CloudKit sync is set up for these tables with no way to populate them. Schema surface area with no benefit. If CloudKit encounters issues with empty tables, debugging is harder. |
-| **Fix Strategy** | Either build the remaining features or remove unused models from the schema until needed. |
-
-### M-4. No `Hashable` conformance on `@Model` classes used in `ForEach`
-
-| | |
-|---|---|
-| **Files** | `CycleDetailView.swift:131` (`ForEach(…, id: \.id)`), `InsightsView.swift:31` (`ForEach(insights, id: \.id)`) |
-| **Root Cause** | `ForEach` uses `id: \.id` instead of relying on `Identifiable`. SwiftData `@Model` classes don't auto-conform to `Hashable`. |
-| **Impact** | Works correctly but is fragile — if `id` property changes or is removed, the `ForEach` breaks at compile time with an unhelpful error. |
-| **Fix Strategy** | Add explicit `Identifiable` conformance or use `ForEach(items)` without `id:` since `@Model` classes are already reference types with stable identity. |
-
-### M-5. Hardcoded padding/spacing values inconsistent across views
-
-| | |
-|---|---|
-| **Files** | Throughout — padding varies: 4, 6, 8, 10, 12, 14, 16, 20, 24, 32 |
-| **Root Cause** | No spacing scale in `AppTheme`. Each view picks its own magic numbers. |
-| **Impact** | Inconsistent visual rhythm. Makes design system maintenance harder. |
-| **Fix Strategy** | Define spacing constants in `AppTheme` (e.g., `.spacing4`, `.spacing8`, `.spacing16`). |
-
-### M-6. `FlowIntensity.none` case is confusing in period logging context
-
-| | |
-|---|---|
-| **File** | `Enums.swift:6` |
-| **Root Cause** | `FlowIntensity` has a `.none` case. In `CycleLogView`, selecting "None" while logging a period day is contradictory. |
-| **Impact** | User can log "period day with no flow" — semantically odd. |
-| **Fix Strategy** | Either remove `.none` from the `FlowIntensityPicker` during period logging, or rename to `.noFlow` and hide it contextually. |
-
-### M-7. HealthKit entitlement declared but unused
-
-| | |
-|---|---|
-| **Files** | `CycleBalance.entitlements`, `project.yml` (Info.plist keys) |
-| **Root Cause** | HealthKit access entitlement and usage description strings are configured, but no `import HealthKit` or `HKHealthStore` exists in any Swift file. |
-| **Impact** | Apple may reject the app during review for claiming HealthKit access without using it. |
-| **Fix Strategy** | Remove entitlement and Info.plist keys until HealthKit integration is implemented. |
-
-### M-8. `CyclePredictionEngine` does not handle edge case of all same-length cycles
-
-| | |
-|---|---|
-| **File** | `CyclePredictionEngine.swift:115-118` |
-| **Root Cause** | `calculateVariance()` returns 0 when `values.count == 1`. But it also returns 0 when all values are identical (variance of `[28, 28, 28]` = 0). This makes `standardDeviation = 0` and `windowHalf = minimumWindowDays / 2.0 = 2.5`, which is fine. However, `confidence = 1.0` when all cycles are identical — which may be overconfident for PCOS users with limited data. |
-| **Impact** | Low — the minimum 5-day window prevents false precision. But confidence reporting could mislead. |
-| **Fix Strategy** | Cap confidence at `0.9` or add a "recency" factor that decays confidence when the most recent cycle was long ago. |
-
----
-
-## Summary
-
-| Severity | Count | Key Theme |
-|---|---|---|
-| **Critical** | 3 | Silent data loss, duplicate entries |
-| **High** | 8 | No logging, perf waste, accessibility, locale |
-| **Medium** | 8 | Type safety, dead code, naming, edge cases |
-| **Total** | **19** | |
-
-### Recommended Fix Order
-
-1. **C-1** (duplicate entries) — Active bug causing data corruption
-2. **C-2 + C-3** (silent try?) — Enable `do/catch` + **H-1** (add Logger)
-3. **H-8** (calendar accessibility) — Blocks accessibility compliance
-4. **H-4** (Dynamic Type) — Blocks accessibility compliance
-5. **H-6** (locale calendar) — Breaks for non-US users
-6. **H-2** (ViewModel recreation) — Performance
-7. **H-3** (DateFormatter caching) — Performance
-8. **H-5** (God Object) — Maintainability
-9. **M-1** (SymptomType as String) — Type safety
-10. **M-7** (HealthKit entitlement) — App Store review risk
+Step 3 queue seed (next after approval): **empty** (all currently logged findings resolved).
