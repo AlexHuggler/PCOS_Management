@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftData
-@testable import CycleBalance
+@testable import PCOS
 
 @MainActor
 enum TestHelpers {

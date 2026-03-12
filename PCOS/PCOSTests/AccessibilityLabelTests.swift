@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import CycleBalance
+@testable import PCOS
 
 @Suite("Accessibility Labels")
 struct AccessibilityLabelTests {

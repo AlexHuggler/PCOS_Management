@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import UIKit
-@testable import CycleBalance
+@testable import PCOS
 
 @Suite("Enum Consistency")
 struct EnumTests {
