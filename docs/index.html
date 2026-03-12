@@ -419,7 +419,13 @@
   <div class="form-card">
     <div id="formError" class="form-error"></div>
 
-    <form id="interestForm">
+    <form id="interestForm" action="https://formsubmit.co/contact@cyclebalance.app" method="POST">
+      <!-- FormSubmit.co configuration -->
+      <input type="hidden" name="_subject" value="New CycleBalance Waitlist Signup">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://cyclebalance.app?submitted=true">
+      <input type="text" name="_honey" style="display:none">
+
       <h2>Get early access</h2>
       <p class="form-subtitle">Be the first to try CycleBalance when it launches. No spam, just updates.</p>
 
@@ -525,58 +531,13 @@
 </div>
 
 <script>
-  // =============================================
-  // FORM BACKEND CONFIGURATION
-  // =============================================
-  // Replace this URL with your Formspree endpoint.
-  // 1. Go to https://formspree.io and sign up (free tier: 50 submissions/month)
-  // 2. Create a new form
-  // 3. Copy the endpoint URL and paste it below
-  const FORM_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
-  // =============================================
-
-  const form = document.getElementById('interestForm');
-  const thankYou = document.getElementById('thankYou');
-  const submitBtn = document.getElementById('submitBtn');
-  const formError = document.getElementById('formError');
-
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    formError.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
-
-    // Collect form data
-    const formData = new FormData(form);
-
-    // Collect checked interests into a comma-separated string
-    const interests = [];
-    form.querySelectorAll('input[name="interests"]:checked').forEach(cb => {
-      interests.push(cb.value);
-    });
-    formData.delete('interests');
-    formData.append('interests', interests.join(', '));
-
-    try {
-      const response = await fetch(FORM_ENDPOINT, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (response.ok) {
-        form.style.display = 'none';
-        thankYou.style.display = 'block';
-      } else {
-        throw new Error('Submission failed');
-      }
-    } catch (error) {
-      formError.textContent = 'Something went wrong. Please try again or email us directly.';
-      formError.style.display = 'block';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Join the Waitlist';
-    }
-  });
+  // Show thank-you message if redirected back after submission
+  if (new URLSearchParams(window.location.search).has('submitted')) {
+    const form = document.getElementById('interestForm');
+    const thankYou = document.getElementById('thankYou');
+    form.style.display = 'none';
+    thankYou.style.display = 'block';
+  }
 </script>
 
 </body>
