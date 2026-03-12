@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CycleBalance — The PCOS Tracker That Actually Gets It</title>
+
+  <!-- SEO -->
+  <meta name="description" content="CycleBalance is the first iOS cycle and symptom tracker built from the ground up for PCOS. Irregular cycle intelligence, insulin tracking, and 100% on-device privacy. Join the waitlist.">
+  <meta name="keywords" content="PCOS, PCOS tracker, PCOS app, irregular period tracker, polycystic ovary syndrome, cycle tracking, insulin resistance, symptom tracker, iOS app">
+  <link rel="canonical" href="https://cyclebalance.app">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="CycleBalance — The PCOS Tracker That Actually Gets It">
+  <meta property="og:description" content="No 28-day assumptions. No data leaving your device. The first cycle tracker built from the ground up for PCOS. Join the waitlist.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cyclebalance.app">
+  <meta property="og:image" content="https://cyclebalance.app/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CycleBalance — The PCOS Tracker That Actually Gets It">
+  <meta name="twitter:description" content="No 28-day assumptions. No data leaving your device. The first cycle tracker built from the ground up for PCOS.">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --sage: #627F7A;
+      --sage-dark: #4A6460;
+      --sage-light: #8FA9A4;
+      --sage-pale: #E8EFED;
+      --coral: #E77C6A;
+      --coral-hover: #D4674F;
+      --warm-cream: #FAF7F4;
+      --warm-white: #FDFCFA;
+      --text-primary: #2D3B39;
+      --text-secondary: #5A6B68;
+      --text-muted: #8A9895;
+      --border: #D4DDD9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--warm-cream);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .page-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    /* Logo */
+    .logo-section {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--sage);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(98, 127, 122, 0.25);
+    }
+
+    .logo-icon svg { width: 36px; height: 36px; }
+
+    .logo-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--sage-dark);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-tagline {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin-bottom: 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .hero h1 span { color: var(--coral); }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Feature pills */
+    .features-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .feature-pill {
+      background: var(--sage-pale);
+      color: var(--sage-dark);
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feature-pill .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--sage);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Form card */
+    .form-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(98, 127, 122, 0.08);
+      border: 1px solid var(--border);
+    }
+
+    .form-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .form-card .form-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .form-group label .required { color: var(--coral); }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235A6B68' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(98, 127, 122, 0.12);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--text-muted); }
+
+    /* Checkbox group */
+    .checkbox-group { margin-bottom: 20px; border: none; }
+
+    .checkbox-group legend {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .checkbox-item:hover {
+      border-color: var(--sage-light);
+      background: var(--sage-pale);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--sage);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .checkbox-item span {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--coral);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover { background: var(--coral-hover); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Privacy note */
+    .privacy-note {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .privacy-note svg {
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    /* Error message */
+    .form-error {
+      display: none;
+      background: #FEF2F2;
+      color: #991B1B;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      border: 1px solid #FECACA;
+    }
+
+    /* Bottom */
+    .bottom-section {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-section p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .bottom-section .highlight {
+      color: var(--sage-dark);
+      font-weight: 600;
+    }
+
+    /* Thank you */
+    .thank-you {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .thank-you .check-circle {
+      width: 64px;
+      height: 64px;
+      background: var(--sage-pale);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .thank-you .check-circle svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--sage);
+    }
+
+    .thank-you h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .thank-you p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      max-width: 400px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 28px 16px 48px; }
+      .hero h1 { font-size: 24px; }
+      .form-card { padding: 28px 20px; }
+      .checkbox-grid { grid-template-columns: 1fr; }
+      .features-row { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Logo -->
+  <div class="logo-section">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="1.5"/>
+        <path d="M12 7 C9 7, 7 9, 7 12 C7 15, 9 17, 12 17" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="2" fill="white"/>
+        <path d="M14 8 Q17 9 17 12 Q17 15 14 16" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+    <div class="logo-title">CycleBalance</div>
+    <div class="logo-tagline">PCOS management, built from the ground up.</div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>The first cycle tracker that <span>actually understands PCOS</span></h1>
+    <p>No 28-day assumptions. No shaming language. No data leaving your device. Just a smart, private tool designed for how your body actually works.</p>
+  </div>
+
+  <!-- Feature pills -->
+  <div class="features-row">
+    <div class="feature-pill"><span class="dot"></span>Irregular cycle intelligence</div>
+    <div class="feature-pill"><span class="dot"></span>Insulin &amp; glucose tracking</div>
+    <div class="feature-pill"><span class="dot"></span>On-device ML insights</div>
+    <div class="feature-pill"><span class="dot"></span>100% private — always</div>
+    <div class="feature-pill"><span class="dot"></span>Doctor-ready reports</div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+    <div id="formError" class="form-error"></div>
+
+    <form id="interestForm">
+      <h2>Get early access</h2>
+      <p class="form-subtitle">Be the first to try CycleBalance when it launches. No spam, just updates.</p>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Name <span class="required">*</span></label>
+        <input type="text" id="name" name="name" placeholder="Your first name" required>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email <span class="required">*</span></label>
+        <input type="email" id="email" name="email" placeholder="you@email.com" required>
+      </div>
+
+      <!-- PCOS Journey -->
+      <div class="form-group">
+        <label for="experience">Where are you on your PCOS journey?</label>
+        <select id="experience" name="pcos_experience">
+          <option value="" disabled selected>Select one...</option>
+          <option value="newly_diagnosed">I was recently diagnosed</option>
+          <option value="experienced">I've been managing PCOS for a while</option>
+          <option value="exploring">I think I might have PCOS</option>
+          <option value="ttc">I'm trying to conceive with PCOS</option>
+          <option value="supporting">I'm supporting someone with PCOS</option>
+        </select>
+      </div>
+
+      <!-- Feature Interest -->
+      <fieldset class="checkbox-group">
+        <legend>What features interest you most?</legend>
+        <div class="checkbox-grid">
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="cycle_tracking">
+            <span>Irregular cycle tracking</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="symptom_correlation">
+            <span>Symptom-lifestyle correlation</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="insulin_tracking">
+            <span>Insulin &amp; glucose tracking</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="supplement_tracking">
+            <span>Supplement tracking</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="doctor_reports">
+            <span>Doctor-ready reports</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="privacy">
+            <span>On-device privacy</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="diet_impact">
+            <span>Diet impact analysis</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="interests" value="hair_skin">
+            <span>Hair &amp; skin photo journal</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Current apps -->
+      <div class="form-group">
+        <label for="current_apps">What do you currently use to manage PCOS? <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <textarea id="current_apps" name="current_apps" placeholder="e.g. Flo, Clue, spreadsheets, nothing yet..."></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn" id="submitBtn">Join the Waitlist</button>
+
+      <div class="privacy-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Your information is stored securely. We'll never share your email or send spam.
+      </div>
+    </form>
+
+    <!-- Thank you -->
+    <div class="thank-you" id="thankYou">
+      <div class="check-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2>You're on the list!</h2>
+      <p>We'll send you updates as CycleBalance gets closer to launch. Thank you for being part of this from the start.</p>
+    </div>
+  </div>
+
+  <!-- Bottom -->
+  <div class="bottom-section">
+    <p>
+      <span class="highlight">Coming September 2026</span> — timed to PCOS Awareness Month.<br>
+      Built for the 7.5 million women in the U.S. living with PCOS.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  // =============================================
+  // FORM BACKEND CONFIGURATION
+  // =============================================
+  // Replace this URL with your Formspree endpoint.
+  // 1. Go to https://formspree.io and sign up (free tier: 50 submissions/month)
+  // 2. Create a new form
+  // 3. Copy the endpoint URL and paste it below
+  const FORM_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+  // =============================================
+
+  const form = document.getElementById('interestForm');
+  const thankYou = document.getElementById('thankYou');
+  const submitBtn = document.getElementById('submitBtn');
+  const formError = document.getElementById('formError');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    formError.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    // Collect form data
+    const formData = new FormData(form);
+
+    // Collect checked interests into a comma-separated string
+    const interests = [];
+    form.querySelectorAll('input[name="interests"]:checked').forEach(cb => {
+      interests.push(cb.value);
+    });
+    formData.delete('interests');
+    formData.append('interests', interests.join(', '));
+
+    try {
+      const response = await fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        form.style.display = 'none';
+        thankYou.style.display = 'block';
+      } else {
+        throw new Error('Submission failed');
+      }
+    } catch (error) {
+      formError.textContent = 'Something went wrong. Please try again or email us directly.';
+      formError.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Join the Waitlist';
+    }
+  });
+</script>
+
+</body>
+</html>
