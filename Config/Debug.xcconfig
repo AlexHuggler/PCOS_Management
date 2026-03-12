@@ -1,0 +1,5 @@
+#include? "LocalSecrets.xcconfig"
+
+REVENUECAT_ENTITLEMENT_ID = premium
+REVENUECAT_OFFERING_ID = default
+PREMIUM_BILLING_MODE = local_storekit

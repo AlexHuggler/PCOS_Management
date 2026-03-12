@@ -1,6 +1,6 @@
 # CycleBalance
 
-A privacy-first iOS app for women managing Polycystic Ovary Syndrome (PCOS). Track irregular cycles without shame, monitor insulin resistance, log symptoms, and discover what actually helps with AI-powered insights.
+A privacy-first iOS app for women managing Polycystic Ovary Syndrome (PCOS). Track irregular cycles, monitor insulin resistance, log symptoms, and generate on-device insights.
 
 ## Requirements
 
@@ -8,54 +8,60 @@ A privacy-first iOS app for women managing Polycystic Ovary Syndrome (PCOS). Tra
 - iOS 17.0+ deployment target
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 
+## Source of Truth
+
+- `project.yml` is the build definition.
+- `PCOS.xcodeproj` is generated from XcodeGen and should not be manually edited.
+- Do not use `PCOS/PCOS.xcodeproj` (stale nested project); only use the root `PCOS.xcodeproj`.
+- Active target/scheme: `PCOS`.
+- `CycleBalance/` and `PCOS/PCOS/` (plus test trees) are kept in parity. Run `./scripts/check_tree_parity.sh`.
+- Backlog source of truth: `ISSUE_LOG.md`.
+
 ## Setup
 
 ```bash
-# Install XcodeGen
 brew install xcodegen
 
-# Clone and generate project
 git clone <repo-url>
 cd PCOS_Management
-xcodegen generate
-open CycleBalance.xcodeproj
+./scripts/open_pcos_xcode.sh
 ```
 
-Build and run with Cmd+R targeting an iOS 17+ simulator.
+Alternative:
 
-## Architecture
+```bash
+make open-xcode
+```
 
-- **Language:** Swift 6 with strict concurrency
-- **UI:** SwiftUI (iOS 17+)
-- **Data:** SwiftData for local storage
-- **Sync:** CloudKit private database
-- **ML:** Core ML for on-device pattern recognition
-- **Health:** HealthKit integration
+## Build and Test
+
+```bash
+xcodebuild -project PCOS.xcodeproj -scheme PCOS -configuration Debug build
+xcodebuild -project PCOS.xcodeproj -scheme PCOS -configuration Release CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.2' test
+```
+
+## Device QA Note
+
+- If the UI appears vertically "squished" on a physical iPhone, first verify Reachability is not active.
+- Disable Reachability in `Settings > Accessibility > Touch > Reachability` (or swipe up/tap the top area to dismiss it) before treating the layout as an app regression.
 
 ## Project Structure
 
 ```
-CycleBalance/
-├── App/                  # App entry point, navigation, settings
-├── Features/
-│   ├── Cycle/            # Irregular cycle tracking & prediction
-│   ├── Symptoms/         # PCOS symptom logging
-│   ├── BloodSugar/       # Glucose & insulin resistance tracking
-│   ├── Supplements/      # Supplement efficacy monitoring
-│   ├── Meals/            # Meal logging with GI analysis
-│   ├── PhotoJournal/     # Hair growth/loss photo tracking
-│   ├── Insights/         # AI-powered correlations
-│   └── Reports/          # Doctor-exportable PDF reports
-├── Core/
-│   ├── Data/             # SwiftData models, CloudKit sync
-│   ├── HealthKit/        # Health data integration
-│   ├── ML/               # Core ML models & inference
-│   ├── Notifications/    # Local notification scheduling
-│   └── Extensions/       # Swift extensions
-├── SharedUI/             # Reusable components, themes, charts
-└── Resources/            # Assets, ML models, localization
+PCOS_Management/
+├── project.yml                     # XcodeGen source of truth
+├── PCOS/PCOS/                      # Active app source tree
+├── PCOS/PCOSTests/                 # Active unit tests
+├── PCOS/PCOSUITests/               # Active UI tests
+├── CycleBalance/                   # Canonical mirror tree (parity-checked)
+├── CycleBalanceTests/              # Canonical mirror tests (parity-checked)
+├── scripts/check_tree_parity.sh    # Drift guard
+├── scripts/open_pcos_xcode.sh      # One-command Xcode setup/open
+├── ISSUE_LOG.md                    # Product backlog / issue tracking
+└── project_map.md                  # Architecture map
 ```
 
 ## Medical Disclaimer
 
-CycleBalance is designed to help you track and understand your PCOS symptoms. It is not a medical device and does not provide medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider about your health concerns.
+CycleBalance is designed to help users track and understand PCOS symptoms. It is not a medical device and does not provide medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider about health concerns.

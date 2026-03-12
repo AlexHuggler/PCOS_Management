@@ -1,0 +1,66 @@
+name: iOS CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Verify source tree parity
+        run: ./scripts/check_tree_parity.sh
+
+      - name: Regenerate Xcode project
+        run: xcodegen generate
+
+      - name: Select iPhone simulator destination
+        id: simulator
+        run: |
+          SIMULATOR_ID="$(xcodebuild -showdestinations -project PCOS.xcodeproj -scheme PCOS | awk '/platform:iOS Simulator/ && /name:iPhone/ && !/placeholder/ { match($0, /id:[^,}]*/); if (RSTART > 0) { id = substr($0, RSTART + 3, RLENGTH - 3); gsub(/^[[:space:]]+|[[:space:]]+$/, "", id); print id; exit } }')"
+
+          if [[ -z "$SIMULATOR_ID" ]]; then
+            echo "::error::No iPhone simulator destination found for PCOS scheme."
+            xcodebuild -showdestinations -project PCOS.xcodeproj -scheme PCOS
+            exit 1
+          fi
+
+          echo "id=$SIMULATOR_ID" >> "$GITHUB_OUTPUT"
+          echo "Using simulator id: $SIMULATOR_ID"
+
+      - name: Build Debug
+        run: |
+          xcodebuild \
+            -project PCOS.xcodeproj \
+            -scheme PCOS \
+            -configuration Debug \
+            -destination "id=${{ steps.simulator.outputs.id }}" \
+            build
+
+      - name: Build Release
+        run: |
+          xcodebuild \
+            -project PCOS.xcodeproj \
+            -scheme PCOS \
+            -configuration Release \
+            -destination "id=${{ steps.simulator.outputs.id }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Run Unit and UI Tests
+        run: |
+          xcodebuild \
+            -project PCOS.xcodeproj \
+            -scheme PCOS \
+            -destination "id=${{ steps.simulator.outputs.id }}" \
+            test

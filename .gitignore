@@ -42,4 +42,7 @@ fastlane/test_output
 # Secrets
 *.xcconfig
 !*-Sample.xcconfig
+!Config/Debug.xcconfig
+!Config/Release.xcconfig
+!Config/LocalSecrets.example.xcconfig
 .env
