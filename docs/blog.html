@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — CycleBalance</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Insights on PCOS management, cycle tracking, and privacy-first health tech from the CycleBalance team.">
+  <meta name="keywords" content="PCOS blog, PCOS education, cycle tracking, irregular periods, health data privacy, CycleBalance">
+  <link rel="canonical" href="https://cyclebalance.app/blog">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Blog — CycleBalance">
+  <meta property="og:description" content="Insights on PCOS management, cycle tracking, and privacy-first health tech from the CycleBalance team.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cyclebalance.app/blog">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --sage: #627F7A;
+      --sage-dark: #4A6460;
+      --sage-light: #8FA9A4;
+      --sage-pale: #E8EFED;
+      --coral: #E77C6A;
+      --coral-hover: #D4674F;
+      --warm-cream: #FAF7F4;
+      --warm-white: #FDFCFA;
+      --text-primary: #2D3B39;
+      --text-secondary: #5A6B68;
+      --text-muted: #8A9895;
+      --border: #D4DDD9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--warm-cream);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .page-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    /* Header */
+    .site-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--sage);
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(98, 127, 122, 0.2);
+    }
+
+    .header-logo svg { width: 22px; height: 22px; }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--sage-dark);
+      letter-spacing: -0.3px;
+    }
+
+    .site-header a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: opacity 0.2s;
+    }
+
+    .site-header a:hover { opacity: 0.8; }
+
+    /* Page heading */
+    .page-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .page-heading h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+
+    .page-heading p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Blog cards */
+    .blog-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .blog-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 32px 36px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(98, 127, 122, 0.08);
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    .blog-card:hover {
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 12px 32px rgba(98, 127, 122, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .blog-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .blog-tag {
+      background: var(--sage-pale);
+      color: var(--sage-dark);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .blog-date {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .blog-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .blog-card h2 a {
+      transition: color 0.2s;
+    }
+
+    .blog-card h2 a:hover {
+      color: var(--sage-dark);
+    }
+
+    .blog-excerpt {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .read-more {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--coral);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s, gap 0.2s;
+    }
+
+    .read-more:hover {
+      color: var(--coral-hover);
+      gap: 8px;
+    }
+
+    .read-more svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Subscribe section */
+    .subscribe-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(98, 127, 122, 0.08);
+      border: 1px solid var(--border);
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .subscribe-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .subscribe-card .subscribe-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .subscribe-form {
+      display: flex;
+      gap: 10px;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    .subscribe-form input[type="email"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .subscribe-form input[type="email"]:focus {
+      outline: none;
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(98, 127, 122, 0.12);
+    }
+
+    .subscribe-form input[type="email"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    .subscribe-btn {
+      padding: 12px 24px;
+      background: var(--coral);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .subscribe-btn:hover { background: var(--coral-hover); }
+    .subscribe-btn:active { transform: scale(0.98); }
+
+    .subscribe-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .subscribe-note svg {
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    /* Footer */
+    .site-footer {
+      text-align: center;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--sage-dark);
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 28px 16px 48px; }
+      .page-heading h1 { font-size: 24px; }
+      .blog-card { padding: 24px 20px; }
+      .subscribe-card { padding: 28px 20px; }
+      .subscribe-form {
+        flex-direction: column;
+      }
+      .subscribe-btn {
+        width: 100%;
+        padding: 14px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="site-header">
+    <a href="/">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="1.5"/>
+          <path d="M12 7 C9 7, 7 9, 7 12 C7 15, 9 17, 12 17" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2" fill="white"/>
+          <path d="M14 8 Q17 9 17 12 Q17 15 14 16" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <span class="header-title">CycleBalance</span>
+    </a>
+  </header>
+
+  <!-- Page Heading -->
+  <div class="page-heading">
+    <h1>Blog</h1>
+    <p>Thoughts on PCOS management, cycle tracking, and building health tools that put privacy first.</p>
+  </div>
+
+  <!-- Blog Posts -->
+  <div class="blog-list">
+
+    <!-- Post 1 -->
+    <article class="blog-card">
+      <div class="blog-meta">
+        <span class="blog-tag">Our Story</span>
+        <span class="blog-date">March 2026</span>
+      </div>
+      <h2><a href="#">Why We Built CycleBalance</a></h2>
+      <p class="blog-excerpt">Every major cycle tracking app on the market assumes a 28-day cycle. If your period is irregular, late, or unpredictable, you get red warnings, confused predictions, and features that simply don't apply. We built CycleBalance because the 1 in 10 women with PCOS deserve a tracker that works with their biology, not against it.</p>
+      <a href="#" class="read-more">
+        Read more
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </a>
+    </article>
+
+    <!-- Post 2 -->
+    <article class="blog-card">
+      <div class="blog-meta">
+        <span class="blog-tag">PCOS Education</span>
+        <span class="blog-date">March 2026</span>
+      </div>
+      <h2><a href="#">Understanding Irregular Cycles with PCOS</a></h2>
+      <p class="blog-excerpt">Polycystic ovary syndrome disrupts the hormonal signals that drive ovulation, which means cycles can range anywhere from 21 days to several months. Tracking these patterns over time is one of the most powerful things you can do to understand your body and have more productive conversations with your doctor.</p>
+      <a href="#" class="read-more">
+        Read more
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </a>
+    </article>
+
+    <!-- Post 3 -->
+    <article class="blog-card">
+      <div class="blog-meta">
+        <span class="blog-tag">Privacy</span>
+        <span class="blog-date">March 2026</span>
+      </div>
+      <h2><a href="#">Privacy-First Health Tracking: Why Your Data Should Stay on Your Device</a></h2>
+      <p class="blog-excerpt">Most health apps upload your most intimate data to cloud servers, where it can be sold, subpoenaed, or breached. In a post-Dobbs world, reproductive health data carries real legal risk. CycleBalance takes a different approach: all your data stays on your device, processed locally, and never touches our servers.</p>
+      <a href="#" class="read-more">
+        Read more
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </a>
+    </article>
+
+  </div>
+
+  <!-- Subscribe Section -->
+  <div class="subscribe-card">
+    <h2>Subscribe for updates</h2>
+    <p class="subscribe-subtitle">Get new posts and CycleBalance news delivered to your inbox. No spam, ever.</p>
+    <form class="subscribe-form" action="https://formsubmit.co/Contact@cyclebalance.app" method="POST">
+      <input type="hidden" name="_subject" value="CycleBalance Blog Subscriber">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://cyclebalance.app/blog?subscribed=true">
+      <input type="text" name="_honey" style="display:none">
+      <input type="email" name="email" placeholder="you@email.com" required>
+      <button type="submit" class="subscribe-btn">Subscribe</button>
+    </form>
+    <p class="subscribe-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      No spam. Unsubscribe anytime.
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <nav class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/support">Support</a>
+    </nav>
+    <p class="footer-copy">&copy; 2026 CycleBalance. All rights reserved.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
