@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — CycleBalance</title>
+
+  <!-- SEO -->
+  <meta name="description" content="CycleBalance Privacy Policy. Learn how we protect your data with 100% on-device storage and no cloud tracking.">
+  <link rel="canonical" href="https://cyclebalance.app/privacy">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --sage: #627F7A;
+      --sage-dark: #4A6460;
+      --sage-light: #8FA9A4;
+      --sage-pale: #E8EFED;
+      --coral: #E77C6A;
+      --coral-hover: #D4674F;
+      --warm-cream: #FAF7F4;
+      --warm-white: #FDFCFA;
+      --text-primary: #2D3B39;
+      --text-secondary: #5A6B68;
+      --text-muted: #8A9895;
+      --border: #D4DDD9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--warm-cream);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      background: var(--warm-white);
+    }
+
+    .header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--sage);
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(98, 127, 122, 0.2);
+    }
+
+    .header-logo-icon svg { width: 20px; height: 20px; }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--sage-dark);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+
+    .header-title:hover { color: var(--sage); }
+
+    .header-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    /* Content */
+    .page-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 60px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .effective-date {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+    }
+
+    .intro {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 40px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .privacy-highlight {
+      background: var(--sage-pale);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .privacy-highlight svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .privacy-highlight p {
+      font-size: 15px;
+      color: var(--sage-dark);
+      font-weight: 500;
+      line-height: 1.6;
+    }
+
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .section h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      letter-spacing: -0.2px;
+    }
+
+    .section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .section p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .section ul {
+      list-style: none;
+      margin-bottom: 12px;
+      padding-left: 0;
+    }
+
+    .section ul li {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      padding-left: 20px;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .section ul li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 6px;
+      height: 6px;
+      background: var(--sage);
+      border-radius: 50%;
+    }
+
+    .section a {
+      color: var(--sage-dark);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .section a:hover {
+      color: var(--coral);
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      background: var(--warm-white);
+    }
+
+    .footer-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--sage-dark);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 32px 16px 48px; }
+      .page-title { font-size: 26px; }
+      .privacy-highlight { flex-direction: column; gap: 10px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="header-link">
+      <div class="header-logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="1.5"/>
+          <path d="M12 7 C9 7, 7 9, 7 12 C7 15, 9 17, 12 17" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2" fill="white"/>
+          <path d="M14 8 Q17 9 17 12 Q17 15 14 16" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <span class="header-title">CycleBalance</span>
+    </a>
+  </div>
+</header>
+
+<!-- Content -->
+<div class="page-wrapper">
+
+  <h1 class="page-title">Privacy Policy</h1>
+  <p class="effective-date">Effective Date: March 18, 2026</p>
+
+  <p class="intro">
+    CycleBalance ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the CycleBalance iOS application (the "App") and our website at cyclebalance.app (the "Website"). We built CycleBalance with a privacy-first philosophy: your health data stays on your device, always.
+  </p>
+
+  <!-- Privacy highlight box -->
+  <div class="privacy-highlight">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--sage-dark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0110 0v4"/>
+    </svg>
+    <p>Your health data never leaves your device. CycleBalance stores all personal health information locally on your iPhone using on-device storage and on-device machine learning (Core ML). There are no servers, no cloud sync, and no third-party analytics tracking your health data.</p>
+  </div>
+
+  <!-- 1. Information We Collect -->
+  <div class="section">
+    <h2>1. Information We Collect</h2>
+
+    <h3>A. Information Stored On-Device Only (App)</h3>
+    <p>When you use the CycleBalance app, you may enter personal health information such as:</p>
+    <ul>
+      <li>Menstrual cycle dates and patterns</li>
+      <li>Symptoms (e.g., acne, hair changes, fatigue, mood)</li>
+      <li>Insulin and glucose readings</li>
+      <li>Supplement and medication logs</li>
+      <li>Diet and lifestyle notes</li>
+      <li>Photos for hair and skin journals</li>
+    </ul>
+    <p>This data is stored exclusively on your device. It is never transmitted to our servers or any third party. We have no ability to access, view, or retrieve this data.</p>
+
+    <h3>B. Information Collected via the Website (Waitlist)</h3>
+    <p>If you choose to join our waitlist through the Website, we collect:</p>
+    <ul>
+      <li>Your name</li>
+      <li>Your email address</li>
+      <li>Your PCOS journey stage (e.g., newly diagnosed, trying to conceive)</li>
+      <li>Feature interests (which app features appeal to you)</li>
+      <li>What apps or tools you currently use to manage PCOS (optional)</li>
+    </ul>
+    <p>This information is submitted voluntarily and processed through Formsubmit.co, a third-party form handling service.</p>
+  </div>
+
+  <!-- 2. How We Use Your Information -->
+  <div class="section">
+    <h2>2. How We Use Your Information</h2>
+
+    <h3>On-Device App Data</h3>
+    <p>Your health data is used solely within the app on your device to:</p>
+    <ul>
+      <li>Track and display your cycle patterns, symptoms, and health metrics</li>
+      <li>Provide personalized insights using on-device machine learning (Core ML)</li>
+      <li>Generate doctor-ready reports that you choose to export or share</li>
+      <li>Identify correlations between symptoms, lifestyle, and cycle patterns</li>
+    </ul>
+    <p>All machine learning processing occurs entirely on your device. No data is sent to external servers for analysis.</p>
+
+    <h3>Waitlist Data</h3>
+    <p>We use the information you provide through our waitlist to:</p>
+    <ul>
+      <li>Notify you when CycleBalance launches</li>
+      <li>Send occasional development updates (no spam)</li>
+      <li>Understand what features our future users value most</li>
+    </ul>
+  </div>
+
+  <!-- 3. Data Storage and Security -->
+  <div class="section">
+    <h2>3. Data Storage and Security</h2>
+
+    <h3>App Data</h3>
+    <p>All health data entered into CycleBalance is stored locally on your device. We leverage iOS built-in security features, including:</p>
+    <ul>
+      <li>iOS Data Protection encryption, which encrypts your data when your device is locked</li>
+      <li>App sandboxing, which prevents other apps from accessing CycleBalance data</li>
+      <li>No network transmission of health data — your information never leaves your device</li>
+    </ul>
+    <p>Because your data is stored only on your device, if you delete the app or lose your device, your data cannot be recovered by us. We recommend using your device's built-in backup features if you wish to preserve your data.</p>
+
+    <h3>Waitlist Data</h3>
+    <p>Waitlist submissions are processed by Formsubmit.co and delivered to us via email. We store this information securely and do not sell, rent, or share it with third parties for marketing purposes.</p>
+  </div>
+
+  <!-- 4. Third-Party Services -->
+  <div class="section">
+    <h2>4. Third-Party Services</h2>
+    <p>CycleBalance is designed to minimize third-party involvement:</p>
+    <ul>
+      <li><strong>Health data:</strong> No third-party services have access to your health data. None. There are no analytics SDKs, no ad trackers, and no cloud databases connected to your health information.</li>
+      <li><strong>Waitlist form:</strong> We use <a href="https://formsubmit.co" target="_blank" rel="noopener noreferrer">Formsubmit.co</a> to process waitlist submissions on our Website. Formsubmit.co receives the information you submit in the waitlist form (name, email, and your responses). Please review <a href="https://formsubmit.co/privacy" target="_blank" rel="noopener noreferrer">Formsubmit.co's privacy policy</a> for details on how they handle submitted data.</li>
+      <li><strong>On-device machine learning:</strong> CycleBalance uses Apple's Core ML framework to provide insights. All ML processing happens locally on your device. No data is sent to Apple or any other party for this purpose.</li>
+    </ul>
+  </div>
+
+  <!-- 5. Data Sharing -->
+  <div class="section">
+    <h2>5. Data Sharing</h2>
+    <p>We do not sell, trade, or rent your personal information. Because your health data is stored exclusively on your device, we are technically unable to share it.</p>
+    <p>You may choose to share data from the app (for example, exporting a doctor-ready report). Any such sharing is initiated solely by you and is under your control.</p>
+    <p>We may disclose waitlist information if required by law, legal process, or governmental request.</p>
+  </div>
+
+  <!-- 6. Your Rights and Choices -->
+  <div class="section">
+    <h2>6. Your Rights and Choices</h2>
+
+    <h3>App Data</h3>
+    <p>Since all app data resides on your device, you have full control at all times:</p>
+    <ul>
+      <li><strong>Access:</strong> All your data is visible to you within the app at any time.</li>
+      <li><strong>Deletion:</strong> You can delete individual entries within the app or delete all data by uninstalling the app.</li>
+      <li><strong>Portability:</strong> You can export your data through the app's report and export features.</li>
+    </ul>
+
+    <h3>Waitlist Data</h3>
+    <p>You may request to have your waitlist information deleted at any time by contacting us at <a href="mailto:Contact@cyclebalance.app">Contact@cyclebalance.app</a>. We will process your request within 30 days.</p>
+  </div>
+
+  <!-- 7. California Privacy Rights (CCPA) -->
+  <div class="section">
+    <h2>7. California Privacy Rights</h2>
+    <p>If you are a California resident, the California Consumer Privacy Act (CCPA) provides you with specific rights regarding your personal information:</p>
+    <ul>
+      <li><strong>Right to Know:</strong> You have the right to request that we disclose what personal information we have collected about you. For app data, all information is on your device and fully accessible to you. For waitlist data, you may contact us for details.</li>
+      <li><strong>Right to Delete:</strong> You have the right to request deletion of your personal information. App data can be deleted directly by you at any time. Waitlist data can be deleted upon request.</li>
+      <li><strong>Right to Opt-Out of Sale:</strong> We do not sell your personal information to third parties.</li>
+      <li><strong>Non-Discrimination:</strong> We will not discriminate against you for exercising any of your CCPA rights.</li>
+    </ul>
+    <p>To exercise your rights, contact us at <a href="mailto:Contact@cyclebalance.app">Contact@cyclebalance.app</a>.</p>
+  </div>
+
+  <!-- 8. European Privacy Rights (GDPR) -->
+  <div class="section">
+    <h2>8. European Privacy Rights (GDPR)</h2>
+    <p>If you are located in the European Economic Area (EEA), United Kingdom, or Switzerland, you have additional rights under the General Data Protection Regulation (GDPR):</p>
+    <ul>
+      <li><strong>Legal Basis:</strong> We process waitlist data based on your consent (which you provide by submitting the form). App data is processed locally on your device and is not collected by us.</li>
+      <li><strong>Right of Access:</strong> You may request a copy of any personal data we hold about you.</li>
+      <li><strong>Right to Rectification:</strong> You may request correction of inaccurate personal data.</li>
+      <li><strong>Right to Erasure:</strong> You may request deletion of your personal data.</li>
+      <li><strong>Right to Restrict Processing:</strong> You may request that we limit how we use your data.</li>
+      <li><strong>Right to Data Portability:</strong> You may request your data in a structured, machine-readable format.</li>
+      <li><strong>Right to Withdraw Consent:</strong> You may withdraw consent at any time by contacting us.</li>
+    </ul>
+    <p>To exercise any of these rights, please contact us at <a href="mailto:Contact@cyclebalance.app">Contact@cyclebalance.app</a>. We will respond to your request within 30 days.</p>
+  </div>
+
+  <!-- 9. Children's Privacy -->
+  <div class="section">
+    <h2>9. Children's Privacy</h2>
+    <p>CycleBalance is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided us with personal information through our waitlist, we will take steps to delete such information promptly.</p>
+    <p>If you are a parent or guardian and believe that your child has provided us with personal information, please contact us at <a href="mailto:Contact@cyclebalance.app">Contact@cyclebalance.app</a>.</p>
+  </div>
+
+  <!-- 10. Changes to This Policy -->
+  <div class="section">
+    <h2>10. Changes to This Privacy Policy</h2>
+    <p>We may update this Privacy Policy from time to time to reflect changes in our practices or for legal, regulatory, or operational reasons. If we make material changes, we will notify you by updating the "Effective Date" at the top of this page and, where possible, through in-app notification.</p>
+    <p>We encourage you to review this Privacy Policy periodically to stay informed about how we are protecting your data.</p>
+  </div>
+
+  <!-- 11. Contact Us -->
+  <div class="section">
+    <h2>11. Contact Us</h2>
+    <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:Contact@cyclebalance.app">Contact@cyclebalance.app</a></li>
+      <li><strong>Website:</strong> <a href="https://cyclebalance.app" target="_blank" rel="noopener noreferrer">cyclebalance.app</a></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="footer-copy">CycleBalance &copy; 2026</span>
+    <nav class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Use</a>
+      <a href="mailto:Contact@cyclebalance.app">Support</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
