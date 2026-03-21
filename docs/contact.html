@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — CycleBalance</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Contact the CycleBalance team. Reach us at contact@cyclebalance.app for questions, feedback, or support with your PCOS cycle and symptom tracker.">
+  <link rel="canonical" href="https://cyclebalance.app/contact">
+  <meta name="keywords" content="CycleBalance contact, PCOS app contact, CycleBalance email, CycleBalance support">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Contact Us — CycleBalance">
+  <meta property="og:description" content="Get in touch with the CycleBalance team for questions, feedback, or support.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cyclebalance.app/contact">
+  <meta property="og:image" content="https://cyclebalance.app/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contact Us — CycleBalance">
+  <meta name="twitter:description" content="Get in touch with the CycleBalance team for questions, feedback, or support.">
+  <meta name="twitter:image" content="https://cyclebalance.app/og-image.png">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact CycleBalance",
+    "description": "Contact the CycleBalance team for questions, feedback, or support.",
+    "url": "https://cyclebalance.app/contact",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "CycleBalance",
+      "email": "contact@cyclebalance.app",
+      "url": "https://cyclebalance.app"
+    }
+  }
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sage: #7C9A82;
+      --sage-dark: #5A7A60;
+      --sage-pale: #EEF3EF;
+      --coral: #D4836A;
+      --coral-dark: #B8694F;
+      --warm-white: #FAFAF7;
+      --text-primary: #2D3436;
+      --text-secondary: #636E72;
+      --text-muted: #A0A8AB;
+      --border: #E8E6E1;
+      --card-bg: #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--warm-white);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .site-header {
+      background: var(--sage);
+      padding: 14px 24px;
+    }
+
+    .site-header a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .header-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo-icon svg { width: 20px; height: 20px; }
+
+    .header-logo-text {
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+    }
+
+    /* Page layout */
+    .page-wrapper {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+
+    .page-heading {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .page-heading h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .page-heading p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Email card */
+    .email-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .email-card .email-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--sage-pale);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .email-card .email-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--sage);
+    }
+
+    .email-card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .email-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .email-link {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--sage-dark);
+      text-decoration: none;
+      padding: 10px 24px;
+      background: var(--sage-pale);
+      border-radius: 10px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .email-link:hover {
+      background: var(--sage);
+      color: white;
+    }
+
+    /* Form card */
+    .form-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+    }
+
+    .form-card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .form-group .required {
+      color: var(--coral);
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--warm-white);
+      color: var(--text-primary);
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      color: white;
+      background: var(--sage);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .submit-btn:hover { background: var(--sage-dark); }
+
+    /* Thank you state */
+    .thank-you {
+      display: none;
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .check-circle {
+      width: 56px;
+      height: 56px;
+      background: var(--sage-pale);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .check-circle::after {
+      content: '';
+      width: 20px;
+      height: 10px;
+      border-left: 3px solid var(--sage);
+      border-bottom: 3px solid var(--sage);
+      transform: rotate(-45deg);
+      margin-top: -4px;
+    }
+
+    .thank-you h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .thank-you p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    .site-footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--sage-dark); }
+
+    .site-footer .copyright {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 24px 16px 48px; }
+      .page-heading h1 { font-size: 24px; }
+      .form-card { padding: 28px 20px; }
+      .email-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="site-header">
+  <a href="/">
+    <div class="header-logo-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="1.5"/>
+        <path d="M12 7 C9 7, 7 9, 7 12 C7 15, 9 17, 12 17" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="2" fill="white"/>
+        <path d="M14 8 Q17 9 17 12 Q17 15 14 16" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+    <span class="header-logo-text">CycleBalance</span>
+  </a>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- Page heading -->
+  <div class="page-heading">
+    <h1>Contact Us</h1>
+    <p>Have a question, feedback, or need help? We'd love to hear from you.</p>
+  </div>
+
+  <!-- Email card -->
+  <div class="email-card">
+    <div class="email-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="3"/>
+        <path d="M22 4L12 13L2 4"/>
+      </svg>
+    </div>
+    <h2>Email Us Directly</h2>
+    <p>We typically respond within 24 hours.</p>
+    <a href="mailto:contact@cyclebalance.app" class="email-link">contact@cyclebalance.app</a>
+  </div>
+
+  <!-- Contact form -->
+  <div class="form-card">
+
+    <form id="contactForm" action="https://formsubmit.co/contact@cyclebalance.app" method="POST">
+      <!-- FormSubmit.co configuration -->
+      <input type="hidden" name="_subject" value="CycleBalance Contact Form">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://cyclebalance.app/contact?submitted=true">
+      <input type="text" name="_honey" style="display:none">
+
+      <h2>Send a Message</h2>
+      <p class="form-subtitle">Or use the form below and we'll get back to you.</p>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Name <span class="required">*</span></label>
+        <input type="text" id="name" name="name" placeholder="Your name" required>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email <span class="required">*</span></label>
+        <input type="email" id="email" name="email" placeholder="you@email.com" required>
+      </div>
+
+      <!-- Message -->
+      <div class="form-group">
+        <label for="message">Message <span class="required">*</span></label>
+        <textarea id="message" name="message" placeholder="How can we help?" required></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn">Send Message</button>
+    </form>
+
+    <!-- Thank you state -->
+    <div class="thank-you" id="thankYou">
+      <div class="check-circle"></div>
+      <h2>Message Sent</h2>
+      <p>Thank you for reaching out! We'll get back to you as soon as possible.</p>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="site-footer">
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/support">Support</a>
+    </div>
+    <p class="copyright">&copy; 2026 CycleBalance. All rights reserved.</p>
+  </div>
+
+</div>
+
+<script>
+  // Show thank-you state if redirected back after form submission
+  if (new URLSearchParams(window.location.search).has('submitted')) {
+    var form = document.getElementById('contactForm');
+    var thankYou = document.getElementById('thankYou');
+    form.style.display = 'none';
+    thankYou.style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
