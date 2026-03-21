@@ -1,0 +1,20 @@
+# CycleBalance — https://cyclebalance.app
+# Allow all crawlers including AI bots
+
+User-agent: *
+Allow: /
+
+# AI Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://cyclebalance.app/sitemap.xml
