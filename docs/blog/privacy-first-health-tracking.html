@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy-First Health Tracking: Why Your Data Should Stay on Your Device - CycleBalance Blog</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Most health apps upload your reproductive data to cloud servers where it can be sold, subpoenaed, or breached. Learn why on-device privacy matters and how CycleBalance keeps your data safe.">
+  <meta name="keywords" content="health data privacy, reproductive data protection, period tracker privacy, PCOS app privacy, on-device health tracking, health app data security">
+  <link rel="canonical" href="https://cyclebalance.app/blog/privacy-first-health-tracking">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Privacy-First Health Tracking: Why Your Data Should Stay on Your Device">
+  <meta property="og:description" content="Most health apps upload your reproductive data to cloud servers where it can be sold, subpoenaed, or breached. Learn why on-device privacy matters.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://cyclebalance.app/blog/privacy-first-health-tracking">
+  <meta property="og:image" content="https://cyclebalance.app/og-image.png">
+  <meta property="article:published_time" content="2026-03-29">
+  <meta property="article:author" content="CycleBalance Team">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Privacy-First Health Tracking: Why Your Data Should Stay on Your Device">
+  <meta name="twitter:description" content="Most health apps upload your reproductive data to cloud servers. Learn why on-device privacy matters and how CycleBalance keeps your data safe.">
+  <meta name="twitter:image" content="https://cyclebalance.app/og-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- Structured Data: BlogPosting -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Privacy-First Health Tracking: Why Your Data Should Stay on Your Device",
+    "description": "Most health apps upload your reproductive data to cloud servers where it can be sold, subpoenaed, or breached. Learn why on-device privacy matters and how CycleBalance keeps your data safe.",
+    "datePublished": "2026-03-29",
+    "dateModified": "2026-04-13",
+    "url": "https://cyclebalance.app/blog/privacy-first-health-tracking",
+    "articleSection": "Privacy",
+    "wordCount": 1400,
+    "author": {
+      "@type": "Organization",
+      "name": "CycleBalance Team",
+      "url": "https://cyclebalance.app"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CycleBalance",
+      "url": "https://cyclebalance.app",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://cyclebalance.app/og-image.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://cyclebalance.app/blog/privacy-first-health-tracking"
+    }
+  }
+  </script>
+
+  <!-- Structured Data: BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://cyclebalance.app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://cyclebalance.app/blog"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Privacy-First Health Tracking",
+        "item": "https://cyclebalance.app/blog/privacy-first-health-tracking"
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --sage: #627F7A;
+      --sage-dark: #4A6460;
+      --sage-light: #8FA9A4;
+      --sage-pale: #E8EFED;
+      --coral: #E77C6A;
+      --coral-hover: #D4674F;
+      --warm-cream: #FAF7F4;
+      --warm-white: #FDFCFA;
+      --text-primary: #2D3B39;
+      --text-secondary: #5A6B68;
+      --text-muted: #8A9895;
+      --border: #D4DDD9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--warm-cream);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; }
+
+    .page-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(98, 127, 122, 0.2);
+    }
+
+    .header-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--sage-dark);
+      letter-spacing: -0.3px;
+    }
+
+    .site-header a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .site-header a:hover { opacity: 0.8; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sage);
+      text-decoration: none;
+      margin-bottom: 32px;
+      transition: color 0.2s, gap 0.2s;
+    }
+
+    .back-link:hover { color: var(--sage-dark); gap: 8px; }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .article-header { margin-bottom: 32px; }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .article-tag {
+      background: var(--sage-pale);
+      color: var(--sage-dark);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .article-date {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .article-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      letter-spacing: -0.3px;
+      margin-bottom: 12px;
+    }
+
+    .article-author {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .article-author strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .article-body {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .article-body p { margin-bottom: 20px; }
+
+    .article-body h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 36px;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .article-body h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+
+    .article-body a {
+      color: var(--coral);
+      text-decoration: underline;
+      text-decoration-color: rgba(231, 124, 106, 0.3);
+      text-underline-offset: 2px;
+      transition: text-decoration-color 0.2s;
+    }
+
+    .article-body a:hover { text-decoration-color: var(--coral); }
+
+    .article-body ul, .article-body ol {
+      margin-bottom: 20px;
+      padding-left: 24px;
+    }
+
+    .article-body li {
+      margin-bottom: 8px;
+      line-height: 1.7;
+    }
+
+    .article-body blockquote {
+      border-left: 3px solid var(--sage-light);
+      padding: 16px 20px;
+      margin: 24px 0;
+      background: var(--sage-pale);
+      border-radius: 0 12px 12px 0;
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+
+    .article-cta {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .article-cta h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .article-cta p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--coral);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .cta-btn:hover { background: var(--coral-hover); color: white; }
+
+    .site-footer {
+      text-align: center;
+      padding-top: 32px;
+      margin-top: 48px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--sage-dark); }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 28px 16px 48px; }
+      .article-header h1 { font-size: 26px; }
+      .article-body { font-size: 15px; }
+      .article-cta { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <header class="site-header">
+    <a href="/">
+      <div class="header-logo">
+        <img src="/icon-192.png" alt="CycleBalance" width="40" height="40">
+      </div>
+      <span class="header-title">CycleBalance</span>
+    </a>
+  </header>
+
+  <a href="/blog" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to Blog
+  </a>
+
+  <article>
+    <div class="article-header">
+      <div class="article-meta">
+        <span class="article-tag">Privacy</span>
+        <span class="article-date">March 29, 2026</span>
+      </div>
+      <h1>Privacy-First Health Tracking: Why Your Data Should Stay on Your Device</h1>
+      <p class="article-author">By <strong>the CycleBalance Team</strong></p>
+    </div>
+
+    <div class="article-body">
+
+      <p>Let's start with an uncomfortable question: do you know where your period data is right now?</p>
+
+      <p>If you've been using one of the popular cycle tracking apps, the answer is probably "on a server somewhere." Maybe multiple servers. Possibly in another country. And there's a good chance it's been shared with third parties you've never heard of.</p>
+
+      <p>This isn't speculation. It's documented.</p>
+
+      <h2>The Problem with Cloud-Based Health Tracking</h2>
+
+      <p>In 2021, the Federal Trade Commission <a href="https://www.ftc.gov/legal-library/browse/cases-proceedings/192-3133-flo-health-inc" target="_blank" rel="noopener">took action against Flo Health</a>, one of the most popular period tracking apps in the world, for sharing users' health data with third-party analytics firms including Facebook and Google. The data included information about whether users were trying to get pregnant and details about their menstrual cycles. Flo had promised in its privacy policy that this data would be kept confidential.</p>
+
+      <p>Flo isn't alone. A <a href="https://www.privacyinternational.org/long-read/3196/no-bodys-business-mine-how-menstruation-apps-are-sharing-your-data" target="_blank" rel="noopener">2019 investigation by Privacy International</a> found that multiple period tracking apps were sending intimate health data to Facebook through its analytics SDK, often before users even had a chance to read the privacy policy. The data included cycle dates, symptoms, sexual activity, and mood.</p>
+
+      <p>The standard defense from these companies is that the data is "anonymized" or "aggregated." But <a href="https://www.nature.com/articles/s41467-019-10933-3" target="_blank" rel="noopener">research published in Nature Communications</a> has shown that supposedly anonymized datasets can often be re-identified with surprisingly little information. When you combine cycle data with location, age, and device identifiers (all of which apps routinely collect), the idea of meaningful anonymization becomes difficult to defend.</p>
+
+      <h2>After Dobbs: Reproductive Data as Legal Risk</h2>
+
+      <p>The privacy conversation around reproductive health data changed fundamentally after the U.S. Supreme Court's Dobbs v. Jackson decision in June 2022, which overturned the federal right to abortion established by Roe v. Wade.</p>
+
+      <p>Almost immediately, legal scholars and privacy advocates raised alarms about period tracking data. In states with restrictive abortion laws, cycle tracking data could theoretically be subpoenaed as evidence in criminal investigations. A missed period, a change in tracking behavior, or a sudden gap in data could all become legally relevant.</p>
+
+      <p>This isn't hypothetical legal theory. The <a href="https://www.eff.org/deeplinks/2022/06/security-and-privacy-tips-people-seeking-abortions" target="_blank" rel="noopener">Electronic Frontier Foundation (EFF)</a> published detailed guidance urging people to delete period tracking apps or switch to apps that don't store data on remote servers. Several state attorneys general launched investigations into health app data practices. The concern was clear: if your reproductive health data exists on a company's servers, it's potentially accessible to law enforcement through a subpoena, warrant, or court order.</p>
+
+      <p>For people with PCOS, who may already have irregular cycles that could look "suspicious" to an algorithm or an investigator unfamiliar with the condition, this risk is particularly concerning.</p>
+
+      <h2>Why "Privacy Policies" Aren't Enough</h2>
+
+      <p>Many apps responded to the post-Dobbs concerns by updating their privacy policies. Some added language about not sharing data with law enforcement. Others introduced new encryption features. These are welcome steps, but they have a fundamental limitation: if your data is on their servers, they can be compelled to hand it over.</p>
+
+      <p>A privacy policy is a promise. And promises can be broken, voluntarily or by court order. A company can update its privacy policy at any time. It can be acquired by another company with different values. It can be served with a valid legal order that overrides its stated commitments.</p>
+
+      <p>The only way to guarantee that your health data can't be accessed by anyone other than you is to make sure it never leaves your device in the first place.</p>
+
+      <h2>How On-Device Processing Works</h2>
+
+      <p>When we say CycleBalance is "100% on-device," we mean it literally. Here's what that looks like in practice:</p>
+
+      <ul>
+        <li><strong>Data storage:</strong> All your cycle data, symptoms, insulin readings, and health logs are stored in an encrypted database on your iPhone. We use Apple's iOS Data Protection framework, which encrypts your data with your device passcode. When your phone is locked, the data is inaccessible, even to us.</li>
+        <li><strong>Machine learning:</strong> The symptom-lifestyle correlations and pattern recognition in CycleBalance run through Apple's <a href="https://developer.apple.com/machine-learning/core-ml/" target="_blank" rel="noopener">Core ML framework</a>. This means the ML models run locally on your device's neural engine. Your data never gets sent to a server for processing.</li>
+        <li><strong>No analytics:</strong> We don't use Google Analytics, Firebase, Mixpanel, or any third-party analytics SDK. We don't track which screens you visit, which features you use, or how long you spend in the app. We genuinely don't know how you use CycleBalance, and that's by design.</li>
+        <li><strong>No cloud sync:</strong> There's no account creation, no login, no cloud backup of your health data. Your data lives on your device and nowhere else. You can export it yourself (as CSV, JSON, or PDF) whenever you want, but that's your choice.</li>
+      </ul>
+
+      <h2>The Trade-offs (and Why We Think They're Worth It)</h2>
+
+      <p>We'll be honest: the on-device approach has trade-offs. Without cloud sync, your data doesn't automatically transfer if you get a new phone (though you can use Apple's built-in device transfer or our export/import feature). Without analytics, we have less visibility into how the app is being used, which makes it harder to prioritize features. Without accounts, there's no way to recover your data if you lose your device.</p>
+
+      <p>We think these trade-offs are worth it. Your reproductive health data is some of the most intimate information that exists. In the current legal and social landscape, the risks of storing it on remote servers outweigh the convenience benefits of cloud sync.</p>
+
+      <p>And the technology is good enough to make on-device processing genuinely powerful. Apple's Core ML can run sophisticated machine learning models on-device with minimal battery impact. Modern iPhones have more processing power than you'd ever need for health data analysis. The idea that you need cloud servers for smart health insights is increasingly outdated.</p>
+
+      <h2>What You Can Do Right Now</h2>
+
+      <p>Whether or not you use CycleBalance, here are some practical steps to protect your reproductive health data:</p>
+
+      <ol>
+        <li><strong>Check your current app's privacy policy.</strong> Look for language about "third-party partners," "analytics providers," or "aggregated data sharing." If any of those are present, your data is likely leaving your device.</li>
+        <li><strong>Review app permissions.</strong> Does your cycle tracker need access to your location? Your contacts? Your advertising identifier? If so, ask why.</li>
+        <li><strong>Look for on-device processing.</strong> Apps that process data locally don't need to send your information to servers. This is the strongest form of privacy protection available.</li>
+        <li><strong>Use a strong device passcode.</strong> On-device encryption is only as strong as your passcode. Use a six-digit (or longer) passcode, or Face ID/Touch ID.</li>
+        <li><strong>Be thoughtful about what you share.</strong> Even if your app is private, be cautious about sharing health data through messaging, social media, or email, which may not have the same protections.</li>
+      </ol>
+
+      <h2>Privacy Is a Right, Not a Feature</h2>
+
+      <p>We believe that everyone has a right to track their health without that data being used against them. For the PCOS community, which already faces enough challenges in getting proper care and recognition, the added worry of data exploitation shouldn't be part of the equation.</p>
+
+      <p>That's why we built CycleBalance the way we did. Not because on-device is trendy, but because it's the right approach for reproductive health data in 2026.</p>
+
+      <p>Your body. Your data. Your device. That's the way it should be.</p>
+
+      <div class="article-cta">
+        <h3>Track your health privately</h3>
+        <p>CycleBalance keeps all your data on your iPhone. No cloud, no exceptions.</p>
+        <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cta-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          Download on the App Store
+        </a>
+      </div>
+
+    </div>
+  </article>
+
+  <footer class="site-footer">
+    <nav class="footer-links">
+      <a href="/">Home</a>
+      <a href="/blog">Blog</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/support">Support</a>
+    </nav>
+    <p class="footer-copy">&copy; 2026 CycleBalance. All rights reserved.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
