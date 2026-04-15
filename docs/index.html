@@ -531,6 +531,25 @@
       color: var(--sage-dark);
       text-decoration: none;
       letter-spacing: -0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .site-nav .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(98, 127, 122, 0.2);
+      flex-shrink: 0;
+    }
+
+    .site-nav .nav-logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .site-nav .nav-links {
@@ -569,6 +588,30 @@
     .site-hero {
       text-align: center;
       padding: 60px 0 48px;
+    }
+
+    .hero-app-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      margin: 0 auto 28px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 6px rgba(98, 127, 122, 0.15),
+        0 12px 32px rgba(98, 127, 122, 0.22);
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .hero-app-icon:hover {
+      transform: scale(1.04);
+    }
+
+    .hero-app-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .site-hero h1 {
@@ -856,6 +899,25 @@
       font-weight: 700;
       color: var(--sage-dark);
       margin-bottom: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(98, 127, 122, 0.2);
+      flex-shrink: 0;
+    }
+
+    .footer-brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .footer-copy {
@@ -1185,6 +1247,9 @@
       .site-nav { position: relative; }
       .site-hero { padding: 40px 0 32px; }
       .site-hero h1 { font-size: 28px; }
+      .hero-app-icon { width: 80px; height: 80px; border-radius: 18px; margin-bottom: 20px; }
+      .site-nav .nav-logo-icon { width: 32px; height: 32px; border-radius: 8px; }
+      .site-nav .nav-logo { font-size: 20px; gap: 8px; }
       .privacy-banner { padding: 28px 20px; }
       .about-section { padding: 32px 0; }
       .key-facts { padding: 20px 18px; }
@@ -1355,7 +1420,10 @@
 
   <!-- Navigation -->
   <nav class="site-nav">
-    <a href="/" class="nav-logo">CycleBalance</a>
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-icon"><img src="/icon-192.png" alt="CycleBalance app icon" width="36" height="36"></span>
+      CycleBalance
+    </a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
       <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -1373,6 +1441,9 @@
 
     <!-- Hero -->
     <div class="site-hero" data-section="hero">
+      <div class="hero-app-icon">
+        <img src="/icon-192.png" alt="CycleBalance app icon" width="96" height="96">
+      </div>
       <h1>Your cycle. <span>Your way.</span><br>Your device only.</h1>
       <p>CycleBalance is the first cycle and symptom tracker built from the ground up for PCOS. Smart, private, and designed for how your body actually works.</p>
       <div class="hero-buttons">
@@ -1706,7 +1777,10 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
-        <div class="footer-brand">CycleBalance</div>
+        <div class="footer-brand">
+          <span class="footer-brand-icon"><img src="/icon-192.png" alt="CycleBalance app icon" width="28" height="28"></span>
+          CycleBalance
+        </div>
         <div class="footer-copy">&copy; 2026 CycleBalance. All rights reserved.</div>
       </div>
       <div class="footer-links">
