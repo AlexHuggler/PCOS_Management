@@ -1256,6 +1256,617 @@
       .faq-question { padding: 14px 18px; }
       .faq-answer-inner { padding: 0 18px 14px; }
     }
+
+    /* ============================================================
+       CB-DARK THEME (new landing template)
+       Namespaced under .cb-dark so it cannot collide with the
+       existing light-theme styles used below the hero.
+       ============================================================ */
+    .cb-dark {
+      --bg:            #0B1120;
+      --bg-elev:       #121A2E;
+      --bg-panel:      #141C2E;
+      --bg-panel-soft: #19223A;
+      --border:        #1F2B44;
+      --border-soft:   #243150;
+      --text:          #F5F7FB;
+      --text-muted:    #8B93A7;
+      --text-dim:      #6A7388;
+      --accent-teal:   #7FD1C7;
+      --accent-pink:   #F4B8C4;
+      --accent-purple: #B8A3E8;
+      --accent-peach:  #F4C2A8;
+      --accent-mint:   #8FC9BC;
+      --coral-1:       #F7C7B5;
+      --coral-2:       #F4A898;
+      --coral-ink:     #1A1423;
+      background: radial-gradient(ellipse at 15% -5%, #1A2448 0%, transparent 45%),
+                  radial-gradient(ellipse at 95% 10%, #2A1E4A 0%, transparent 40%),
+                  var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      position: relative;
+      overflow: hidden;
+    }
+    .cb-dark *,
+    .cb-dark *::before,
+    .cb-dark *::after { box-sizing: border-box; }
+
+    .cb-dark a { color: inherit; text-decoration: none; }
+    .cb-dark h1, .cb-dark h2, .cb-dark h3 { color: var(--text); margin: 0; line-height: 1.2; font-weight: 700; }
+    .cb-dark p { margin: 0; color: var(--text-muted); }
+
+    .cb-dark .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* -------- NAV -------- */
+    .cb-dark .cb-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 5;
+    }
+    .cb-dark .cb-nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+    .cb-dark .cb-nav-brand svg { width: 30px; height: 30px; }
+    .cb-dark .cb-nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .cb-dark .cb-nav-links a {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    .cb-dark .cb-nav-links a:hover { opacity: 1; }
+    .cb-dark .cb-nav-toggle {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 40px; height: 40px;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0;
+    }
+    .cb-dark .cb-nav-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    /* -------- BUTTONS -------- */
+    .cb-dark .cb-btn-app {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--coral-1) 0%, var(--coral-2) 100%);
+      color: var(--coral-ink);
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.1;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px -8px rgba(244,168,152,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .cb-dark .cb-btn-app:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -8px rgba(244,168,152,0.55); }
+    .cb-dark .cb-btn-app .apple-logo { width: 22px; height: 22px; flex-shrink: 0; }
+    .cb-dark .cb-btn-app .label-stack { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+    .cb-dark .cb-btn-app .label-stack .small { font-size: 10px; font-weight: 500; opacity: 0.8; }
+    .cb-dark .cb-btn-app .label-stack .big { font-size: 15px; font-weight: 600; margin-top: 2px; }
+
+    .cb-dark .cb-btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 32px;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 14px;
+      border: 1px solid var(--border-soft);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .cb-dark .cb-btn-outline:hover { background: rgba(255,255,255,0.04); border-color: #324066; }
+
+    /* -------- HERO -------- */
+    .cb-dark .cb-hero {
+      position: relative;
+      padding: 40px 0 80px;
+    }
+    .cb-dark .cb-hero-inner {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+      position: relative;
+    }
+    .cb-dark .cb-hero-copy { position: relative; z-index: 2; }
+    .cb-dark .cb-hero-copy h1 {
+      font-size: 56px;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+    .cb-dark .cb-hero-copy h1 .grad {
+      background: linear-gradient(90deg, var(--accent-teal) 0%, var(--accent-pink) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .cb-dark .cb-hero-copy .subtitle {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .cb-dark .cb-hero-bullets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 32px;
+      max-width: 520px;
+      margin-bottom: 36px;
+    }
+    .cb-dark .cb-hero-bullets li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: var(--text);
+      list-style: none;
+    }
+    .cb-dark .cb-hero-bullets svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .cb-dark .cb-hero-cta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .cb-dark .cb-hero-cta .cb-btn-app { padding: 14px 24px; }
+    .cb-dark .cb-moon-bg {
+      position: absolute;
+      left: -80px;
+      top: 10px;
+      width: 420px;
+      height: 420px;
+      pointer-events: none;
+      opacity: 0.85;
+      z-index: 1;
+    }
+
+    /* -------- HERO PHONE -------- */
+    .cb-dark .cb-hero-phone-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+      z-index: 2;
+    }
+    .cb-dark .cb-hero-phone-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 10% 5%;
+      background: radial-gradient(circle at 50% 50%, rgba(184,163,232,0.35) 0%, rgba(244,184,196,0.18) 40%, transparent 70%);
+      filter: blur(20px);
+      z-index: 0;
+    }
+    .cb-dark .cb-hero-phone {
+      position: relative;
+      z-index: 1;
+      max-width: 340px;
+      width: 100%;
+      height: auto;
+      border-radius: 48px;
+      display: block;
+    }
+    .cb-dark .cb-hero-phone-fallback {
+      position: relative;
+      z-index: 1;
+      width: 300px;
+      aspect-ratio: 300 / 610;
+      border-radius: 42px;
+      background: linear-gradient(180deg, #1A2340 0%, #0F1628 100%);
+      border: 2px solid #2A3554;
+      box-shadow: 0 30px 80px -30px rgba(127,209,199,0.3), inset 0 0 0 8px #070B15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    /* -------- SECTION HEADINGS -------- */
+    .cb-dark .cb-section-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 28px;
+      color: var(--text);
+    }
+
+    /* -------- FEATURES -------- */
+    .cb-dark .cb-features {
+      padding: 40px 0 40px;
+      position: relative;
+      z-index: 2;
+    }
+    .cb-dark .cb-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+    .cb-dark .cb-feature-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 20px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .cb-dark .cb-feature-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-soft);
+    }
+    .cb-dark .cb-feature-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .cb-dark .cb-feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .cb-dark .cb-feature-icon svg { width: 22px; height: 22px; stroke: #1A1423; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .cb-dark .cb-icon-pink   { background: linear-gradient(135deg, #F4B8C4, #E48DA6); }
+    .cb-dark .cb-icon-teal   { background: linear-gradient(135deg, #9FDED6, #5FB8AA); }
+    .cb-dark .cb-icon-peach  { background: linear-gradient(135deg, #F7CFB3, #ECA685); }
+    .cb-dark .cb-icon-mint   { background: linear-gradient(135deg, #A8D9CC, #6FB5A3); }
+    .cb-dark .cb-icon-purple { background: linear-gradient(135deg, #C5B3ED, #9D82D8); }
+    .cb-dark .cb-icon-rose   { background: linear-gradient(135deg, #F4B8C4, #D98AA3); }
+    .cb-dark .cb-feature-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .cb-dark .cb-feature-card p {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* -------- TRIO ROW -------- */
+    .cb-dark .cb-trio {
+      padding: 20px 0 60px;
+    }
+    .cb-dark .cb-trio-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 16px;
+    }
+    .cb-dark .cb-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 26px;
+    }
+    .cb-dark .cb-panel h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* How steps */
+    .cb-dark .cb-how-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: start;
+      margin-top: 8px;
+    }
+    .cb-dark .cb-how-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr auto;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 16px;
+    }
+    .cb-dark .cb-step-num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1A1423;
+    }
+    .cb-dark .cb-step-num.p1 { background: linear-gradient(135deg, #F4B8C4, #E48DA6); }
+    .cb-dark .cb-step-num.p2 { background: linear-gradient(135deg, #9FDED6, #5FB8AA); }
+    .cb-dark .cb-step-num.p3 { background: linear-gradient(135deg, #C5B3ED, #9D82D8); }
+    .cb-dark .cb-step-dashed {
+      flex: 1;
+      border-top: 1px dashed #3A4770;
+      height: 1px;
+    }
+    .cb-dark .cb-how-step {
+      text-align: center;
+    }
+    .cb-dark .cb-how-step .cb-step-ic { width: 18px; height: 18px; color: var(--text-muted); margin: 0 auto 4px; display: block; }
+    .cb-dark .cb-how-step h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 2px 0 6px;
+      color: var(--text);
+    }
+    .cb-dark .cb-how-step p {
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--text-dim);
+    }
+
+    /* PCOS list */
+    .cb-dark .cb-pcos {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .cb-dark .cb-pcos-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 14px;
+    }
+    .cb-dark .cb-pcos-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .cb-dark .cb-pcos-list svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: var(--accent-teal);
+      margin-top: 2px;
+    }
+    .cb-dark .cb-pcos-art { width: 100px; height: 100px; opacity: 0.9; }
+
+    /* FAQ panel */
+    .cb-dark .cb-faq-list {
+      display: grid;
+      gap: 10px;
+    }
+    .cb-dark .cb-faq-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-panel-soft);
+      overflow: hidden;
+    }
+    .cb-dark .cb-faq-q {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      text-align: left;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-family: inherit;
+    }
+    .cb-dark .cb-faq-q svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-muted);
+      stroke-width: 2;
+      fill: none;
+      transition: transform 0.25s;
+    }
+    .cb-dark .cb-faq-item.open .cb-faq-q svg { transform: rotate(180deg); }
+    .cb-dark .cb-faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .cb-dark .cb-faq-item.open .cb-faq-a { max-height: 400px; }
+    .cb-dark .cb-faq-a-inner {
+      padding: 0 16px 14px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* -------- FOOTER -------- */
+    .cb-dark .cb-footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0 24px;
+      margin-top: 0;
+    }
+    .cb-dark .cb-footer-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+      gap: 40px;
+      align-items: start;
+    }
+    .cb-dark .cb-footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .cb-dark .cb-footer-brand svg { width: 28px; height: 28px; }
+    .cb-dark .cb-footer-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 220px;
+      line-height: 1.5;
+    }
+    .cb-dark .cb-footer-col h5 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 14px;
+    }
+    .cb-dark .cb-footer-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .cb-dark .cb-footer-col a {
+      color: var(--text-muted);
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .cb-dark .cb-footer-col a:hover { color: var(--text); }
+    .cb-dark .cb-footer-cta-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 16px;
+    }
+    .cb-dark .cb-socials {
+      display: flex;
+      gap: 12px;
+    }
+    .cb-dark .cb-socials a {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .cb-dark .cb-socials a:hover { color: var(--text); border-color: var(--text-dim); }
+    .cb-dark .cb-socials svg { width: 16px; height: 16px; }
+    .cb-dark .cb-footer-copy {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding-top: 24px;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* -------- DIVIDER between new & old content -------- */
+    .cb-more-divider {
+      background: #0B1120;
+      padding: 40px 0 20px;
+      text-align: center;
+    }
+    .cb-more-divider .cb-more-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    .cb-more-divider h3 {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      color: #8B93A7;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .cb-more-divider h3::before,
+    .cb-more-divider h3::after {
+      content: "";
+      width: 60px;
+      height: 1px;
+      background: #1F2B44;
+    }
+
+    /* -------- RESPONSIVE -------- */
+    @media (max-width: 1100px) {
+      .cb-dark .cb-hero-copy h1 { font-size: 48px; }
+      .cb-dark .cb-feature-grid { grid-template-columns: repeat(3, 1fr); }
+      .cb-dark .cb-trio-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      .cb-dark .cb-nav-links { display: none; }
+      .cb-dark .cb-nav-links.open {
+        display: flex;
+        position: absolute;
+        top: 72px;
+        left: 16px;
+        right: 16px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 10;
+      }
+      .cb-dark .cb-nav-toggle { display: inline-flex; align-items: center; justify-content: center; }
+      .cb-dark .cb-hero-inner { grid-template-columns: 1fr; }
+      .cb-dark .cb-moon-bg { width: 280px; height: 280px; left: -60px; opacity: 0.5; }
+      .cb-dark .cb-hero-copy h1 { font-size: 40px; }
+      .cb-dark .cb-hero-phone-wrap { min-height: 420px; }
+      .cb-dark .cb-footer-grid { grid-template-columns: 1fr 1fr; }
+      .cb-dark .cb-footer-cta-col { grid-column: 1 / -1; align-items: flex-start; }
+    }
+    @media (max-width: 560px) {
+      .cb-dark .cb-nav { padding: 16px; }
+      .cb-dark .container,
+      .cb-dark .cb-nav,
+      .cb-dark .cb-hero-inner { padding-left: 16px; padding-right: 16px; }
+      .cb-dark .cb-hero-copy h1 { font-size: 34px; }
+      .cb-dark .cb-hero-bullets { grid-template-columns: 1fr; gap: 10px; }
+      .cb-dark .cb-feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .cb-dark .cb-footer-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1418,42 +2029,270 @@
 <!-- ==================== FULL SITE MODE ==================== -->
 <div id="siteMode" style="display:none">
 
-  <!-- Navigation -->
-  <nav class="site-nav">
-    <a href="/" class="nav-logo">
-      <span class="nav-logo-icon"><img src="/icon-192.png" alt="CycleBalance app icon" width="36" height="36"></span>
-      CycleBalance
-    </a>
-    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
-      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <ul class="nav-links">
-      <li><a href="#features">Features</a></li>
-      <li><a href="#privacy-section">Privacy</a></li>
-      <li><a href="/blog">Blog</a></li>
-      <li><a href="/support">Support</a></li>
-      <li><a href="#compare">Compare</a></li>
-      <li><a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="nav-cta">Download</a></li>
-    </ul>
-  </nav>
+  <!-- ============ NEW DARK-THEME TEMPLATE (top of page) ============ -->
+  <div class="cb-dark">
+
+    <!-- NAV -->
+    <nav class="cb-nav" aria-label="Primary">
+      <a href="/" class="cb-nav-brand" aria-label="CycleBalance home">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="cbMoonLogo" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#9FE0D4"/>
+              <stop offset="0.55" stop-color="#C5B3ED"/>
+              <stop offset="1" stop-color="#F4B8C4"/>
+            </linearGradient>
+          </defs>
+          <path d="M22 5 C 13 7, 8 14, 9 22 C 10 27, 15 30, 21 28 C 14 26, 11 20, 13 14 C 15 9, 19 6, 22 5 Z" fill="url(#cbMoonLogo)"/>
+          <circle cx="25" cy="10" r="1.2" fill="#F4B8C4"/>
+          <circle cx="27" cy="16" r="0.8" fill="#C5B3ED"/>
+        </svg>
+        CycleBalance
+      </a>
+      <button class="cb-nav-toggle" type="button" aria-label="Toggle menu" onclick="document.querySelector('.cb-nav-links').classList.toggle('open')">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <ul class="cb-nav-links">
+        <li><a href="#features-new">Features</a></li>
+        <li><a href="#how-new">How it works</a></li>
+        <li><a href="/support">PCOS Support</a></li>
+        <li><a href="#faq-new">FAQ</a></li>
+      </ul>
+      <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cb-btn-app" aria-label="Download CycleBalance on the App Store">
+        <svg class="apple-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <span class="label-stack"><span class="small">Download on the</span><span class="big">App Store</span></span>
+      </a>
+    </nav>
+
+    <!-- HERO -->
+    <section class="cb-hero">
+      <div class="cb-hero-inner">
+        <div class="cb-hero-copy">
+          <svg class="cb-moon-bg" viewBox="0 0 420 420" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="cbMoonHero" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#7FD1C7"/>
+                <stop offset="0.5" stop-color="#B8A3E8"/>
+                <stop offset="1" stop-color="#F4B8C4"/>
+              </linearGradient>
+              <radialGradient id="cbMoonGlow" cx="0.4" cy="0.5" r="0.6">
+                <stop offset="0" stop-color="#F4C2A8" stop-opacity="0.35"/>
+                <stop offset="1" stop-color="#F4C2A8" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle cx="210" cy="210" r="150" fill="url(#cbMoonGlow)"/>
+            <path d="M260 60 C 140 90, 80 180, 100 290 C 120 370, 210 405, 300 380 C 190 350, 130 260, 160 160 C 185 100, 230 70, 260 60 Z" fill="url(#cbMoonHero)"/>
+            <circle cx="340" cy="90" r="2.2" fill="#F4B8C4"/>
+            <circle cx="380" cy="170" r="1.6" fill="#C5B3ED"/>
+            <circle cx="360" cy="260" r="2" fill="#7FD1C7"/>
+            <circle cx="50" cy="120" r="1.4" fill="#F4B8C4"/>
+            <path d="M330 120 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 z" fill="#F4B8C4" opacity="0.8"/>
+          </svg>
+          <h1>Understand your cycle.<br>Support your <span class="grad">balance.</span></h1>
+          <p class="subtitle">CycleBalance is the compassionate period tracker built for women with irregular cycles and PCOS.</p>
+          <ul class="cb-hero-bullets">
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 z" fill="#F4B8C4"/></svg>Track irregular periods</li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 z" fill="#7FD1C7"/></svg>Personalized insights</li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 z" fill="#C5B3ED"/></svg>Log symptoms &amp; moods</li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 z" fill="#F4C2A8"/></svg>Privacy-first by design</li>
+          </ul>
+          <div class="cb-hero-cta">
+            <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cb-btn-app">
+              <svg class="apple-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <span class="label-stack"><span class="small">Download on the</span><span class="big">App Store</span></span>
+            </a>
+            <a href="#features-new" class="cb-btn-outline">Learn More</a>
+          </div>
+        </div>
+        <div class="cb-hero-phone-wrap">
+          <img src="/hero-phone-mockup.png"
+               alt="CycleBalance iPhone app showing Day 12 Follicular Phase cycle tracker with mood, meal, and habit logging"
+               class="cb-hero-phone"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="cb-hero-phone-fallback" style="display:none">
+            Preview coming soon &mdash;<br>add <code>hero-phone-mockup.png</code> to <code>/docs</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="cb-features" id="features-new">
+      <div class="container">
+        <h2 class="cb-section-title">Everything you need, in one place</h2>
+        <div class="cb-feature-grid">
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-pink">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg>
+              </span>
+              <h3>Irregular Period Tracking</h3>
+            </div>
+            <p>Track unpredictable cycles with ease and see the big picture over time.</p>
+          </div>
+
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-teal">
+                <svg viewBox="0 0 24 24"><path d="M12 3 C 8 9, 5 13, 5 16 a7 7 0 0 0 14 0 c 0 -3 -3 -7 -7 -13 z"/></svg>
+              </span>
+              <h3>Symptoms &amp; Mood Logging</h3>
+            </div>
+            <p>Log physical symptoms, moods, and energy to find your patterns.</p>
+          </div>
+
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-peach">
+                <svg viewBox="0 0 24 24"><path d="M4 12 h16 a8 8 0 0 1 -16 0 z"/><path d="M9 8 c 0 -2 1 -3 3 -3 s 3 1 3 3"/></svg>
+              </span>
+              <h3>Meal &amp; Nutrition Logging</h3>
+            </div>
+            <p>See how your food choices may impact your cycle and symptoms.</p>
+          </div>
+
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-mint">
+                <svg viewBox="0 0 24 24"><path d="M11 21 C 5 21, 3 15, 4 9 c 7 -1 13 1 16 8 c -3 2 -6 3 -9 4 z"/><path d="M5 20 c 3 -5 8 -8 14 -10"/></svg>
+              </span>
+              <h3>Habit Tracking</h3>
+            </div>
+            <p>Build consistent habits that support your hormonal balance.</p>
+          </div>
+
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-purple">
+                <svg viewBox="0 0 24 24"><path d="M12 3 l1.8 5.2 l5.2 1.8 l-5.2 1.8 l-1.8 5.2 l-1.8 -5.2 l-5.2 -1.8 l5.2 -1.8 z"/><path d="M19 15 l0.8 2 l2 0.8 l-2 0.8 l-0.8 2 l-0.8 -2 l-2 -0.8 l2 -0.8 z"/></svg>
+              </span>
+              <h3>Personalized Insights</h3>
+            </div>
+            <p>Smart insights that help you understand your unique cycle.</p>
+          </div>
+
+          <div class="cb-feature-card">
+            <div class="cb-feature-head">
+              <span class="cb-feature-icon cb-icon-rose">
+                <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11 V 8 a4 4 0 0 1 8 0 v 3"/></svg>
+              </span>
+              <h3>Privacy First</h3>
+            </div>
+            <p>Your data is yours. Encrypted, private, and never shared.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRIO ROW: How it works / Built for PCOS / FAQ -->
+    <section class="cb-trio">
+      <div class="container">
+        <div class="cb-trio-grid">
+
+          <!-- How it works -->
+          <div class="cb-panel" id="how-new">
+            <h2>How it works</h2>
+            <div class="cb-how-row">
+              <span class="cb-step-num p1">1</span>
+              <span class="cb-step-dashed"></span>
+              <span class="cb-step-num p2">2</span>
+              <span class="cb-step-dashed"></span>
+              <span class="cb-step-num p3">3</span>
+            </div>
+            <div class="cb-how-steps">
+              <div class="cb-how-step">
+                <svg class="cb-step-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L 12 8 l 4 4 L 7 21 H 3 z"/><path d="M14 6 l 4 4"/></svg>
+                <h4>Log</h4>
+                <p>Quickly log your period, symptoms, mood, meals, and habits.</p>
+              </div>
+              <div class="cb-how-step">
+                <svg class="cb-step-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 V 10"/><path d="M10 20 V 4"/><path d="M16 20 V 13"/></svg>
+                <h4>Track</h4>
+                <p>We turn your data into clear charts and meaningful patterns.</p>
+              </div>
+              <div class="cb-how-step">
+                <svg class="cb-step-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 l 1.6 4.4 l 4.4 1.6 l -4.4 1.6 l -1.6 4.4 l -1.6 -4.4 l -4.4 -1.6 l 4.4 -1.6 z"/></svg>
+                <h4>Understand</h4>
+                <p>Get personalized insights to help you make informed choices.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Built for PCOS -->
+          <div class="cb-panel">
+            <h2>Built for women with PCOS</h2>
+            <div class="cb-pcos">
+              <ul class="cb-pcos-list">
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Designed for irregular and long cycles</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Track symptoms like acne, bloating, fatigue, and more</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Understand ovulation patterns</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Support for insulin resistance &amp; metabolic health</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Compassionate, inclusive, and science-backed</li>
+              </ul>
+              <svg class="cb-pcos-art" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="cbMoonPanel" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#9FE0D4"/>
+                    <stop offset="0.55" stop-color="#C5B3ED"/>
+                    <stop offset="1" stop-color="#F4B8C4"/>
+                  </linearGradient>
+                </defs>
+                <path d="M70 18 C 40 28, 22 50, 28 76 C 34 90, 56 94, 74 84 C 52 80, 38 64, 42 44 C 46 30, 58 22, 70 18 Z" fill="url(#cbMoonPanel)"/>
+                <circle cx="68" cy="58" r="5" fill="#F4B8C4"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- FAQ -->
+          <div class="cb-panel" id="faq-new">
+            <h2>FAQ</h2>
+            <div class="cb-faq-list">
+              <div class="cb-faq-item">
+                <button class="cb-faq-q" type="button" aria-expanded="false">
+                  <span>Is CycleBalance free to use?</span>
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Yes. CycleBalance is free to download and all core tracking features are free, including cycle logging, symptom tracking, and data export.</div></div>
+              </div>
+              <div class="cb-faq-item">
+                <button class="cb-faq-q" type="button" aria-expanded="false">
+                  <span>Is my data private?</span>
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Absolutely. All data is stored and processed entirely on your iPhone. No cloud sync, no third-party analytics, no data selling.</div></div>
+              </div>
+              <div class="cb-faq-item">
+                <button class="cb-faq-q" type="button" aria-expanded="false">
+                  <span>Can CycleBalance help with PCOS?</span>
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Yes. CycleBalance is built specifically for PCOS, supporting irregular cycles from 21 to 90+ days and tracking PCOS-specific symptoms and metabolic markers.</div></div>
+              </div>
+              <div class="cb-faq-item">
+                <button class="cb-faq-q" type="button" aria-expanded="false">
+                  <span>Does it replace medical advice?</span>
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">No. CycleBalance is a tracking and insights tool. It is not a medical device and does not replace advice from your healthcare provider.</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </div>
+  <!-- ============ END NEW DARK-THEME TEMPLATE ============ -->
+
+  <!-- ============ DIVIDER to existing site content ============ -->
+  <div class="cb-more-divider">
+    <div class="cb-more-inner">
+      <h3>More about CycleBalance</h3>
+    </div>
+  </div>
 
   <div class="site-content">
-
-    <!-- Hero -->
-    <div class="site-hero" data-section="hero">
-      <div class="hero-app-icon">
-        <img src="/icon-192.png" alt="CycleBalance app icon" width="96" height="96">
-      </div>
-      <h1>Your cycle. <span>Your way.</span><br>Your device only.</h1>
-      <p>CycleBalance is the first cycle and symptom tracker built from the ground up for PCOS. Smart, private, and designed for how your body actually works.</p>
-      <div class="hero-buttons">
-        <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="btn-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-          Download for iOS
-        </a>
-        <a href="#features" class="btn-secondary">See Features</a>
-      </div>
-    </div>
 
     <!-- About CycleBalance -->
     <article class="about-section" id="about" data-section="about">
@@ -1478,84 +2317,6 @@
         </div>
       </div>
     </article>
-
-    <!-- Features -->
-    <div class="features-section" id="features" data-section="features">
-      <h2>Built different, because PCOS is different</h2>
-      <p class="section-subtitle">Every feature designed specifically for the PCOS experience.</p>
-
-      <div class="feature-cards">
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          </div>
-          <h3>Irregular Cycle Intelligence</h3>
-          <p>No 28-day assumptions. CycleBalance learns your unique patterns and adapts predictions to cycles that vary from 21 to 90+ days.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <h3>Insulin &amp; Glucose Tracking</h3>
-          <p>Track blood sugar, insulin resistance markers, and see how they correlate with your cycle, symptoms, and lifestyle choices.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 6v6l4 2"/></svg>
-          </div>
-          <h3>Symptom-Lifestyle Correlation</h3>
-          <p>Log symptoms, meals, exercise, sleep, and stress. On-device ML finds patterns you and your doctor might miss.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          </div>
-          <h3>Doctor-Ready Reports</h3>
-          <p>Generate clear, shareable summaries of your cycles, symptoms, and trends. Walk into appointments with data, not guesses.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>100% On-Device Privacy</h3>
-          <p>Your health data never leaves your iPhone. No cloud sync, no third-party analytics, no compromises. Ever.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          </div>
-          <h3>Supplement &amp; Med Tracking</h3>
-          <p>Track inositol, metformin, vitamins, and other supplements. See what's helping and share with your care team.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- How it works -->
-    <div class="how-section">
-      <h2>Simple to start, powerful over time</h2>
-      <div class="how-steps">
-        <div class="how-step">
-          <div class="step-number">1</div>
-          <h3>Log what matters</h3>
-          <p>Quick daily check-ins for symptoms, meals, mood, and more. Takes less than a minute.</p>
-        </div>
-        <div class="how-step">
-          <div class="step-number">2</div>
-          <h3>See your patterns</h3>
-          <p>On-device ML surfaces correlations between your cycle, symptoms, and lifestyle.</p>
-        </div>
-        <div class="how-step">
-          <div class="step-number">3</div>
-          <h3>Take control</h3>
-          <p>Use insights and doctor-ready reports to make informed decisions about your health.</p>
-        </div>
-      </div>
-    </div>
 
     <!-- Privacy banner -->
     <div class="privacy-banner" id="privacy-section" data-section="privacy">
@@ -1685,82 +2446,6 @@
       <p class="comparison-note">Comparison based on publicly available information as of April 2026. Features may vary by app version and subscription tier.</p>
     </section>
 
-    <!-- FAQ Section -->
-    <section class="faq-section" id="faq" data-section="faq">
-      <h2>Frequently Asked Questions</h2>
-      <p class="section-subtitle">Common questions about CycleBalance and PCOS tracking.</p>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>What is CycleBalance?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">CycleBalance is the first iOS cycle and symptom tracker built specifically for people with PCOS (polycystic ovary syndrome). Unlike general-purpose period trackers, it supports irregular cycles from 21 to 90+ days, includes insulin and glucose tracking, uses on-device machine learning to surface symptom-lifestyle correlations, and keeps 100% of your data on your iPhone.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>How is CycleBalance different from other period trackers?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">Most cycle trackers assume a 28-day cycle and penalize irregularity with warnings or confused predictions. CycleBalance was designed from scratch for PCOS. It adapts to irregular cycles, tracks insulin resistance markers, logs PCOS-specific symptoms like hirsutism and acne, and never sends your data to the cloud. It also generates doctor-ready reports you can share at appointments.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>Is my health data private and secure?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">Yes. CycleBalance stores and processes all data entirely on your iPhone using Apple's Core ML framework. There is no cloud sync, no third-party analytics, and no data selling. Your reproductive health data never leaves your device.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>Is CycleBalance free?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">CycleBalance is free to download and use. All core tracking features are free, including cycle logging, symptom tracking, and data export. Optional premium features are available for those who want advanced insights.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>What can I track with CycleBalance?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">You can track irregular cycles, PCOS-specific symptoms (acne, hirsutism, hair thinning, bloating, fatigue, mood changes), insulin and glucose levels, supplements and medications (like inositol and metformin), meals, exercise, sleep, and stress. CycleBalance uses on-device machine learning to surface correlations between these factors.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>Can I share my data with my doctor?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">Yes. CycleBalance generates clear, exportable reports summarizing your cycles, symptoms, and trends. You can share these as PDF, CSV, or JSON with your healthcare provider to have more productive, data-driven appointments.</div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" type="button" aria-expanded="false">
-          <span>What devices does CycleBalance support?</span>
-          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="faq-answer">
-          <div class="faq-answer-inner">CycleBalance is available for iPhone running iOS 17 or later. You can download it for free from the Apple App Store.</div>
-        </div>
-      </div>
-    </section>
-
     <!-- CTA -->
     <div class="cta-section" id="download">
       <h2>Ready to track on your terms?</h2>
@@ -1773,25 +2458,74 @@
 
   </div>
 
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">
-          <span class="footer-brand-icon"><img src="/icon-192.png" alt="CycleBalance app icon" width="28" height="28"></span>
-          CycleBalance
+  <!-- ============ NEW DARK-THEME FOOTER ============ -->
+  <div class="cb-dark">
+    <footer class="cb-footer">
+      <div class="container">
+        <div class="cb-footer-grid">
+          <div>
+            <div class="cb-footer-brand">
+              <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="cbMoonFooter" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#9FE0D4"/>
+                    <stop offset="0.55" stop-color="#C5B3ED"/>
+                    <stop offset="1" stop-color="#F4B8C4"/>
+                  </linearGradient>
+                </defs>
+                <path d="M22 5 C 13 7, 8 14, 9 22 C 10 27, 15 30, 21 28 C 14 26, 11 20, 13 14 C 15 9, 19 6, 22 5 Z" fill="url(#cbMoonFooter)"/>
+              </svg>
+              CycleBalance
+            </div>
+            <p class="cb-footer-tagline">Understand your cycle.<br>Support your balance.</p>
+          </div>
+
+          <div class="cb-footer-col">
+            <h5>Product</h5>
+            <ul>
+              <li><a href="#features-new">Features</a></li>
+              <li><a href="#how-new">How it works</a></li>
+            </ul>
+          </div>
+
+          <div class="cb-footer-col">
+            <h5>Support</h5>
+            <ul>
+              <li><a href="/support">PCOS Support</a></li>
+              <li><a href="#faq-new">FAQ</a></li>
+            </ul>
+          </div>
+
+          <div class="cb-footer-col">
+            <h5>Company</h5>
+            <ul>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/terms">Terms of Service</a></li>
+            </ul>
+          </div>
+
+          <div class="cb-footer-cta-col">
+            <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cb-btn-app">
+              <svg class="apple-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <span class="label-stack"><span class="small">Download on the</span><span class="big">App Store</span></span>
+            </a>
+            <div class="cb-socials">
+              <a href="#" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg>
+              </a>
+              <a href="#" aria-label="TikTok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 v 10.5 a 3.5 3.5 0 1 1 -3.5 -3.5"/><path d="M14 4 c 0.5 2.5 2 4 4.5 4.5"/></svg>
+              </a>
+              <a href="mailto:contact@cyclebalance.app" aria-label="Email">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7 l 9 7 l 9 -7"/></svg>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="footer-copy">&copy; 2026 CycleBalance. All rights reserved.</div>
+        <div class="cb-footer-copy">&copy; 2026 CycleBalance. All rights reserved.</div>
       </div>
-      <div class="footer-links">
-        <a href="/privacy">Privacy Policy</a>
-        <a href="/terms">Terms of Use</a>
-        <a href="/contact">Contact</a>
-        <a href="/support">Support</a>
-        <a href="/blog">Blog</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
+  </div>
 
 </div>
 
@@ -1808,7 +2542,7 @@
     document.getElementById('waitlistMode').style.display = 'none';
     document.getElementById('siteMode').style.display = 'block';
 
-    // FAQ accordion toggle
+    // FAQ accordion toggle (old light-theme FAQ — now unused; kept defensive)
     document.querySelectorAll('.faq-question').forEach(btn => {
       btn.addEventListener('click', () => {
         const item = btn.parentElement;
@@ -1816,6 +2550,23 @@
         document.querySelectorAll('.faq-item').forEach(i => {
           i.classList.remove('open');
           i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // New dark-theme FAQ accordion
+    document.querySelectorAll('.cb-dark .cb-faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.cb-dark .cb-faq-item').forEach(i => {
+          i.classList.remove('open');
+          const q = i.querySelector('.cb-faq-q');
+          if (q) q.setAttribute('aria-expanded', 'false');
         });
         if (!isOpen) {
           item.classList.add('open');
