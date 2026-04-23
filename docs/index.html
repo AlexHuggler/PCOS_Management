@@ -1477,14 +1477,94 @@
       z-index: 2;
     }
     .cb-dark .cb-hero-phone-wrap::before { content: none; }
+
+    /* iPhone 17 Pro titanium frame */
     .cb-dark .cb-hero-phone {
       position: relative;
       z-index: 1;
-      max-width: 340px;
+      width: 320px;
+      max-width: 100%;
+      aspect-ratio: 320 / 660;
+      padding: 10px;
+      background:
+        linear-gradient(135deg,
+          #6a6a6c 0%,
+          #3a3a3c 18%,
+          #1c1c1e 42%,
+          #2a2a2c 60%,
+          #1c1c1e 80%,
+          #5a5a5c 100%);
+      border-radius: 55px;
+      box-shadow:
+        0 40px 90px -25px rgba(0,0,0,0.75),
+        0 0 0 1px rgba(255,255,255,0.06),
+        inset 0 0 0 1.5px rgba(255,255,255,0.08),
+        inset 0 0 0 3px rgba(0,0,0,0.45);
+    }
+    /* Left side button (action/volume) */
+    .cb-dark .cb-hero-phone::before {
+      content: "";
+      position: absolute;
+      left: -2px;
+      top: 22%;
+      width: 3px;
+      height: 12%;
+      background: linear-gradient(90deg, #1c1c1e 0%, #48484a 50%, #1c1c1e 100%);
+      border-radius: 2px 0 0 2px;
+      box-shadow: 0 45px 0 #2a2a2c, 0 45px 0 0 rgba(255,255,255,0.04);
+    }
+    /* Right side button (power) */
+    .cb-dark .cb-hero-phone::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 28%;
+      width: 3px;
+      height: 14%;
+      background: linear-gradient(-90deg, #1c1c1e 0%, #48484a 50%, #1c1c1e 100%);
+      border-radius: 0 2px 2px 0;
+    }
+    .cb-dark .cb-hero-phone-screen {
+      position: relative;
       width: 100%;
-      height: auto;
-      border-radius: 48px;
+      height: 100%;
+      background: #000;
+      border-radius: 45px;
+      overflow: hidden;
+    }
+    .cb-dark .cb-hero-phone-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
+    }
+    /* Dynamic Island */
+    .cb-dark .cb-hero-phone-island {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 105px;
+      height: 30px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 3;
+      box-shadow:
+        inset 0 0 0 0.5px rgba(60,60,60,0.9),
+        0 2px 6px rgba(0,0,0,0.6);
+    }
+    /* Front camera lens inside Dynamic Island */
+    .cb-dark .cb-hero-phone-island::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle at 30% 30%, #2a2a2a 0%, #050505 70%);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 0.5px rgba(90,90,90,0.4);
     }
     .cb-dark .cb-hero-phone-fallback {
       position: relative;
@@ -2129,16 +2209,21 @@
           </div>
         </div>
         <div class="cb-hero-phone-wrap">
-          <video class="cb-hero-phone"
-                 src="/Video%20V1.MP4"
-                 autoplay
-                 loop
-                 muted
-                 playsinline
-                 preload="metadata"
-                 aria-label="CycleBalance app preview"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          </video>
+          <div class="cb-hero-phone">
+            <div class="cb-hero-phone-island" aria-hidden="true"></div>
+            <div class="cb-hero-phone-screen">
+              <video class="cb-hero-phone-video"
+                     src="/Video%20V1.MP4"
+                     autoplay
+                     loop
+                     muted
+                     playsinline
+                     preload="metadata"
+                     aria-label="CycleBalance app preview"
+                     onerror="var w=this.closest('.cb-hero-phone-wrap'); w.querySelector('.cb-hero-phone').style.display='none'; w.querySelector('.cb-hero-phone-fallback').style.display='flex';">
+              </video>
+            </div>
+          </div>
           <div class="cb-hero-phone-fallback" style="display:none">
             Preview coming soon &mdash;<br>add <code>Video V1.MP4</code> to <code>/docs</code>
           </div>
