@@ -1,57 +1,339 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ====================  HOMEPAGE  ==================== -->
   <url>
     <loc>https://cyclebalance.app/</loc>
-    <lastmod>2026-04-13</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
   </url>
   <url>
+    <loc>https://cyclebalance.app/de/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/fr/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/it/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ja/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ko/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/nl/</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/"/>
+  </url>
+
+  <!-- ====================  PRIVACY POLICY  ==================== -->
+  <url>
+    <loc>https://cyclebalance.app/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/privacy"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/privacy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/privacy"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/privacy"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/privacy"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/privacy"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/privacy"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/de/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/fr/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/it/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ja/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ko/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/nl/privacy</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+
+  <!-- ====================  TERMS OF USE  ==================== -->
+  <url>
+    <loc>https://cyclebalance.app/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/terms"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/terms"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/terms"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/terms"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/terms"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/terms"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/terms"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/de/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/fr/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/it/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ja/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ko/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/nl/terms</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+
+  <!-- ====================  SUPPORT  ==================== -->
+  <url>
+    <loc>https://cyclebalance.app/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/support"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/support"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/support"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/support"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/support"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/support"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/support"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/support"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/de/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/fr/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/it/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ja/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ko/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/nl/support</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+
+  <!-- ====================  CONTACT  ==================== -->
+  <url>
+    <loc>https://cyclebalance.app/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cyclebalance.app/contact"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cyclebalance.app/de/contact"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cyclebalance.app/fr/contact"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://cyclebalance.app/it/contact"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://cyclebalance.app/ja/contact"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://cyclebalance.app/ko/contact"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://cyclebalance.app/nl/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cyclebalance.app/contact"/>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/de/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/fr/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/it/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ja/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/ko/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/nl/contact</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.45</priority>
+  </url>
+
+  <!-- ====================  BLOG (English-only)  ==================== -->
+  <url>
     <loc>https://cyclebalance.app/blog</loc>
-    <lastmod>2026-04-13</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cyclebalance.app/blog/why-we-built-cyclebalance</loc>
-    <lastmod>2026-04-13</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://cyclebalance.app/blog/understanding-irregular-cycles-pcos</loc>
-    <lastmod>2026-04-13</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://cyclebalance.app/blog/privacy-first-health-tracking</loc>
-    <lastmod>2026-04-13</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://cyclebalance.app/support</loc>
-    <lastmod>2026-04-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://cyclebalance.app/contact</loc>
-    <lastmod>2026-04-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://cyclebalance.app/privacy</loc>
-    <lastmod>2026-04-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://cyclebalance.app/terms</loc>
-    <lastmod>2026-04-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
+
 </urlset>
