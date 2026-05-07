@@ -1,0 +1,1608 @@
+{
+  "generatedAt": "2026-05-07",
+  "supportedLocales": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "ja",
+    "ko",
+    "nl"
+  ],
+  "references": {
+    "pcos2023": {
+      "title": "2023 International Evidence-Based Guideline for the Assessment and Management of Polycystic Ovary Syndrome",
+      "source": "Monash University",
+      "url": "https://www.monash.edu/medicine/mchri/pcos/guideline"
+    },
+    "jcem2023": {
+      "title": "Recommendations From the 2023 International Evidence-Based Guideline for the Assessment and Management of PCOS",
+      "source": "The Journal of Clinical Endocrinology and Metabolism",
+      "url": "https://academic.oup.com/jcem/article/108/10/2447/7242360"
+    },
+    "acog": {
+      "title": "Polycystic Ovary Syndrome (PCOS) FAQ",
+      "source": "American College of Obstetricians and Gynecologists",
+      "url": "https://www.acog.org/womens-health/faqs/polycystic-ovary-syndrome-pcos"
+    },
+    "nichd": {
+      "title": "Polycystic Ovary Syndrome (PCOS)",
+      "source": "NICHD",
+      "url": "https://www.nichd.nih.gov/health/topics/pcos"
+    },
+    "cochraneLifestyle": {
+      "title": "Lifestyle changes in women with polycystic ovary syndrome",
+      "source": "Cochrane Database of Systematic Reviews",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30921477/"
+    },
+    "inositolCochrane": {
+      "title": "Inositol for subfertile women with polycystic ovary syndrome",
+      "source": "Cochrane Database of Systematic Reviews",
+      "url": "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012378.pub2/full"
+    },
+    "inositolMeta": {
+      "title": "Effectiveness of myoinositol for polycystic ovary syndrome: systematic review and meta-analysis",
+      "source": "Endocrine",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30049532/"
+    },
+    "magnesiumOds": {
+      "title": "Magnesium: Health Professional Fact Sheet",
+      "source": "NIH Office of Dietary Supplements",
+      "url": "https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/"
+    },
+    "omegaOds": {
+      "title": "Omega-3 Fatty Acids: Health Professional Fact Sheet",
+      "source": "NIH Office of Dietary Supplements",
+      "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/"
+    },
+    "vitaminDOds": {
+      "title": "Vitamin D: Health Professional Fact Sheet",
+      "source": "NIH Office of Dietary Supplements",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
+    },
+    "zincOds": {
+      "title": "Zinc: Health Professional Fact Sheet",
+      "source": "NIH Office of Dietary Supplements",
+      "url": "https://ods.od.nih.gov/factsheets/Zinc-HealthProfessional/"
+    },
+    "dhaAha": {
+      "title": "Dietary Guidance to Improve Cardiovascular Health",
+      "source": "American Heart Association",
+      "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001031"
+    },
+    "legumeTrial": {
+      "title": "Effect of legumes as part of a low glycemic index diet on glycemic control and cardiovascular risk factors",
+      "source": "Archives of Internal Medicine",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/23089999/"
+    },
+    "sleepPcos": {
+      "title": "Sleep disturbances and PCOS are addressed as part of lifelong health in the international guideline",
+      "source": "2023 International PCOS Guideline",
+      "url": "https://www.monash.edu/medicine/mchri/pcos/guideline"
+    }
+  },
+  "articles": [
+    {
+      "slug": "best-foods-for-pcos",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-general/build-a-pcos-friendly-plate.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-general/pcos-choose-more-limit-more-foods.webp",
+        "/assets/images/blog/nutrition-general/the-science-of-fiber-pcos-blood-sugar.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "cochraneLifestyle",
+        "legumeTrial"
+      ],
+      "relatedSlugs": [
+        "protein-strategy-for-pcos",
+        "pcos-carbohydrate-blueprint",
+        "fiber-and-pcos-blood-sugar"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "The Best Foods for PCOS: An Evidence-Based Nutrition Guide",
+          "topic": "PCOS-friendly foods and plate-building",
+          "action": "building one balanced plate at a time",
+          "description": "Evidence-backed CycleBalance guide to PCOS-friendly foods and plate-building for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "PCOS-friendly foods and plate-building, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Die besten Lebensmittel bei PCOS: ein evidenzbasierter Ernahrungsleitfaden",
+          "topic": "PCOS-freundliche Lebensmittel und Telleraufbau",
+          "action": "Teller Schritt fur Schritt ausgewogen aufzubauen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu PCOS-freundliche Lebensmittel und Telleraufbau bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "PCOS-freundliche Lebensmittel und Telleraufbau, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Les meilleurs aliments pour le SOPK : un guide nutritionnel fonde sur les donnees",
+          "topic": "les aliments et assiettes adaptes au SOPK",
+          "action": "composer une assiette equilibree",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les aliments et assiettes adaptes au SOPK dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les aliments et assiettes adaptes au SOPK, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "I migliori alimenti per la PCOS: una guida basata sulle evidenze",
+          "topic": "alimenti e piatti adatti alla PCOS",
+          "action": "costruire un piatto equilibrato",
+          "description": "Guida CycleBalance basata sulle evidenze su alimenti e piatti adatti alla PCOS nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "alimenti e piatti adatti alla PCOS, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSに最適な食品：エビデンスに基づく栄養ガイド",
+          "topic": "PCOSに合う食品と食事の組み立て",
+          "action": "一食ずつバランスを整えること",
+          "description": "PCOSにおけるPCOSに合う食品と食事の組み立てについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "PCOSに合う食品と食事の組み立て, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS에 가장 좋은 음식: 근거 기반 영양 가이드",
+          "topic": "PCOS에 맞는 음식과 식사 구성",
+          "action": "한 끼씩 균형 있게 구성하는 것",
+          "description": "PCOS와 PCOS에 맞는 음식과 식사 구성에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "PCOS에 맞는 음식과 식사 구성, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "De beste voeding bij PCOS: een wetenschappelijk onderbouwde gids",
+          "topic": "PCOS-vriendelijke voeding en bordopbouw",
+          "action": "stap voor stap een evenwichtig bord maken",
+          "description": "Onderbouwde CycleBalance-gids over PCOS-vriendelijke voeding en bordopbouw bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "PCOS-vriendelijke voeding en bordopbouw, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "protein-strategy-for-pcos",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-protein/the-power-of-protein-for-pcos-balance.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-protein/build-pcos-meals-around-protein-and-fiber.webp",
+        "/assets/images/blog/nutrition-protein/start-the-day-with-protein-pcos-breakfast-ideas.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "cochraneLifestyle"
+      ],
+      "relatedSlugs": [
+        "best-foods-for-pcos",
+        "pcos-breakfast-ideas",
+        "fiber-and-pcos-blood-sugar"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Why Protein Matters for PCOS: A Strategy for Blood Sugar and Hormones",
+          "topic": "protein timing and meal balance",
+          "action": "adding a protein anchor to meals and snacks",
+          "description": "Evidence-backed CycleBalance guide to protein timing and meal balance for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "protein timing and meal balance, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Warum Eiweiss bei PCOS wichtig ist: eine Strategie fur Blutzucker und Hormone",
+          "topic": "Eiweiss-Timing und Mahlzeitenbalance",
+          "action": "Mahlzeiten und Snacks mit einer Eiweissquelle zu verankern",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Eiweiss-Timing und Mahlzeitenbalance bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Eiweiss-Timing und Mahlzeitenbalance, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Pourquoi les proteines comptent dans le SOPK : strategie pour la glycemie et les hormones",
+          "topic": "le timing des proteines et l equilibre des repas",
+          "action": "ajouter une source de proteines aux repas et collations",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur le timing des proteines et l equilibre des repas dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "le timing des proteines et l equilibre des repas, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Perche le proteine contano nella PCOS: strategia per glicemia e ormoni",
+          "topic": "tempistica delle proteine ed equilibrio dei pasti",
+          "action": "aggiungere una fonte proteica a pasti e spuntini",
+          "description": "Guida CycleBalance basata sulle evidenze su tempistica delle proteine ed equilibrio dei pasti nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "tempistica delle proteine ed equilibrio dei pasti, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSにおけるタンパク質の重要性：血糖とホルモンのための戦略",
+          "topic": "タンパク質のタイミングと食事バランス",
+          "action": "食事や間食にタンパク質の軸を入れること",
+          "description": "PCOSにおけるタンパク質のタイミングと食事バランスについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "タンパク質のタイミングと食事バランス, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS에서 단백질이 중요한 이유: 혈당과 호르몬 전략",
+          "topic": "단백질 섭취 타이밍과 식사 균형",
+          "action": "식사와 간식에 단백질 중심을 더하는 것",
+          "description": "PCOS와 단백질 섭취 타이밍과 식사 균형에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "단백질 섭취 타이밍과 식사 균형, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Waarom eiwit belangrijk is bij PCOS: strategie voor bloedsuiker en hormonen",
+          "topic": "eiwittiming en maaltijdbalans",
+          "action": "een eiwitanker toevoegen aan maaltijden en snacks",
+          "description": "Onderbouwde CycleBalance-gids over eiwittiming en maaltijdbalans bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "eiwittiming en maaltijdbalans, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "pcos-carbohydrate-blueprint",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-carbs/the-pcos-carbohydrate-blueprint-smart-swaps.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-carbs/pair-carbs-with-protein-fat-fiber-pcos.webp",
+        "/assets/images/blog/nutrition-carbs/pcos-carbohydrate-blueprint-best-carbs-hall-of-fame.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "cochraneLifestyle",
+        "legumeTrial"
+      ],
+      "relatedSlugs": [
+        "best-foods-for-pcos",
+        "fiber-and-pcos-blood-sugar",
+        "pcos-breakfast-ideas"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "The PCOS Carbohydrate Blueprint: Why You Do Not Need to Cut Carbs",
+          "topic": "carbohydrate quality, pairing, and blood sugar",
+          "action": "pairing carbohydrates with protein, fat, and fiber",
+          "description": "Evidence-backed CycleBalance guide to carbohydrate quality, pairing, and blood sugar for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "carbohydrate quality, pairing, and blood sugar, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Der PCOS-Kohlenhydrat-Bauplan: warum Sie Kohlenhydrate nicht streichen mussen",
+          "topic": "Kohlenhydratqualitat, Kombination und Blutzucker",
+          "action": "Kohlenhydrate mit Eiweiss, Fett und Ballaststoffen zu kombinieren",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Kohlenhydratqualitat, Kombination und Blutzucker bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Kohlenhydratqualitat, Kombination und Blutzucker, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Le plan glucidique du SOPK : pourquoi il ne faut pas supprimer les glucides",
+          "topic": "la qualite des glucides, les associations et la glycemie",
+          "action": "associer les glucides aux proteines, graisses et fibres",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur la qualite des glucides, les associations et la glycemie dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "la qualite des glucides, les associations et la glycemie, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Il blueprint dei carboidrati nella PCOS: perche non serve eliminarli",
+          "topic": "qualita dei carboidrati, abbinamenti e glicemia",
+          "action": "abbinare carboidrati a proteine, grassi e fibre",
+          "description": "Guida CycleBalance basata sulle evidenze su qualita dei carboidrati, abbinamenti e glicemia nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "qualita dei carboidrati, abbinamenti e glicemia, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOS炭水化物ブループリント：糖質を完全カットしなくてよい理由",
+          "topic": "炭水化物の質、組み合わせ、血糖",
+          "action": "炭水化物をタンパク質・脂質・食物繊維と組み合わせること",
+          "description": "PCOSにおける炭水化物の質、組み合わせ、血糖について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "炭水化物の質、組み合わせ、血糖, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS 탄수화물 청사진: 탄수화물을 끊을 필요가 없는 이유",
+          "topic": "탄수화물의 질, 조합, 혈당",
+          "action": "탄수화물을 단백질, 지방, 섬유질과 함께 먹는 것",
+          "description": "PCOS와 탄수화물의 질, 조합, 혈당에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "탄수화물의 질, 조합, 혈당, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Het PCOS-koolhydratenplan: waarom u koolhydraten niet hoeft te schrappen",
+          "topic": "koolhydraatkwaliteit, combinaties en bloedsuiker",
+          "action": "koolhydraten combineren met eiwit, vet en vezels",
+          "description": "Onderbouwde CycleBalance-gids over koolhydraatkwaliteit, combinaties en bloedsuiker bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "koolhydraatkwaliteit, combinaties en bloedsuiker, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "pcos-and-fruit-guide",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-fruits/the-pcos-fruit-guide-natures-best-for-hormone-balance.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-fruits/why-fruit-choice-matters-for-pcos.webp",
+        "/assets/images/blog/nutrition-fruits/best-pick-berries-for-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "cochraneLifestyle"
+      ],
+      "relatedSlugs": [
+        "best-foods-for-pcos",
+        "pcos-carbohydrate-blueprint",
+        "fiber-and-pcos-blood-sugar"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "PCOS and Fruit: A Smart Guide to Hormone-Friendly Choices",
+          "topic": "fruit choices, fiber, and blood sugar",
+          "action": "choosing whole fruit and pairing it with protein or fat",
+          "description": "Evidence-backed CycleBalance guide to fruit choices, fiber, and blood sugar for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "fruit choices, fiber, and blood sugar, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "PCOS und Obst: ein kluger Leitfaden fur hormonfreundliche Entscheidungen",
+          "topic": "Obstauswahl, Ballaststoffe und Blutzucker",
+          "action": "ganzes Obst zu wahlen und mit Eiweiss oder Fett zu kombinieren",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Obstauswahl, Ballaststoffe und Blutzucker bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Obstauswahl, Ballaststoffe und Blutzucker, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "SOPK et fruits : guide intelligent pour des choix favorables aux hormones",
+          "topic": "les choix de fruits, les fibres et la glycemie",
+          "action": "choisir des fruits entiers et les associer a proteines ou graisses",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les choix de fruits, les fibres et la glycemie dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les choix de fruits, les fibres et la glycemie, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "PCOS e frutta: guida intelligente per scelte amiche degli ormoni",
+          "topic": "scelte di frutta, fibre e glicemia",
+          "action": "scegliere frutta intera e abbinarla a proteine o grassi",
+          "description": "Guida CycleBalance basata sulle evidenze su scelte di frutta, fibre e glicemia nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "scelte di frutta, fibre e glicemia, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSと果物：ホルモンに優しい賢い選び方ガイド",
+          "topic": "果物の選び方、食物繊維、血糖",
+          "action": "丸ごとの果物を選びタンパク質や脂質と組み合わせること",
+          "description": "PCOSにおける果物の選び方、食物繊維、血糖について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "果物の選び方、食物繊維、血糖, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS와 과일: 호르몬 친화적 선택 가이드",
+          "topic": "과일 선택, 섬유질, 혈당",
+          "action": "통과일을 고르고 단백질이나 지방과 함께 먹는 것",
+          "description": "PCOS와 과일 선택, 섬유질, 혈당에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "과일 선택, 섬유질, 혈당, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "PCOS en fruit: slimme gids voor hormoonvriendelijke keuzes",
+          "topic": "fruitkeuzes, vezels en bloedsuiker",
+          "action": "heel fruit kiezen en combineren met eiwit of vet",
+          "description": "Onderbouwde CycleBalance-gids over fruitkeuzes, vezels en bloedsuiker bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "fruitkeuzes, vezels en bloedsuiker, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "inositol-for-pcos-evidence-based-guide",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/what-is-inositol-pcos-explained.webp",
+      "inlineImages": [
+        "/assets/images/blog/supplements/inositol-myo-d-chiro-supports-insulin-sensitivity.webp",
+        "/assets/images/blog/supplements/inositol-may-help-regulate-cycles-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "inositolCochrane",
+        "inositolMeta"
+      ],
+      "relatedSlugs": [
+        "pcos-supplement-safety-guide",
+        "magnesium-for-pcos",
+        "pcos-and-insulin-resistance"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Inositol for PCOS: An Evidence-Based Guide to the Most-Studied Supplement",
+          "topic": "inositol, insulin signaling, and cycle patterns",
+          "action": "treating any supplement as a clinician-guided experiment",
+          "description": "Evidence-backed CycleBalance guide to inositol, insulin signaling, and cycle patterns for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "inositol, insulin signaling, and cycle patterns, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Inositol bei PCOS: ein evidenzbasierter Leitfaden zum meistuntersuchten Supplement",
+          "topic": "Inositol, Insulinsignale und Zyklusmuster",
+          "action": "jedes Supplement als arztlich begleitetes Experiment zu betrachten",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Inositol, Insulinsignale und Zyklusmuster bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Inositol, Insulinsignale und Zyklusmuster, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Inositol et SOPK : guide fonde sur les donnees du complement le plus etudie",
+          "topic": "l inositol, le signal insulinique et les cycles",
+          "action": "traiter tout complement comme un essai encadre par un clinicien",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur l inositol, le signal insulinique et les cycles dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "l inositol, le signal insulinique et les cycles, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Inositolo e PCOS: guida basata sulle evidenze sull integratore piu studiato",
+          "topic": "inositolo, segnale insulinico e cicli",
+          "action": "trattare ogni integratore come un esperimento guidato dal medico",
+          "description": "Guida CycleBalance basata sulle evidenze su inositolo, segnale insulinico e cicli nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "inositolo, segnale insulinico e cicli, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSのイノシトール：最も研究されたサプリメントのエビデンスガイド",
+          "topic": "イノシトール、インスリンシグナル、周期パターン",
+          "action": "サプリメントを医療者と相談する小さな実験として扱うこと",
+          "description": "PCOSにおけるイノシトール、インスリンシグナル、周期パターンについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "イノシトール、インスリンシグナル、周期パターン, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS의 이노시톨: 가장 많이 연구된 보충제 가이드",
+          "topic": "이노시톨, 인슐린 신호, 주기 패턴",
+          "action": "보충제를 의료진과 함께하는 실험으로 다루는 것",
+          "description": "PCOS와 이노시톨, 인슐린 신호, 주기 패턴에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "이노시톨, 인슐린 신호, 주기 패턴, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Inositol bij PCOS: wetenschappelijke gids voor het meest onderzochte supplement",
+          "topic": "inositol, insulinesignalering en cycluspatronen",
+          "action": "elk supplement behandelen als een begeleid experiment",
+          "description": "Onderbouwde CycleBalance-gids over inositol, insulinesignalering en cycluspatronen bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "inositol, insulinesignalering en cycluspatronen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "magnesium-for-pcos",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/why-magnesium-matters-for-pcos.webp",
+      "inlineImages": [
+        "/assets/images/blog/supplements/magnesium-for-sleep-and-fatigue-pcos.webp",
+        "/assets/images/blog/supplements/magnesium-for-cravings-and-blood-sugar-balance-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "magnesiumOds",
+        "cochraneLifestyle"
+      ],
+      "relatedSlugs": [
+        "pcos-supplement-safety-guide",
+        "lifestyle-for-pcos-sleep-stress-exercise",
+        "inositol-for-pcos-evidence-based-guide"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Magnesium for PCOS: Stress, Sleep, Cramps, and Cravings",
+          "topic": "magnesium intake, sleep, stress, and symptom comfort",
+          "action": "checking food sources first and documenting supplement timing",
+          "description": "Evidence-backed CycleBalance guide to magnesium intake, sleep, stress, and symptom comfort for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "magnesium intake, sleep, stress, and symptom comfort, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Magnesium bei PCOS: Stress, Schlaf, Krampfe und Heisshunger",
+          "topic": "Magnesiumzufuhr, Schlaf, Stress und Symptomkomfort",
+          "action": "zuerst Lebensmittelquellen zu prufen und Supplement-Timing zu dokumentieren",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Magnesiumzufuhr, Schlaf, Stress und Symptomkomfort bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Magnesiumzufuhr, Schlaf, Stress und Symptomkomfort, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Magnesium et SOPK : stress, sommeil, crampes et fringales",
+          "topic": "le magnesium, le sommeil, le stress et le confort",
+          "action": "commencer par les sources alimentaires et noter le moment de prise",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur le magnesium, le sommeil, le stress et le confort dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "le magnesium, le sommeil, le stress et le confort, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Magnesio e PCOS: stress, sonno, crampi e voglie",
+          "topic": "magnesio, sonno, stress e comfort dei sintomi",
+          "action": "partire dagli alimenti e annotare il timing degli integratori",
+          "description": "Guida CycleBalance basata sulle evidenze su magnesio, sonno, stress e comfort dei sintomi nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "magnesio, sonno, stress e comfort dei sintomi, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSのマグネシウム：ストレス・睡眠・けいれん・食欲",
+          "topic": "マグネシウム摂取、睡眠、ストレス、症状の快適さ",
+          "action": "まず食品から確認しサプリのタイミングを記録すること",
+          "description": "PCOSにおけるマグネシウム摂取、睡眠、ストレス、症状の快適さについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "マグネシウム摂取、睡眠、ストレス、症状の快適さ, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS의 마그네슘: 스트레스, 수면, 경련, 식욕",
+          "topic": "마그네슘 섭취, 수면, 스트레스, 증상 완화",
+          "action": "식품 섭취를 먼저 확인하고 보충제 시간을 기록하는 것",
+          "description": "PCOS와 마그네슘 섭취, 수면, 스트레스, 증상 완화에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "마그네슘 섭취, 수면, 스트레스, 증상 완화, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Magnesium bij PCOS: stress, slaap, krampen en cravings",
+          "topic": "magnesiuminname, slaap, stress en comfort",
+          "action": "eerst voedselbronnen bekijken en supplementtiming noteren",
+          "description": "Onderbouwde CycleBalance-gids over magnesiuminname, slaap, stress en comfort bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "magnesiuminname, slaap, stress en comfort, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "omega-3-for-pcos",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/omega-3-and-pcos-scientific-benefits.webp",
+      "inlineImages": [
+        "/assets/images/blog/supplements/omega-3-rich-fish-can-be-helpful-pcos.webp",
+        "/assets/images/blog/supplements/omega-3-supports-heart-and-triglyceride-health-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "omegaOds",
+        "dhaAha"
+      ],
+      "relatedSlugs": [
+        "healthy-fats-for-pcos",
+        "pcos-supplement-safety-guide",
+        "pcos-and-insulin-resistance"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Omega-3 for PCOS: Inflammation, Hormones, and Insulin Sensitivity",
+          "topic": "omega-3 fats, inflammation, and metabolic health",
+          "action": "choosing food sources or supplements with realistic expectations",
+          "description": "Evidence-backed CycleBalance guide to omega-3 fats, inflammation, and metabolic health for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "omega-3 fats, inflammation, and metabolic health, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Omega-3 bei PCOS: Entzundung, Hormone und Insulinsensitivitat",
+          "topic": "Omega-3-Fette, Entzundung und Stoffwechselgesundheit",
+          "action": "Lebensmittel oder Supplemente mit realistischen Erwartungen zu wahlen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Omega-3-Fette, Entzundung und Stoffwechselgesundheit bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Omega-3-Fette, Entzundung und Stoffwechselgesundheit, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Omega-3 et SOPK : inflammation, hormones et sensibilite a l insuline",
+          "topic": "les omega-3, l inflammation et la sante metabolique",
+          "action": "choisir aliments ou complements avec des attentes realistes",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les omega-3, l inflammation et la sante metabolique dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les omega-3, l inflammation et la sante metabolique, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Omega-3 e PCOS: infiammazione, ormoni e sensibilita insulinica",
+          "topic": "grassi omega-3, infiammazione e salute metabolica",
+          "action": "scegliere cibi o integratori con aspettative realistiche",
+          "description": "Guida CycleBalance basata sulle evidenze su grassi omega-3, infiammazione e salute metabolica nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "grassi omega-3, infiammazione e salute metabolica, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSのオメガ3：炎症、ホルモン、インスリン感受性",
+          "topic": "オメガ3脂肪、炎症、代謝の健康",
+          "action": "食品やサプリを現実的な期待で選ぶこと",
+          "description": "PCOSにおけるオメガ3脂肪、炎症、代謝の健康について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "オメガ3脂肪、炎症、代謝の健康, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS의 오메가3: 염증, 호르몬, 인슐린 민감성",
+          "topic": "오메가3 지방, 염증, 대사 건강",
+          "action": "음식이나 보충제를 현실적인 기대와 함께 선택하는 것",
+          "description": "PCOS와 오메가3 지방, 염증, 대사 건강에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "오메가3 지방, 염증, 대사 건강, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Omega-3 bij PCOS: ontsteking, hormonen en insulinegevoeligheid",
+          "topic": "omega-3-vetten, ontsteking en metabole gezondheid",
+          "action": "voedselbronnen of supplementen kiezen met realistische verwachtingen",
+          "description": "Onderbouwde CycleBalance-gids over omega-3-vetten, ontsteking en metabole gezondheid bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "omega-3-vetten, ontsteking en metabole gezondheid, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "pcos-and-insulin-resistance",
+      "section": "education",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/hormone-insulin/hormone-chain-reaction-blood-sugar-impacts-body-pcos.webp",
+      "inlineImages": [
+        "/assets/images/blog/hormone-insulin/pcos-and-insulin-resistance-hidden-connection-weight.webp",
+        "/assets/images/blog/hormone-insulin/blood-sugar-fertility-connection-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "acog",
+        "nichd"
+      ],
+      "relatedSlugs": [
+        "pcos-carbohydrate-blueprint",
+        "fiber-and-pcos-blood-sugar",
+        "how-to-track-pcos-symptoms"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "PCOS and Insulin Resistance: The Hidden Connection That Drives Symptoms",
+          "topic": "insulin resistance and PCOS symptoms",
+          "action": "tracking meals, movement, sleep, stress, and glucose patterns together",
+          "description": "Evidence-backed CycleBalance guide to insulin resistance and PCOS symptoms for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "insulin resistance and PCOS symptoms, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "PCOS und Insulinresistenz: die verborgene Verbindung hinter Symptomen",
+          "topic": "Insulinresistenz und PCOS-Symptome",
+          "action": "Mahlzeiten, Bewegung, Schlaf, Stress und Glukosemuster gemeinsam zu verfolgen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Insulinresistenz und PCOS-Symptome bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Insulinresistenz und PCOS-Symptome, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "SOPK et resistance a l insuline : le lien cache qui nourrit les symptomes",
+          "topic": "la resistance a l insuline et les symptomes du SOPK",
+          "action": "suivre repas, mouvement, sommeil, stress et glycemie ensemble",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur la resistance a l insuline et les symptomes du SOPK dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "la resistance a l insuline et les symptomes du SOPK, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "PCOS e insulino-resistenza: il collegamento nascosto dei sintomi",
+          "topic": "insulino-resistenza e sintomi PCOS",
+          "action": "monitorare insieme pasti, movimento, sonno, stress e glicemia",
+          "description": "Guida CycleBalance basata sulle evidenze su insulino-resistenza e sintomi PCOS nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "insulino-resistenza e sintomi PCOS, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSとインスリン抵抗性：症状を動かす隠れたつながり",
+          "topic": "インスリン抵抗性とPCOS症状",
+          "action": "食事、運動、睡眠、ストレス、血糖を一緒に記録すること",
+          "description": "PCOSにおけるインスリン抵抗性とPCOS症状について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "インスリン抵抗性とPCOS症状, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS와 인슐린 저항성: 증상을 움직이는 숨은 연결",
+          "topic": "인슐린 저항성과 PCOS 증상",
+          "action": "식사, 움직임, 수면, 스트레스, 혈당 패턴을 함께 기록하는 것",
+          "description": "PCOS와 인슐린 저항성과 PCOS 증상에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "인슐린 저항성과 PCOS 증상, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "PCOS en insulineresistentie: de verborgen verbinding achter symptomen",
+          "topic": "insulineresistentie en PCOS-symptomen",
+          "action": "maaltijden, beweging, slaap, stress en glucose samen volgen",
+          "description": "Onderbouwde CycleBalance-gids over insulineresistentie en PCOS-symptomen bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "insulineresistentie en PCOS-symptomen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "best-vegetables-for-pcos",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-vegetables/best-vegetables-for-pcos-management.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-vegetables/why-vegetables-matter-for-pcos.webp",
+        "/assets/images/blog/nutrition-vegetables/easy-ways-to-eat-more-veggies-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "cochraneLifestyle"
+      ],
+      "relatedSlugs": [
+        "best-foods-for-pcos",
+        "fiber-and-pcos-blood-sugar",
+        "pcos-breakfast-ideas"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Best Vegetables for PCOS: Fiber, Micronutrients, and Blood Sugar Support",
+          "topic": "vegetables, fiber, and meal volume",
+          "action": "adding one extra vegetable serving to the meal you already eat",
+          "description": "Evidence-backed CycleBalance guide to vegetables, fiber, and meal volume for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "vegetables, fiber, and meal volume, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Die besten Gemuse bei PCOS: Ballaststoffe, Mikronahrstoffe und Blutzucker",
+          "topic": "Gemuse, Ballaststoffe und Mahlzeitenvolumen",
+          "action": "eine zusatzliche Gemuseportion zu einer bestehenden Mahlzeit hinzuzufugen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Gemuse, Ballaststoffe und Mahlzeitenvolumen bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Gemuse, Ballaststoffe und Mahlzeitenvolumen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Les meilleurs legumes pour le SOPK : fibres, micronutriments et glycemie",
+          "topic": "les legumes, les fibres et le volume des repas",
+          "action": "ajouter une portion de legumes au repas deja habituel",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les legumes, les fibres et le volume des repas dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les legumes, les fibres et le volume des repas, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Le migliori verdure per la PCOS: fibre, micronutrienti e glicemia",
+          "topic": "verdure, fibre e volume del pasto",
+          "action": "aggiungere una porzione di verdura a un pasto gia abituale",
+          "description": "Guida CycleBalance basata sulle evidenze su verdure, fibre e volume del pasto nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "verdure, fibre e volume del pasto, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSにおすすめの野菜：食物繊維・微量栄養素・血糖サポート",
+          "topic": "野菜、食物繊維、食事量",
+          "action": "いつもの食事に野菜を一品足すこと",
+          "description": "PCOSにおける野菜、食物繊維、食事量について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "野菜、食物繊維、食事量, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS에 좋은 채소: 섬유질, 미량영양소, 혈당 지원",
+          "topic": "채소, 섬유질, 식사 부피",
+          "action": "이미 먹는 식사에 채소 한 가지를 더하는 것",
+          "description": "PCOS와 채소, 섬유질, 식사 부피에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "채소, 섬유질, 식사 부피, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Beste groenten bij PCOS: vezels, micronutrienten en bloedsuiker",
+          "topic": "groenten, vezels en maaltijdvolume",
+          "action": "een extra portie groente toevoegen aan een bestaande maaltijd",
+          "description": "Onderbouwde CycleBalance-gids over groenten, vezels en maaltijdvolume bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "groenten, vezels en maaltijdvolume, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "healthy-fats-for-pcos",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-fats/the-best-fats-for-pcos-balance.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-fats/why-healthy-fats-matter-for-pcos.webp",
+        "/assets/images/blog/nutrition-fats/omega-3-fats-for-pcos-inflammation.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "omegaOds",
+        "dhaAha"
+      ],
+      "relatedSlugs": [
+        "omega-3-for-pcos",
+        "best-foods-for-pcos",
+        "pcos-breakfast-ideas"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Healthy Fats for PCOS: What to Add, What to Limit, and Why",
+          "topic": "healthy fats, satiety, and inflammation",
+          "action": "using unsaturated fats as meal anchors instead of ultra-processed fats",
+          "description": "Evidence-backed CycleBalance guide to healthy fats, satiety, and inflammation for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "healthy fats, satiety, and inflammation, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Gesunde Fette bei PCOS: was Sie erganzen, begrenzen und warum",
+          "topic": "gesunde Fette, Sattigung und Entzundung",
+          "action": "ungesattigte Fette statt ultra-verarbeiteter Fette als Mahlzeitenanker zu nutzen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu gesunde Fette, Sattigung und Entzundung bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "gesunde Fette, Sattigung und Entzundung, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Bonnes graisses et SOPK : quoi ajouter, quoi limiter et pourquoi",
+          "topic": "les bonnes graisses, la satiete et l inflammation",
+          "action": "utiliser les graisses insaturees plutot que les graisses ultra-transformees",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les bonnes graisses, la satiete et l inflammation dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les bonnes graisses, la satiete et l inflammation, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Grassi sani per la PCOS: cosa aggiungere, cosa limitare e perche",
+          "topic": "grassi sani, sazieta e infiammazione",
+          "action": "usare grassi insaturi invece di grassi ultra-processati",
+          "description": "Guida CycleBalance basata sulle evidenze su grassi sani, sazieta e infiammazione nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "grassi sani, sazieta e infiammazione, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSに役立つ脂質：足したいもの・控えたいもの・理由",
+          "topic": "健康的な脂質、満腹感、炎症",
+          "action": "超加工された脂質より不飽和脂肪を食事の軸にすること",
+          "description": "PCOSにおける健康的な脂質、満腹感、炎症について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "健康的な脂質、満腹感、炎症, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS 건강한 지방: 더할 것, 줄일 것, 이유",
+          "topic": "건강한 지방, 포만감, 염증",
+          "action": "초가공 지방 대신 불포화 지방을 식사에 활용하는 것",
+          "description": "PCOS와 건강한 지방, 포만감, 염증에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "건강한 지방, 포만감, 염증, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Gezonde vetten bij PCOS: wat toevoegen, wat beperken en waarom",
+          "topic": "gezonde vetten, verzadiging en ontsteking",
+          "action": "onverzadigde vetten gebruiken in plaats van ultrabewerkte vetten",
+          "description": "Onderbouwde CycleBalance-gids over gezonde vetten, verzadiging en ontsteking bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "gezonde vetten, verzadiging en ontsteking, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "fiber-and-pcos-blood-sugar",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-general/the-science-of-fiber-pcos-blood-sugar.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-general/seeds-and-smart-add-ins-pcos.webp",
+        "/assets/images/blog/nutrition-general/what-to-reach-for-pcos-whole-grains-fiber-fruit.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "cochraneLifestyle",
+        "legumeTrial"
+      ],
+      "relatedSlugs": [
+        "best-foods-for-pcos",
+        "pcos-carbohydrate-blueprint",
+        "best-vegetables-for-pcos"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Fiber and PCOS Blood Sugar: The Quiet Lever Most Meals Need",
+          "topic": "fiber, glycemic response, and fullness",
+          "action": "adding beans, lentils, oats, seeds, berries, or greens gradually",
+          "description": "Evidence-backed CycleBalance guide to fiber, glycemic response, and fullness for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "fiber, glycemic response, and fullness, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Ballaststoffe und PCOS-Blutzucker: der leise Hebel in vielen Mahlzeiten",
+          "topic": "Ballaststoffe, glykämische Antwort und Sattigung",
+          "action": "Bohnen, Linsen, Hafer, Samen, Beeren oder Grunzeug langsam zu steigern",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Ballaststoffe, glykämische Antwort und Sattigung bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Ballaststoffe, glykämische Antwort und Sattigung, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Fibres et glycemie dans le SOPK : le levier discret des repas",
+          "topic": "les fibres, la reponse glycemique et la satiete",
+          "action": "ajouter progressivement haricots, lentilles, avoine, graines, baies ou legumes verts",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les fibres, la reponse glycemique et la satiete dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les fibres, la reponse glycemique et la satiete, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Fibre e glicemia nella PCOS: la leva silenziosa dei pasti",
+          "topic": "fibre, risposta glicemica e sazieta",
+          "action": "aggiungere gradualmente legumi, avena, semi, frutti di bosco o verdure",
+          "description": "Guida CycleBalance basata sulle evidenze su fibre, risposta glicemica e sazieta nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "fibre, risposta glicemica e sazieta, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "食物繊維とPCOSの血糖：食事で効く静かなレバー",
+          "topic": "食物繊維、血糖反応、満腹感",
+          "action": "豆類、オーツ、種子、ベリー、葉物を少しずつ増やすこと",
+          "description": "PCOSにおける食物繊維、血糖反応、満腹感について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "食物繊維、血糖反応、満腹感, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "섬유질과 PCOS 혈당: 식사에서 중요한 조용한 지렛대",
+          "topic": "섬유질, 혈당 반응, 포만감",
+          "action": "콩류, 귀리, 씨앗, 베리, 잎채소를 천천히 늘리는 것",
+          "description": "PCOS와 섬유질, 혈당 반응, 포만감에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "섬유질, 혈당 반응, 포만감, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Vezels en PCOS-bloedsuiker: de stille hefboom in maaltijden",
+          "topic": "vezels, glycemische respons en verzadiging",
+          "action": "bonen, linzen, haver, zaden, bessen of bladgroenten geleidelijk toevoegen",
+          "description": "Onderbouwde CycleBalance-gids over vezels, glycemische respons en verzadiging bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "vezels, glycemische respons en verzadiging, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "pcos-breakfast-ideas",
+      "section": "nutrition",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/nutrition-protein/start-the-day-with-protein-pcos-breakfast-ideas.webp",
+      "inlineImages": [
+        "/assets/images/blog/nutrition-protein/pcos-protein-checklist-for-every-meal.webp",
+        "/assets/images/blog/nutrition-carbs/pair-carbs-with-protein-fat-fiber-recipe-example.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "cochraneLifestyle"
+      ],
+      "relatedSlugs": [
+        "protein-strategy-for-pcos",
+        "fiber-and-pcos-blood-sugar",
+        "pcos-carbohydrate-blueprint"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "PCOS Breakfast Ideas: Protein, Fiber, and Steadier Mornings",
+          "topic": "breakfast structure, cravings, and morning energy",
+          "action": "building breakfast around protein plus fiber-rich carbohydrate",
+          "description": "Evidence-backed CycleBalance guide to breakfast structure, cravings, and morning energy for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "breakfast structure, cravings, and morning energy, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "PCOS-Frühstücksideen: Eiweiss, Ballaststoffe und ruhigere Morgen",
+          "topic": "Frühstücksstruktur, Heisshunger und Morgenenergie",
+          "action": "Frühstück um Eiweiss und ballaststoffreiche Kohlenhydrate aufzubauen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Frühstücksstruktur, Heisshunger und Morgenenergie bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Frühstücksstruktur, Heisshunger und Morgenenergie, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Idees de petit-dejeuner SOPK : proteines, fibres et matins plus stables",
+          "topic": "la structure du petit-dejeuner, les envies et l energie du matin",
+          "action": "construire le petit-dejeuner autour de proteines et glucides riches en fibres",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur la structure du petit-dejeuner, les envies et l energie du matin dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "la structure du petit-dejeuner, les envies et l energie du matin, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Colazioni per PCOS: proteine, fibre e mattine piu stabili",
+          "topic": "struttura della colazione, voglie ed energia mattutina",
+          "action": "costruire la colazione su proteine e carboidrati ricchi di fibre",
+          "description": "Guida CycleBalance basata sulle evidenze su struttura della colazione, voglie ed energia mattutina nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "struttura della colazione, voglie ed energia mattutina, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOS朝食アイデア：タンパク質・食物繊維・安定した朝",
+          "topic": "朝食の組み立て、食欲、朝のエネルギー",
+          "action": "タンパク質と食物繊維の多い炭水化物を朝食の軸にすること",
+          "description": "PCOSにおける朝食の組み立て、食欲、朝のエネルギーについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "朝食の組み立て、食欲、朝のエネルギー, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS 아침 식사 아이디어: 단백질, 섬유질, 안정적인 아침",
+          "topic": "아침 식사 구성, 식욕, 오전 에너지",
+          "action": "단백질과 섬유질 많은 탄수화물을 중심으로 아침을 구성하는 것",
+          "description": "PCOS와 아침 식사 구성, 식욕, 오전 에너지에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "아침 식사 구성, 식욕, 오전 에너지, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "PCOS-ontbijtideeen: eiwit, vezels en stabielere ochtenden",
+          "topic": "ontbijtstructuur, trek en ochtendenergie",
+          "action": "ontbijt bouwen rond eiwit en vezelrijke koolhydraten",
+          "description": "Onderbouwde CycleBalance-gids over ontbijtstructuur, trek en ochtendenergie bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "ontbijtstructuur, trek en ochtendenergie, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "vitamin-d-and-pcos",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/vitamin-d-pcos-hormone-immune-support.webp",
+      "inlineImages": [
+        "/assets/images/blog/supplements/not-all-pcos-supplements-look-the-same.webp",
+        "/assets/images/blog/supplements/a-gentle-reminder-pcos-supplements-consistency.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "vitaminDOds",
+        "pcos2023"
+      ],
+      "relatedSlugs": [
+        "pcos-supplement-safety-guide",
+        "inositol-for-pcos-evidence-based-guide",
+        "magnesium-for-pcos"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Vitamin D and PCOS: What to Test, Track, and Discuss",
+          "topic": "vitamin D status and supplement decisions",
+          "action": "asking about testing before guessing at a dose",
+          "description": "Evidence-backed CycleBalance guide to vitamin D status and supplement decisions for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "vitamin D status and supplement decisions, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Vitamin D und PCOS: was Sie testen, verfolgen und besprechen sollten",
+          "topic": "Vitamin-D-Status und Supplement-Entscheidungen",
+          "action": "vor einer Dosierung nach einem Test zu fragen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Vitamin-D-Status und Supplement-Entscheidungen bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Vitamin-D-Status und Supplement-Entscheidungen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Vitamine D et SOPK : quoi tester, suivre et discuter",
+          "topic": "le statut en vitamine D et les choix de complement",
+          "action": "demander un dosage avant de choisir une dose",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur le statut en vitamine D et les choix de complement dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "le statut en vitamine D et les choix de complement, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Vitamina D e PCOS: cosa testare, monitorare e discutere",
+          "topic": "stato della vitamina D e scelte di integrazione",
+          "action": "chiedere un test prima di scegliere una dose",
+          "description": "Guida CycleBalance basata sulle evidenze su stato della vitamina D e scelte di integrazione nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "stato della vitamina D e scelte di integrazione, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "ビタミンDとPCOS：検査・記録・相談したいこと",
+          "topic": "ビタミンDの状態とサプリ判断",
+          "action": "用量を決める前に検査について相談すること",
+          "description": "PCOSにおけるビタミンDの状態とサプリ判断について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "ビタミンDの状態とサプリ判断, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "비타민 D와 PCOS: 검사, 기록, 상담할 것",
+          "topic": "비타민 D 상태와 보충제 결정",
+          "action": "용량을 추측하기 전에 검사를 상담하는 것",
+          "description": "PCOS와 비타민 D 상태와 보충제 결정에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "비타민 D 상태와 보충제 결정, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Vitamine D en PCOS: wat testen, volgen en bespreken",
+          "topic": "vitamine D-status en supplementkeuzes",
+          "action": "eerst testen bespreken voordat u een dosis kiest",
+          "description": "Onderbouwde CycleBalance-gids over vitamine D-status en supplementkeuzes bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "vitamine D-status en supplementkeuzes, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "zinc-spearmint-pcos-acne",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/zinc-and-spearmint-for-pcos-acne-androgens.webp",
+      "inlineImages": [
+        "/assets/images/blog/cycle-tracking-symptoms/acne-and-cravings-pcos-helpful-clues.webp",
+        "/assets/images/blog/supplements/not-all-pcos-supplements-look-the-same.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "zincOds",
+        "acog"
+      ],
+      "relatedSlugs": [
+        "pcos-supplement-safety-guide",
+        "how-to-track-pcos-symptoms",
+        "inositol-for-pcos-evidence-based-guide"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Zinc, Spearmint, and PCOS Acne: What Is Reasonable to Try?",
+          "topic": "skin symptoms, androgen-related clues, and supplement safety",
+          "action": "tracking skin changes before and after any new supplement",
+          "description": "Evidence-backed CycleBalance guide to skin symptoms, androgen-related clues, and supplement safety for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "skin symptoms, androgen-related clues, and supplement safety, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Zink, Spearmint und PCOS-Akne: was ist vernünftig zu versuchen?",
+          "topic": "Hautsymptome, androgenbezogene Hinweise und Supplement-Sicherheit",
+          "action": "Hautveranderungen vor und nach einem neuen Supplement zu dokumentieren",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Hautsymptome, androgenbezogene Hinweise und Supplement-Sicherheit bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Hautsymptome, androgenbezogene Hinweise und Supplement-Sicherheit, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Zinc, menthe verte et acne SOPK : que peut-on essayer raisonnablement ?",
+          "topic": "les symptomes cutanes, les signes androgeniques et la securite des complements",
+          "action": "suivre la peau avant et apres tout nouveau complement",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les symptomes cutanes, les signes androgeniques et la securite des complements dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les symptomes cutanes, les signes androgeniques et la securite des complements, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Zinco, menta verde e acne nella PCOS: cosa ha senso provare?",
+          "topic": "sintomi cutanei, segnali androgenici e sicurezza degli integratori",
+          "action": "monitorare la pelle prima e dopo ogni nuovo integratore",
+          "description": "Guida CycleBalance basata sulle evidenze su sintomi cutanei, segnali androgenici e sicurezza degli integratori nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "sintomi cutanei, segnali androgenici e sicurezza degli integratori, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "亜鉛・スペアミント・PCOSのにきび：試す前に知りたいこと",
+          "topic": "皮膚症状、アンドロゲン関連の手がかり、サプリ安全性",
+          "action": "新しいサプリの前後で皮膚変化を記録すること",
+          "description": "PCOSにおける皮膚症状、アンドロゲン関連の手がかり、サプリ安全性について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "皮膚症状、アンドロゲン関連の手がかり、サプリ安全性, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "아연, 스피어민트, PCOS 여드름: 무엇을 시도할 수 있을까?",
+          "topic": "피부 증상, 안드로겐 관련 단서, 보충제 안전성",
+          "action": "새 보충제 전후 피부 변화를 기록하는 것",
+          "description": "PCOS와 피부 증상, 안드로겐 관련 단서, 보충제 안전성에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "피부 증상, 안드로겐 관련 단서, 보충제 안전성, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Zink, groene munt en PCOS-acne: wat is redelijk om te proberen?",
+          "topic": "huidklachten, androgeengerelateerde signalen en supplementveiligheid",
+          "action": "huidveranderingen volgen voor en na elk nieuw supplement",
+          "description": "Onderbouwde CycleBalance-gids over huidklachten, androgeengerelateerde signalen en supplementveiligheid bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "huidklachten, androgeengerelateerde signalen en supplementveiligheid, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "pcos-supplement-safety-guide",
+      "section": "supplements",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/supplements/not-all-pcos-supplements-look-the-same.webp",
+      "inlineImages": [
+        "/assets/images/blog/supplements/a-gentle-reminder-pcos-supplements-consistency.webp",
+        "/assets/images/blog/supplements/inositol-the-one-pcos-supplement-that-gets-attention.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "magnesiumOds",
+        "omegaOds",
+        "vitaminDOds",
+        "zincOds"
+      ],
+      "relatedSlugs": [
+        "inositol-for-pcos-evidence-based-guide",
+        "vitamin-d-and-pcos",
+        "magnesium-for-pcos"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "PCOS Supplement Safety Guide: How to Evaluate Claims Before You Buy",
+          "topic": "supplement claims, interactions, and tracking",
+          "action": "using one change at a time and documenting dose, timing, and symptoms",
+          "description": "Evidence-backed CycleBalance guide to supplement claims, interactions, and tracking for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "supplement claims, interactions, and tracking, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "PCOS-Supplement-Sicherheit: wie Sie Behauptungen vor dem Kauf prüfen",
+          "topic": "Supplement-Behauptungen, Wechselwirkungen und Tracking",
+          "action": "nur eine Anderung auf einmal zu machen und Dosis, Timing und Symptome zu notieren",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Supplement-Behauptungen, Wechselwirkungen und Tracking bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Supplement-Behauptungen, Wechselwirkungen und Tracking, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Guide securite des complements SOPK : evaluer les promesses avant d acheter",
+          "topic": "les promesses, interactions et le suivi des complements",
+          "action": "changer une seule chose a la fois et noter dose, moment et symptomes",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les promesses, interactions et le suivi des complements dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les promesses, interactions et le suivi des complements, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Sicurezza degli integratori per PCOS: valutare le promesse prima di acquistare",
+          "topic": "promesse, interazioni e monitoraggio degli integratori",
+          "action": "fare un cambiamento alla volta e annotare dose, timing e sintomi",
+          "description": "Guida CycleBalance basata sulle evidenze su promesse, interazioni e monitoraggio degli integratori nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "promesse, interazioni e monitoraggio degli integratori, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSサプリ安全ガイド：購入前に主張を見極める",
+          "topic": "サプリの主張、相互作用、記録",
+          "action": "一度に一つだけ変え、用量・時間・症状を記録すること",
+          "description": "PCOSにおけるサプリの主張、相互作用、記録について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "サプリの主張、相互作用、記録, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS 보충제 안전 가이드: 구매 전 주장 평가하기",
+          "topic": "보충제 주장, 상호작용, 기록",
+          "action": "한 번에 하나만 바꾸고 용량, 시간, 증상을 기록하는 것",
+          "description": "PCOS와 보충제 주장, 상호작용, 기록에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "보충제 주장, 상호작용, 기록, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "PCOS-supplementveiligheid: claims beoordelen voor aankoop",
+          "topic": "supplementclaims, interacties en registratie",
+          "action": "een verandering tegelijk doen en dosis, timing en symptomen noteren",
+          "description": "Onderbouwde CycleBalance-gids over supplementclaims, interacties en registratie bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "supplementclaims, interacties en registratie, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "missed-periods-with-pcos",
+      "section": "tracking",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/cycle-tracking-symptoms/cycle-length-and-missed-periods-pcos.webp",
+      "inlineImages": [
+        "/assets/images/blog/cycle-tracking-symptoms/irregular-periods-are-not-just-random-pcos.webp",
+        "/assets/images/blog/cycle-tracking-symptoms/patterns-become-clearer-together-pcos-tracking.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "acog",
+        "nichd"
+      ],
+      "relatedSlugs": [
+        "how-to-track-pcos-symptoms",
+        "pcos-and-insulin-resistance",
+        "lifestyle-for-pcos-sleep-stress-exercise"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Missed Periods with PCOS: What Irregular Cycles Can Tell You",
+          "topic": "missed periods, cycle length, and ovulation clues",
+          "action": "logging cycle start dates and symptoms consistently",
+          "description": "Evidence-backed CycleBalance guide to missed periods, cycle length, and ovulation clues for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "missed periods, cycle length, and ovulation clues, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Ausbleibende Perioden bei PCOS: was unregelmassige Zyklen zeigen konnen",
+          "topic": "ausbleibende Perioden, Zykluslange und Ovulationshinweise",
+          "action": "Zyklusstartdaten und Symptome konsequent zu erfassen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu ausbleibende Perioden, Zykluslange und Ovulationshinweise bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "ausbleibende Perioden, Zykluslange und Ovulationshinweise, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Regles absentes avec le SOPK : ce que les cycles irreguliers peuvent indiquer",
+          "topic": "les regles absentes, la longueur du cycle et les indices d ovulation",
+          "action": "noter regulierement les debuts de cycle et symptomes",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur les regles absentes, la longueur du cycle et les indices d ovulation dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "les regles absentes, la longueur du cycle et les indices d ovulation, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Mestruazioni saltate nella PCOS: cosa possono indicare i cicli irregolari",
+          "topic": "mestruazioni saltate, durata del ciclo e segnali di ovulazione",
+          "action": "registrare con costanza inizio ciclo e sintomi",
+          "description": "Guida CycleBalance basata sulle evidenze su mestruazioni saltate, durata del ciclo e segnali di ovulazione nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "mestruazioni saltate, durata del ciclo e segnali di ovulazione, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSで月経が来ないとき：不規則な周期から分かること",
+          "topic": "月経の欠如、周期の長さ、排卵の手がかり",
+          "action": "周期開始日と症状を継続して記録すること",
+          "description": "PCOSにおける月経の欠如、周期の長さ、排卵の手がかりについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "月経の欠如、周期の長さ、排卵の手がかり, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS에서 생리를 건너뛸 때: 불규칙한 주기가 말하는 것",
+          "topic": "생리 없음, 주기 길이, 배란 단서",
+          "action": "주기 시작일과 증상을 꾸준히 기록하는 것",
+          "description": "PCOS와 생리 없음, 주기 길이, 배란 단서에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "생리 없음, 주기 길이, 배란 단서, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Uitblijvende menstruatie bij PCOS: wat onregelmatige cycli kunnen vertellen",
+          "topic": "uitblijvende menstruatie, cycluslengte en ovulatiesignalen",
+          "action": "cyclusstart en symptomen consequent registreren",
+          "description": "Onderbouwde CycleBalance-gids over uitblijvende menstruatie, cycluslengte en ovulatiesignalen bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "uitblijvende menstruatie, cycluslengte en ovulatiesignalen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "how-to-track-pcos-symptoms",
+      "section": "tracking",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/app-and-branding/track-what-works-for-your-body-cyclebalance.webp",
+      "inlineImages": [
+        "/assets/images/blog/cycle-tracking-symptoms/mood-and-energy-follow-a-pattern-pcos.webp",
+        "/assets/images/blog/app-and-branding/log-what-you-feel-cyclebalance-app.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "acog",
+        "nichd"
+      ],
+      "relatedSlugs": [
+        "missed-periods-with-pcos",
+        "pcos-and-insulin-resistance",
+        "privacy-first-health-tracking"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "How to Track PCOS Symptoms Without Turning Your Life Into a Spreadsheet",
+          "topic": "symptom tracking, patterns, and privacy-first records",
+          "action": "choosing a small set of symptoms to log consistently",
+          "description": "Evidence-backed CycleBalance guide to symptom tracking, patterns, and privacy-first records for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "symptom tracking, patterns, and privacy-first records, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "PCOS-Symptome tracken, ohne das Leben in eine Tabelle zu verwandeln",
+          "topic": "Symptomtracking, Muster und datenschutzfreundliche Notizen",
+          "action": "eine kleine Symptomgruppe konsequent zu erfassen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Symptomtracking, Muster und datenschutzfreundliche Notizen bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Symptomtracking, Muster und datenschutzfreundliche Notizen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Suivre les symptomes du SOPK sans transformer sa vie en tableur",
+          "topic": "le suivi des symptomes, les tendances et la confidentialite",
+          "action": "choisir quelques symptomes a noter regulierement",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur le suivi des symptomes, les tendances et la confidentialite dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "le suivi des symptomes, les tendances et la confidentialite, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Come monitorare i sintomi PCOS senza trasformare la vita in un foglio di calcolo",
+          "topic": "monitoraggio sintomi, pattern e privacy",
+          "action": "scegliere pochi sintomi da registrare con costanza",
+          "description": "Guida CycleBalance basata sulle evidenze su monitoraggio sintomi, pattern e privacy nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "monitoraggio sintomi, pattern e privacy, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "生活を表計算にしないPCOS症状記録の方法",
+          "topic": "症状記録、パターン、プライバシー重視の記録",
+          "action": "記録する症状を少数に絞って続けること",
+          "description": "PCOSにおける症状記録、パターン、プライバシー重視の記録について、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "症状記録、パターン、プライバシー重視の記録, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "삶을 표로 만들지 않고 PCOS 증상 기록하는 법",
+          "topic": "증상 기록, 패턴, 개인정보 중심 기록",
+          "action": "소수의 증상을 꾸준히 기록하는 것",
+          "description": "PCOS와 증상 기록, 패턴, 개인정보 중심 기록에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "증상 기록, 패턴, 개인정보 중심 기록, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "PCOS-symptomen volgen zonder dat uw leven een spreadsheet wordt",
+          "topic": "symptoomregistratie, patronen en privacy",
+          "action": "een kleine set symptomen consequent vastleggen",
+          "description": "Onderbouwde CycleBalance-gids over symptoomregistratie, patronen en privacy bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "symptoomregistratie, patronen en privacy, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    },
+    {
+      "slug": "lifestyle-for-pcos-sleep-stress-exercise",
+      "section": "lifestyle",
+      "datePublished": "2026-05-07",
+      "dateModified": "2026-05-07",
+      "heroImage": "/assets/images/blog/lifestyle/sleep-like-it-matters-pcos.webp",
+      "inlineImages": [
+        "/assets/images/blog/lifestyle/reduce-stress-load-for-pcos.webp",
+        "/assets/images/blog/lifestyle/walk-more-add-strength-training-pcos.webp"
+      ],
+      "referenceIds": [
+        "pcos2023",
+        "jcem2023",
+        "cochraneLifestyle",
+        "sleepPcos"
+      ],
+      "relatedSlugs": [
+        "pcos-and-insulin-resistance",
+        "missed-periods-with-pcos",
+        "how-to-track-pcos-symptoms"
+      ],
+      "healthContent": true,
+      "locales": [
+        "en",
+        "de",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "nl"
+      ],
+      "localized": {
+        "en": {
+          "title": "Lifestyle for PCOS: Sleep, Stress, and Exercise Without All-or-Nothing Rules",
+          "topic": "sleep, stress load, movement, and symptom patterns",
+          "action": "picking one sleep, stress, or movement habit to repeat",
+          "description": "Evidence-backed CycleBalance guide to sleep, stress load, movement, and symptom patterns for PCOS, with practical tracking ideas, careful medical disclaimers, and references to clinical guidance.",
+          "keywords": "sleep, stress load, movement, and symptom patterns, PCOS, polycystic ovary syndrome, CycleBalance, irregular cycles, symptom tracking"
+        },
+        "de": {
+          "title": "Lebensstil bei PCOS: Schlaf, Stress und Bewegung ohne Alles-oder-Nichts-Regeln",
+          "topic": "Schlaf, Stressbelastung, Bewegung und Symptommuster",
+          "action": "eine Schlaf-, Stress- oder Bewegungsgewohnheit auszuwahlen und zu wiederholen",
+          "description": "Evidenzbasierter CycleBalance-Leitfaden zu Schlaf, Stressbelastung, Bewegung und Symptommuster bei PCOS, mit praktischen Tracking-Ideen, vorsichtiger Einordnung und Quellen aus Leitlinien und Forschung.",
+          "keywords": "Schlaf, Stressbelastung, Bewegung und Symptommuster, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "fr": {
+          "title": "Mode de vie et SOPK : sommeil, stress et activite sans regles extremes",
+          "topic": "le sommeil, la charge de stress, le mouvement et les symptomes",
+          "action": "choisir une habitude de sommeil, stress ou mouvement a repeter",
+          "description": "Guide CycleBalance fonde sur les donnees probantes sur le sommeil, la charge de stress, le mouvement et les symptomes dans le SOPK, avec idees de suivi, prudence medicale et references cliniques.",
+          "keywords": "le sommeil, la charge de stress, le mouvement et les symptomes, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "it": {
+          "title": "Stile di vita per PCOS: sonno, stress ed esercizio senza regole estreme",
+          "topic": "sonno, carico di stress, movimento e pattern dei sintomi",
+          "action": "scegliere un abitudine di sonno, stress o movimento da ripetere",
+          "description": "Guida CycleBalance basata sulle evidenze su sonno, carico di stress, movimento e pattern dei sintomi nella PCOS, con idee pratiche di monitoraggio, disclaimer medico e riferimenti clinici.",
+          "keywords": "sonno, carico di stress, movimento e pattern dei sintomi, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ja": {
+          "title": "PCOSの生活習慣：睡眠・ストレス・運動を極端にしない",
+          "topic": "睡眠、ストレス負荷、運動、症状パターン",
+          "action": "睡眠・ストレス・運動の習慣を一つ選んで続けること",
+          "description": "PCOSにおける睡眠、ストレス負荷、運動、症状パターンについて、CycleBalanceがエビデンス、記録の工夫、医療上の注意点とともに解説します。",
+          "keywords": "睡眠、ストレス負荷、運動、症状パターン, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "ko": {
+          "title": "PCOS 생활습관: 수면, 스트레스, 운동을 극단 없이 다루기",
+          "topic": "수면, 스트레스 부담, 움직임, 증상 패턴",
+          "action": "수면, 스트레스, 운동 습관 하나를 골라 반복하는 것",
+          "description": "PCOS와 수면, 스트레스 부담, 움직임, 증상 패턴에 대한 CycleBalance 근거 기반 가이드입니다. 실용적인 기록 방법, 신중한 의학적 고지, 임상 참고문헌을 포함합니다.",
+          "keywords": "수면, 스트레스 부담, 움직임, 증상 패턴, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        },
+        "nl": {
+          "title": "Leefstijl bij PCOS: slaap, stress en beweging zonder alles-of-nietsregels",
+          "topic": "slaap, stressbelasting, beweging en symptoompatronen",
+          "action": "een slaap-, stress- of beweeggewoonte kiezen en herhalen",
+          "description": "Onderbouwde CycleBalance-gids over slaap, stressbelasting, beweging en symptoompatronen bij PCOS, met praktische registratietips, zorgvuldige medische disclaimer en klinische bronnen.",
+          "keywords": "slaap, stressbelasting, beweging en symptoompatronen, PCOS, CycleBalance, cycle tracking, symptom tracking"
+        }
+      }
+    }
+  ],
+  "legacyArticles": [
+    {
+      "slug": "privacy-first-health-tracking",
+      "datePublished": "2026-05-07",
+      "section": "tracking",
+      "heroImage": "/assets/images/blog/app-and-branding/cyclebalance-tracking-symptoms-and-glucose.webp",
+      "localized": {
+        "en": {
+          "title": "Privacy-First Health Tracking: Why Your Data Should Stay on Your Device",
+          "description": "Why CycleBalance keeps reproductive health data on-device and avoids advertising trackers.",
+          "keywords": "privacy-first health app, PCOS tracking privacy, CycleBalance"
+        }
+      }
+    },
+    {
+      "slug": "understanding-irregular-cycles-pcos",
+      "datePublished": "2026-05-07",
+      "section": "tracking",
+      "heroImage": "/assets/images/blog/cycle-tracking-symptoms/irregular-periods-are-not-just-random-pcos.webp",
+      "localized": {
+        "en": {
+          "title": "Understanding Irregular Cycles with PCOS",
+          "description": "How PCOS can disrupt ovulation timing and why cycle tracking can help reveal useful patterns.",
+          "keywords": "irregular cycles PCOS, missed periods PCOS, cycle tracking"
+        }
+      }
+    },
+    {
+      "slug": "why-we-built-cyclebalance",
+      "datePublished": "2026-05-07",
+      "section": "tracking",
+      "heroImage": "/assets/images/blog/app-and-branding/meet-cyclebalance-app-iphone-mockup.webp",
+      "localized": {
+        "en": {
+          "title": "Why We Built CycleBalance",
+          "description": "The story behind a privacy-first cycle tracker designed specifically for PCOS and irregular cycles.",
+          "keywords": "CycleBalance, PCOS app, irregular cycle tracker"
+        }
+      }
+    }
+  ]
+}
