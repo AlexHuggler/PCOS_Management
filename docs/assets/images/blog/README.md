@@ -14,8 +14,10 @@ All images are WebP, max 1600px wide, EXIF-stripped, ready for blog use on GitHu
 
 ## Folder structure
 
+This library lives at `docs/assets/images/blog/` and is served at `https://cyclebalance.app/assets/images/blog/<topic>/<slug>.webp` once deployed via GitHub Pages.
+
 ```
-PCOS_Management_Images/
+docs/assets/images/blog/
 ├── app-and-branding/  (20 images)
 ├── nutrition-general/  (14 images)
 ├── nutrition-protein/  (12 images)
@@ -36,12 +38,12 @@ Every filename is a descriptive, keyword-rich slug. The `alt-text-reference.csv`
 
 **For blog markdown:**
 ```markdown
-![Why fruit choice matters for PCOS](nutrition-fruits/why-fruit-choice-matters-for-pcos.webp)
+![Why fruit choice matters for PCOS](/assets/images/blog/nutrition-fruits/why-fruit-choice-matters-for-pcos.webp)
 ```
 
-**For HTML / Hugo / Jekyll:**
+**For HTML / Hugo / Jekyll (absolute path from site root):**
 ```html
-<img src="nutrition-fruits/why-fruit-choice-matters-for-pcos.webp"
+<img src="/assets/images/blog/nutrition-fruits/why-fruit-choice-matters-for-pcos.webp"
      alt="Why fruit choice matters for PCOS: high vs low glycemic fruits"
      loading="lazy" width="1600">
 ```
