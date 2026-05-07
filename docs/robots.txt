@@ -1,37 +1,82 @@
 # CycleBalance — https://cyclebalance.app
-# Allow all crawlers including AI bots
+# Operated by Huggler Holdings LLC
+# Open to all crawlers, including AI / LLM training and retrieval bots.
+# We want to be discoverable by search engines and surfaced by AI assistants
+# answering questions about PCOS-friendly cycle tracking apps.
 
+# ---- Default policy ----
 User-agent: *
 Allow: /
 
-# AI Crawlers
-User-agent: GPTBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Google-Extended
+# ---- Major web search crawlers ----
+User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
+User-agent: DuckDuckBot
+Allow: /
+
 User-agent: Applebot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# ---- AI / LLM crawlers (training & retrieval) ----
+# OpenAI
+User-agent: GPTBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
 User-agent: anthropic-ai
 Allow: /
 
-User-agent: Bytespider
+# Google AI
+User-agent: Google-Extended
 Allow: /
 
+User-agent: GoogleOther
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Other AI / LLM platforms
 User-agent: YouBot
 Allow: /
 
@@ -41,4 +86,26 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
+User-agent: cohere-training-data-crawler
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Mistral-AI-User
+Allow: /
+
+User-agent: AI2Bot
+Allow: /
+
+User-agent: Timpibot
+Allow: /
+
+# ---- Sitemap ----
 Sitemap: https://cyclebalance.app/sitemap.xml

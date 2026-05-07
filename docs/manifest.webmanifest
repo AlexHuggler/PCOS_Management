@@ -1,0 +1,42 @@
+{
+  "name": "CycleBalance — PCOS Cycle & Symptom Tracker",
+  "short_name": "CycleBalance",
+  "description": "The first iOS cycle and symptom tracker built from the ground up for PCOS. Irregular cycle intelligence, insulin tracking, and 100% on-device privacy.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0B1120",
+  "background_color": "#0B1120",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/us/app/cyclebalance/id6760353511",
+      "id": "6760353511"
+    }
+  ],
+  "prefer_related_applications": true
+}
