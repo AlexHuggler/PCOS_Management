@@ -186,7 +186,7 @@
         "name": "CycleBalance è gratuita?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CycleBalance è gratuita da scaricare e utilizzare. Tutte le funzionalità di tracciamento principali sono gratuite, inclusa la registrazione del ciclo, il tracciamento dei sintomi e l'esportazione dei dati. Sono disponibili funzionalità premium opzionali per chi desidera approfondimenti avanzati."
+          "text": "CycleBalance è scaricabile gratuitamente e include le funzioni di tracking principali. Premium opzionale sblocca il monitoraggio avanzato del glucosio, le foto dei pasti, la registrazione degli integratori e report dettagliati."
         }
       },
       {
@@ -284,7 +284,7 @@
       margin-top: 4px;
     }
 
-    /* ===== WAITLIST MODE STYLES ===== */
+    /* ===== LEGACY FORM STYLES ===== */
     .hero {
       text-align: center;
       margin-bottom: 40px;
@@ -1510,6 +1510,13 @@
       flex-wrap: wrap;
     }
     .cb-dark .cb-hero-cta .cb-btn-app { padding: 14px 24px; }
+    .cb-dark .cb-hero-note {
+      max-width: 520px;
+      margin: 14px 0 0;
+      color: #C8CDD8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
     /* -------- HERO PHONE -------- */
     .cb-dark .cb-hero-phone-wrap {
@@ -1946,6 +1953,40 @@
     }
     #siteMode .about-section .key-facts h3,
     #siteMode .about-section .key-facts li { color: #F5F7FB !important; }
+    #siteMode .privacy-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+      gap: 30px;
+      align-items: center;
+      text-align: left;
+      overflow: hidden;
+    }
+    #siteMode .privacy-banner p {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    #siteMode .privacy-clarification {
+      color: #C8CDD8 !important;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    #siteMode .privacy-copy { min-width: 0; }
+    #siteMode .privacy-visual {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(244,184,196,0.16), transparent 48%),
+        rgba(255,255,255,0.04);
+      padding: 12px;
+      box-shadow: 0 22px 56px -38px rgba(0,0,0,0.9);
+    }
+    #siteMode .privacy-visual img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+    }
     #siteMode .privacy-point { color: #F5F7FB !important; }
     #siteMode .comparison-table {
       background: #141C2E !important;
@@ -2033,6 +2074,14 @@
       .cb-dark .cb-hero-inner { grid-template-columns: 1fr; }
       .cb-dark .cb-hero-copy h1 { font-size: 40px; }
       .cb-dark .cb-hero-phone-wrap { min-height: 420px; }
+      #siteMode .privacy-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      #siteMode .privacy-banner p {
+        margin-left: auto;
+        margin-right: auto;
+      }
       .cb-dark .cb-footer-grid { grid-template-columns: 1fr 1fr; }
       .cb-dark .cb-footer-cta-col { grid-column: 1 / -1; align-items: flex-start; }
     }
@@ -2050,163 +2099,8 @@
 </head>
 <body>
 
-<!-- ============================================================
-     SITE MODE TOGGLE
-     Set SITE_LIVE = true when you're ready to launch the full site.
-     When false, visitors see only the waitlist landing page.
-     ============================================================ -->
-
-<!-- ==================== WAITLIST MODE ==================== -->
-<div id="waitlistMode">
-  <div class="page-wrapper">
-
-    <!-- Logo -->
-    <div class="logo-section">
-      <div class="logo-icon">
-        <img src="/icon-192.png" alt="CycleBalance" width="64" height="64">
-      </div>
-      <div class="logo-title">CycleBalance</div>
-      <div class="logo-tagline">Gestione della PCOS, costruita da zero.</div>
-    </div>
-
-    <!-- Hero -->
-    <div class="hero">
-      <h1>Il primo tracker del ciclo che <span>capisce davvero la PCOS</span></h1>
-      <p>Nessuna ipotesi di ciclo di 28 giorni. Nessun linguaggio colpevolizzante. Nessun dato che lascia il tuo dispositivo. Solo uno strumento intelligente e privato progettato per come funziona davvero il tuo corpo.</p>
-    </div>
-
-    <!-- Feature pills -->
-    <div class="features-row">
-      <div class="feature-pill"><span class="dot"></span>Intelligenza per cicli irregolari</div>
-      <div class="feature-pill"><span class="dot"></span>Monitoraggio insulina e glucosio</div>
-      <div class="feature-pill"><span class="dot"></span>Approfondimenti ML sul dispositivo</div>
-      <div class="feature-pill"><span class="dot"></span>100% privato — sempre</div>
-      <div class="feature-pill"><span class="dot"></span>Report pronti per il medico</div>
-    </div>
-
-    <!-- Form Card -->
-    <div class="form-card">
-      <div id="formError" class="form-error"></div>
-
-      <form id="interestForm" action="https://formsubmit.co/contact@cyclebalance.app" method="POST">
-        <!-- FormSubmit.co configuration -->
-        <input type="hidden" name="_subject" value="Nuova iscrizione lista d'attesa CycleBalance">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_next" value="https://cyclebalance.app/it/?submitted=true">
-        <input type="text" name="_honey" style="display:none">
-
-        <h2>Accedi in anteprima</h2>
-        <p class="form-subtitle">Sii tra i primi a provare CycleBalance al lancio. Niente spam, solo aggiornamenti.</p>
-
-        <!-- Name -->
-        <div class="form-group">
-          <label for="name">Nome <span class="required">*</span></label>
-          <input type="text" id="name" name="name" placeholder="Il tuo nome" required>
-        </div>
-
-        <!-- Email -->
-        <div class="form-group">
-          <label for="email">Email <span class="required">*</span></label>
-          <input type="email" id="email" name="email" placeholder="tu@email.com" required>
-        </div>
-
-        <!-- PCOS Journey -->
-        <div class="form-group">
-          <label for="experience">A che punto sei nel tuo percorso con la PCOS?</label>
-          <select id="experience" name="pcos_experience">
-            <option value="" disabled selected>Seleziona un'opzione...</option>
-            <option value="newly_diagnosed">Ho ricevuto una diagnosi di recente</option>
-            <option value="experienced">Gestisco la PCOS da tempo</option>
-            <option value="exploring">Penso di avere la PCOS</option>
-            <option value="ttc">Sto cercando di concepire con la PCOS</option>
-            <option value="supporting">Sto supportando qualcuno con la PCOS</option>
-          </select>
-        </div>
-
-        <!-- Feature Interest -->
-        <fieldset class="checkbox-group">
-          <legend>Quali funzionalità ti interessano di più?</legend>
-          <div class="checkbox-grid">
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="cycle_tracking">
-              <span>Tracciamento dei cicli irregolari</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="symptom_correlation">
-              <span>Correlazione sintomi-stile di vita</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="insulin_tracking">
-              <span>Monitoraggio insulina e glucosio</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="supplement_tracking">
-              <span>Tracciamento integratori</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="doctor_reports">
-              <span>Report pronti per il medico</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="privacy">
-              <span>Privacy sul dispositivo</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="diet_impact">
-              <span>Analisi dell'impatto della dieta</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="hair_skin">
-              <span>Diario fotografico capelli e pelle</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <!-- Current apps -->
-        <div class="form-group">
-          <label for="current_apps">Cosa usi attualmente per gestire la PCOS? <span style="font-weight:400;color:var(--text-muted)">(facoltativo)</span></label>
-          <textarea id="current_apps" name="current_apps" placeholder="es. Flo, Clue, fogli di calcolo, ancora niente..."></textarea>
-        </div>
-
-        <!-- Submit -->
-        <button type="submit" class="submit-btn" id="submitBtn">Iscriviti alla lista d'attesa</button>
-
-        <div class="privacy-note">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Le tue informazioni sono archiviate in modo sicuro. Non condivideremo mai la tua email né invieremo spam.
-        </div>
-      </form>
-
-      <!-- Thank you -->
-      <div class="thank-you" id="thankYou">
-        <div class="check-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <h2>Sei in lista!</h2>
-        <p>Ti invieremo aggiornamenti man mano che CycleBalance si avvicinerà al lancio. Grazie per far parte di questo progetto fin dall'inizio.</p>
-      </div>
-    </div>
-
-    <!-- Bottom -->
-    <div class="bottom-section">
-      <p>
-        <span class="highlight">Ora disponibile su App Store</span> — creata per il Mese di sensibilizzazione sulla PCOS.<br>
-        Creata per le 7,5 milioni di donne negli Stati Uniti che convivono con la PCOS.
-      </p>
-      <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
-        <a href="/it/privacy" style="color: var(--text-muted); text-decoration: underline;">Informativa sulla privacy</a> &middot;
-        <a href="/it/terms" style="color: var(--text-muted); text-decoration: underline;">Termini di utilizzo</a> &middot;
-        <a href="/it/support" style="color: var(--text-muted); text-decoration: underline;">Contatti</a>
-      </p>
-    </div>
-
-  </div>
-</div>
-
 <!-- ==================== FULL SITE MODE ==================== -->
-<div id="siteMode" style="display:none">
+<div id="siteMode">
 
   <!-- ============ NEW DARK-THEME TEMPLATE (top of page) ============ -->
   <div class="cb-dark">
@@ -2251,6 +2145,7 @@
             </a>
             <a href="#features-new" class="cb-btn-outline">Scopri di più</a>
           </div>
+          <p class="cb-hero-note">Tracking di base gratuito. Premium opzionale sblocca funzioni avanzate per glucosio, pasti, integratori e report.</p>
         </div>
         <div class="cb-hero-phone-wrap">
           <div class="cb-hero-phone">
@@ -2401,14 +2296,14 @@
                   <span>CycleBalance è gratuita?</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">Sì. CycleBalance è gratuita da scaricare e tutte le funzionalità di tracciamento principali sono gratuite, inclusa la registrazione del ciclo, il tracciamento dei sintomi e l'esportazione dei dati.</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Sì. CycleBalance è scaricabile gratuitamente e include le funzioni di tracking principali. Premium opzionale sblocca il monitoraggio avanzato del glucosio, le foto dei pasti, la registrazione degli integratori e report dettagliati.</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
                   <span>I miei dati sono privati?</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">Assolutamente sì. Tutti i dati sono archiviati ed elaborati interamente sul tuo iPhone. Niente sincronizzazione cloud, niente analisi di terze parti, niente vendita di dati.</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Sì. I tuoi registri di salute restano sul tuo iPhone. Non sincronizziamo i tuoi dati sanitari nel cloud, non li vendiamo e non li usiamo per tracciamento pubblicitario. Gli acquisti sono gestiti tramite Apple e RevenueCat, mentre i messaggi di assistenza vengono elaborati tramite Formsubmit.co solo quando ci contatti.</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
@@ -2469,25 +2364,31 @@
 
     <!-- Privacy banner -->
     <div class="privacy-banner" id="privacy-section" data-section="privacy">
-      <h2>I tuoi dati rimangono sul tuo dispositivo. Punto.</h2>
-      <p>In un mondo in cui le app sanitarie vendono i tuoi dati più intimi, CycleBalance prende posizione. Tutto viene elaborato e archiviato sul tuo iPhone utilizzando Core ML di Apple.</p>
-      <div class="privacy-points">
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Nessun caricamento cloud
+      <div class="privacy-copy">
+        <h2>I tuoi dati rimangono sul tuo dispositivo. Punto.</h2>
+        <p>CycleBalance è pensata per chi vuole più contesto senza rinunciare alla riservatezza dei dati sanitari più personali. I tuoi registri restano sul tuo iPhone e gli insight sono progettati per funzionare sul dispositivo.</p>
+        <p class="privacy-clarification">I tuoi registri di salute restano sul tuo iPhone. Non sincronizziamo i tuoi dati sanitari nel cloud, non li vendiamo e non li usiamo per tracciamento pubblicitario. Gli acquisti sono gestiti tramite Apple e RevenueCat, mentre i messaggi di assistenza vengono elaborati tramite Formsubmit.co solo quando ci contatti.</p>
+        <div class="privacy-points">
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Nessun caricamento cloud
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Nessuna analisi di terze parti
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Nessuna vendita di dati
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Nessun tracciamento pubblicitario
+          </div>
         </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Nessuna analisi di terze parti
-        </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Nessuna vendita di dati
-        </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Crittografia iOS
-        </div>
+      </div>
+      <div class="privacy-visual">
+        <img src="/assets/images/site/cyclebalance-privacy-trust-device.jpg" alt="Concetto di privacy sul dispositivo per CycleBalance" width="1200" height="675" loading="lazy">
       </div>
     </div>
 
@@ -2683,58 +2584,43 @@
 </div>
 
 <script>
-  // =============================================
-  // SITE MODE TOGGLE
-  // Change to true when you're ready to launch the full site.
-  // The waitlist page will be replaced by the full marketing site.
-  // =============================================
-  const SITE_LIVE = true;
-  // =============================================
-
-  if (SITE_LIVE) {
-    document.getElementById('waitlistMode').style.display = 'none';
-    document.getElementById('siteMode').style.display = 'block';
-
-    // FAQ accordion toggle (old light-theme FAQ — now unused; kept defensive)
-    document.querySelectorAll('.faq-question').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.parentElement;
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faq-item').forEach(i => {
-          i.classList.remove('open');
-          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-        });
-        if (!isOpen) {
-          item.classList.add('open');
-          btn.setAttribute('aria-expanded', 'true');
-        }
-      });
+  const navToggle = document.querySelector('.cb-nav-toggle');
+  const navLinks = document.getElementById('primaryNavLinks');
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
-    // New dark-theme FAQ accordion
-    document.querySelectorAll('.cb-dark .cb-faq-q').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.parentElement;
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.cb-dark .cb-faq-item').forEach(i => {
-          i.classList.remove('open');
-          const q = i.querySelector('.cb-faq-q');
-          if (q) q.setAttribute('aria-expanded', 'false');
-        });
-        if (!isOpen) {
-          item.classList.add('open');
-          btn.setAttribute('aria-expanded', 'true');
-        }
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
       });
     });
-  } else {
-    // Show thank-you message if redirected back after form submission
-    if (new URLSearchParams(window.location.search).has('submitted')) {
-      const form = document.getElementById('interestForm');
-      const thankYou = document.getElementById('thankYou');
-      form.style.display = 'none';
-      thankYou.style.display = 'block';
-    }
+  }
+
+  document.querySelectorAll('.cb-dark .cb-faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.cb-dark .cb-faq-item').forEach(i => {
+        i.classList.remove('open');
+        const q = i.querySelector('.cb-faq-q');
+        if (q) q.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.cb-hero-phone-video').forEach(video => {
+      video.removeAttribute('autoplay');
+      video.pause();
+    });
   }
 </script>
 

@@ -12,13 +12,13 @@ const MANIFEST_PATH = path.join(CONTENT_DIR, 'blog-manifest.json');
 const MEDIA_MANIFEST_PATH = path.join(CONTENT_DIR, 'media-manifest.json');
 
 const locales = {
-  en: { label: 'EN', name: 'English', lang: 'en', prefix: '', og: 'en_US' },
-  de: { label: 'DE', name: 'Deutsch', lang: 'de', prefix: '/de', og: 'de_DE' },
-  fr: { label: 'FR', name: 'Francais', lang: 'fr', prefix: '/fr', og: 'fr_FR' },
-  it: { label: 'IT', name: 'Italiano', lang: 'it', prefix: '/it', og: 'it_IT' },
-  ja: { label: 'JA', name: '日本語', lang: 'ja', prefix: '/ja', og: 'ja_JP' },
-  ko: { label: 'KO', name: '한국어', lang: 'ko', prefix: '/ko', og: 'ko_KR' },
-  nl: { label: 'NL', name: 'Nederlands', lang: 'nl', prefix: '/nl', og: 'nl_NL' }
+  en: { label: 'EN', name: 'English', lang: 'en', prefix: '', og: 'en_US', appStoreUrl: 'https://apps.apple.com/us/app/cyclebalance/id6760353511' },
+  de: { label: 'DE', name: 'Deutsch', lang: 'de', prefix: '/de', og: 'de_DE', appStoreUrl: 'https://apps.apple.com/de/app/cyclebalance/id6760353511' },
+  fr: { label: 'FR', name: 'Francais', lang: 'fr', prefix: '/fr', og: 'fr_FR', appStoreUrl: 'https://apps.apple.com/fr/app/cyclebalance/id6760353511' },
+  it: { label: 'IT', name: 'Italiano', lang: 'it', prefix: '/it', og: 'it_IT', appStoreUrl: 'https://apps.apple.com/it/app/cyclebalance/id6760353511' },
+  ja: { label: 'JA', name: '日本語', lang: 'ja', prefix: '/ja', og: 'ja_JP', appStoreUrl: 'https://apps.apple.com/jp/app/cyclebalance/id6760353511' },
+  ko: { label: 'KO', name: '한국어', lang: 'ko', prefix: '/ko', og: 'ko_KR', appStoreUrl: 'https://apps.apple.com/kr/app/cyclebalance/id6760353511' },
+  nl: { label: 'NL', name: 'Nederlands', lang: 'nl', prefix: '/nl', og: 'nl_NL', appStoreUrl: 'https://apps.apple.com/nl/app/cyclebalance/id6760353511' }
 };
 
 const ui = {
@@ -767,7 +767,7 @@ function articlePage(article, locale, manifest, mediaByPath) {
       <div class="article-cta">
         <h3>${t.ctaTitle}</h3>
         <p>${t.ctaText}</p>
-        <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cta-btn" rel="noopener">
+        <a href="${locales[locale].appStoreUrl}" class="cta-btn" rel="noopener">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
           ${t.ctaButton}
         </a>

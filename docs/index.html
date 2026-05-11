@@ -178,7 +178,7 @@
         "name": "Is my health data private and secure in CycleBalance?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. CycleBalance stores your logs entirely on your iPhone, and insights are designed to run on device. There is no cloud sync, no third-party analytics, and no data selling. Your reproductive health data never leaves your device."
+          "text": "Yes. Your health logs stay on your iPhone. We do not cloud-sync your health data, sell it, or use it for ad tracking. Purchases are handled through Apple and RevenueCat, and support messages are processed through Formsubmit.co only when you contact us."
         }
       },
       {
@@ -186,7 +186,7 @@
         "name": "Is CycleBalance free?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CycleBalance is free to download and use. All core tracking features are free, including cycle logging, symptom tracking, and data export. Optional premium features are available for those who want advanced insights."
+          "text": "CycleBalance is free to download and includes core tracking features. Optional Premium unlocks advanced glucose tracking, meal photos, supplement logging, and detailed reports."
         }
       },
       {
@@ -289,7 +289,7 @@
       margin-top: 4px;
     }
 
-    /* ===== WAITLIST MODE STYLES ===== */
+    /* ===== LEGACY FORM STYLES ===== */
     .hero {
       text-align: center;
       margin-bottom: 40px;
@@ -1528,6 +1528,13 @@
       flex-wrap: wrap;
     }
     .cb-dark .cb-hero-cta .cb-btn-app { padding: 14px 24px; }
+    .cb-dark .cb-hero-note {
+      max-width: 520px;
+      margin: 14px 0 0;
+      color: #C8CDD8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
     .cb-dark .cb-hero-trust {
       display: flex;
       flex-wrap: wrap;
@@ -2103,6 +2110,12 @@
       margin-left: 0;
       margin-right: 0;
     }
+    #siteMode .privacy-clarification {
+      color: #C8CDD8 !important;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
     #siteMode .privacy-copy { min-width: 0; }
     #siteMode .privacy-visual {
       border-radius: 18px;
@@ -2339,7 +2352,7 @@
       <ul class="cb-nav-links" id="primaryNavLinks">
         <li><a href="#features-new">Features</a></li>
         <li><a href="#how-new">How it works</a></li>
-        <li><a href="/support">PCOS Guide</a></li>
+        <li><a href="/support">Support</a></li>
         <li><a href="#faq-new">FAQ</a></li>
       </ul>
       <a href="https://apps.apple.com/us/app/cyclebalance/id6760353511" class="cb-btn-app" aria-label="Download CycleBalance on the App Store">
@@ -2367,6 +2380,7 @@
             </a>
             <a href="#features-new" class="cb-btn-outline">See features</a>
           </div>
+          <p class="cb-hero-note">Free core tracking. Optional Premium unlocks advanced glucose, meal, supplement, and report features.</p>
           <ul class="cb-hero-trust" aria-label="CycleBalance trust highlights">
             <li>Now on the App Store</li>
             <li>No cloud sync</li>
@@ -2565,14 +2579,14 @@
                   <span>Is CycleBalance free to use?</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">Yes. CycleBalance is free to download and all core tracking features are free, including cycle logging, symptom tracking, and data export.</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Yes. CycleBalance is free to download and includes core tracking features. Optional Premium unlocks advanced glucose tracking, meal photos, supplement logging, and detailed reports.</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
                   <span>Is my data private?</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">Absolutely. All data is stored and processed entirely on your iPhone. No cloud sync, no third-party analytics, no data selling.</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">Yes. Your health logs stay on your iPhone. We do not cloud-sync your health data, sell it, or use it for ad tracking. Purchases are handled through Apple and RevenueCat, and support messages are processed through Formsubmit.co only when you contact us.</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
@@ -2636,6 +2650,7 @@
       <div class="privacy-copy">
         <h2>Your data stays on your device. Period.</h2>
         <p>CycleBalance is designed for people who want more context without giving away intimate health data. Your logs stay on your iPhone, and insights are designed to run on device.</p>
+        <p class="privacy-clarification">Your health logs stay on your iPhone. We do not cloud-sync your health data, sell it, or use it for ad tracking. Purchases are handled through Apple and RevenueCat, and support messages are processed through Formsubmit.co only when you contact us.</p>
         <div class="privacy-points">
           <div class="privacy-point">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2651,12 +2666,12 @@
           </div>
           <div class="privacy-point">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            iOS encryption
+            No ad tracking
           </div>
         </div>
       </div>
       <div class="privacy-visual">
-        <img src="/assets/images/site/cyclebalance-privacy-on-device.jpg" alt="CycleBalance on-device privacy preview" width="1000" height="666">
+        <img src="/assets/images/site/cyclebalance-privacy-trust-device.jpg" alt="On-device privacy concept for CycleBalance" width="1200" height="675" loading="lazy">
       </div>
     </div>
 
@@ -2789,7 +2804,7 @@
           <div class="cb-footer-col">
             <h5>Support</h5>
             <ul>
-              <li><a href="/support">PCOS Guide</a></li>
+              <li><a href="/support">Support</a></li>
               <li><a href="#faq-new">FAQ</a></li>
             </ul>
           </div>
