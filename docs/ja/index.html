@@ -186,7 +186,7 @@
         "name": "CycleBalanceは無料ですか？",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CycleBalanceは無料でダウンロード・ご利用いただけます。周期記録、症状トラッキング、データエクスポートを含むすべての基本トラッキング機能は無料です。より高度なインサイトをご希望の方向けに、オプションのプレミアム機能もご用意しています。"
+          "text": "CycleBalanceは無料でダウンロードでき、基本的な記録機能が含まれます。任意のPremiumで、血糖の高度な記録、食事写真、サプリメント記録、詳細レポートを利用できます。"
         }
       },
       {
@@ -284,7 +284,7 @@
       margin-top: 4px;
     }
 
-    /* ===== WAITLIST MODE STYLES ===== */
+    /* ===== LEGACY FORM STYLES ===== */
     .hero {
       text-align: center;
       margin-bottom: 40px;
@@ -1510,6 +1510,13 @@
       flex-wrap: wrap;
     }
     .cb-dark .cb-hero-cta .cb-btn-app { padding: 14px 24px; }
+    .cb-dark .cb-hero-note {
+      max-width: 520px;
+      margin: 14px 0 0;
+      color: #C8CDD8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
     /* -------- HERO PHONE -------- */
     .cb-dark .cb-hero-phone-wrap {
@@ -1946,6 +1953,40 @@
     }
     #siteMode .about-section .key-facts h3,
     #siteMode .about-section .key-facts li { color: #F5F7FB !important; }
+    #siteMode .privacy-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+      gap: 30px;
+      align-items: center;
+      text-align: left;
+      overflow: hidden;
+    }
+    #siteMode .privacy-banner p {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    #siteMode .privacy-clarification {
+      color: #C8CDD8 !important;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    #siteMode .privacy-copy { min-width: 0; }
+    #siteMode .privacy-visual {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(244,184,196,0.16), transparent 48%),
+        rgba(255,255,255,0.04);
+      padding: 12px;
+      box-shadow: 0 22px 56px -38px rgba(0,0,0,0.9);
+    }
+    #siteMode .privacy-visual img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+    }
     #siteMode .privacy-point { color: #F5F7FB !important; }
     #siteMode .comparison-table {
       background: #141C2E !important;
@@ -2033,6 +2074,14 @@
       .cb-dark .cb-hero-inner { grid-template-columns: 1fr; }
       .cb-dark .cb-hero-copy h1 { font-size: 40px; }
       .cb-dark .cb-hero-phone-wrap { min-height: 420px; }
+      #siteMode .privacy-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      #siteMode .privacy-banner p {
+        margin-left: auto;
+        margin-right: auto;
+      }
       .cb-dark .cb-footer-grid { grid-template-columns: 1fr 1fr; }
       .cb-dark .cb-footer-cta-col { grid-column: 1 / -1; align-items: flex-start; }
     }
@@ -2050,163 +2099,8 @@
 </head>
 <body>
 
-<!-- ============================================================
-     SITE MODE TOGGLE
-     Set SITE_LIVE = true when you're ready to launch the full site.
-     When false, visitors see only the waitlist landing page.
-     ============================================================ -->
-
-<!-- ==================== WAITLIST MODE ==================== -->
-<div id="waitlistMode">
-  <div class="page-wrapper">
-
-    <!-- Logo -->
-    <div class="logo-section">
-      <div class="logo-icon">
-        <img src="/icon-192.png" alt="CycleBalance" width="64" height="64">
-      </div>
-      <div class="logo-title">CycleBalance</div>
-      <div class="logo-tagline">ゼロから設計されたPCOS管理アプリ。</div>
-    </div>
-
-    <!-- Hero -->
-    <div class="hero">
-      <h1>PCOSを<span>本当に理解する</span>初の周期トラッカー</h1>
-      <p>28日周期を前提にしません。否定的な表現も使いません。データはデバイスから外に出ません。あなたの体の本当の働きに合わせて設計された、スマートでプライベートなツールです。</p>
-    </div>
-
-    <!-- Feature pills -->
-    <div class="features-row">
-      <div class="feature-pill"><span class="dot"></span>不規則周期インテリジェンス</div>
-      <div class="feature-pill"><span class="dot"></span>インスリン・血糖トラッキング</div>
-      <div class="feature-pill"><span class="dot"></span>デバイス内MLインサイト</div>
-      <div class="feature-pill"><span class="dot"></span>100％プライベート — 常に</div>
-      <div class="feature-pill"><span class="dot"></span>医師向けレポート</div>
-    </div>
-
-    <!-- Form Card -->
-    <div class="form-card">
-      <div id="formError" class="form-error"></div>
-
-      <form id="interestForm" action="https://formsubmit.co/contact@cyclebalance.app" method="POST">
-        <!-- FormSubmit.co configuration -->
-        <input type="hidden" name="_subject" value="CycleBalance ウェイトリスト新規登録">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_next" value="https://cyclebalance.app/ja/?submitted=true">
-        <input type="text" name="_honey" style="display:none">
-
-        <h2>早期アクセスを入手</h2>
-        <p class="form-subtitle">CycleBalanceのリリース時にいち早くお試しください。スパムは送信せず、最新情報のみお届けします。</p>
-
-        <!-- Name -->
-        <div class="form-group">
-          <label for="name">お名前 <span class="required">*</span></label>
-          <input type="text" id="name" name="name" placeholder="お名前" required>
-        </div>
-
-        <!-- Email -->
-        <div class="form-group">
-          <label for="email">メールアドレス <span class="required">*</span></label>
-          <input type="email" id="email" name="email" placeholder="you@email.com" required>
-        </div>
-
-        <!-- PCOS Journey -->
-        <div class="form-group">
-          <label for="experience">PCOSとの関わりについて教えてください</label>
-          <select id="experience" name="pcos_experience">
-            <option value="" disabled selected>選択してください...</option>
-            <option value="newly_diagnosed">最近診断を受けました</option>
-            <option value="experienced">PCOSと長く付き合っています</option>
-            <option value="exploring">PCOSかもしれないと思っています</option>
-            <option value="ttc">PCOSと向き合いながら妊活中です</option>
-            <option value="supporting">PCOSの方をサポートしています</option>
-          </select>
-        </div>
-
-        <!-- Feature Interest -->
-        <fieldset class="checkbox-group">
-          <legend>最も興味がある機能はどれですか？</legend>
-          <div class="checkbox-grid">
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="cycle_tracking">
-              <span>不規則周期トラッキング</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="symptom_correlation">
-              <span>症状とライフスタイルの相関</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="insulin_tracking">
-              <span>インスリン・血糖トラッキング</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="supplement_tracking">
-              <span>サプリメント管理</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="doctor_reports">
-              <span>医師向けレポート</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="privacy">
-              <span>デバイス内プライバシー</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="diet_impact">
-              <span>食事の影響分析</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="interests" value="hair_skin">
-              <span>髪・肌のフォトジャーナル</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <!-- Current apps -->
-        <div class="form-group">
-          <label for="current_apps">現在PCOS管理に使用しているものは？ <span style="font-weight:400;color:var(--text-muted)">（任意）</span></label>
-          <textarea id="current_apps" name="current_apps" placeholder="例：Flo、Clue、スプレッドシート、まだ何も使っていない..."></textarea>
-        </div>
-
-        <!-- Submit -->
-        <button type="submit" class="submit-btn" id="submitBtn">ウェイトリストに参加</button>
-
-        <div class="privacy-note">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          お客様の情報は安全に保管されます。メールアドレスを共有したり、スパムを送信したりすることはありません。
-        </div>
-      </form>
-
-      <!-- Thank you -->
-      <div class="thank-you" id="thankYou">
-        <div class="check-circle">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <h2>ご登録ありがとうございます！</h2>
-        <p>CycleBalanceのリリースが近づきましたら、最新情報をお送りいたします。最初からご参加いただきありがとうございます。</p>
-      </div>
-    </div>
-
-    <!-- Bottom -->
-    <div class="bottom-section">
-      <p>
-        <span class="highlight">App Storeで配信中</span> — PCOS啓発月間に向けて開発されました。<br>
-        全世界でPCOSと共に生きる多くの女性のために。
-      </p>
-      <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
-        <a href="/ja/privacy" style="color: var(--text-muted); text-decoration: underline;">プライバシーポリシー</a> &middot;
-        <a href="/ja/terms" style="color: var(--text-muted); text-decoration: underline;">利用規約</a> &middot;
-        <a href="/ja/support" style="color: var(--text-muted); text-decoration: underline;">お問い合わせ</a>
-      </p>
-    </div>
-
-  </div>
-</div>
-
 <!-- ==================== FULL SITE MODE ==================== -->
-<div id="siteMode" style="display:none">
+<div id="siteMode">
 
   <!-- ============ NEW DARK-THEME TEMPLATE (top of page) ============ -->
   <div class="cb-dark">
@@ -2251,6 +2145,7 @@
             </a>
             <a href="#features-new" class="cb-btn-outline">詳しく見る</a>
           </div>
+          <p class="cb-hero-note">基本的な記録機能は無料。任意のPremiumで、血糖・食事・サプリメント・レポートの高度な機能を利用できます。</p>
         </div>
         <div class="cb-hero-phone-wrap">
           <div class="cb-hero-phone">
@@ -2401,14 +2296,14 @@
                   <span>CycleBalanceは無料で使えますか？</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">はい。CycleBalanceは無料でダウンロードでき、周期記録、症状トラッキング、データエクスポートを含むすべての基本トラッキング機能は無料でご利用いただけます。</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">はい。CycleBalanceは無料でダウンロードでき、基本的な記録機能が含まれます。任意のPremiumで、血糖の高度な記録、食事写真、サプリメント記録、詳細レポートを利用できます。</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
                   <span>私のデータはプライベートに保たれますか？</span>
                   <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div class="cb-faq-a"><div class="cb-faq-a-inner">もちろんです。すべてのデータはお客様のiPhone内で完全に保存・処理されます。クラウド同期、サードパーティの解析、データの販売は一切ありません。</div></div>
+                <div class="cb-faq-a"><div class="cb-faq-a-inner">はい。健康ログはiPhone上に保存されます。健康データをクラウド同期したり、販売したり、広告トラッキングに使用したりすることはありません。購入はAppleとRevenueCatを通じて処理され、サポートメッセージはお問い合わせ時にのみFormsubmit.coを通じて処理されます。</div></div>
               </div>
               <div class="cb-faq-item">
                 <button class="cb-faq-q" type="button" aria-expanded="false">
@@ -2469,25 +2364,31 @@
 
     <!-- Privacy banner -->
     <div class="privacy-banner" id="privacy-section" data-section="privacy">
-      <h2>あなたのデータはデバイス内に。それだけ。</h2>
-      <p>多くの健康アプリが最もプライベートなデータを販売する世の中で、CycleBalanceは断固たる姿勢を貫きます。すべてのデータは、AppleのCore MLを使用してiPhone内で処理・保存されます。</p>
-      <div class="privacy-points">
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          クラウドアップロードなし
+      <div class="privacy-copy">
+        <h2>あなたのデータはデバイス内に。それだけ。</h2>
+        <p>CycleBalanceは、親密な健康データを手放さずに、より多くの背景を把握したい人のために設計されています。記録はiPhone上に保存され、インサイトはデバイス上で機能するように設計されています。</p>
+        <p class="privacy-clarification">健康ログはiPhone上に保存されます。健康データをクラウド同期したり、販売したり、広告トラッキングに使用したりすることはありません。購入はAppleとRevenueCatを通じて処理され、サポートメッセージはお問い合わせ時にのみFormsubmit.coを通じて処理されます。</p>
+        <div class="privacy-points">
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            クラウドアップロードなし
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            サードパーティ解析なし
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            データ販売なし
+          </div>
+          <div class="privacy-point">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            広告トラッキングなし
+          </div>
         </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          サードパーティ解析なし
-        </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          データ販売なし
-        </div>
-        <div class="privacy-point">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          iOS暗号化
-        </div>
+      </div>
+      <div class="privacy-visual">
+        <img src="/assets/images/site/cyclebalance-privacy-trust-device.jpg" alt="CycleBalanceのオンデバイスプライバシーを表すビジュアル" width="1200" height="675" loading="lazy">
       </div>
     </div>
 
@@ -2683,58 +2584,43 @@
 </div>
 
 <script>
-  // =============================================
-  // SITE MODE TOGGLE
-  // Change to true when you're ready to launch the full site.
-  // The waitlist page will be replaced by the full marketing site.
-  // =============================================
-  const SITE_LIVE = true;
-  // =============================================
-
-  if (SITE_LIVE) {
-    document.getElementById('waitlistMode').style.display = 'none';
-    document.getElementById('siteMode').style.display = 'block';
-
-    // FAQ accordion toggle (old light-theme FAQ — now unused; kept defensive)
-    document.querySelectorAll('.faq-question').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.parentElement;
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faq-item').forEach(i => {
-          i.classList.remove('open');
-          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-        });
-        if (!isOpen) {
-          item.classList.add('open');
-          btn.setAttribute('aria-expanded', 'true');
-        }
-      });
+  const navToggle = document.querySelector('.cb-nav-toggle');
+  const navLinks = document.getElementById('primaryNavLinks');
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
     });
 
-    // New dark-theme FAQ accordion
-    document.querySelectorAll('.cb-dark .cb-faq-q').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.parentElement;
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.cb-dark .cb-faq-item').forEach(i => {
-          i.classList.remove('open');
-          const q = i.querySelector('.cb-faq-q');
-          if (q) q.setAttribute('aria-expanded', 'false');
-        });
-        if (!isOpen) {
-          item.classList.add('open');
-          btn.setAttribute('aria-expanded', 'true');
-        }
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
       });
     });
-  } else {
-    // Show thank-you message if redirected back after form submission
-    if (new URLSearchParams(window.location.search).has('submitted')) {
-      const form = document.getElementById('interestForm');
-      const thankYou = document.getElementById('thankYou');
-      form.style.display = 'none';
-      thankYou.style.display = 'block';
-    }
+  }
+
+  document.querySelectorAll('.cb-dark .cb-faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.cb-dark .cb-faq-item').forEach(i => {
+        i.classList.remove('open');
+        const q = i.querySelector('.cb-faq-q');
+        if (q) q.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.cb-hero-phone-video').forEach(video => {
+      video.removeAttribute('autoplay');
+      video.pause();
+    });
   }
 </script>
 

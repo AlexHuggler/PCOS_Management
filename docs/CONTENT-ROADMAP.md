@@ -43,6 +43,7 @@ Last updated: 2026-05-07
 - Run localized keyword research for German, French, Italian, Japanese, Korean, and Dutch instead of translating English search intent directly.
 - Add analytics-free performance monitoring, such as server-side Search Console review and App Store conversion tracking.
 - Test App Store CTA placement by article type without adding advertising trackers.
+- App Store Connect follow-up: verify that the App Store listing includes English in supported languages if the app supports English, and complete the accessibility-support metadata where applicable.
 
 ## Maintenance checklist
 1. Add or update a post in `docs/content/blog-manifest.json`.
