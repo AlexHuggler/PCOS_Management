@@ -8,6 +8,7 @@ const DOCS = path.join(ROOT, 'docs');
 const CONTENT_DIR = path.join(DOCS, 'content');
 const SITE = 'https://cyclebalance.app';
 const DATE = '2026-05-07';
+const ROADMAP_DATE = '2026-05-24';
 const MANIFEST_PATH = path.join(CONTENT_DIR, 'blog-manifest.json');
 const MEDIA_MANIFEST_PATH = path.join(CONTENT_DIR, 'media-manifest.json');
 
@@ -911,12 +912,16 @@ function sitemap(manifest) {
   function add(url, priority = '0.7', alternates = []) {
     urls.push({ url, priority, alternates });
   }
-  const staticPages = ['', 'privacy', 'terms', 'support', 'contact'];
-  for (const page of staticPages) {
+  const localizedStaticPages = ['', 'privacy', 'terms', 'support', 'contact'];
+  for (const page of localizedStaticPages) {
     const urlSet = Object.keys(locales).map(locale => `${locales[locale].prefix}/${page}`.replace(/\/$/, '/') || '/');
     add(urlSet[0], page ? '0.6' : '1.0', urlSet);
     urlSet.slice(1).forEach(url => add(url, page ? '0.55' : '0.95'));
   }
+  [
+    { url: '/social', priority: '0.65' },
+    { url: '/promo-video', priority: '0.7' }
+  ].forEach(page => add(page.url, page.priority));
   const blogSet = Object.keys(locales).map(locale => blogUrl(locale));
   add(blogSet[0], '0.85', blogSet);
   blogSet.slice(1).forEach(url => add(url, '0.8'));
@@ -957,6 +962,11 @@ function llmsTxt(manifest) {
 - App Store: https://apps.apple.com/us/app/cyclebalance/id6760353511
 - Privacy posture: health data is stored on-device; no advertising trackers or cloud health-data sync
 - Supported website languages: English, German, French, Italian, Japanese, Korean, Dutch
+
+## Key app pages
+- Home: ${absolute('/')}
+- Promo video with transcript: ${absolute('/promo-video')}
+- Social landing page: ${absolute('/social')}
 
 ## Localized blog indexes
 - English: ${absolute(blogUrl('en'))}
@@ -1016,7 +1026,7 @@ async function writeRoadmap(manifest) {
   const localizedPages = articleCount * Object.keys(locales).length;
   const roadmap = `# CycleBalance Content Roadmap
 
-Last updated: ${DATE}
+Last updated: ${ROADMAP_DATE}
 
 ## Completed in this wave
 - Repaired the multilingual blog graph so ${articleCount} evidence-backed articles are available in all seven supported languages.
@@ -1027,23 +1037,16 @@ Last updated: ${DATE}
 - Kept existing image URLs stable and excluded \`misc-flagged\` assets from public blog usage.
 - Updated the sitemap and \`llms.txt\` so they describe only pages that exist.
 - Standardized managed health articles with BlogPosting schema, MedicalWebPage schema, BreadcrumbList schema, citations, medical disclaimers, and large image/snippet robots controls.
+- Added \`/promo-video\` as a dedicated promo video landing page with VideoObject schema, transcript text, and the existing \`cyclebalance-promo-v1.mp4\` asset.
+- Preserved \`/social\` as a standalone sitemap and \`llms.txt\` page outside the localized static-page set.
 
 ## Validation results
-- Latest validation status: PASS with \`node tools/validate-site.mjs --external\` on ${DATE}.
+- Latest local validation report is maintained in \`docs/VALIDATION-REPORT.md\` after \`node tools/validate-site.mjs\`.
 - Managed evidence articles: ${articleCount}
 - Managed localized article pages: ${localizedPages}
 - Legacy English-only articles: ${manifest.legacyArticles.length}
-- HTML files checked: 171
-- Sitemap URLs checked: 171
-- Internal references checked: 5859
-- Hreflang links checked: 1344
-- JSON-LD blocks parsed: 482
-- Image references checked: 1110
-- External references checked: 14
-- Local validation errors: 0
-- External reference result: 0 broken 404/410 URLs; 5 bot-protected/manual-review warnings for reputable sources that block scripted requests.
 - Validation report: \`docs/VALIDATION-REPORT.md\`
-- Static smoke checks covered \`/blog\`, \`/de/blog\`, \`/ja/blog/how-to-track-pcos-symptoms\`, and \`/blog/pcos-supplement-safety-guide\`.
+- Static smoke checks should cover \`/blog\`, \`/promo-video\`, and at least one localized page after each generated content wave.
 
 ## Remaining known gaps
 - Legacy English-only posts remain intentionally English-only; they should be upgraded only if a future wave needs them as full evidence-backed health posts.
@@ -1052,9 +1055,12 @@ Last updated: ${DATE}
 - External search performance still needs Search Console monitoring after deployment and recrawl.
 
 ## Future improvements
-- Add deeper content clusters for fertility planning, metformin, GLP-1 conversations, hair growth/hirsutism, mental health, sleep apnea, pregnancy/postpartum, and doctor visit preparation.
+- Prioritize pregnancy and postpartum PCOS content, including postpartum cycle re-entry, pregnancy planning conversations, and clinician handoff notes.
+- Add meal and glucose reflection clusters that explain paired meal/glucose logs, post-meal symptom feedback, and non-diagnostic readiness language.
+- Build doctor-visit preparation content around concise export review, visible timeline summaries, medication/supplement questions, and cycle irregularity discussion prompts.
+- Expand visible PCOS change documentation content for acne, hair, body changes, and photo-journal privacy expectations.
+- Add deeper content clusters for fertility planning, metformin, GLP-1 conversations, hair growth/hirsutism, mental health, and sleep apnea.
 - Add image sitemap extensions once the current HTML image usage has been indexed cleanly.
-- Create a dedicated video landing page with VideoObject schema and transcript for \`/assets/videos/cyclebalance-promo-v1.mp4\`.
 - Add clinician/reviewer bios and a documented editorial review process for stronger YMYL trust signals.
 - Run localized keyword research for German, French, Italian, Japanese, Korean, and Dutch instead of translating English search intent directly.
 - Add analytics-free performance monitoring, such as server-side Search Console review and App Store conversion tracking.

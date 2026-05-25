@@ -252,6 +252,18 @@
     <priority>0.55</priority>
   </url>
   <url>
+    <loc>https://cyclebalance.app/social</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://cyclebalance.app/promo-video</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://cyclebalance.app/blog</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>

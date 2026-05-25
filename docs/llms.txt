@@ -9,6 +9,11 @@
 - Privacy posture: health data is stored on-device; no advertising trackers or cloud health-data sync
 - Supported website languages: English, German, French, Italian, Japanese, Korean, Dutch
 
+## Key app pages
+- Home: https://cyclebalance.app/
+- Promo video with transcript: https://cyclebalance.app/promo-video
+- Social landing page: https://cyclebalance.app/social
+
 ## Localized blog indexes
 - English: https://cyclebalance.app/blog
 - Deutsch: https://cyclebalance.app/de/blog
