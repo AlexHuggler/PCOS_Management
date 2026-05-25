@@ -19,19 +19,22 @@ struct FlowIntensityPicker: View {
                             .frame(height: 28)
 
                         Text(intensity.displayName)
-                            .font(.caption)
-                            .fontWeight(selection == intensity ? .semibold : .regular)
+                            .appFont(.caption, weight: selection == intensity ? .semibold : .regular)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
                     }
                     .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.vertical, 14)
                     .background(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
                             .fill(selection == intensity
-                                  ? flowColor(for: intensity).opacity(0.15)
+                                  ? flowColor(for: intensity).opacity(AppTheme.opacityMedium)
                                   : .clear)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
                             .strokeBorder(selection == intensity
                                           ? flowColor(for: intensity).opacity(0.4)
                                           : .clear, lineWidth: 1.5)
@@ -41,9 +44,13 @@ struct FlowIntensityPicker: View {
                                     : .secondary)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(intensity.displayName) flow")
+                .accessibilityLabel(
+                    L10n.flowAccessibilityLabel(for: intensity)
+                )
                 .accessibilityAddTraits(selection == intensity ? .isSelected : [])
-                .accessibilityHint("Double tap to select \(intensity.displayName) flow intensity")
+                .accessibilityHint(
+                    L10n.flowAccessibilityHint(for: intensity)
+                )
             }
         }
         .sensoryFeedback(.selection, trigger: selection)
@@ -55,24 +62,24 @@ struct FlowIntensityPicker: View {
         switch intensity {
         case .none:
             Image(systemName: "drop")
-                .font(.body)
+                .appFont(.body)
         case .spotting:
             Image(systemName: "drop.fill")
-                .font(.caption)
+                .appFont(.caption)
                 .opacity(0.6)
         case .light:
             Image(systemName: "drop.fill")
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .opacity(0.75)
         case .medium:
             Image(systemName: "drop.fill")
-                .font(.body)
+                .appFont(.body)
         case .heavy:
             HStack(spacing: 2) {
                 Image(systemName: "drop.fill")
-                    .font(.caption2)
+                    .appFont(.caption2)
                 Image(systemName: "drop.fill")
-                    .font(.subheadline)
+                    .appFont(.subheadline)
             }
         }
     }

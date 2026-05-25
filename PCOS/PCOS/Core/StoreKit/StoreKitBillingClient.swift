@@ -4,109 +4,38 @@ import os
 
 @MainActor
 final class StoreKitBillingClient: PremiumBillingClient {
-    typealias UpdatesStreamFactory = () -> AsyncStream<Void>
-    typealias EntitlementRefresher = () async throws -> Set<String>
+    let backendMode: BillingBackendMode = .localStoreKit
+    private(set) var lastStatusMessage: String?
 
-    let mode: BillingBackendMode = .localStoreKit
-
-    private let productIDs: [String]
+    private let configuration: BillingConfiguration
     private var productsByID: [String: Product] = [:]
-    private let updatesStreamFactory: UpdatesStreamFactory
-    private let entitlementRefresherOverride: EntitlementRefresher?
-    private var lastKnownEntitlements: Set<String> = []
 
-    init(
-        configuration: BillingConfiguration,
-        updatesStreamFactory: @escaping UpdatesStreamFactory = StoreKitBillingClient.defaultUpdatesStream,
-        entitlementRefresher: EntitlementRefresher? = nil
-    ) {
-        self.productIDs = configuration.productIDs
-        self.updatesStreamFactory = updatesStreamFactory
-        self.entitlementRefresherOverride = entitlementRefresher
+    init(configuration: BillingConfiguration) {
+        self.configuration = configuration
     }
 
-    func configureIfNeeded() throws {}
-
-    func loadProducts() async throws -> [BillingProduct] {
-        let products = try await Product.products(for: productIDs)
-        let sortedProducts = products.sorted { $0.price < $1.price }
-        productsByID = Dictionary(uniqueKeysWithValues: sortedProducts.map { ($0.id, $0) })
-        let mappedProducts = sortedProducts.map(BillingProduct.init(storeKitProduct:))
-
-        guard !mappedProducts.isEmpty else {
-            throw BillingClientError.productsUnavailable
-        }
-
-        return mappedProducts
-    }
-
-    func purchase(_ product: BillingProduct) async throws -> BillingPurchaseResult {
-        guard let storeProduct = productsByID[product.id] else {
-            throw BillingClientError.productNotLoaded(product.id)
-        }
-
-        let result = try await storeProduct.purchase()
-        switch result {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
-            await transaction.finish()
-            return .purchased(productID: transaction.productID)
-        case .userCancelled:
-            return .userCancelled
-        case .pending:
-            return .pending
-        @unknown default:
-            return .pending
-        }
-    }
-
-    func restorePurchases() async throws -> Set<String> {
-        try await AppStore.sync()
-        return try await currentEntitlements()
+    func configureIfNeeded() throws {
+        lastStatusMessage = nil
     }
 
     func currentEntitlements() async throws -> Set<String> {
-        var activePurchases: Set<String> = []
-
-        for await result in Transaction.currentEntitlements {
-            guard let transaction = try? checkVerified(result) else {
-                continue
-            }
-
-            if transaction.revocationDate != nil {
-                continue
-            }
-
-            if let expirationDate = transaction.expirationDate, expirationDate <= Date() {
-                continue
-            }
-
-            activePurchases.insert(transaction.productID)
-        }
-
-        lastKnownEntitlements = activePurchases
-        return activePurchases
+        lastStatusMessage = nil
+        return try await Self.activeEntitlementProductIDs(for: configuration.productIDs)
     }
 
     func makeEntitlementUpdatesStream() -> AsyncStream<Set<String>> {
-        AsyncStream { continuation in
-            let updateTask = Task { [weak self] in
-                guard let self else {
-                    continuation.finish()
-                    return
-                }
+        let productIDs = configuration.productIDs
 
-                for await _ in self.updatesStreamFactory() {
+        return AsyncStream { continuation in
+            let updatesTask = Task {
+                for await _ in Transaction.updates {
                     guard !Task.isCancelled else { break }
+
                     do {
-                        let entitlements = try await self.refreshEntitlements()
-                        self.lastKnownEntitlements = entitlements
+                        let entitlements = try await Self.activeEntitlementProductIDs(for: productIDs)
                         continuation.yield(entitlements)
                     } catch {
-                        Logger.storeKit.error(
-                            "Failed to refresh StoreKit entitlements from updates stream: \(error.localizedDescription, privacy: .public)"
-                        )
-                        continuation.yield(self.lastKnownEntitlements)
+                        Logger.storeKit.error("Failed to refresh StoreKit entitlement update: \(error.localizedDescription, privacy: .public)")
                     }
                 }
 
@@ -114,61 +43,102 @@ final class StoreKitBillingClient: PremiumBillingClient {
             }
 
             continuation.onTermination = { _ in
-                updateTask.cancel()
+                updatesTask.cancel()
             }
         }
     }
 
-    private func refreshEntitlements() async throws -> Set<String> {
-        if let entitlementRefresherOverride {
-            return try await entitlementRefresherOverride()
+    func loadProducts() async throws -> [BillingProduct] {
+        let products = try await Product.products(for: configuration.productIDs)
+        guard !products.isEmpty else {
+            throw BillingClientError.productsUnavailable
         }
-        return try await currentEntitlements()
+
+        productsByID = Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) })
+
+        let orderedProducts = configuration.productIDs.compactMap { productsByID[$0] }
+        return orderedProducts.map(Self.makeBillingProduct(from:))
     }
 
-    nonisolated private static func defaultUpdatesStream() -> AsyncStream<Void> {
-        AsyncStream { continuation in
-            let task = Task {
-                for await _ in Transaction.updates {
-                    continuation.yield(())
-                }
-                continuation.finish()
-            }
-            continuation.onTermination = { _ in
-                task.cancel()
-            }
+    func purchase(productID: String) async throws -> BillingPurchaseOutcome {
+        let product = try await loadProduct(productID: productID)
+        let result = try await product.purchase()
+
+        switch result {
+        case .success(let verification):
+            let transaction = try Self.checkVerified(verification)
+            await transaction.finish()
+            return .success
+        case .pending:
+            return .pending
+        case .userCancelled:
+            return .cancelled
+        @unknown default:
+            return .pending
         }
     }
 
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    func restorePurchases() async throws {
+        try await AppStore.sync()
+    }
+
+    private func loadProduct(productID: String) async throws -> Product {
+        if let cachedProduct = productsByID[productID] {
+            return cachedProduct
+        }
+
+        let products = try await Product.products(for: [productID])
+        guard let product = products.first else {
+            throw BillingClientError.productNotLoaded(productID)
+        }
+
+        productsByID[productID] = product
+        return product
+    }
+
+    private static func activeEntitlementProductIDs(for productIDs: [String]) async throws -> Set<String> {
+        let allowedProductIDs = Set(productIDs)
+        var activeProductIDs: Set<String> = []
+
+        for await entitlement in Transaction.currentEntitlements {
+            let transaction = try checkVerified(entitlement)
+            guard allowedProductIDs.contains(transaction.productID) else { continue }
+            guard transaction.revocationDate == nil else { continue }
+
+            if let expirationDate = transaction.expirationDate, expirationDate <= Date() {
+                continue
+            }
+
+            activeProductIDs.insert(transaction.productID)
+        }
+
+        return activeProductIDs
+    }
+
+    private static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .verified(let value):
-            value
-        case .unverified(_, let error):
-            throw error
+            return value
+        case .unverified:
+            throw BillingClientError.verificationFailed
         }
     }
-}
 
-private extension BillingProduct {
-    init(storeKitProduct: Product) {
-        self.init(
-            id: storeKitProduct.id,
-            displayName: storeKitProduct.displayName,
-            displayPrice: storeKitProduct.displayPrice,
-            price: storeKitProduct.price,
-            subscriptionPeriod: storeKitProduct.subscription.flatMap {
-                BillingPeriod(storeKitSubscriptionPeriod: $0.subscriptionPeriod)
-            }
+    private static func makeBillingProduct(from product: Product) -> BillingProduct {
+        BillingProduct(
+            id: product.id,
+            displayName: product.displayName,
+            displayPrice: product.displayPrice,
+            price: product.price,
+            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod)
         )
     }
-}
 
-private extension BillingPeriod {
-    init?(storeKitSubscriptionPeriod: Product.SubscriptionPeriod) {
+    private static func makeBillingPeriod(from subscriptionPeriod: Product.SubscriptionPeriod?) -> BillingPeriod? {
+        guard let subscriptionPeriod else { return nil }
+
         let unit: BillingPeriodUnit
-
-        switch storeKitSubscriptionPeriod.unit {
+        switch subscriptionPeriod.unit {
         case .day:
             unit = .day
         case .week:
@@ -178,9 +148,9 @@ private extension BillingPeriod {
         case .year:
             unit = .year
         @unknown default:
-            return nil
+            unit = .month
         }
 
-        self.init(unit: unit, value: storeKitSubscriptionPeriod.value)
+        return BillingPeriod(unit: unit, value: subscriptionPeriod.value)
     }
 }

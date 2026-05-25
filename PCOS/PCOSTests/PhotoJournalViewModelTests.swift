@@ -1,11 +1,19 @@
 import Testing
 import Foundation
 import SwiftData
+import UIKit
 @testable import PCOS
 
 @Suite("PhotoJournal ViewModel", .serialized)
 @MainActor
 struct PhotoJournalViewModelTests {
+    private struct MockCoreMLPredictor: PhotoDensityCoreMLPredicting {
+        let score: Double?
+
+        func predictDensityScore(photoData: Data, photoType: HairPhotoType) -> Double? {
+            score
+        }
+    }
 
     /// Creates an in-memory ModelContainer that includes HairPhotoEntry.
     private func makeContainer() throws -> ModelContainer {
@@ -16,6 +24,17 @@ struct PhotoJournalViewModelTests {
             cloudKitDatabase: .none
         )
         return try ModelContainer(for: schema, configurations: [config])
+    }
+
+    private func makeImageData() -> Data {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
+        let image = renderer.image { context in
+            UIColor.black.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 24, height: 24))
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 6, y: 6, width: 12, height: 12))
+        }
+        return image.jpegData(compressionQuality: 0.9) ?? Data()
     }
 
     // MARK: - Save
@@ -36,6 +55,77 @@ struct PhotoJournalViewModelTests {
         #expect(all.count == 1)
         #expect(all.first?.photoType == .hairline)
         #expect(all.first?.notes == "Test note")
+    }
+
+    @Test("Save photo populates density analysis result when image data is valid")
+    func savePhotoPopulatesAnalysisResult() throws {
+        let container = try makeContainer()
+        let vm = PhotoJournalViewModel(modelContext: container.mainContext)
+
+        vm.selectedPhotoType = .scalpPart
+        vm.capturedPhotoData = makeImageData()
+        vm.photoDate = Date()
+
+        try vm.savePhoto()
+
+        let saved = try #require(vm.fetchAllPhotos().first)
+        #expect(saved.analysisResult?.isEmpty == false)
+    }
+
+    @Test("Photo density service labels Core ML output source when model score is available")
+    func photoDensityCoreMLSourceLabel() {
+        let service = PhotoDensityAnalysisService(
+            coreMLPredictor: MockCoreMLPredictor(score: 72)
+        )
+        let analysis = service.analyze(photoData: makeImageData(), photoType: .hairline)
+        #expect(analysis?.localizedCaseInsensitiveContains("Core ML") == true)
+    }
+
+    @Test("Photo density service falls back to heuristic label when Core ML score is unavailable")
+    func photoDensityHeuristicFallbackLabel() {
+        let service = PhotoDensityAnalysisService(
+            coreMLPredictor: MockCoreMLPredictor(score: nil)
+        )
+        let analysis = service.analyze(photoData: makeImageData(), photoType: .hairline)
+        #expect(analysis?.localizedCaseInsensitiveContains("heuristic") == true)
+    }
+
+    @Test("Saved photo data is encrypted and decryptable")
+    func savedPhotoDataEncrypted() throws {
+        let container = try makeContainer()
+        let vm = PhotoJournalViewModel(modelContext: container.mainContext)
+
+        let original = makeImageData()
+        vm.selectedPhotoType = .hairline
+        vm.capturedPhotoData = original
+        vm.photoDate = Date()
+
+        try vm.savePhoto()
+
+        let saved = try #require(vm.fetchAllPhotos().first)
+        #expect(saved.photoData != original)
+
+        let decrypted = PhotoEncryptionService().decrypt(saved.photoData)
+        #expect(decrypted == original)
+    }
+
+    @Test("Save persists photo note suggestions for the selected type")
+    func savePersistsPhotoNoteSuggestions() throws {
+        let container = try makeContainer()
+        let suiteName = "PhotoJournalViewModelTests.suggestions.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let defaultsStore = UserEntryDefaultsStore(defaults: defaults)
+        let vm = PhotoJournalViewModel(modelContext: container.mainContext, defaultsStore: defaultsStore)
+
+        vm.selectedPhotoType = .hairline
+        vm.capturedPhotoData = Data([0x00, 0x01, 0x02])
+        vm.notes = "Baby hairs, Same angle"
+
+        try vm.savePhoto()
+
+        #expect(defaultsStore.recentPhotoNotes(photoType: .hairline, limit: 2) == ["Same angle", "Baby hairs"])
+        #expect(defaultsStore.recentPhotoNotes(photoType: .body, limit: 2).isEmpty)
     }
 
     // MARK: - Fetch All
@@ -233,5 +323,24 @@ struct PhotoJournalViewModelTests {
         #expect(vm.capturedPhotoData == nil)
         #expect(vm.notes == "")
         #expect(!vm.hasPhoto)
+    }
+
+    @Test("Photo note suggestions are scoped by selected photo type")
+    func photoNoteSuggestionsScopedByType() throws {
+        let container = try makeContainer()
+        let suiteName = "PhotoJournalViewModelTests.noteScope.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let defaultsStore = UserEntryDefaultsStore(defaults: defaults)
+        defaultsStore.recordRecentPhotoNote("Temple thinning", photoType: .hairline)
+        let vm = PhotoJournalViewModel(modelContext: container.mainContext, defaultsStore: defaultsStore)
+
+        vm.selectedPhotoType = .hairline
+        #expect(vm.photoNoteSuggestions.contains("Temple thinning"))
+        #expect(vm.photoNoteSuggestions.contains("Same angle"))
+
+        vm.selectedPhotoType = .body
+        #expect(!vm.photoNoteSuggestions.contains("Temple thinning"))
+        #expect(vm.photoNoteSuggestions.contains("Area tracked today"))
     }
 }

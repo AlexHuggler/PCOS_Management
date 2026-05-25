@@ -10,6 +10,14 @@ struct AdherenceStats {
     }
 }
 
+struct SupplementDosageChange: Identifiable {
+    let id: String
+    let supplementName: String
+    let date: Date
+    let previousDosageMg: Double
+    let newDosageMg: Double
+}
+
 @Observable
 @MainActor
 final class SupplementViewModel {
@@ -56,8 +64,6 @@ final class SupplementViewModel {
         self.modelContext = modelContext
         self.defaultsStore = defaultsStore
         self.suggestionProvider = suggestionProvider ?? SuggestionProvider(defaultsStore: defaultsStore)
-        self.supplementName = preferredSupplementName
-        self.brand = preferredSupplementBrand
         self.scheduledTime = preferredSupplementTime
     }
 
@@ -80,6 +86,7 @@ final class SupplementViewModel {
 
         do {
             try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
             defaultsStore.lastSupplementName = name
             defaultsStore.lastSupplementBrand = brand
             defaultsStore.lastSupplementTime = time
@@ -98,6 +105,7 @@ final class SupplementViewModel {
         log.taken.toggle()
         do {
             try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
         } catch {
             Logger.database.error("Failed to toggle supplement taken state: \(error.localizedDescription)")
         }
@@ -109,19 +117,7 @@ final class SupplementViewModel {
         let startOfDay = calendar.startOfDay(for: Date())
         guard let endOfDay = calendar.endOfDay(for: Date()) else { return [] }
 
-        let descriptor = FetchDescriptor<SupplementLog>(
-            predicate: #Predicate<SupplementLog> { log in
-                log.date >= startOfDay && log.date < endOfDay
-            },
-            sortBy: [SortDescriptor(\.timeTaken)]
-        )
-
-        do {
-            return try modelContext.fetch(descriptor)
-        } catch {
-            Logger.database.error("Failed to fetch today's supplement logs: \(error.localizedDescription)")
-            return []
-        }
+        return fetchLogs(startDate: startOfDay, endDate: endOfDay)
     }
 
     /// Fetch distinct supplement names the user has ever logged.
@@ -186,11 +182,102 @@ final class SupplementViewModel {
         }
     }
 
+    func hasYesterdayLogs() -> Bool {
+        !fetchYesterdayLogs().isEmpty
+    }
+
+    func repeatYesterdaySupplements() throws -> Int {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+        let yesterdayLogs = fetchYesterdayLogs()
+
+        guard !yesterdayLogs.isEmpty else { return 0 }
+
+        var existingKeys = Set(fetchTodaysLogs().map { repeatKey(for: $0, calendar: calendar) })
+        var insertedCount = 0
+
+        for log in yesterdayLogs {
+            let trimmedName = log.supplementName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else { continue }
+
+            let trimmedBrand = log.brand?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let repeatedTime = repeatedTime(from: log.timeTaken, on: todayStart, calendar: calendar)
+            let key = repeatKey(
+                name: trimmedName,
+                dosage: log.dosageMg,
+                brand: trimmedBrand,
+                time: repeatedTime,
+                calendar: calendar
+            )
+
+            guard existingKeys.insert(key).inserted else { continue }
+
+            modelContext.insert(
+                SupplementLog(
+                    date: todayStart,
+                    supplementName: trimmedName,
+                    dosageMg: log.dosageMg,
+                    timeTaken: repeatedTime,
+                    taken: true,
+                    brand: trimmedBrand?.isEmpty == false ? trimmedBrand : nil
+                )
+            )
+            insertedCount += 1
+        }
+
+        guard insertedCount > 0 else { return 0 }
+
+        do {
+            try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
+            return insertedCount
+        } catch {
+            Logger.database.error("Failed to repeat yesterday's supplements: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    func dosageChanges(days: Int) -> [SupplementDosageChange] {
+        let logs = fetchLogs(days: days)
+            .filter { $0.dosageMg != nil }
+            .sorted { lhs, rhs in
+                if lhs.supplementName != rhs.supplementName {
+                    return lhs.supplementName < rhs.supplementName
+                }
+                return lhs.timeTaken < rhs.timeTaken
+            }
+
+        let grouped = Dictionary(grouping: logs, by: \.supplementName)
+        var changes: [SupplementDosageChange] = []
+
+        for (name, entries) in grouped {
+            var lastDosage: Double?
+            for entry in entries {
+                guard let dosage = entry.dosageMg else { continue }
+                if let lastDosage, abs(lastDosage - dosage) >= 0.001 {
+                    changes.append(
+                        SupplementDosageChange(
+                            id: "\(name)-\(entry.id.uuidString)",
+                            supplementName: name,
+                            date: entry.timeTaken,
+                            previousDosageMg: lastDosage,
+                            newDosageMg: dosage
+                        )
+                    )
+                }
+                lastDosage = dosage
+            }
+        }
+
+        return changes.sorted { $0.date > $1.date }
+    }
+
     /// Delete a supplement log entry.
     func deleteLog(_ log: SupplementLog) {
         modelContext.delete(log)
         do {
             try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
         } catch {
             Logger.database.error("Failed to delete supplement log: \(error.localizedDescription)")
         }
@@ -198,9 +285,9 @@ final class SupplementViewModel {
 
     /// Reset the form state.
     func reset() {
-        supplementName = preferredSupplementName
+        supplementName = ""
         dosageText = ""
-        brand = preferredSupplementBrand
+        brand = ""
         scheduledTime = preferredSupplementTime
     }
 
@@ -213,9 +300,12 @@ final class SupplementViewModel {
 
     func recommendedDosageLabel(for supplement: PCOSSupplement?) -> String {
         guard let dosage = recommendedDosageMg(for: supplement) else {
-            return "No default dosage"
+            return String(localized: "No default dosage", comment: "Supplement picker helper text when a supplement has no default dosage.")
         }
-        return "Recommended dosage: \(formattedDosage(dosage)) mg"
+        return String(
+            localized: "Recommended dosage: \(formattedDosage(dosage)) mg",
+            comment: "Supplement picker helper text showing the recommended dosage in milligrams."
+        )
     }
 
     func recommendedDosageValue(for supplement: PCOSSupplement?) -> String? {
@@ -224,6 +314,89 @@ final class SupplementViewModel {
     }
 
     private func formattedDosage(_ dosage: Double) -> String {
-        dosage.rounded(.towardZero) == dosage ? "\(Int(dosage))" : String(format: "%.1f", dosage)
+        if dosage.rounded(.towardZero) == dosage {
+            return L10n.decimal(dosage, fractionDigits: 0)
+        }
+        return L10n.decimal(dosage, fractionDigits: 1)
     }
+
+    private func fetchYesterdayLogs() -> [SupplementLog] {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+        guard let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: todayStart) else {
+            return []
+        }
+
+        return fetchLogs(startDate: yesterdayStart, endDate: todayStart)
+    }
+
+    private func fetchLogs(
+        startDate: Date,
+        endDate: Date,
+        sortBy: [SortDescriptor<SupplementLog>] = [SortDescriptor(\.timeTaken)]
+    ) -> [SupplementLog] {
+        let descriptor = FetchDescriptor<SupplementLog>(
+            predicate: #Predicate<SupplementLog> { log in
+                log.date >= startDate && log.date < endDate
+            },
+            sortBy: sortBy
+        )
+
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch supplement logs between dates: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    private func repeatedTime(from time: Date, on day: Date, calendar: Calendar) -> Date {
+        let components = calendar.dateComponents([.hour, .minute], from: time)
+        return calendar.date(
+            bySettingHour: components.hour ?? 0,
+            minute: components.minute ?? 0,
+            second: 0,
+            of: day
+        ) ?? day
+    }
+
+    private func repeatKey(for log: SupplementLog, calendar: Calendar) -> SupplementRepeatKey {
+        repeatKey(
+            name: log.supplementName,
+            dosage: log.dosageMg,
+            brand: log.brand,
+            time: log.timeTaken,
+            calendar: calendar
+        )
+    }
+
+    private func repeatKey(
+        name: String,
+        dosage: Double?,
+        brand: String?,
+        time: Date,
+        calendar: Calendar
+    ) -> SupplementRepeatKey {
+        let components = calendar.dateComponents([.hour, .minute], from: time)
+
+        return SupplementRepeatKey(
+            name: normalized(name),
+            dosageKey: dosage.map { Int(($0 * 1_000).rounded()) },
+            brand: normalized(brand ?? ""),
+            hour: components.hour ?? 0,
+            minute: components.minute ?? 0
+        )
+    }
+
+    private func normalized(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
+private struct SupplementRepeatKey: Hashable {
+    let name: String
+    let dosageKey: Int?
+    let brand: String
+    let hour: Int
+    let minute: Int
 }

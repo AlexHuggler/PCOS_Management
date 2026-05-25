@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -12,6 +13,7 @@ private enum PhotoCaptureSource {
 struct PhotoCaptureView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
     @State private var viewModel: PhotoJournalViewModel?
     @State private var saveCoordinator = SaveInteractionCoordinator()
     @State private var activeAlert: ActiveAlert?
@@ -59,11 +61,11 @@ struct PhotoCaptureView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Add Photo")
+            .navigationTitle(L10n.string("Add Photo", defaultValue: "Add Photo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
                             activeAlert = .cancel
                         } else {
@@ -105,7 +107,6 @@ struct PhotoCaptureView: View {
                     )
                 }
             }
-            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if saveCoordinator.isShowingSavedFeedback {
                     SavedFeedbackOverlay()
@@ -113,6 +114,7 @@ struct PhotoCaptureView: View {
             }
             .sheet(isPresented: $isShowingCamera) {
                 CameraImagePicker(
+                    photoType: viewModel?.selectedPhotoType ?? .scalpPart,
                     onImagePicked: { data in
                         if let data {
                             viewModel?.capturedPhotoData = data
@@ -137,8 +139,13 @@ struct PhotoCaptureView: View {
                         }
                     } catch {
                         await MainActor.run {
-                            saveCoordinator.showErrorHaptic()
-                            activeAlert = .error("Could not import photo: \(error.localizedDescription)")
+                            saveCoordinator.showErrorFeedback()
+                            activeAlert = .error(
+                                String(
+                                    localized: "Could not import photo: \(error.localizedDescription)",
+                                    comment: "Error shown when importing a progress photo fails."
+                                )
+                            )
                         }
                     }
                 }
@@ -157,7 +164,7 @@ struct PhotoCaptureView: View {
     private var photoTypeSelector: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Photo Type")
-                .font(.headline)
+                .appFont(.headline)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.spacing8) {
@@ -178,6 +185,7 @@ struct PhotoCaptureView: View {
         let capturedPhotoData = viewModel?.capturedPhotoData
         let hasPhoto = capturedPhotoData != nil
         let primarySource: PhotoCaptureSource = hasPhoto ? .library : .camera
+        let selectedPhotoType = viewModel?.selectedPhotoType ?? .scalpPart
 
         return VStack(spacing: AppTheme.spacing12) {
             if let photoData = capturedPhotoData,
@@ -188,9 +196,21 @@ struct PhotoCaptureView: View {
                     .frame(maxHeight: 300)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                            PhotoPositioningOverlay(photoType: selectedPhotoType)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
                     )
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.tertiarySystemFill))
+                        .frame(height: 220)
+                    PhotoPositioningOverlay(photoType: selectedPhotoType)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
             }
 
             VStack(spacing: AppTheme.spacing8) {
@@ -219,7 +239,7 @@ struct PhotoCaptureView: View {
                     photoLibrary: .shared()
                 ) {
                     Label(title, systemImage: "photo.on.rectangle.angled")
-                        .font(.headline)
+                        .appFont(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
@@ -233,7 +253,7 @@ struct PhotoCaptureView: View {
                     presentCameraIfAvailable()
                 } label: {
                     Label(title, systemImage: "camera")
-                        .font(.headline)
+                        .appFont(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
@@ -259,7 +279,7 @@ struct PhotoCaptureView: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(.secondary)
             Text(text)
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -272,8 +292,8 @@ struct PhotoCaptureView: View {
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-            Text("Notes")
-                .font(.headline)
+            Text(L10n.string("Notes", defaultValue: "Notes"))
+                .appFont(.headline)
 
             TextField("Add any observations...", text: Binding(
                 get: { viewModel?.notes ?? "" },
@@ -281,13 +301,45 @@ struct PhotoCaptureView: View {
             ), axis: .vertical)
             .lineLimit(3...6)
             .textFieldStyle(.roundedBorder)
+
+            if let viewModel, !viewModel.photoNoteSuggestions.isEmpty {
+                Text("Quick notes")
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+
+                FlowLayout(spacing: AppTheme.spacing8) {
+                    ForEach(viewModel.photoNoteSuggestions, id: \.self) { suggestion in
+                        let isSelected = viewModel.isPhotoNoteSelected(suggestion)
+                        Button {
+                            viewModel.togglePhotoNoteSuggestion(suggestion)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .appFont(.caption2)
+                                }
+                                Text(suggestion)
+                                    .appFont(.caption)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(isSelected ? AppTheme.accentColor.opacity(0.22) : AppTheme.accentColor.opacity(0.12))
+                            )
+                            .foregroundStyle(AppTheme.accentColor)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Date")
-                .font(.headline)
+                .appFont(.headline)
 
             DatePicker(
                 "Photo Date",
@@ -310,7 +362,7 @@ struct PhotoCaptureView: View {
             savePhoto()
         } label: {
             Text("Save Photo")
-                .font(.headline)
+                .appFont(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(
@@ -371,9 +423,15 @@ struct PhotoCaptureView: View {
             saveCoordinator.showSuccessAndDismiss {
                 dismiss()
             }
+            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
         } catch {
-            saveCoordinator.showErrorHaptic()
-            activeAlert = .error("Could not save photo: \(error.localizedDescription)")
+            saveCoordinator.showErrorFeedback()
+            activeAlert = .error(
+                String(
+                    localized: "Could not save photo: \(error.localizedDescription)",
+                    comment: "Error shown when a progress photo cannot be saved."
+                )
+            )
         }
     }
 
@@ -387,7 +445,88 @@ struct PhotoCaptureView: View {
     }
 }
 
+private struct PhotoPositioningOverlay: View {
+    let photoType: HairPhotoType
+
+    var body: some View {
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let height = proxy.size.height
+
+            ZStack {
+                switch photoType {
+                case .scalpPart:
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .frame(width: width * 0.62, height: height * 0.78)
+
+                    Rectangle()
+                        .fill(.white.opacity(0.7))
+                        .frame(width: 2, height: height * 0.68)
+                case .hairline:
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .frame(width: width * 0.74, height: height * 0.42)
+                        .offset(y: -height * 0.18)
+                case .faceChin:
+                    Ellipse()
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .frame(width: width * 0.56, height: height * 0.34)
+                        .offset(y: height * 0.18)
+                case .faceUpperLip:
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .frame(width: width * 0.42, height: height * 0.16)
+                        .offset(y: height * 0.03)
+                case .body:
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [10, 7]))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .frame(width: width * 0.84, height: height * 0.82)
+                }
+
+                VStack {
+                    Spacer()
+                    Text(photoType.overlayInstruction)
+                        .appFont(.caption, weight: .semibold)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(.black.opacity(0.45))
+                        )
+                        .foregroundStyle(.white)
+                        .padding(.bottom, 10)
+                }
+            }
+            .frame(width: width, height: height)
+        }
+    }
+}
+
+private extension HairPhotoType {
+    var overlayInstruction: String {
+        switch self {
+        case .scalpPart:
+            "Align your part line with the center guide."
+        case .hairline:
+            "Frame your hairline inside the top guide."
+        case .faceChin:
+            "Center the chin area in the oval."
+        case .faceUpperLip:
+            "Place the upper lip inside the guide box."
+        case .body:
+            "Keep the target area inside the full-frame guide."
+        }
+    }
+}
+
 private struct CameraImagePicker: UIViewControllerRepresentable {
+    let photoType: HairPhotoType
     let onImagePicked: (Data?) -> Void
     let onCancel: () -> Void
 
@@ -399,11 +538,20 @@ private struct CameraImagePicker: UIViewControllerRepresentable {
         let picker = UIImagePickerController()
         picker.sourceType = .camera
         picker.allowsEditing = false
+        picker.cameraOverlayView = makeOverlayView()
         picker.delegate = context.coordinator
         return picker
     }
 
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    private func makeOverlayView() -> UIView {
+        let host = UIHostingController(rootView: PhotoPositioningOverlay(photoType: photoType))
+        host.view.backgroundColor = .clear
+        host.view.frame = UIScreen.main.bounds
+        host.view.isUserInteractionEnabled = false
+        return host.view
+    }
 
     final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         private let parent: CameraImagePicker

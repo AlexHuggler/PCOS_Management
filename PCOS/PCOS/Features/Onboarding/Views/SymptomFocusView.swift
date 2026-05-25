@@ -15,18 +15,23 @@ struct SymptomFocusView: View {
         VStack(spacing: AppTheme.spacing24) {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Text("Which symptoms matter most to you?")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    Text("We'll highlight these on your dashboard. You can always change this later.")
-                        .font(.subheadline)
+                    Text(L10n.string("Which symptoms matter most to you?", defaultValue: "Which symptoms matter most to you?"))
+                        .appHeadingFont(.title2, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
+                    Text(L10n.string("We'll highlight these on your dashboard. You can always change this later.", defaultValue: "We'll highlight these on your dashboard. You can always change this later."))
+                        .appFont(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, AppTheme.spacing24)
 
                 if !selectedAreas.isEmpty {
-                    Text("\(selectedAreas.count) of \(Self.maxSelections) selected")
-                        .font(.caption)
+                    Text(
+                        String(
+                            localized: "\(selectedAreas.count) of \(Self.maxSelections) selected",
+                            comment: "Text showing how many symptom focus areas are selected during onboarding."
+                        )
+                    )
+                        .appFont(.caption)
                         .foregroundStyle(AppTheme.accentColor)
                         .padding(.horizontal, AppTheme.spacing24)
                 }
@@ -52,8 +57,8 @@ struct SymptomFocusView: View {
                 Button {
                     saveAndContinue()
                 } label: {
-                    Text("Continue")
-                        .font(.headline)
+                    Text(L10n.string("Continue", defaultValue: "Continue"))
+                        .appFont(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, AppTheme.spacing12)
                         .background(
@@ -65,14 +70,15 @@ struct SymptomFocusView: View {
                 .buttonStyle(.plain)
                 .disabled(selectedAreas.isEmpty)
 
-                Button("Skip", action: onSkip)
-                    .font(.subheadline)
+                Button(L10n.string("Skip", defaultValue: "Skip"), action: onSkip)
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
                     .accessibilityHint("Skip symptom focus selection and continue setup")
             }
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
         }
+        .background(BotanicalScreenBackground(style: .dense))
         .sensoryFeedback(.selection, trigger: selectedAreas.count)
     }
 

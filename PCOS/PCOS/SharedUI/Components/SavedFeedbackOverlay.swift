@@ -7,19 +7,18 @@ struct SavedFeedbackOverlay: View {
     var body: some View {
         VStack(spacing: AppTheme.spacing12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.largeTitle))
+                .appFont(.largeTitle)
                 .foregroundStyle(.white)
                 .symbolEffect(.bounce, value: appeared)
 
             Text("Saved")
-                .font(.headline)
+                .appFont(.headline)
                 .foregroundStyle(.white)
         }
         .padding(AppTheme.spacing32)
         .background(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusXL)
                 .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
         )
         .transition(.scale.combined(with: .opacity))
         .onAppear { appeared = true }

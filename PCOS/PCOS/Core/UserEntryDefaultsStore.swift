@@ -2,6 +2,7 @@ import Foundation
 
 enum LoggerShortcut: String, Codable, CaseIterable, Identifiable, Sendable {
     case period
+    case ovulation
     case symptoms
     case bloodSugar
     case supplements
@@ -12,18 +13,27 @@ enum LoggerShortcut: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .period: "Log Period"
-        case .symptoms: "Log Symptoms"
-        case .bloodSugar: "Log Blood Sugar"
-        case .supplements: "Log Supplements"
-        case .meal: "Log Meal"
-        case .photo: "Photo Journal"
+        case .period:
+            L10n.string("Log Period", defaultValue: "Log Period")
+        case .ovulation:
+            L10n.string("Log Ovulation Clues", defaultValue: "Log Ovulation Clues")
+        case .symptoms:
+            L10n.string("Log Symptoms", defaultValue: "Log Symptoms")
+        case .bloodSugar:
+            L10n.string("Log Blood Sugar", defaultValue: "Log Blood Sugar")
+        case .supplements:
+            L10n.string("Log Supplements", defaultValue: "Log Supplements")
+        case .meal:
+            L10n.string("Log Meal", defaultValue: "Log Meal")
+        case .photo:
+            L10n.string("Photo Journal", defaultValue: "Photo Journal")
         }
     }
 
     var systemImage: String {
         switch self {
         case .period: "drop.fill"
+        case .ovulation: "scope"
         case .symptoms: "list.bullet.clipboard"
         case .bloodSugar: "drop.triangle.fill"
         case .supplements: "pills.fill"
@@ -190,12 +200,44 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         recentValues(for: Keys.recentMealDescriptions, limit: limit)
     }
 
+    func recordRecentMealDescription(_ value: String, mealType: MealType) {
+        recordRecent(value, key: mealDescriptionKey(for: mealType))
+    }
+
+    func recentMealDescriptions(mealType: MealType, limit: Int = 4) -> [String] {
+        scopedRecentValues(
+            primaryKey: mealDescriptionKey(for: mealType),
+            fallbackKey: Keys.recentMealDescriptions,
+            limit: limit
+        )
+    }
+
     func recordRecentMealNote(_ value: String) {
         recordRecent(value, key: Keys.recentMealNotes)
     }
 
     func recentMealNotes(limit: Int = 6) -> [String] {
         recentValues(for: Keys.recentMealNotes, limit: limit)
+    }
+
+    func recordRecentMealNote(_ value: String, mealType: MealType) {
+        recordRecent(value, key: mealNoteKey(for: mealType))
+    }
+
+    func recentMealNotes(mealType: MealType, limit: Int = 6) -> [String] {
+        scopedRecentValues(
+            primaryKey: mealNoteKey(for: mealType),
+            fallbackKey: Keys.recentMealNotes,
+            limit: limit
+        )
+    }
+
+    func recordRecentPhotoNote(_ value: String, photoType: HairPhotoType) {
+        recordRecent(value, key: photoNoteKey(for: photoType))
+    }
+
+    func recentPhotoNotes(photoType: HairPhotoType, limit: Int = 6) -> [String] {
+        recentValues(for: photoNoteKey(for: photoType), limit: limit)
     }
 
     func recordRecentPeriodNote(_ value: String, flowIntensity: FlowIntensity) {
@@ -243,6 +285,24 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         return Array(values.prefix(limit))
     }
 
+    private func scopedRecentValues(primaryKey: String, fallbackKey: String, limit: Int) -> [String] {
+        let primaryValues = defaults.stringArray(forKey: primaryKey) ?? []
+        let fallbackValues = defaults.stringArray(forKey: fallbackKey) ?? []
+
+        var seen = Set<String>()
+        var output: [String] = []
+
+        for value in primaryValues + fallbackValues {
+            let normalizedValue = normalized(value)
+            guard !normalizedValue.isEmpty else { continue }
+            guard seen.insert(normalizedValue).inserted else { continue }
+            output.append(value.trimmingCharacters(in: .whitespacesAndNewlines))
+            if output.count >= limit { break }
+        }
+
+        return output
+    }
+
     private func periodNotesKey(for flowIntensity: FlowIntensity) -> String? {
         switch flowIntensity {
         case .spotting, .light, .medium, .heavy:
@@ -250,6 +310,22 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         case .none:
             return nil
         }
+    }
+
+    private func mealDescriptionKey(for mealType: MealType) -> String {
+        "\(Keys.recentMealDescriptionsPrefix)\(mealType.rawValue)"
+    }
+
+    private func mealNoteKey(for mealType: MealType) -> String {
+        "\(Keys.recentMealNotesPrefix)\(mealType.rawValue)"
+    }
+
+    private func photoNoteKey(for photoType: HairPhotoType) -> String {
+        "\(Keys.recentPhotoNotesPrefix)\(photoType.rawValue)"
+    }
+
+    private func normalized(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     private enum Keys {
@@ -267,7 +343,10 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         static let recentBloodSugarContexts = "entryDefaults.recentBloodSugarContexts"
         static let recentBloodSugarNotes = "entryDefaults.recentBloodSugarNotes"
         static let recentMealDescriptions = "entryDefaults.recentMealDescriptions"
+        static let recentMealDescriptionsPrefix = "entryDefaults.recentMealDescriptions."
         static let recentMealNotes = "entryDefaults.recentMealNotes"
+        static let recentMealNotesPrefix = "entryDefaults.recentMealNotes."
+        static let recentPhotoNotesPrefix = "entryDefaults.recentPhotoNotes."
         static let recentPeriodNotesPrefix = "entryDefaults.recentPeriodNotes."
         static let recentSupplementNames = "entryDefaults.recentSupplementNames"
         static let recentSupplementBrands = "entryDefaults.recentSupplementBrands"

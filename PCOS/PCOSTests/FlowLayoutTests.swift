@@ -57,4 +57,20 @@ struct FlowLayoutTests {
         #expect(size.width >= 0)
         #expect(size.height >= 0)
     }
+
+    @Test("Frame dimension sanitizer clamps invalid values to finite non-negative output")
+    func frameDimensionSanitizerClampsInvalidValues() {
+        #expect(LayoutDimensionSanitizer.frameDimension(from: nil) == 0)
+        #expect(LayoutDimensionSanitizer.frameDimension(from: -CGFloat.infinity) == 0)
+        #expect(LayoutDimensionSanitizer.frameDimension(from: -12) == 0)
+        #expect(LayoutDimensionSanitizer.frameDimension(from: 42) == 42)
+    }
+
+    @Test("Progress sanitizer clamps values into zero to one range")
+    func progressSanitizerClampsRange() {
+        #expect(LayoutDimensionSanitizer.normalizedProgress(from: -CGFloat.infinity) == 0)
+        #expect(LayoutDimensionSanitizer.normalizedProgress(from: -0.25) == 0)
+        #expect(LayoutDimensionSanitizer.normalizedProgress(from: 0.45) == 0.45)
+        #expect(LayoutDimensionSanitizer.normalizedProgress(from: 2.0) == 1)
+    }
 }

@@ -26,6 +26,40 @@ struct AccessibilityLabelTests {
         }
     }
 
+    @Test("FlowIntensity display names honor locale overrides")
+    func flowIntensityDisplayNamesHonorLocaleOverrides() {
+        #expect(
+            L10n.withOverrides(appLanguage: .fr) {
+                FlowIntensity.heavy.displayName
+            } == "Abondant"
+        )
+        #expect(
+            L10n.withOverrides(appLanguage: .ja) {
+                FlowIntensity.light.displayName
+            } == "少ない"
+        )
+        #expect(
+            L10n.withOverrides(appLanguage: .de) {
+                FlowIntensity.spotting.displayName
+            } == "Schmierblutung"
+        )
+    }
+
+    @Test("Flow accessibility builders honor locale overrides")
+    func flowAccessibilityBuildersHonorLocaleOverrides() {
+        let frenchLabel = L10n.withOverrides(appLanguage: .fr) {
+            L10n.flowAccessibilityLabel(for: .heavy)
+        }
+        #expect(frenchLabel.contains("Abondant"))
+        #expect(!frenchLabel.contains("Heavy flow"))
+
+        let germanHint = L10n.withOverrides(appLanguage: .de) {
+            L10n.flowAccessibilityHint(for: .light)
+        }
+        #expect(germanHint.contains("Leicht"))
+        #expect(!germanHint.contains("Double tap"))
+    }
+
     @Test("SymptomType display names are non-empty")
     func symptomDisplayNames() {
         for symptom in SymptomType.allCases {

@@ -16,43 +16,50 @@ struct SelectableCard<Value: Hashable>: View {
             selection = value
         } label: {
             HStack(spacing: AppTheme.spacing16) {
-                Image(systemName: systemImage)
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? AppTheme.accentColor : .secondary)
-                    .frame(width: 44)
+                BotanicalIconBadge(
+                    systemImage: systemImage,
+                    color: isSelected ? AppTheme.accentColor : AppTheme.sage,
+                    size: 44
+                )
+                .opacity(isSelected ? 1 : 0.72)
 
                 VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                     Text(title)
-                        .font(.body)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
+                        .appFont(.body, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppTheme.accentColor)
-                        .transition(.scale.combined(with: .opacity))
-                }
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(AppTheme.accentColor)
+                    .opacity(isSelected ? 1 : 0)
+                    .scaleEffect(isSelected ? 1 : 0.5)
             }
-            .padding(AppTheme.spacing16)
+            .padding(AppTheme.isBotanicalJournal ? AppTheme.spacing20 : AppTheme.spacing16)
             .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? AppTheme.accentColor.opacity(0.08) : AppTheme.cardBackground)
+                RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                    .fill(isSelected ? AppTheme.accentColor.opacity(AppTheme.opacitySubtle) : AppTheme.cardBackground)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
                     .strokeBorder(
-                        isSelected ? AppTheme.accentColor.opacity(0.4) : Color.clear,
-                        lineWidth: 1.5
+                        isSelected ? AppTheme.accentColor.opacity(0.4) : AppTheme.cardBorder,
+                        lineWidth: AppTheme.isBotanicalJournal ? 0.8 : 1.5
                     )
             )
-            .animation(.easeInOut(duration: 0.2), value: isSelected)
+            .shadow(
+                color: AppTheme.cardShadowColor,
+                radius: AppTheme.isBotanicalJournal ? 10 : 0,
+                x: 0,
+                y: AppTheme.isBotanicalJournal ? 6 : 0
+            )
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)

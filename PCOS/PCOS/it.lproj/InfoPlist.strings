@@ -1,0 +1,17 @@
+/* Bundle display name */
+"CFBundleDisplayName" = "CycleBalance";
+
+/* Bundle name */
+"CFBundleName" = "PCOS";
+
+/* Privacy - Camera Usage Description */
+"NSCameraUsageDescription" = "CycleBalance utilizza la fotocamera per acquisire foto dei progressi della crescita/perdita dei capelli da monitorare.";
+
+/* Privacy - Health Share Usage Description */
+"NSHealthShareUsageDescription" = "CycleBalance legge i tuoi dati Apple Health per popolare le tendenze del benessere e i riepiloghi giornalieri.";
+
+/* Privacy - Health Update Usage Description */
+"NSHealthUpdateUsageDescription" = "CycleBalance legge i dati di Apple Health per compilare tendenze di benessere e riepiloghi giornalieri. L'app non scrive su Apple Health.";
+
+/* Privacy - Photo Library Usage Description */
+"NSPhotoLibraryUsageDescription" = "CycleBalance utilizza la tua libreria di foto per salvare e confrontare le foto dei progressi di crescita/perdita dei capelli.";

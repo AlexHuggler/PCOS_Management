@@ -4,6 +4,8 @@ import Observation
 @MainActor
 protocol PremiumStatusProviding: AnyObject {
     var isPremium: Bool { get }
+    var backendMode: BillingBackendMode { get }
+    var statusMessage: String? { get }
     func checkSubscriptionStatus() async
 }
 

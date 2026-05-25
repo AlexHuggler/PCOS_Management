@@ -3,7 +3,13 @@ import SwiftData
 
 struct CycleDetailView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
+    @State private var manualOverrideEnabled = false
+    @State private var manualOverrideDays = 35
+    @State private var selectedOvulationStatus: OvulationStatus = .unknown
+    @State private var settingsError: String?
+    @State private var activeTooltip: String?
 
     var body: some View {
         ScrollView {
@@ -13,6 +19,9 @@ struct CycleDetailView: View {
 
                 // Prediction card
                 predictionCard
+
+                // Prediction settings
+                predictionSettingsCard
 
                 // Statistics card
                 statisticsCard
@@ -25,16 +34,30 @@ struct CycleDetailView: View {
             }
             .padding()
         }
+        .overlay {
+            if let activeTooltip {
+                Color.black.opacity(0.01)
+                    .ignoresSafeArea()
+                    .onTapGesture { dismissTooltip() }
+                TooltipOverlay(message: activeTooltip) {
+                    dismissTooltip()
+                }
+                .padding()
+            }
+        }
         .refreshable {
             await Task.yield()
             viewModel?.loadData()
         }
-        .navigationTitle("Cycle Details")
+        .navigationTitle(L10n.string("Cycle Details", defaultValue: "Cycle Details"))
         .onAppear {
             if viewModel == nil {
                 let vm = CycleViewModel(modelContext: modelContext)
                 vm.loadData()
                 viewModel = vm
+                hydratePredictionSettings(from: vm)
+            } else if let viewModel {
+                hydratePredictionSettings(from: viewModel)
             }
         }
     }
@@ -44,19 +67,19 @@ struct CycleDetailView: View {
     private var currentCycleCard: some View {
         VStack(spacing: AppTheme.spacing8) {
             if let dayCount = viewModel?.currentCycleDayCount {
-                Text("Day \(dayCount)")
-                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                Text(L10n.format("Day %lld", defaultValue: "Day %lld", Int64(dayCount)))
+                    .appFont(.largeTitle, weight: .bold)
                     .foregroundStyle(AppTheme.accentColor)
                     .contentTransition(.numericText())
-                Text("of current cycle")
-                    .font(.subheadline)
+                Text(L10n.string("of current cycle", defaultValue: "of current cycle"))
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                Text("No Active Cycle")
-                    .font(.title2)
+                Text(L10n.string("No Active Cycle", defaultValue: "No Active Cycle"))
+                    .appFont(.title2)
                     .foregroundStyle(.secondary)
-                Text("Log a period to start tracking")
-                    .font(.subheadline)
+                Text(L10n.string("Log a period to start tracking", defaultValue: "Log a period to start tracking"))
+                    .appFont(.subheadline)
                     .foregroundStyle(.tertiary)
             }
         }
@@ -67,22 +90,111 @@ struct CycleDetailView: View {
 
     private var predictionCard: some View {
         Group {
-            if let predictionText = viewModel?.predictionRangeText,
-               let prediction = viewModel?.prediction {
+            if let predictionText = viewModel?.predictionPrimaryText,
+               let confidenceValue = viewModel?.predictionConfidenceValue {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label("Next Period Estimate", systemImage: "sparkles")
-                        .font(.headline)
+                    Label(viewModel?.hasActionablePrediction == true ? L10n.string("Next Period Estimate", defaultValue: "Next Period Estimate") : L10n.string("Estimate Update", defaultValue: "Estimate Update"), systemImage: "sparkles")
+                        .appFont(.headline)
                         .foregroundStyle(AppTheme.coralAccent)
 
                     Text(predictionText)
-                        .font(.body)
+                        .appFont(.body)
+
+                    if let secondaryText = viewModel?.predictionSecondaryText {
+                        Text(secondaryText)
+                            .appFont(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if appState.showScientificDetail {
+                        HStack {
+                            Text(viewModel?.predictionConfidenceText ?? L10n.string("Confidence", defaultValue: "Confidence"))
+                                .appFont(.caption)
+                                .foregroundStyle(.secondary)
+                            ProgressView(value: confidenceValue)
+                                .tint(AppTheme.accentColor)
+                        }
+                    } else {
+                        Text(qualitativeConfidenceLabel(confidenceValue))
+                            .appFont(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+            }
+        }
+    }
+
+    private var predictionSettingsCard: some View {
+        Group {
+            if viewModel != nil {
+                VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                    HStack {
+                        Text(L10n.string("Prediction Settings", defaultValue: "Prediction Settings"))
+                            .appFont(.headline)
+                        infoButton(L10n.string(
+                            "tooltip.prediction_settings",
+                            defaultValue: "These settings help CycleBalance predict your next period more accurately based on your unique cycle patterns."
+                        ))
+                    }
 
                     HStack {
-                        Text("Confidence")
-                            .font(.caption)
+                        Toggle(
+                            L10n.string("Manual cycle length override", defaultValue: "Manual cycle length override"),
+                            isOn: $manualOverrideEnabled
+                        )
+                        infoButton(L10n.string(
+                            "tooltip.manual_override",
+                            defaultValue: "Turn this on if you already know your typical cycle length — for example, from tracking with your provider. The app will use this instead of calculating it automatically."
+                        ))
+                    }
+
+                    if manualOverrideEnabled {
+                        Stepper(value: $manualOverrideDays, in: 15...120) {
+                            Text(L10n.format("Expected cycle length: %lld days", defaultValue: "Expected cycle length: %lld days", Int64(manualOverrideDays)))
+                                .appFont(.subheadline)
+                        }
+                    }
+
+                    HStack {
+                        Picker(L10n.string("Ovulation status", defaultValue: "Ovulation status"), selection: $selectedOvulationStatus) {
+                            ForEach(OvulationStatus.allCases) { status in
+                                Text(status.displayName).tag(status)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        infoButton(L10n.string(
+                            "tooltip.ovulation_status",
+                            defaultValue: "Unknown: Default — the app predicts without assuming ovulation patterns.\n\nOvulatory: Choose if you track ovulation with OPKs or BBT and your cycles include ovulation.\n\nAnovulatory: Choose if your cycles typically don't include ovulation, which is common with PCOS."
+                        ))
+                    }
+
+                    Button {
+                        savePredictionSettings()
+                    } label: {
+                        Text(L10n.string("Apply Settings", defaultValue: "Apply Settings"))
+                            .appFont(.subheadline, weight: .semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(AppTheme.accentColor)
+                            )
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+
+                    if !appState.allowsPremiumAccess {
+                        Text(L10n.string("Free tier shows cycle history for the last 30 days.", defaultValue: "Free tier shows cycle history for the last 30 days."))
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
-                        ProgressView(value: prediction.confidence)
-                            .tint(AppTheme.accentColor)
+                    }
+
+                    if let settingsError {
+                        Text(settingsError)
+                            .appFont(.caption)
+                            .foregroundStyle(.red)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,20 +207,26 @@ struct CycleDetailView: View {
         Group {
             if let stats = viewModel?.statistics {
                 VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-                    Text("Cycle Statistics")
-                        .font(.headline)
+                    HStack {
+                        Text(L10n.string("Cycle Statistics", defaultValue: "Cycle Statistics"))
+                            .appFont(.headline)
+                        infoButton(L10n.string(
+                            "tooltip.cycle_statistics",
+                            defaultValue: "A snapshot of your cycle history. 'Average' is your typical cycle length, 'Range' shows your shortest to longest, and 'Cycles' is how many complete cycles you've tracked."
+                        ))
+                    }
 
                     HStack(spacing: AppTheme.spacing16) {
                         StatisticItem(
-                            title: "Average",
-                            value: "\(stats.formattedAverage) days"
+                            title: L10n.string("Average", defaultValue: "Average"),
+                            value: L10n.format("%@ days", defaultValue: "%@ days", stats.formattedAverage)
                         )
                         StatisticItem(
-                            title: "Range",
+                            title: L10n.string("Range", defaultValue: "Range"),
                             value: stats.rangeDescription
                         )
                         StatisticItem(
-                            title: "Cycles",
+                            title: L10n.string("Cycles", defaultValue: "Cycles"),
                             value: "\(stats.totalCycles)"
                         )
                     }
@@ -121,15 +239,15 @@ struct CycleDetailView: View {
 
     private var cycleLengthChartCard: some View {
         Group {
-            let completedCycles = viewModel?.cycles.filter { $0.lengthDays != nil } ?? []
+            let completedCycles = visibleCompletedCycles
             if completedCycles.count >= 2 {
                 let lengths: [(cycleNumber: Int, days: Int)] = completedCycles.enumerated().compactMap { index, cycle in
-                    guard let days = cycle.lengthDays else { return nil }
+                    guard let days = cycle.manualCycleLengthOverrideDays ?? cycle.lengthDays else { return nil }
                     return (cycleNumber: index + 1, days: days)
                 }
                 VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-                    Text("Cycle Length Trend")
-                        .font(.headline)
+                    Text(L10n.string("Cycle Length Trend", defaultValue: "Cycle Length Trend"))
+                        .appFont(.headline)
 
                     CycleLengthChart(cycleLengths: lengths)
                 }
@@ -141,21 +259,20 @@ struct CycleDetailView: View {
 
     private var recentCyclesCard: some View {
         Group {
-            let completedCycles = viewModel?.cycles.filter { $0.lengthDays != nil } ?? []
+            let completedCycles = visibleCompletedCycles
             if !completedCycles.isEmpty {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Text("Recent Cycles")
-                        .font(.headline)
+                    Text(L10n.string("Recent Cycles", defaultValue: "Recent Cycles"))
+                        .appFont(.headline)
 
                     ForEach(completedCycles.suffix(6).reversed()) { cycle in
                         HStack {
                             Text(formatDate(cycle.startDate))
-                                .font(.subheadline)
+                                .appFont(.subheadline)
                             Spacer()
-                            if let length = cycle.lengthDays {
-                                Text("\(length) days")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                            if let length = cycle.manualCycleLengthOverrideDays ?? cycle.lengthDays {
+                                Text(L10n.format("%lld days", defaultValue: "%lld days", Int64(length)))
+                                    .appFont(.subheadline, weight: .medium)
                                     .foregroundStyle(AppTheme.accentColor)
                             }
                         }
@@ -169,14 +286,75 @@ struct CycleDetailView: View {
         }
     }
 
-    private static let mediumDateFormatter: DateFormatter = {
+    private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter
-    }()
+        formatter.locale = L10n.locale()
+        return formatter.string(from: date)
+    }
 
-    private func formatDate(_ date: Date) -> String {
-        Self.mediumDateFormatter.string(from: date)
+    private var visibleCompletedCycles: [Cycle] {
+        let completed = viewModel?.cycles.filter { !$0.isPredicted && ($0.lengthDays != nil || $0.manualCycleLengthOverrideDays != nil) } ?? []
+        guard let earliest = FreeTierPolicyService().earliestAccessibleCycleHistoryDate(now: Date(), isPremium: appState.allowsPremiumAccess) else {
+            return completed
+        }
+        return completed.filter { $0.startDate >= earliest }
+    }
+
+    private func hydratePredictionSettings(from viewModel: CycleViewModel) {
+        if let override = viewModel.currentManualCycleLengthOverride {
+            manualOverrideEnabled = true
+            manualOverrideDays = override
+        } else {
+            manualOverrideEnabled = false
+        }
+        selectedOvulationStatus = viewModel.currentOvulationStatus
+        settingsError = nil
+    }
+
+    private func infoButton(_ message: String) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                activeTooltip = (activeTooltip == message) ? nil : message
+            }
+        } label: {
+            Image(systemName: "info.circle")
+                .appFont(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func qualitativeConfidenceLabel(_ value: Double) -> String {
+        let pct = Int((value * 100).rounded())
+        if pct >= 75 {
+            return L10n.string("Strong estimate", defaultValue: "Strong estimate")
+        } else if pct >= 50 {
+            return L10n.string("Moderate estimate", defaultValue: "Moderate estimate")
+        } else {
+            return L10n.string("Rough estimate", defaultValue: "Rough estimate")
+        }
+    }
+
+    private func dismissTooltip() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            activeTooltip = nil
+        }
+    }
+
+    private func savePredictionSettings() {
+        do {
+            try viewModel?.updateCurrentCycleSettings(
+                manualCycleLengthOverrideDays: manualOverrideEnabled ? manualOverrideDays : nil,
+                ovulationStatus: selectedOvulationStatus
+            )
+            settingsError = nil
+        } catch {
+            settingsError = String(
+                localized: "Could not save prediction settings: \(error.localizedDescription)",
+                comment: "Cycle detail error shown when prediction settings fail to save."
+            )
+        }
     }
 }
 
@@ -187,10 +365,9 @@ struct StatisticItem: View {
     var body: some View {
         VStack(spacing: AppTheme.spacing4) {
             Text(value)
-                .font(.title3)
-                .fontWeight(.semibold)
+                .appFont(.title3, weight: .semibold)
             Text(title)
-                .font(.caption)
+                .appFont(.caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -201,5 +378,6 @@ struct StatisticItem: View {
     NavigationStack {
         CycleDetailView()
     }
+    .environment(AppState())
     .modelContainer(for: [CycleEntry.self, Cycle.self], inMemory: true)
 }

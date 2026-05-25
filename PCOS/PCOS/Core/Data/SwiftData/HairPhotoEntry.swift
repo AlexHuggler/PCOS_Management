@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class HairPhotoEntry {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<HairPhotoEntry>([\.date])
+    #endif
+
     var id: UUID = UUID()
     var date: Date = Date()
     var photoType: HairPhotoType = HairPhotoType.scalpPart

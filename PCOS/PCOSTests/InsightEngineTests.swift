@@ -21,6 +21,7 @@ struct InsightEngineTests {
             SupplementLog.self,
             MealEntry.self,
             DailyLog.self,
+            BloodSugarReading.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -145,8 +146,9 @@ struct InsightEngineTests {
         let cycleInsights = insights.filter { $0.insightType == .cyclePattern }
         #expect(!cycleInsights.isEmpty)
 
-        // Regular cycles (CV < 0.1) should get "regular" title
-        let regularInsight = cycleInsights.first { $0.title.contains("regular") }
+        let regularInsight = cycleInsights.first {
+            $0.title == String(localized: "Your cycles are regular", comment: "Insight title for stable cycle lengths.")
+        }
         #expect(regularInsight != nil)
     }
 
@@ -174,8 +176,9 @@ struct InsightEngineTests {
         let cycleInsights = insights.filter { $0.insightType == .cyclePattern }
         #expect(!cycleInsights.isEmpty)
 
-        // Should flag as irregular
-        let irregularInsight = cycleInsights.first { $0.title.lowercased().contains("irregular") }
+        let irregularInsight = cycleInsights.first {
+            $0.title == String(localized: "Your cycles are irregular", comment: "Insight title for highly variable cycle lengths.")
+        }
         #expect(irregularInsight != nil)
     }
 
@@ -203,7 +206,12 @@ struct InsightEngineTests {
         let engine = InsightEngine(modelContext: context)
         let insights = try engine.generateInsights()
 
-        let trendInsight = insights.first { $0.title.lowercased().contains("longer") }
+        let trendInsight = insights.first {
+            $0.title == String(
+                localized: "Your recent cycles are getting longer",
+                comment: "Insight title describing recent cycle lengths becoming longer."
+            )
+        }
         #expect(trendInsight != nil)
     }
 
@@ -248,8 +256,245 @@ struct InsightEngineTests {
         let engine = InsightEngine(modelContext: context)
         let insights = try engine.generateInsights()
 
-        let coOccurrence = insights.first { $0.title.contains("appear together") }
+        let coOccurrence = insights.first {
+            $0.insightType == .symptomCorrelation
+                && Set($0.relatedSymptoms) == Set([SymptomType.fatigue.displayName, SymptomType.headache.displayName])
+        }
         #expect(coOccurrence != nil)
+    }
+
+    @Test("Phase-based symptom insights are skipped for long unknown cycles")
+    func phaseBasedSymptomInsightsSkippedForUnsafeCycles() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = Date()
+
+        for offset in [180, 120, 60] {
+            let start = calendar.date(byAdding: .day, value: -offset, to: now) ?? now
+            let end = calendar.date(byAdding: .day, value: 50, to: start) ?? now
+            context.insert(
+                Cycle(
+                    startDate: start,
+                    endDate: end,
+                    lengthDays: 50,
+                    isPredicted: false,
+                    ovulationStatus: .unknown
+                )
+            )
+        }
+
+        for dayOffset in 0..<14 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            Self.insertSymptom(context: context, date: date, type: .fatigue, severity: 3)
+        }
+        try context.save()
+
+        let engine = InsightEngine(modelContext: context)
+        let insights = try engine.generateInsights()
+
+        #expect(
+            !insights.contains {
+                $0.title.contains(
+                    String(localized: "Symptoms peak during", comment: "Prefix for phase-based symptom insights.")
+                )
+            }
+        )
+    }
+
+    @Test("Seasonal analyzer produces insight when month-to-month severity shifts are strong")
+    func seasonalPatternInsightGenerated() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = Date()
+
+        for dayOffset in 0..<140 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            let month = calendar.component(.month, from: date)
+            let severity = month == 1 ? 4 : 2
+            Self.insertSymptom(context: context, date: date, type: .fatigue, severity: severity)
+        }
+        try context.save()
+
+        let engine = InsightEngine(modelContext: context)
+        let insights = try engine.generateInsights()
+
+        #expect(insights.contains { $0.insightType == .seasonalPattern })
+    }
+
+    @Test("Predictive analyzer generates 7-day symptom and cycle forecast insights")
+    func predictiveForecastInsightsGenerated() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = Date()
+
+        for offset in [90, 60, 30] {
+            let start = calendar.date(byAdding: .day, value: -offset, to: now) ?? now
+            Self.insertCycle(context: context, startDate: start, lengthDays: 30 - (offset / 30))
+        }
+
+        for dayOffset in 0..<14 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            context.insert(
+                DailyLog(
+                    date: date,
+                    weight: 71.5 - (Double(dayOffset) * 0.05),
+                    sleepHours: 6.8 + (dayOffset.isMultiple(of: 2) ? 0.4 : 0),
+                    activeMinutes: 35 + dayOffset,
+                    restingHeartRateBPM: 62,
+                    stressLevel: 3
+                )
+            )
+
+            context.insert(
+                SymptomEntry(
+                    date: date,
+                    type: .fatigue,
+                    severity: 2 + (dayOffset % 3)
+                )
+            )
+
+            context.insert(
+                MealEntry(
+                    timestamp: date,
+                    mealType: .dinner,
+                    mealDescription: dayOffset.isMultiple(of: 2) ? "White rice bowl" : "Salmon salad",
+                    glycemicImpact: dayOffset.isMultiple(of: 2) ? .high : .low
+                )
+            )
+
+            context.insert(
+                SupplementLog(
+                    date: date,
+                    supplementName: "Inositol",
+                    timeTaken: date,
+                    taken: !dayOffset.isMultiple(of: 4)
+                )
+            )
+        }
+
+        for dayOffset in 0..<7 {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            context.insert(
+                BloodSugarReading(
+                    timestamp: date,
+                    glucoseValue: 108 + Double(dayOffset * 3),
+                    readingType: .random
+                )
+            )
+        }
+
+        try context.save()
+
+        let engine = InsightEngine(modelContext: context)
+        let insights = try engine.generateInsights()
+
+        #expect(insights.contains { $0.title == String(localized: "7-day symptom severity forecast", comment: "Insight title for the 7-day predicted symptom severity range.") })
+        #expect(insights.contains { $0.title == String(localized: "Cycle length forecast range", comment: "Insight title for the predicted cycle-length range.") })
+    }
+
+    @Test("Diet analyzer emits lag-window breakout correlation with quantitative confidence")
+    func dietLagWindowBreakoutInsightIsQuantitative() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = Date()
+
+        for dayOffset in stride(from: 40, through: 1, by: -1) {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            let isHighGI = dayOffset.isMultiple(of: 2)
+            context.insert(
+                MealEntry(
+                    timestamp: date,
+                    mealType: .lunch,
+                    mealDescription: isHighGI ? "Pasta + soda" : "Chicken salad",
+                    glycemicImpact: isHighGI ? .high : .low
+                )
+            )
+        }
+
+        for dayOffset in stride(from: 38, through: 1, by: -1) {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            let twoDaysBefore = dayOffset + 2
+            let highGITwoDaysEarlier = twoDaysBefore.isMultiple(of: 2)
+            context.insert(
+                SymptomEntry(
+                    date: date,
+                    type: .breakouts,
+                    severity: highGITwoDaysEarlier ? 4 : 1
+                )
+            )
+        }
+
+        try context.save()
+
+        let analyzer = DietImpactInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context))
+        let insights = try analyzer.analyze()
+
+        let lagInsight = try #require(
+            insights.first {
+                $0.title == String(
+                    localized: "Acne breakouts correlate with high-GI meals 2-3 days prior",
+                    comment: "Quantitative insight title for delayed breakout severity changes by GI cohort."
+                )
+            }
+        )
+        #expect(lagInsight.scientificContent?.contains("/5") == true)
+        #expect(lagInsight.scientificContent?.contains("averaged") == true)
+        #expect(lagInsight.confidence >= 0.5)
+        #expect(lagInsight.dataPointsUsed >= 8)
+    }
+
+    @Test("Supplement analyzer emits quantitative adherence-cycle delta wording")
+    func supplementEfficacyCycleDeltaIsQuantitative() throws {
+        try L10n.withOverrides(appLanguage: .en, preferredLanguages: ["en_US"]) {
+            let container = try Self.makeContainer()
+            let context = container.mainContext
+            let calendar = Calendar.current
+            let now = Date()
+
+            let monthAnchors = (1...4).compactMap { calendar.date(byAdding: .month, value: -$0, to: now) }
+                .sorted()
+            let cycleLengths = [27, 28, 35, 36]
+
+            for (index, monthDate) in monthAnchors.enumerated() {
+                let start = calendar.startOfDay(for: monthDate)
+                Self.insertCycle(context: context, startDate: start, lengthDays: cycleLengths[index])
+
+                for day in 1...10 {
+                    guard let logDate = calendar.date(byAdding: .day, value: day, to: start) else { continue }
+                    let highAdherenceMonth = index < 2
+                    let taken = highAdherenceMonth ? day <= 9 : day <= 3
+                    context.insert(
+                        SupplementLog(
+                            date: logDate,
+                            supplementName: "Inositol",
+                            timeTaken: logDate,
+                            taken: taken
+                        )
+                    )
+                }
+            }
+
+            try context.save()
+
+            let analyzer = SupplementEfficacyInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context))
+            let insights = try analyzer.analyze()
+            let expectedTitle = L10n.string(
+                "Cycle length shift with Inositol adherence",
+                defaultValue: "Cycle length shift with Inositol adherence"
+            )
+
+            let cycleDeltaInsight = try #require(
+                insights.first { $0.title == expectedTitle }
+            )
+            #expect(cycleDeltaInsight.scientificContent?.contains("days") == true)
+            #expect(cycleDeltaInsight.scientificContent?.contains("average") == true)
+            #expect(cycleDeltaInsight.confidence >= 0.5)
+            #expect(cycleDeltaInsight.dataPointsUsed >= 4)
+        }
     }
 
     // MARK: - Confidence Threshold
@@ -507,5 +752,83 @@ struct InsightEngineTests {
         let descriptor = FetchDescriptor<Insight>()
         let persisted = try context.fetch(descriptor)
         #expect(!persisted.isEmpty)
+    }
+
+    @Test("InsightsViewModel loadInsights auto-generates when no persisted insights exist")
+    func viewModelLoadInsightsAutoGenerates() async throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        InsightRefreshCoordinator.clear()
+
+        let vm = InsightsViewModel(
+            modelContext: context,
+            insightGenerator: {
+                [
+                    Insight(
+                        insightType: .cyclePattern,
+                        title: "Generated Insight",
+                        content: "Generated content",
+                        confidence: 0.8,
+                        dataPointsUsed: 4,
+                        actionable: true
+                    ),
+                ]
+            }
+        )
+
+        await vm.loadInsights()
+
+        #expect(vm.insights.count == 1)
+        #expect(vm.insights.first?.title == "Generated Insight")
+        let persisted = try context.fetch(FetchDescriptor<Insight>())
+        #expect(persisted.count == 1)
+    }
+
+    @Test("Insight presentation planner prioritizes onboarding focus and hides premium insights for free users")
+    func insightPresentationPlannerRespectsAudienceAndAccess() {
+        let planner = InsightPresentationPlanner()
+        let now = Date()
+
+        let cycleInsight = Insight(
+            generatedDate: now.addingTimeInterval(-60),
+            insightType: .cyclePattern,
+            title: "Cycle summary",
+            content: "Cycle content",
+            confidence: 0.9,
+            dataPointsUsed: 6,
+            actionable: true
+        )
+        let symptomInsight = Insight(
+            generatedDate: now,
+            insightType: .symptomCorrelation,
+            title: "Skin trend",
+            content: "Skin content",
+            confidence: 0.72,
+            dataPointsUsed: 14,
+            actionable: true,
+            relatedSymptoms: [SymptomType.breakouts.displayName]
+        )
+        let premiumInsight = Insight(
+            generatedDate: now,
+            insightType: .dietImpact,
+            title: "Meal impact",
+            content: "Premium content",
+            confidence: 0.82,
+            dataPointsUsed: 12,
+            actionable: true
+        )
+
+        let plan = planner.makePlan(
+            insights: [cycleInsight, symptomInsight, premiumInsight],
+            preferences: InsightAudiencePreferences(
+                primaryGoal: .understandSymptoms,
+                experience: .newlyDiagnosed,
+                focusAreas: [.skinHair]
+            ),
+            isPremium: false
+        )
+
+        #expect(plan.visibleInsights.map(\.title) == ["Skin trend", "Cycle summary"])
+        #expect(plan.lockedPremiumCards.map(\.id) == ["premium.diet"])
     }
 }

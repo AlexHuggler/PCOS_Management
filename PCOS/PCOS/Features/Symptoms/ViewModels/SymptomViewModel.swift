@@ -6,6 +6,7 @@ import os
 @MainActor
 final class SymptomViewModel {
     private let modelContext: ModelContext
+    private var cachedYesterdaysEntries: [SymptomEntry] = []
 
     var selectedCategory: SymptomCategory? {
         didSet {
@@ -19,6 +20,8 @@ final class SymptomViewModel {
     var symptomSeverities: [SymptomType: Int] = [:]
     var symptomNotes: [SymptomType: String] = [:]
     var logDate: Date = Date()
+    private(set) var yesterdaySymptomCount = 0
+    private(set) var suggestedSymptoms: [SymptomType] = []
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -40,10 +43,15 @@ final class SymptomViewModel {
 
     /// Set severity for a symptom type. Setting to 0 removes it.
     func setSeverity(_ severity: Int, for symptomType: SymptomType) {
-        if severity == 0 {
+        let normalizedSeverity = severity == 0 ? 0 : min(max(severity, 1), 5)
+        if self.severity(for: symptomType) == normalizedSeverity {
+            return
+        }
+
+        if normalizedSeverity == 0 {
             symptomSeverities.removeValue(forKey: symptomType)
         } else {
-            symptomSeverities[symptomType] = min(max(severity, 1), 5)
+            symptomSeverities[symptomType] = normalizedSeverity
         }
     }
 
@@ -64,6 +72,14 @@ final class SymptomViewModel {
 
     /// Save all logged symptoms, replacing any existing entries for the same day.
     func saveSymptoms() throws {
+#if DEBUG
+        Logger.symptoms.debug("Saving symptom selections count=\(self.selectionCount, privacy: .public)")
+        let saveSignpost = Logger.symptomsSignposter.beginInterval("SymptomSave")
+        defer {
+            Logger.symptomsSignposter.endInterval("SymptomSave", saveSignpost)
+        }
+#endif
+
         // Delete today's existing entries to prevent duplicates
         let existingEntries = fetchTodaysSymptoms()
         for entry in existingEntries {
@@ -82,17 +98,31 @@ final class SymptomViewModel {
         }
 
         try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
+        reloadSupportingData()
         reset()
     }
 
-    /// Number of symptoms logged yesterday (for button label preview)
-    var yesterdaySymptomCount: Int {
-        fetchYesterdaysSymptoms().count
+    func reloadSupportingData() {
+        cachedYesterdaysEntries = fetchYesterdaysSymptoms()
+        yesterdaySymptomCount = cachedYesterdaysEntries.count
+        suggestedSymptoms = frequentSymptoms()
+
+#if DEBUG
+        Logger.symptoms.debug(
+            "Reloaded symptom support data yesterday_count=\(self.yesterdaySymptomCount, privacy: .public) suggestion_count=\(self.suggestedSymptoms.count, privacy: .public)"
+        )
+        Logger.symptomsSignposter.emitEvent("SymptomSupportingDataReload")
+#endif
     }
 
     /// Copy yesterday's symptoms
     func copyYesterdaysSymptoms() {
-        let yesterdaysEntries = fetchYesterdaysSymptoms()
+        if cachedYesterdaysEntries.isEmpty && yesterdaySymptomCount == 0 {
+            reloadSupportingData()
+        }
+
+        let yesterdaysEntries = cachedYesterdaysEntries
         guard !yesterdaysEntries.isEmpty else { return }
 
         for entry in yesterdaysEntries {

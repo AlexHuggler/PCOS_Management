@@ -9,13 +9,18 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    func title(for language: AppLanguage) -> String {
         switch self {
-        case .today: "Today"
-        case .calendar: "Calendar"
-        case .track: "Track"
-        case .insights: "Insights"
-        case .settings: "Settings"
+        case .today:
+            L10n.string("Today", defaultValue: "Today", language: language)
+        case .calendar:
+            L10n.string("Calendar", defaultValue: "Calendar", language: language)
+        case .track:
+            L10n.string("Track", defaultValue: "Track", language: language)
+        case .insights:
+            L10n.string("Insights", defaultValue: "Insights", language: language)
+        case .settings:
+            L10n.string("Settings", defaultValue: "Settings", language: language)
         }
     }
 
@@ -33,18 +38,103 @@ enum AppTab: String, CaseIterable, Identifiable {
 @Observable
 @MainActor
 final class AppState {
+    private static var compiledInDebugBuild: Bool {
+#if DEBUG
+        true
+#else
+        false
+#endif
+    }
+
+    private let defaults: UserDefaults
+    private let uiTestDemoScenarioActive: Bool
+    private let testFlightOverrideActive: Bool
+
     var selectedTab: AppTab = .today
     var isPremium: Bool = false
+    var showPremiumPaywall = false
+    let launchAppLanguage: AppLanguage
+    var selectedAppLanguage: AppLanguage {
+        didSet {
+            selectedAppLanguage.persist(defaults: defaults)
+            selectedAppLanguage.applyLaunchOverride(defaults: defaults)
+        }
+    }
+
+    var showScientificDetail: Bool {
+        didSet { defaults.set(showScientificDetail, forKey: "display.showScientificDetail") }
+    }
+
+    var lifecycleMode: LifecycleMode {
+        didSet { defaults.set(lifecycleMode.rawValue, forKey: "lifecycle.mode") }
+    }
 
     let onboardingProfile = OnboardingProfile()
 
     var hasCompletedOnboarding: Bool {
         didSet {
-            UserDefaults.standard.set(hasCompletedOnboarding, forKey: "onboarding.hasCompletedOnboarding")
+            defaults.set(hasCompletedOnboarding, forKey: "onboarding.hasCompletedOnboarding")
         }
     }
 
-    init() {
-        hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "onboarding.hasCompletedOnboarding")
+    init(
+        defaults: UserDefaults = .standard,
+        launchArguments: [String] = ProcessInfo.processInfo.arguments,
+        appStoreReceiptURL: URL? = Bundle.main.appStoreReceiptURL,
+        isDebugBuild: Bool = AppState.compiledInDebugBuild
+    ) {
+        self.defaults = defaults
+        uiTestDemoScenarioActive = launchArguments.contains("-uiTest.demoScenario")
+        testFlightOverrideActive = Self.isTestFlightOverrideActive(
+            appStoreReceiptURL: appStoreReceiptURL,
+            isDebugBuild: isDebugBuild
+        )
+        let storedAppLanguage = AppLanguage.stored(defaults: defaults)
+        launchAppLanguage = AppLanguage.launchSnapshot(
+            defaults: defaults,
+            arguments: launchArguments
+        )
+        selectedAppLanguage = storedAppLanguage
+        hasCompletedOnboarding = defaults.bool(forKey: "onboarding.hasCompletedOnboarding")
+        showScientificDetail = defaults.bool(forKey: "display.showScientificDetail")
+        lifecycleMode = LifecycleMode(rawValue: defaults.string(forKey: "lifecycle.mode") ?? "") ?? .cycling
+
+        if !defaults.bool(forKey: "insights.narrativeUpgradeApplied") {
+            defaults.set(true, forKey: "insights.narrativeUpgradeApplied")
+            InsightRefreshCoordinator.invalidate(defaults: defaults)
+        }
+    }
+
+    var renderLocale: Locale {
+        L10n.locale(for: selectedAppLanguage)
+    }
+
+    var languageRenderKey: String {
+        "\(selectedAppLanguage.rawValue)-\(L10n.resolvedLanguageIdentifier(for: selectedAppLanguage))"
+    }
+
+    var allowsPremiumAccess: Bool {
+        isPremium || uiTestDemoScenarioActive || testFlightOverrideActive
+    }
+
+    var showsSubscriptionUI: Bool {
+        !testFlightOverrideActive
+    }
+
+    func selectTab(_ requestedTab: AppTab) {
+        selectedTab = requestedTab
+    }
+
+    func presentPremiumPaywall() {
+        guard showsSubscriptionUI, !allowsPremiumAccess else { return }
+        showPremiumPaywall = true
+    }
+
+    private static func isTestFlightOverrideActive(
+        appStoreReceiptURL: URL?,
+        isDebugBuild: Bool
+    ) -> Bool {
+        guard !isDebugBuild else { return false }
+        return appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
     }
 }

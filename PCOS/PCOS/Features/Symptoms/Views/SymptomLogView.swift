@@ -1,15 +1,19 @@
+import StoreKit
 import SwiftUI
 import SwiftData
+import os
 
 struct SymptomLogView: View {
     var initialCategory: SymptomCategory? = nil
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
     @State private var viewModel: SymptomViewModel?
     @State private var saveCoordinator = SaveInteractionCoordinator()
     @State private var activeAlert: ActiveAlert?
     @State private var dirtyTracker: FormDirtyTracker<FormSnapshot>?
+    @State private var suggestionsExpanded = true
 
     private struct FormSnapshot: Equatable {
         var selectedCategory: SymptomCategory?
@@ -56,7 +60,7 @@ struct SymptomLogView: View {
                                         symptomType: symptomType,
                                         severity: viewModel.severity(for: symptomType),
                                         onSeverityChange: { newSeverity in
-                                            viewModel.setSeverity(newSeverity, for: symptomType)
+                                            updateSeverity(newSeverity, for: symptomType, source: "grid")
                                         }
                                     )
                                 }
@@ -84,16 +88,24 @@ struct SymptomLogView: View {
                 // Save button
                 saveBar
             }
-            .navigationTitle("Log Symptoms")
+            .navigationTitle(L10n.string("Log Symptoms", defaultValue: "Log Symptoms"))
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.symptom_log")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
                             activeAlert = .cancel
                         } else {
                             dismiss()
                         }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SymptomHistoryView()
+                    } label: {
+                        Label("History", systemImage: "clock.arrow.circlepath")
                     }
                 }
             }
@@ -115,7 +127,6 @@ struct SymptomLogView: View {
                     )
                 }
             }
-            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if saveCoordinator.isShowingSavedFeedback {
                     SavedFeedbackOverlay()
@@ -128,8 +139,16 @@ struct SymptomLogView: View {
                     vm.selectedCategory = initialCategory
                 }
                 vm.prefillTodaysSymptoms()
+                vm.reloadSupportingData()
                 viewModel = vm
                 dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
+#if DEBUG
+                let initialCategoryName = vm.selectedCategory?.rawValue ?? "all"
+                Logger.symptoms.debug(
+                    "Symptom log sheet opened initial_category=\(initialCategoryName, privacy: .public)"
+                )
+                Logger.symptomsSignposter.emitEvent("SymptomLogSheetOpen")
+#endif
             }
             .onDisappear {
                 saveCoordinator.cancelPending()
@@ -143,7 +162,7 @@ struct SymptomLogView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: AppTheme.spacing8) {
                 CategoryChip(
-                    title: "All",
+                    title: L10n.string("All", defaultValue: "All"),
                     isSelected: viewModel?.selectedCategory == nil
                 ) {
                     viewModel?.selectedCategory = nil
@@ -169,26 +188,32 @@ struct SymptomLogView: View {
             // Prominent "Same as yesterday" card when yesterday has data and nothing selected yet
             if let vm = viewModel, vm.yesterdaySymptomCount > 0, vm.selectionCount == 0 {
                 Button {
-                    vm.copyYesterdaysSymptoms()
+                    copyYesterdaysSymptoms()
                 } label: {
                     HStack(spacing: AppTheme.spacing12) {
                         Image(systemName: "arrow.counterclockwise")
-                            .font(.title3)
+                            .appFont(.title3)
                             .foregroundStyle(AppTheme.accentColor)
 
                         VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                            Text("Same as yesterday")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            Text("\(vm.yesterdaySymptomCount) symptom\(vm.yesterdaySymptomCount == 1 ? "" : "s")")
-                                .font(.caption)
+                            Text(L10n.string("Same as yesterday", defaultValue: "Same as yesterday"))
+                                .appFont(.subheadline, weight: .semibold)
+                            Text(
+                                L10n.inflected(
+                                    LocalizedStringResource(
+                                        "^[\(vm.yesterdaySymptomCount) symptom](inflect: true)",
+                                        comment: "Subtitle showing how many symptoms were copied from yesterday."
+                                    )
+                                )
+                            )
+                                .appFont(.caption)
                                 .foregroundStyle(.secondary)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.tertiary)
                     }
                     .cardStyle()
@@ -197,54 +222,39 @@ struct SymptomLogView: View {
                 .sensoryFeedback(.impact(flexibility: .soft), trigger: vm.selectionCount)
             }
 
-            if let vm = viewModel,
-               vm.selectionCount == 0,
-               !periodFocusedQuickSymptoms.isEmpty {
-                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Text("Common on period days")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    FlowLayout(spacing: AppTheme.spacing8) {
-                        ForEach(periodFocusedQuickSymptoms) { type in
-                            Button {
-                                vm.setSeverity(2, for: type)
-                            } label: {
-                                Label(type.displayName, systemImage: type.systemImage)
-                                    .font(.caption)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Capsule().fill(AppTheme.coralAccent.opacity(0.12)))
-                                    .foregroundStyle(AppTheme.coralAccent)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-
-            // Frequent symptoms suggestion row
+            // Combined suggestions section
             if let vm = viewModel, vm.selectionCount == 0 {
-                let frequent = vm.frequentSymptoms()
-                if !frequent.isEmpty {
+                let allSuggestions = combinedSuggestions
+                if !allSuggestions.isEmpty {
                     VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                        Text("Frequent this cycle")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                suggestionsExpanded.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                Text(L10n.string("Suggestions", defaultValue: "Suggestions"))
+                                    .appFont(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Image(systemName: suggestionsExpanded ? "chevron.up" : "chevron.down")
+                                    .appFont(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
 
-                        FlowLayout(spacing: AppTheme.spacing8) {
-                            ForEach(frequent) { type in
-                                Button {
-                                    vm.setSeverity(2, for: type)
-                                } label: {
-                                    Label(type.displayName, systemImage: type.systemImage)
-                                        .font(.caption)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(Capsule().fill(AppTheme.accentColor.opacity(0.12)))
-                                        .foregroundStyle(AppTheme.accentColor)
+                        if suggestionsExpanded {
+                            FlowLayout(spacing: AppTheme.spacing8) {
+                                ForEach(allSuggestions) { type in
+                                    ChipButton(
+                                        title: type.displayName,
+                                        systemImage: type.systemImage,
+                                        color: periodFocusedQuickSymptoms.contains(type) ? AppTheme.coralAccent : AppTheme.accentColor
+                                    ) {
+                                        updateSeverity(2, for: type, source: "suggestion")
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -255,10 +265,10 @@ struct SymptomLogView: View {
             HStack(spacing: AppTheme.spacing12) {
                 if let vm = viewModel, vm.selectionCount > 0 || vm.yesterdaySymptomCount == 0 {
                     Button {
-                        viewModel?.copyYesterdaysSymptoms()
+                        copyYesterdaysSymptoms()
                     } label: {
                         Label(yesterdayButtonLabel, systemImage: "arrow.counterclockwise")
-                            .font(.subheadline)
+                            .appFont(.subheadline)
                             .padding(.horizontal, AppTheme.spacing16)
                             .padding(.vertical, 10)
                             .background(
@@ -278,8 +288,8 @@ struct SymptomLogView: View {
                     Button {
                         viewModel?.reset()
                     } label: {
-                        Text("Clear all")
-                            .font(.subheadline)
+                        Text(L10n.string("Clear all", defaultValue: "Clear all"))
+                            .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
@@ -293,13 +303,20 @@ struct SymptomLogView: View {
             Divider()
             HStack {
                 if let count = viewModel?.selectionCount, count > 0 {
-                    Text("\(count) symptom\(count == 1 ? "" : "s") selected")
-                        .font(.subheadline)
+                    Text(
+                        L10n.inflected(
+                            LocalizedStringResource(
+                                "^[\(count) symptom](inflect: true) selected",
+                                comment: "Footer text showing how many symptoms are currently selected."
+                            )
+                        )
+                    )
+                        .appFont(.subheadline)
                         .foregroundStyle(.secondary)
                         .contentTransition(.numericText())
                 } else {
-                    Text("Tap a symptom to get started")
-                        .font(.caption)
+                    Text(L10n.string("Tap a symptom to get started", defaultValue: "Tap a symptom to get started"))
+                        .appFont(.caption)
                         .foregroundStyle(.tertiary)
                 }
 
@@ -308,8 +325,8 @@ struct SymptomLogView: View {
                 Button {
                     saveSymptoms()
                 } label: {
-                    Text("Save")
-                        .font(.headline)
+                    Text(L10n.string("Save", defaultValue: "Save"))
+                        .appFont(.headline)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
                         .background(
@@ -320,6 +337,7 @@ struct SymptomLogView: View {
                         )
                         .foregroundStyle(.white)
                 }
+                .accessibilityIdentifier("symptom_log.save_button")
                 .disabled(viewModel?.hasSelections != true)
             }
             .padding()
@@ -334,9 +352,12 @@ struct SymptomLogView: View {
 
     private var yesterdayButtonLabel: String {
         if let count = viewModel?.yesterdaySymptomCount, count > 0 {
-            return "Same as yesterday (\(count))"
+            return String(
+                localized: "Same as yesterday (\(count))",
+                comment: "Compact button label for copying the same symptoms as the previous day."
+            )
         }
-        return "Same as yesterday"
+        return L10n.string("Same as yesterday", defaultValue: "Same as yesterday")
     }
 
     private var periodFocusedQuickSymptoms: [SymptomType] {
@@ -345,16 +366,60 @@ struct SymptomLogView: View {
         return [.cramps, .pelvicPain, .backPain, .nausea]
     }
 
+    private var combinedSuggestions: [SymptomType] {
+        var result: [SymptomType] = []
+        result.append(contentsOf: periodFocusedQuickSymptoms)
+        if let vm = viewModel {
+            for type in vm.suggestedSymptoms where !result.contains(type) {
+                result.append(type)
+            }
+        }
+        return result
+    }
+
     private func saveSymptoms() {
+        guard let viewModel else { return }
+
         do {
-            try viewModel?.saveSymptoms()
+            try viewModel.saveSymptoms()
             saveCoordinator.showSuccessAndDismiss {
                 dismiss()
             }
+            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
         } catch {
-            saveCoordinator.showErrorHaptic()
-            activeAlert = .error("Could not save symptoms: \(error.localizedDescription)")
+            saveCoordinator.showErrorFeedback()
+            activeAlert = .error(
+                String(
+                    localized: "Could not save symptoms: \(error.localizedDescription)",
+                    comment: "Error shown when symptom entries cannot be saved."
+                )
+            )
         }
+    }
+
+    private func copyYesterdaysSymptoms() {
+        viewModel?.copyYesterdaysSymptoms()
+
+#if DEBUG
+        Logger.symptoms.debug("Copied yesterday's symptom selections into the current form")
+        Logger.symptomsSignposter.emitEvent("SymptomCopyYesterday")
+#endif
+    }
+
+    private func updateSeverity(_ newSeverity: Int, for symptomType: SymptomType, source: String) {
+        guard let viewModel else { return }
+
+        let previousSeverity = viewModel.severity(for: symptomType)
+        guard previousSeverity != newSeverity else { return }
+
+        viewModel.setSeverity(newSeverity, for: symptomType)
+
+#if DEBUG
+        Logger.symptoms.debug(
+            "Symptom severity changed source=\(source, privacy: .public) type=\(symptomType.rawValue, privacy: .public) from=\(previousSeverity, privacy: .public) to=\(newSeverity, privacy: .public)"
+        )
+        Logger.symptomsSignposter.emitEvent("SymptomSeverityChange")
+#endif
     }
 
     private func snapshot(for viewModel: SymptomViewModel) -> FormSnapshot {
@@ -377,8 +442,7 @@ struct CategoryChip: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(isSelected ? .semibold : .regular)
+                .appFont(.subheadline, weight: isSelected ? .semibold : .regular)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(
@@ -421,7 +485,7 @@ private struct SkeletonCard: View {
         .padding(.horizontal, AppTheme.spacing8)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
                 .fill(Color(.tertiarySystemFill).opacity(0.5))
         )
         .opacity(isAnimating ? 0.4 : 1.0)
@@ -432,5 +496,6 @@ private struct SkeletonCard: View {
 
 #Preview {
     SymptomLogView()
+        .environment(AppState())
         .modelContainer(for: SymptomEntry.self, inMemory: true)
 }

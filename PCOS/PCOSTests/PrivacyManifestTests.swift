@@ -2,13 +2,9 @@ import Testing
 import Foundation
 @testable import PCOS
 
-#if canImport(PCOS)
 private let privacyManifestRelativePath = "../PCOS/PrivacyInfo.xcprivacy"
 private let appIconSetRelativePath = "../PCOS/Assets.xcassets/AppIcon.appiconset"
-#else
-private let privacyManifestRelativePath = "../CycleBalance/PrivacyInfo.xcprivacy"
-private let appIconSetRelativePath = "../CycleBalance/Resources/Assets.xcassets/AppIcon.appiconset"
-#endif
+private let accentColorSetRelativePath = "../PCOS/Assets.xcassets/AccentColor.colorset"
 
 @Suite("Privacy Manifest", .serialized)
 struct PrivacyManifestTests {
@@ -82,10 +78,77 @@ struct AppIconAssetTests {
     }
 }
 
+@Suite("Accent Color Assets", .serialized)
+struct AccentColorAssetTests {
+    @Test("Accent color manifest references concrete components for required variants")
+    func accentColorManifestHasRequiredVariantComponents() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        let accentColorSetURL = testFileURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(accentColorSetRelativePath)
+            .standardizedFileURL
+        let manifestURL = accentColorSetURL.appendingPathComponent("Contents.json")
+
+        #expect(FileManager.default.fileExists(atPath: manifestURL.path))
+
+        let manifestData = try Data(contentsOf: manifestURL)
+        let manifestObject = try JSONSerialization.jsonObject(with: manifestData)
+        let manifest = try #require(manifestObject as? [String: Any])
+        let colors = try #require(manifest["colors"] as? [[String: Any]])
+
+        #expect(!colors.isEmpty)
+
+        var variantsWithComponents: Set<String> = []
+        for colorEntry in colors {
+            let color = try #require(colorEntry["color"] as? [String: Any])
+            let components = try #require(color["components"] as? [String: Any])
+
+            for component in ["red", "green", "blue", "alpha"] {
+                let rawValue = try #require(components[component] as? String)
+                #expect(!rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            let appearances = colorEntry["appearances"] as? [[String: Any]]
+            let variant = appearances?
+                .first(where: { ($0["appearance"] as? String) == "luminosity" })?["value"] as? String
+            variantsWithComponents.insert(variant ?? "default")
+        }
+
+        #expect(variantsWithComponents.contains("default"))
+        #expect(variantsWithComponents.contains("dark"))
+    }
+}
+
+@Suite("App Appearance Policy", .serialized)
+struct AppAppearancePolicyTests {
+    @Test("App root enforces light mode globally")
+    @MainActor
+    func appRootEnforcesLightModeGlobally() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let appFileURL = projectRoot
+            .appendingPathComponent("PCOS/PCOS/App/CycleBalanceApp.swift")
+        let source = try String(contentsOf: appFileURL)
+
+        #expect(source.contains(".preferredColorScheme(.light)"))
+        #expect(!source.contains("#if DEBUG && targetEnvironment(simulator)"))
+    }
+
+    @Test("Saved feedback overlay does not force dark color scheme")
+    @MainActor
+    func savedFeedbackOverlayDoesNotForceDarkColorScheme() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let overlayFileURL = projectRoot
+            .appendingPathComponent("PCOS/PCOS/SharedUI/Components/SavedFeedbackOverlay.swift")
+        let source = try String(contentsOf: overlayFileURL)
+
+        #expect(!source.contains(".colorScheme, .dark"))
+    }
+}
+
 @Suite("App Store Config", .serialized)
 struct AppStoreConfigTests {
-    @Test("Info.plist declares remote-notification background mode for CloudKit pushes")
-    func infoPlistDeclaresRemoteNotificationBackgroundMode() throws {
+    @Test("Info.plist omits CloudKit push background mode")
+    func infoPlistOmitsRemoteNotificationBackgroundMode() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         let infoPlistURL = testFileURL
             .deletingLastPathComponent()
@@ -103,6 +166,20 @@ struct AppStoreConfigTests {
         let info = try #require(plistObject as? [String: Any])
 
         let backgroundModes = info["UIBackgroundModes"] as? [String] ?? []
-        #expect(backgroundModes.contains("remote-notification"))
+        #expect(!backgroundModes.contains("remote-notification"))
+
+        let healthShareUsageDescription = info["NSHealthShareUsageDescription"] as? String ?? ""
+        #expect(!healthShareUsageDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(
+            healthShareUsageDescription.localizedCaseInsensitiveContains("read")
+                || healthShareUsageDescription.localizedCaseInsensitiveContains("import")
+        )
+
+        let healthUpdateUsageDescription = info["NSHealthUpdateUsageDescription"] as? String ?? ""
+        #expect(!healthUpdateUsageDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(
+            healthUpdateUsageDescription.localizedCaseInsensitiveContains("does not write")
+                || healthUpdateUsageDescription.localizedCaseInsensitiveContains("not write")
+        )
     }
 }

@@ -5,8 +5,9 @@ import SwiftData
 struct SupplementEfficacyInsightAnalyzer {
     let fetcher: InsightDataFetcher
 
-    /// Compares symptom severity on days supplements were taken vs missed.
-    /// Requires at least 14 days of supplement + symptom data.
+    /// Emits quantitative-only supplement efficacy insights:
+    /// 1) symptom severity deltas on taken vs missed days
+    /// 2) cycle length deltas in >80% adherence months vs lower-adherence months
     func analyze() throws -> [Insight] {
         let supplementDescriptor = FetchDescriptor<SupplementLog>(
             sortBy: [SortDescriptor(\.date, order: .forward)]
@@ -21,17 +22,28 @@ struct SupplementEfficacyInsightAnalyzer {
             predicate: #Predicate<SymptomEntry> { $0.date >= earliestSupplement },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
-
         let symptoms: [SymptomEntry] = try fetcher.fetch(
             symptomDescriptor,
             stage: .supplementEfficacySymptoms
         )
 
-        guard !symptoms.isEmpty else { return [] }
+        let cycleDescriptor = FetchDescriptor<Cycle>(
+            sortBy: [SortDescriptor(\.startDate, order: .forward)]
+        )
+        let cycles: [Cycle] = try fetcher.fetch(
+            cycleDescriptor,
+            stage: .supplementEfficacyCycles
+        )
 
         var insights: [Insight] = []
 
-        // Group supplements by name
+        let completedCycleLengthsByMonth: [YearMonth: [Int]] = Dictionary(
+            grouping: cycles.filter { !$0.isPredicted && ($0.manualCycleLengthOverrideDays != nil || $0.lengthDays != nil) },
+            by: { YearMonth(date: $0.startDate, calendar: calendar) }
+        ).mapValues { group in
+            group.compactMap { $0.manualCycleLengthOverrideDays ?? $0.lengthDays }
+        }
+
         let byName = Dictionary(grouping: supplements, by: \.supplementName)
         let symptomsByDay = Dictionary(grouping: symptoms) { calendar.startOfDay(for: $0.date) }
 
@@ -39,58 +51,175 @@ struct SupplementEfficacyInsightAnalyzer {
             let takenDays = Set(logs.filter(\.taken).map { calendar.startOfDay(for: $0.date) })
             let missedDays = Set(logs.filter { !$0.taken }.map { calendar.startOfDay(for: $0.date) })
 
-            guard takenDays.count >= 5, missedDays.count >= 3 else { continue }
+            if !symptoms.isEmpty, takenDays.count >= 6, missedDays.count >= 4 {
+                let takenSeverities = takenDays.compactMap { day -> Double? in
+                    guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
+                    return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
+                }
+                let missedSeverities = missedDays.compactMap { day -> Double? in
+                    guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
+                    return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
+                }
 
-            // Average symptom severity on taken vs missed days
-            let takenSeverities = takenDays.compactMap { day -> Double? in
-                guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
-                return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
+                if takenSeverities.count >= 4, missedSeverities.count >= 4 {
+                    let takenAvg = takenSeverities.reduce(0, +) / Double(takenSeverities.count)
+                    let missedAvg = missedSeverities.reduce(0, +) / Double(missedSeverities.count)
+                    let delta = missedAvg - takenAvg
+
+                    if abs(delta) >= 0.4 {
+                        let confidence = min(
+                            0.88,
+                            max(
+                                0.45,
+                                0.50
+                                    + (Double(min(takenSeverities.count, missedSeverities.count)) * 0.03)
+                                    + (abs(delta) * 0.06)
+                            )
+                        )
+
+                        let directionalText = delta > 0
+                            ? L10n.string("lower", defaultValue: "lower")
+                            : L10n.string("higher", defaultValue: "higher")
+
+                        let diffWord = InsightNarrativeHelpers.differenceWord(delta)
+
+                        let friendlyContent = delta > 0
+                            ? L10n.format(
+                                "On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. That makes consistency worth watching over the next few weeks.",
+                                defaultValue: "On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. That makes consistency worth watching over the next few weeks.",
+                                name,
+                                diffWord
+                            )
+                            : L10n.format(
+                                "Your symptoms didn't seem to improve on days you took %@. This doesn't necessarily mean it's not helping — it may take longer, or other factors may be at play.",
+                                defaultValue: "Your symptoms didn't seem to improve on days you took %@. This doesn't necessarily mean it's not helping — it may take longer, or other factors may be at play.",
+                                name
+                            )
+
+                        insights.append(
+                            Insight(
+                                insightType: .supplementEfficacy,
+                                title: L10n.format(
+                                    "%@: symptom severity delta",
+                                    defaultValue: "%@: symptom severity delta",
+                                    name
+                                ),
+                                content: friendlyContent,
+                                scientificContent: L10n.format(
+                                    "Your average symptom severity was %@/5 on days you took %@, compared to %@/5 on days you missed it — symptoms were %@ when you took it.",
+                                    defaultValue: "Your average symptom severity was %@/5 on days you took %@, compared to %@/5 on days you missed it — symptoms were %@ when you took it.",
+                                    L10n.decimal(takenAvg),
+                                    name,
+                                    L10n.decimal(missedAvg),
+                                    directionalText
+                                ),
+                                confidence: confidence,
+                                dataPointsUsed: takenSeverities.count + missedSeverities.count,
+                                actionable: delta <= 0
+                            )
+                        )
+                    }
+                }
             }
-            let missedSeverities = missedDays.compactMap { day -> Double? in
-                guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
-                return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
+
+            let monthGroups = Dictionary(grouping: logs, by: { YearMonth(date: $0.date, calendar: calendar) })
+            let adherenceByMonth: [(month: YearMonth, adherencePercent: Double)] = monthGroups.map { month, entries in
+                let takenCount = entries.filter(\.taken).count
+                let adherence = (Double(takenCount) / Double(entries.count)) * 100
+                return (month, adherence)
             }
+            .sorted { $0.month < $1.month }
 
-            guard !takenSeverities.isEmpty, !missedSeverities.isEmpty else { continue }
+            let highAdherenceMonths = adherenceByMonth
+                .filter { $0.adherencePercent >= 80 }
+                .map(\.month)
+            let lowerAdherenceMonths = adherenceByMonth
+                .filter { $0.adherencePercent < 80 }
+                .map(\.month)
 
-            let takenAvg = takenSeverities.reduce(0, +) / Double(takenSeverities.count)
-            let missedAvg = missedSeverities.reduce(0, +) / Double(missedSeverities.count)
-            let difference = missedAvg - takenAvg
+            let highAdherenceCycleLengths = highAdherenceMonths.flatMap { completedCycleLengthsByMonth[$0] ?? [] }
+            let lowerAdherenceCycleLengths = lowerAdherenceMonths.flatMap { completedCycleLengthsByMonth[$0] ?? [] }
 
-            // Only report meaningful differences (>0.5 severity points)
-            guard abs(difference) > 0.5 else { continue }
+            guard highAdherenceCycleLengths.count >= 2, lowerAdherenceCycleLengths.count >= 2 else { continue }
 
-            let totalDataPoints = takenDays.count + missedDays.count
-            let confidence = min(0.3 + Double(totalDataPoints) * 0.02, 0.75)
+            let highAverage = average(highAdherenceCycleLengths.map(Double.init))
+            let lowAverage = average(lowerAdherenceCycleLengths.map(Double.init))
+            let cycleDelta = lowAverage - highAverage
 
-            if difference > 0 {
-                let insight = Insight(
+            guard abs(cycleDelta) >= 2 else { continue }
+
+            let cycleConfidence = min(
+                0.90,
+                max(
+                    0.48,
+                    0.52
+                        + (Double(min(highAdherenceCycleLengths.count, lowerAdherenceCycleLengths.count)) * 0.04)
+                        + (abs(cycleDelta) * 0.02)
+                )
+            )
+
+            let directionalWord = cycleDelta > 0
+                ? L10n.string("shorter", defaultValue: "shorter")
+                : L10n.string("longer", defaultValue: "longer")
+
+            let friendlyCycleContent = cycleDelta > 0
+                ? L10n.format(
+                    "In months when you were consistent with %@, your cycles tended to be shorter. That makes adherence worth tracking for a bit longer to see if the pattern holds.",
+                    defaultValue: "In months when you were consistent with %@, your cycles tended to be shorter. That makes adherence worth tracking for a bit longer to see if the pattern holds.",
+                    name
+                )
+                : L10n.format(
+                    "In months when you were consistent with %@, your cycles ran a bit longer. That is useful to keep watching before drawing any big conclusions.",
+                    defaultValue: "In months when you were consistent with %@, your cycles ran a bit longer. That is useful to keep watching before drawing any big conclusions.",
+                    name
+                )
+
+            insights.append(
+                Insight(
                     insightType: .supplementEfficacy,
-                    title: "\(name) may be helping",
-                    content: "On days you take \(name), your average symptom severity is "
-                        + "\(String(format: "%.1f", takenAvg))/5, compared to \(String(format: "%.1f", missedAvg))/5 "
-                        + "on days you miss it. This \(String(format: "%.1f", difference))-point difference suggests "
-                        + "a potential benefit.",
-                    confidence: confidence,
-                    dataPointsUsed: totalDataPoints,
+                    title: L10n.format(
+                        "Cycle length shift with %@ adherence",
+                        defaultValue: "Cycle length shift with %@ adherence",
+                        name
+                    ),
+                    content: friendlyCycleContent,
+                    scientificContent: L10n.format(
+                        "Your cycles were about %@ days %@ in months when you consistently took %@ (%@ vs %@ days on average).",
+                        defaultValue: "Your cycles were about %@ days %@ in months when you consistently took %@ (%@ vs %@ days on average).",
+                        L10n.decimal(abs(cycleDelta)),
+                        directionalWord,
+                        name,
+                        L10n.decimal(highAverage),
+                        L10n.decimal(lowAverage)
+                    ),
+                    confidence: cycleConfidence,
+                    dataPointsUsed: highAdherenceCycleLengths.count + lowerAdherenceCycleLengths.count,
                     actionable: true
                 )
-                insights.append(insight)
-            } else {
-                let insight = Insight(
-                    insightType: .supplementEfficacy,
-                    title: "No clear benefit from \(name)",
-                    content: "Your symptom severity doesn't appear lower on days you take \(name) "
-                        + "(taken: \(String(format: "%.1f", takenAvg))/5 vs missed: "
-                        + "\(String(format: "%.1f", missedAvg))/5). Consider discussing this with your provider.",
-                    confidence: confidence,
-                    dataPointsUsed: totalDataPoints,
-                    actionable: true
-                )
-                insights.append(insight)
-            }
+            )
         }
 
         return insights
+    }
+
+    private func average(_ values: [Double]) -> Double {
+        values.reduce(0, +) / Double(values.count)
+    }
+}
+
+private struct YearMonth: Hashable, Comparable {
+    let year: Int
+    let month: Int
+
+    init(date: Date, calendar: Calendar) {
+        year = calendar.component(.year, from: date)
+        month = calendar.component(.month, from: date)
+    }
+
+    static func < (lhs: YearMonth, rhs: YearMonth) -> Bool {
+        if lhs.year != rhs.year {
+            return lhs.year < rhs.year
+        }
+        return lhs.month < rhs.month
     }
 }

@@ -4,6 +4,7 @@ import SwiftData
 @MainActor
 struct SymptomCorrelationInsightAnalyzer {
     let fetcher: InsightDataFetcher
+    private let phaseInferencePolicy = CyclePhaseInferencePolicy()
 
     /// Analyzes symptom patterns across cycle phases, severity trends, and co-occurrences.
     /// Requires at least 14 days of symptom data.
@@ -29,7 +30,7 @@ struct SymptomCorrelationInsightAnalyzer {
             sortBy: [SortDescriptor(\.startDate, order: .forward)]
         )
         let cycles: [Cycle] = try fetcher.fetch(cycleDescriptor, stage: .symptomCorrelationCycles)
-        let completedCycles = cycles.filter { $0.lengthDays != nil && !$0.isPredicted }
+        let completedCycles = cycles.filter { !$0.isPredicted && ($0.manualCycleLengthOverrideDays != nil || $0.lengthDays != nil) }
 
         if !completedCycles.isEmpty {
             // Map symptoms to approximate cycle phases
@@ -39,7 +40,11 @@ struct SymptomCorrelationInsightAnalyzer {
             }
 
             for symptom in symptoms {
-                if let phase = approximatePhase(for: symptom.date, cycles: completedCycles) {
+                if let phase = phaseInferencePolicy.approximatePhase(
+                    for: symptom.date,
+                    cycles: completedCycles,
+                    calendar: calendar
+                ) {
                     phaseSymptoms[phase, default: []].append(symptom)
                 }
             }
@@ -63,10 +68,24 @@ struct SymptomCorrelationInsightAnalyzer {
                 let confidence = min(0.35 + Double(worst.2) * 0.03, 0.80)
                 let phaseInsight = Insight(
                     insightType: .symptomCorrelation,
-                    title: "Symptoms peak during \(worst.0.displayName) phase",
-                    content: "Your most intense symptoms occur during the \(worst.0.displayName.lowercased()) "
-                        + "phase, with an average severity of \(String(format: "%.1f", worst.1))/5. "
-                        + "Common symptoms in this phase: \(topTypes.joined(separator: ", ")).",
+                    title: L10n.format(
+                        "Symptoms peak during %@ phase",
+                        defaultValue: "Symptoms peak during %@ phase",
+                        worst.0.displayName
+                    ),
+                    content: L10n.format(
+                        "Your symptoms tend to be strongest during your %@ phase — especially %@. Knowing this pattern means you can plan gentler days or extra self-care during that time.",
+                        defaultValue: "Your symptoms tend to be strongest during your %@ phase — especially %@. Knowing this pattern means you can plan gentler days or extra self-care during that time.",
+                        worst.0.displayName,
+                        topTypes.joined(separator: ", ")
+                    ),
+                    scientificContent: L10n.format(
+                        "Your most intense symptoms occur during the %@ phase, with an average severity of %@/5. Common symptoms in this phase: %@.",
+                        defaultValue: "Your most intense symptoms occur during the %@ phase, with an average severity of %@/5. Common symptoms in this phase: %@.",
+                        worst.0.displayName,
+                        L10n.decimal(worst.1),
+                        topTypes.joined(separator: ", ")
+                    ),
                     confidence: confidence,
                     dataPointsUsed: symptoms.count,
                     actionable: true,
@@ -100,10 +119,20 @@ struct SymptomCorrelationInsightAnalyzer {
                 let confidence = min(0.35 + coOccurrenceRate * 0.4, 0.80)
                 let pairInsight = Insight(
                     insightType: .symptomCorrelation,
-                    title: "\(topPair.key) often appear together",
-                    content: "These symptoms co-occur on \(percentage)% of your tracked days "
-                        + "(\(topPair.value) out of \(totalDays) days). Understanding symptom clusters "
-                        + "can help you and your provider target treatments more effectively.",
+                    title: L10n.format(
+                        "%@ often appear together",
+                        defaultValue: "%@ often appear together",
+                        topPair.key
+                    ),
+                    content: L10n.string(
+                        "These two symptoms seem to travel together — they show up on the same days quite often. Mentioning this to your provider could help find treatments that address both.",
+                        defaultValue: "These two symptoms seem to travel together — they show up on the same days quite often. Mentioning this to your provider could help find treatments that address both."
+                    ),
+                    scientificContent: L10n.format(
+                        "These symptoms appeared together on %lld%% of your tracked days. Understanding which symptoms cluster can help you and your provider target treatments.",
+                        defaultValue: "These symptoms appeared together on %lld%% of your tracked days. Understanding which symptoms cluster can help you and your provider target treatments.",
+                        percentage
+                    ),
                     confidence: confidence,
                     dataPointsUsed: symptoms.count,
                     actionable: true,
@@ -129,16 +158,39 @@ struct SymptomCorrelationInsightAnalyzer {
                 let diff = secondAvg - firstAvg
 
                 if abs(diff) >= 0.5 {
-                    let direction = diff > 0 ? "increasing" : "decreasing"
-                    let sentiment = diff > 0 ? "worsening" : "improving"
                     let confidence = min(0.3 + abs(diff) * 0.15, 0.70)
+
+                    let friendlyTrendContent = diff > 0
+                        ? L10n.string(
+                            "Your symptoms have been trending a bit harder recently. It might help to think about what's changed — sleep, stress, diet, or activity — and see if something stands out.",
+                            defaultValue: "Your symptoms have been trending a bit harder recently. It might help to think about what's changed — sleep, stress, diet, or activity — and see if something stands out."
+                        )
+                        : L10n.string(
+                            "Your symptoms have been easing up recently — whatever you've been doing seems to be working. Keep going!",
+                            defaultValue: "Your symptoms have been easing up recently — whatever you've been doing seems to be working. Keep going!"
+                        )
 
                     let trendInsight = Insight(
                         insightType: .symptomCorrelation,
-                        title: "Symptom severity is \(direction)",
-                        content: "Your average symptom severity has been \(sentiment) recently "
-                            + "(from \(String(format: "%.1f", firstAvg)) to \(String(format: "%.1f", secondAvg)) "
-                            + "out of 5). \(diff > 0 ? "Consider reviewing recent changes to your routine." : "Keep up what you're doing!")",
+                        title: L10n.string(
+                            diff > 0
+                                ? "Symptom severity is increasing"
+                                : "Symptom severity is decreasing",
+                            defaultValue: diff > 0
+                                ? "Symptom severity is increasing"
+                                : "Symptom severity is decreasing"
+                        ),
+                        content: friendlyTrendContent,
+                        scientificContent: L10n.format(
+                            diff > 0
+                                ? "Your average symptom severity has been worsening recently (from %@ to %@ out of 5). Consider reviewing recent changes to your routine."
+                                : "Your average symptom severity has been improving recently (from %@ to %@ out of 5). Keep up what you're doing!",
+                            defaultValue: diff > 0
+                                ? "Your average symptom severity has been worsening recently (from %@ to %@ out of 5). Consider reviewing recent changes to your routine."
+                                : "Your average symptom severity has been improving recently (from %@ to %@ out of 5). Keep up what you're doing!",
+                            L10n.decimal(firstAvg),
+                            L10n.decimal(secondAvg)
+                        ),
                         confidence: confidence,
                         dataPointsUsed: symptoms.count,
                         actionable: diff > 0
@@ -149,36 +201,5 @@ struct SymptomCorrelationInsightAnalyzer {
         }
 
         return insights
-    }
-
-    /// Approximate cycle phase for a given date based on completed cycles.
-    private func approximatePhase(for date: Date, cycles: [Cycle]) -> CyclePhase? {
-        let calendar = Calendar.current
-
-        // Find which cycle this date falls in.
-        for cycle in cycles {
-            guard let lengthDays = cycle.lengthDays else { continue }
-            let cycleStart = calendar.startOfDay(for: cycle.startDate)
-            guard let cycleEnd = calendar.date(byAdding: .day, value: lengthDays, to: cycleStart) else { continue }
-
-            let dateStart = calendar.startOfDay(for: date)
-            guard dateStart >= cycleStart, dateStart < cycleEnd else { continue }
-
-            let dayInCycle = calendar.dateComponents([.day], from: cycleStart, to: dateStart).day ?? 0
-
-            // Approximate phase based on typical distribution
-            // Menstrual: days 1-5, Follicular: days 6-13, Ovulatory: days 14-16, Luteal: rest
-            if dayInCycle < 5 {
-                return .menstrual
-            } else if dayInCycle < 13 {
-                return .follicular
-            } else if dayInCycle < 16 {
-                return .ovulatory
-            } else {
-                return .luteal
-            }
-        }
-
-        return nil
     }
 }

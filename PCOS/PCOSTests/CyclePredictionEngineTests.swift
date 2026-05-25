@@ -5,6 +5,7 @@ import Foundation
 @Suite("Cycle Prediction Engine")
 struct CyclePredictionEngineTests {
     let engine = CyclePredictionEngine()
+    let predictionService = CyclePredictionService()
 
     @Test("Returns nil with no completed cycles")
     func noPredictionWithoutData() {
@@ -73,5 +74,72 @@ struct CyclePredictionEngineTests {
         cycle.lengthDays = 28
         let result = engine.cycleStatistics(cycles: [cycle])
         #expect(result == nil)
+    }
+
+    @Test("Manual cycle override creates a prediction range")
+    func manualOverridePrediction() throws {
+        let cycles = (0..<3).map { i in
+            Cycle(
+                startDate: Date().addingTimeInterval(TimeInterval(-30 * (3 - i) * 86_400)),
+                endDate: Date().addingTimeInterval(TimeInterval(-30 * (2 - i) * 86_400)),
+                lengthDays: 30,
+                isPredicted: false
+            )
+        }
+
+        let prediction = engine.predictNextPeriod(
+            manualCycleLengthOverrideDays: 34,
+            cycles: cycles,
+            lastPeriodStart: Date()
+        )
+        #expect(prediction != nil)
+        #expect((prediction?.windowDays ?? 0) >= 5)
+    }
+
+    @Test("Statistics prefer manual override lengths when present")
+    func statisticsPreferOverrideLength() throws {
+        let cycle = Cycle(startDate: Date(), endDate: Date(), lengthDays: 31, isPredicted: false, manualCycleLengthOverrideDays: 27)
+        let stats = try #require(engine.cycleStatistics(cycles: [cycle]))
+        #expect(stats.formattedAverage == "27")
+    }
+
+    @Test("Prediction presentation suppresses wide windows")
+    func predictionPresentationSuppressesWideWindow() {
+        let now = Date()
+        let calendar = Calendar.current
+        let prediction = CyclePredictionEngine.Prediction(
+            earliestDate: now,
+            latestDate: calendar.date(byAdding: .day, value: 16, to: now) ?? now,
+            centerDate: calendar.date(byAdding: .day, value: 8, to: now) ?? now,
+            confidence: 0.82
+        )
+
+        let presentation = predictionService.presentation(for: prediction)
+        guard case .uncertain(_, let reason) = presentation else {
+            Issue.record("Expected a wide-window prediction to be suppressed")
+            return
+        }
+
+        #expect(reason == .wideWindow)
+    }
+
+    @Test("Prediction presentation suppresses low-confidence forecasts below 70 percent")
+    func predictionPresentationSuppressesLowConfidence() {
+        let now = Date()
+        let calendar = Calendar.current
+        let prediction = CyclePredictionEngine.Prediction(
+            earliestDate: now,
+            latestDate: calendar.date(byAdding: .day, value: 10, to: now) ?? now,
+            centerDate: calendar.date(byAdding: .day, value: 5, to: now) ?? now,
+            confidence: 0.69
+        )
+
+        let presentation = predictionService.presentation(for: prediction)
+        guard case .uncertain(_, let reason) = presentation else {
+            Issue.record("Expected a sub-threshold confidence prediction to be suppressed")
+            return
+        }
+
+        #expect(reason == .lowConfidence)
     }
 }

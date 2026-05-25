@@ -5,17 +5,28 @@ import os
 @Observable
 @MainActor
 final class HealthKitManager {
+    enum AuthorizationState: Equatable {
+        case unavailable
+        case needsAuthorization
+        case configured
+    }
+
     typealias AvailabilityProvider = @Sendable () -> Bool
     typealias AuthorizationRequester = (
         _ toShare: Set<HKSampleType>?,
         _ read: Set<HKObjectType>,
         _ completion: @escaping @Sendable (Bool, Error?) -> Void
     ) -> Void
+    typealias AuthorizationStatusProvider = (
+        _ toShare: Set<HKSampleType>,
+        _ read: Set<HKObjectType>,
+        _ completion: @escaping @Sendable (HKAuthorizationRequestStatus, Error?) -> Void
+    ) -> Void
     typealias SyncOperation = @Sendable (_ modelContainer: ModelContainer, _ now: Date) async throws -> HealthKitSyncResult
 
     // MARK: - Public State
 
-    var isAuthorized = false
+    var authorizationState: AuthorizationState
     var lastSyncDate: Date?
     var isSyncing = false
     var lastError: String?
@@ -24,13 +35,18 @@ final class HealthKitManager {
         availabilityProvider()
     }
 
+    var isConfigured: Bool {
+        authorizationState == .configured
+    }
+
     // MARK: - Private
 
     private let availabilityProvider: AvailabilityProvider
     private let authorizationRequester: AuthorizationRequester
+    private let authorizationStatusProvider: AuthorizationStatusProvider
     private let syncOperation: SyncOperation
 
-    private let readTypes: Set<HKObjectType> = {
+    static let defaultReadTypes: Set<HKObjectType> = {
         var types = Set<HKObjectType>()
         if let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass) {
             types.insert(bodyMass)
@@ -47,9 +63,13 @@ final class HealthKitManager {
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) {
             types.insert(steps)
         }
+        if let restingHeartRate = HKObjectType.quantityType(forIdentifier: .restingHeartRate) {
+            types.insert(restingHeartRate)
+        }
         return types
     }()
 
+    private let readTypes = HealthKitManager.defaultReadTypes
     private static let lastSyncKey = "healthkit.lastSyncDate"
 
     // MARK: - Init
@@ -58,8 +78,12 @@ final class HealthKitManager {
         healthStore: HKHealthStore = HKHealthStore(),
         availabilityProvider: @escaping AvailabilityProvider = { HKHealthStore.isHealthDataAvailable() },
         authorizationRequester: AuthorizationRequester? = nil,
+        authorizationStatusProvider: AuthorizationStatusProvider? = nil,
         syncOperation: SyncOperation? = nil
     ) {
+        let initialAuthorizationState: AuthorizationState = availabilityProvider() ? .needsAuthorization : .unavailable
+
+        self.authorizationState = initialAuthorizationState
         self.availabilityProvider = availabilityProvider
 
         if let authorizationRequester {
@@ -68,6 +92,15 @@ final class HealthKitManager {
             let store = healthStore
             self.authorizationRequester = { toShare, read, completion in
                 store.requestAuthorization(toShare: toShare, read: read, completion: completion)
+            }
+        }
+
+        if let authorizationStatusProvider {
+            self.authorizationStatusProvider = authorizationStatusProvider
+        } else {
+            let store = healthStore
+            self.authorizationStatusProvider = { toShare, read, completion in
+                store.getRequestStatusForAuthorization(toShare: toShare, read: read, completion: completion)
             }
         }
 
@@ -88,16 +121,30 @@ final class HealthKitManager {
 
     // MARK: - Authorization
 
-    func requestAuthorization() async throws {
+    @discardableResult
+    func refreshAuthorizationState() async -> AuthorizationState {
+        do {
+            let resolvedState = try await resolveAuthorizationState()
+            authorizationState = resolvedState
+            return resolvedState
+        } catch {
+            authorizationState = isAvailable ? .needsAuthorization : .unavailable
+            Logger.database.error("HealthKit authorization status refresh failed: \(error.localizedDescription)")
+            return authorizationState
+        }
+    }
+
+    @discardableResult
+    func requestAuthorization() async throws -> AuthorizationState {
         guard isAvailable else {
             Logger.database.warning("HealthKit is not available on this device")
-            isAuthorized = false
-            return
+            authorizationState = .unavailable
+            return authorizationState
         }
 
         do {
-            let isGranted = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
-                authorizationRequester([], readTypes) { success, error in
+            _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
+                authorizationRequester(nil, readTypes) { success, error in
                     if let error {
                         continuation.resume(throwing: error)
                     } else {
@@ -106,10 +153,37 @@ final class HealthKitManager {
                 }
             }
 
-            isAuthorized = isGranted
+            authorizationState = try await resolveAuthorizationState()
+            return authorizationState
         } catch {
-            isAuthorized = false
+            authorizationState = .needsAuthorization
             throw error
+        }
+    }
+
+    func connectAndSync(modelContext: ModelContext) async {
+        guard isAvailable else {
+            Logger.database.warning("HealthKit connect flow skipped because HealthKit is unavailable")
+            authorizationState = .unavailable
+            return
+        }
+
+        lastError = nil
+
+        do {
+            if authorizationState == .needsAuthorization {
+                try await requestAuthorization()
+            }
+
+            guard authorizationState == .configured else {
+                Logger.database.notice("HealthKit authorization was not configured after the connect request")
+                return
+            }
+
+            await performFullSync(modelContext: modelContext)
+        } catch {
+            lastError = error.localizedDescription
+            Logger.database.error("HealthKit connect flow failed: \(error.localizedDescription)")
         }
     }
 
@@ -136,6 +210,32 @@ final class HealthKitManager {
         } catch {
             lastError = error.localizedDescription
             Logger.database.error("HealthKit sync failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func resolveAuthorizationState() async throws -> AuthorizationState {
+        guard isAvailable else {
+            return .unavailable
+        }
+
+        let requestStatus = try await withCheckedThrowingContinuation {
+            (continuation: CheckedContinuation<HKAuthorizationRequestStatus, Error>) in
+            authorizationStatusProvider([], readTypes) { status, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: status)
+                }
+            }
+        }
+
+        switch requestStatus {
+        case .unnecessary:
+            return .configured
+        case .shouldRequest, .unknown:
+            return .needsAuthorization
+        @unknown default:
+            return .needsAuthorization
         }
     }
 }

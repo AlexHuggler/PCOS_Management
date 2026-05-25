@@ -6,17 +6,39 @@ enum BillingPeriodUnit: String, CaseIterable, Sendable {
     case month
     case year
 
-    func displayText(for value: Int) -> String {
+    func displayText(
+        for value: Int,
+        language: AppLanguage? = nil,
+        base: Bundle = .main,
+        preferredLanguages: [String]? = nil
+    ) -> String {
+        let singularKey: String
+        let pluralKey: String
+
         switch self {
         case .day:
-            value == 1 ? "day" : "\(value) days"
+            singularKey = "%lld day"
+            pluralKey = "%lld days"
         case .week:
-            value == 1 ? "week" : "\(value) weeks"
+            singularKey = "%lld week"
+            pluralKey = "%lld weeks"
         case .month:
-            value == 1 ? "month" : "\(value) months"
+            singularKey = "%lld month"
+            pluralKey = "%lld months"
         case .year:
-            value == 1 ? "year" : "\(value) years"
+            singularKey = "%lld year"
+            pluralKey = "%lld years"
         }
+
+        let key = value == 1 ? singularKey : pluralKey
+        return L10n.format(
+            key,
+            defaultValue: key,
+            language: language,
+            base: base,
+            preferredLanguages: preferredLanguages,
+            Int64(value)
+        )
     }
 }
 
@@ -25,7 +47,20 @@ struct BillingPeriod: Equatable, Sendable {
     let value: Int
 
     var displayText: String {
-        unit.displayText(for: value)
+        displayText()
+    }
+
+    func displayText(
+        language: AppLanguage? = nil,
+        base: Bundle = .main,
+        preferredLanguages: [String]? = nil
+    ) -> String {
+        unit.displayText(
+            for: value,
+            language: language,
+            base: base,
+            preferredLanguages: preferredLanguages
+        )
     }
 
     var annualMultiplier: Decimal {
@@ -50,9 +85,60 @@ struct BillingProduct: Identifiable, Equatable, Sendable {
     let price: Decimal
     let subscriptionPeriod: BillingPeriod?
 
+    var paywallDisplayName: String {
+        paywallDisplayName()
+    }
+
+    func paywallDisplayName(
+        language: AppLanguage? = nil,
+        base: Bundle = .main,
+        preferredLanguages: [String]? = nil
+    ) -> String {
+        switch id {
+        case SubscriptionManager.monthlyProductID:
+            L10n.string(
+                "CycleBalance Premium Monthly",
+                defaultValue: "CycleBalance Premium Monthly",
+                language: language,
+                base: base,
+                preferredLanguages: preferredLanguages
+            )
+        case SubscriptionManager.yearlyProductID:
+            L10n.string(
+                "CycleBalance Premium Yearly",
+                defaultValue: "CycleBalance Premium Yearly",
+                language: language,
+                base: base,
+                preferredLanguages: preferredLanguages
+            )
+        default:
+            displayName
+        }
+    }
+
     var displayPriceWithPeriod: String {
+        displayPriceWithPeriod()
+    }
+
+    func displayPriceWithPeriod(
+        language: AppLanguage? = nil,
+        base: Bundle = .main,
+        preferredLanguages: [String]? = nil
+    ) -> String {
         guard let subscriptionPeriod else { return displayPrice }
-        return "\(displayPrice) / \(subscriptionPeriod.displayText)"
+        return L10n.format(
+            "%@ / %@",
+            defaultValue: "%@ / %@",
+            language: language,
+            base: base,
+            preferredLanguages: preferredLanguages,
+            displayPrice,
+            subscriptionPeriod.displayText(
+                language: language,
+                base: base,
+                preferredLanguages: preferredLanguages
+            )
+        )
     }
 
     var annualizedPrice: Decimal? {

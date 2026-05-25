@@ -7,6 +7,8 @@ import Foundation
 struct PremiumStateBridgeTests {
     final class MockPremiumStatusProvider: PremiumStatusProviding {
         var isPremium = false
+        let backendMode: BillingBackendMode = .revenueCat
+        var statusMessage: String?
         var checkCallCount = 0
 
         func checkSubscriptionStatus() async {

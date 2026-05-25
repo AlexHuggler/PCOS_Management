@@ -20,13 +20,19 @@ struct OnboardingCompletionView: View {
                 .symbolEffect(.bounce, value: appeared)
                 .accessibilityHidden(true)
 
-            Text("You're all set!")
-                .font(.title)
-                .fontWeight(.bold)
+            Text(String(localized: "You're all set!", comment: "Onboarding completion headline."))
+                .appHeadingFont(.title, weight: .regular)
+                .foregroundStyle(AppTheme.primaryText)
 
             Text(personalizedMessage)
-                .font(.body)
+                .appFont(.body)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, AppTheme.spacing24)
+
+            Text(String(localized: "We're a small team building this for you — find \"Share Feedback\" in Settings anytime.", comment: "Feedback invitation on the completion screen."))
+                .appFont(.caption)
+                .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, AppTheme.spacing24)
 
@@ -35,8 +41,8 @@ struct OnboardingCompletionView: View {
             Button {
                 onFinish()
             } label: {
-                Text("Start Exploring")
-                    .font(.headline)
+                Text(String(localized: "Start Exploring", comment: "Primary onboarding completion button label."))
+                    .appFont(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppTheme.spacing12)
                     .background(
@@ -46,10 +52,13 @@ struct OnboardingCompletionView: View {
                     .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("onboarding.completion.finish")
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
         }
-        .background(AppTheme.warmNeutral.ignoresSafeArea())
+        .background(BotanicalScreenBackground(style: .dense))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("screen.onboarding.completion")
         .onAppear {
             appeared = true
         }
@@ -58,11 +67,11 @@ struct OnboardingCompletionView: View {
     private var personalizedMessage: String {
         switch profile.primaryGoal {
         case .trackCycles:
-            "Log your period when it arrives and CycleBalance will start predicting your next one."
+            String(localized: "Everything's set. Log when you're ready — CycleBalance adapts to your rhythm, not the other way around.", comment: "Onboarding completion message for users focused on cycle tracking.")
         case .understandSymptoms:
-            "Log how you feel each day. After 2 cycles, you'll see your first insights."
+            String(localized: "Your tracking journey starts now. You're part of a growing community of women making sense of their symptoms.", comment: "Onboarding completion message for users focused on symptoms.")
         case nil:
-            "Your CycleBalance journey starts now."
+            String(localized: "You're part of a growing community of women taking control of their PCOS. We're glad you're here.", comment: "Generic onboarding completion message.")
         }
     }
 }

@@ -2,37 +2,55 @@ import Testing
 import Foundation
 @testable import PCOS
 
-#if canImport(PCOS)
 private let paywallSourceRelativePath = "../PCOS/Core/StoreKit/PaywallView.swift"
-#else
-private let paywallSourceRelativePath = "../CycleBalance/Core/StoreKit/PaywallView.swift"
-#endif
+private let premiumGateSourceRelativePath = "../PCOS/Core/StoreKit/PremiumGate.swift"
+private let insightsSourceRelativePath = "../PCOS/Features/Insights/Views/InsightsView.swift"
 
 @Suite("Paywall Error Handling", .serialized)
 struct PaywallErrorHandlingTests {
-    private func loadPaywallSource() throws -> String {
+    private func loadSource(relativePath: String) throws -> String {
         let testFileURL = URL(fileURLWithPath: #filePath)
         let sourceURL = testFileURL
             .deletingLastPathComponent()
-            .appendingPathComponent(paywallSourceRelativePath)
+            .appendingPathComponent(relativePath)
             .standardizedFileURL
         return try String(contentsOf: sourceURL, encoding: .utf8)
     }
 
-    @Test("Paywall purchase action uses explicit do/catch")
-    func paywallPurchaseUsesDoCatch() throws {
+    private func loadPaywallSource() throws -> String {
+        try loadSource(relativePath: paywallSourceRelativePath)
+    }
+
+    @Test("Paywall loading and purchase flows surface explicit error handling across billing backends")
+    func paywallLoadingAndCallbacksUseExplicitErrorHandling() throws {
         let source = try loadPaywallSource()
 
-        #expect(!source.contains("try? await subscriptionManager.purchase(product)"))
+        #expect(source.contains("await loadPaywallIfNeeded()"))
+        #expect(source.contains("billingProducts = try await subscriptionManager.loadProducts()"))
+        #expect(source.contains("let outcome = try await subscriptionManager.purchase(productID: product.id)"))
+        #expect(source.contains("try await subscriptionManager.restorePurchases()"))
+        #expect(source.contains("loadErrorMessage = Self.userFacingMessage("))
+        #expect(source.contains("alertErrorMessage = Self.userFacingMessage("))
+        #expect(source.contains("case .pending:"))
+        #expect(source.contains("case .cancelled:"))
+    }
 
-        let purchaseCall = "try await subscriptionManager.purchase(product)"
-        let range = try #require(source.range(of: purchaseCall))
+    @Test("Premium gate presents visible unlock affordance before opening paywall")
+    func premiumGateShowsVisibleAffordance() throws {
+        let source = try loadSource(relativePath: premiumGateSourceRelativePath)
 
-        let contextStart = source.index(range.lowerBound, offsetBy: -120, limitedBy: source.startIndex) ?? source.startIndex
-        let contextEnd = source.index(range.upperBound, offsetBy: 120, limitedBy: source.endIndex) ?? source.endIndex
-        let context = String(source[contextStart..<contextEnd])
+        #expect(source.contains("premium_gate.unlock"))
+        #expect(source.contains("sparkles"))
+        #expect(!source.contains("lock.fill"))
+        #expect(source.contains("Unlock Premium"))
+    }
 
-        #expect(context.contains("do {"))
-        #expect(context.contains("} catch {"))
+    @Test("Insights errors include an explicit retry CTA")
+    func insightsErrorsExposeRetryCTA() throws {
+        let source = try loadSource(relativePath: insightsSourceRelativePath)
+
+        #expect(source.contains("insights.error_retry"))
+        #expect(source.contains("retryInsights"))
+        #expect(source.contains("Try Again"))
     }
 }

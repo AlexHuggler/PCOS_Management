@@ -85,18 +85,28 @@ final class NotificationManager {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Period May Be Coming"
+        content.title = String(
+            localized: "Period May Be Coming",
+            comment: "Notification title sent before a predicted period."
+        )
 
         let daysBetween = calendar.dateComponents([.day], from: earliestDate, to: latestDate).day ?? 0
         if daysBetween <= 1 {
-            content.body = "Your period is expected in about 2 days."
+            content.body = String(
+                localized: "Your period is expected in about 2 days.",
+                comment: "Notification body for a narrow predicted period window."
+            )
         } else {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
+            formatter.locale = L10n.locale()
             let earliestStr = formatter.string(from: earliestDate)
             let latestStr = formatter.string(from: latestDate)
-            content.body = "Your period is expected between \(earliestStr) and \(latestStr)."
+            content.body = String(
+                localized: "Your period is expected between \(earliestStr) and \(latestStr).",
+                comment: "Notification body for a broader predicted period date range."
+            )
         }
         content.sound = .default
 
@@ -130,8 +140,14 @@ final class NotificationManager {
         cancelReminders(withPrefix: "symptom.")
 
         let content = UNMutableNotificationContent()
-        content.title = "Log Your Symptoms"
-        content.body = "Take a moment to record how you're feeling today."
+        content.title = String(
+            localized: "Log Your Symptoms",
+            comment: "Daily symptom reminder notification title."
+        )
+        content.body = String(
+            localized: "Take a moment to record how you're feeling today.",
+            comment: "Daily symptom reminder notification body."
+        )
         content.sound = .default
 
         let calendar = Calendar.current
@@ -171,8 +187,14 @@ final class NotificationManager {
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
         let content = UNMutableNotificationContent()
-        content.title = "Supplement Reminder"
-        content.body = "Time to take your \(name)."
+        content.title = String(
+            localized: "Supplement Reminder",
+            comment: "Supplement reminder notification title."
+        )
+        content.body = String(
+            localized: "Time to take your \(name).",
+            comment: "Supplement reminder notification body with the supplement name."
+        )
         content.sound = .default
 
         let calendar = Calendar.current
@@ -215,5 +237,19 @@ final class NotificationManager {
             center.removePendingNotificationRequests(withIdentifiers: matchingIdentifiers)
             logger.info("Cancelled \(matchingIdentifiers.count) reminders with prefix '\(prefix)'")
         }
+    }
+
+    // MARK: - Lifecycle Mode
+
+    /// Suspends period prediction reminders during pregnancy.
+    func suspendPeriodReminders() {
+        cancelReminders(withPrefix: "period.")
+        logger.info("Period reminders suspended for pregnancy mode")
+    }
+
+    /// Resumes period-related reminders after pregnancy ends.
+    func resumePeriodRemindersIfEnabled() {
+        guard periodRemindersEnabled else { return }
+        logger.info("Period reminders re-enabled after pregnancy mode")
     }
 }

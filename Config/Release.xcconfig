@@ -1,5 +1,4 @@
 #include? "LocalSecrets.xcconfig"
 
-REVENUECAT_ENTITLEMENT_ID = premium
+REVENUECAT_ENTITLEMENT_ID = CycleBalance Unlimited
 REVENUECAT_OFFERING_ID = default
-PREMIUM_BILLING_MODE = revenuecat

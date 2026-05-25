@@ -45,7 +45,7 @@ struct NotificationSettingsView: View {
 
                     if periodToggle {
                         Text("You'll be reminded 2 days before your predicted period.")
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -95,7 +95,7 @@ struct NotificationSettingsView: View {
 
                     if supplementToggle {
                         Text("Manage individual supplement times from the Supplements tab.")
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -103,10 +103,10 @@ struct NotificationSettingsView: View {
                 Section {
                     VStack(alignment: .center, spacing: AppTheme.spacing4) {
                         Text("All reminders stay on your device.")
-                            .font(.caption2)
+                            .appFont(.caption2)
                             .foregroundStyle(.secondary)
                         Text("No data is shared with notification servers.")
-                            .font(.caption2)
+                            .appFont(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)

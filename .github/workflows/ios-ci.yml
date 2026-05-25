@@ -18,9 +18,6 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Verify source tree parity
-        run: ./scripts/check_tree_parity.sh
-
       - name: Regenerate Xcode project
         run: xcodegen generate
 

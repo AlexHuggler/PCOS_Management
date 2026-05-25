@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class CycleEntry {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<CycleEntry>([\.date])
+    #endif
+
     var id: UUID = UUID()
     var date: Date = Date()
     var flowIntensity: FlowIntensity?

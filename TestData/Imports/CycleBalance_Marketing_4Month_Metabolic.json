@@ -1,0 +1,5453 @@
+{
+  "appVersion": "marketing-4month-metabolic",
+  "exportedAt": "2026-03-22T12:00:00.000Z",
+  "records": {
+    "bloodSugarReadings": [
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 95,
+        "id": "D30AA8D4-470B-45E8-AB1F-4DC822CE4D83",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-21T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 101,
+        "id": "96C3679E-31F1-4DD1-A790-6D650F6E0F24",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-21T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 129,
+        "id": "C55EFA54-40D7-47C2-BB86-017CFF9BFFFC",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-21T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 95,
+        "id": "3D99B9A2-449B-4645-95B1-BE461F774BA0",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-03-19T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 100,
+        "id": "3AEC44DF-B1B2-463C-B275-CB2F21BAE549",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-19T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 130,
+        "id": "0E7D0BB4-C923-49D1-8678-94A27C1C8DBA",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-19T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 95,
+        "id": "095CD109-8CC3-4741-911B-77F6419D7FF8",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-03-17T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "242DDFC7-EE4F-4F8E-B05A-510ACB801B8F",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-17T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 128,
+        "id": "C3E968AF-8329-41DF-9C62-6792DF70B439",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-17T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 96,
+        "id": "8EEBB676-FFEA-489A-8C72-A7D9CB1296D9",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-03-15T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 104,
+        "id": "629B33B9-4416-4A95-8897-946592348825",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-15T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 135,
+        "id": "74B27F6A-88CC-43FF-9889-E00BEEA698DC",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-15T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 97,
+        "id": "C0ABF4F9-4880-4EB4-AEE9-4DA7089A2F50",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-13T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 102,
+        "id": "A563C72B-D672-43A5-854C-4C9C2248D6C4",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-13T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 129,
+        "id": "E230DBAD-F913-4E06-9539-C874BA803A9E",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-13T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 99,
+        "id": "15768CEE-82E2-4C72-B2DA-8ADFE2FDCCF5",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-03-11T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "A4A5CE5F-14EE-4CB7-98DE-0D00D547B4D6",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-11T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 137,
+        "id": "6AC04F64-F7E0-4B7F-824B-4FE580CAF6AB",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-11T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 101,
+        "id": "7C5872A0-4E9D-4A1A-B6AD-9D04D67D3F04",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-09T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 106,
+        "id": "76895B60-842D-49D4-A90A-056B193619BB",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-09T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 133,
+        "id": "F2B01E20-20F0-4132-93E0-25BACDB02508",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-09T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 99,
+        "id": "39F68058-87F6-440F-803A-53E1FA9F39B6",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-03-07T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 107,
+        "id": "2E84F900-F631-4F93-BDEF-B763F5565B01",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-07T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 132,
+        "id": "DDCC2568-0869-4D49-A626-B0AA06F8682D",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-07T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 99,
+        "id": "38EBD943-1AEF-438C-B9B3-82B07B91BF71",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-03-05T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 106,
+        "id": "296E01F3-987C-4388-A675-7E193445BDEE",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-05T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 137,
+        "id": "3251D6FC-7E36-4806-80E4-916D0146E275",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-05T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 101,
+        "id": "D05C3143-CE77-420B-95C6-9EE8EF439029",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-03-03T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 103,
+        "id": "962885DD-5569-4066-B7A6-F41D7BA5B125",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-03T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 138,
+        "id": "D1EA5F73-FE38-452D-9E2C-BDDD70A96390",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-03T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 101,
+        "id": "A78BEB39-1984-4F87-9B37-5EC6085EE7EF",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-01T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 104,
+        "id": "AD88044E-0BF4-4C69-8EBD-B575C9B1580C",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-01T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 137,
+        "id": "ECC0E4BD-FCF1-429F-9B0F-CBA4AE52A06E",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-01T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 100,
+        "id": "8D8AF3F7-D8D2-42F4-95CE-EFA2E3910C22",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-02-27T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "E2456233-0EED-4AAB-A98F-3B41B4A3BD7F",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-27T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 139,
+        "id": "04E1A2A5-1E5C-4B26-9A91-F5FE54BE3F5C",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-27T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 100,
+        "id": "9DAE9CB2-5332-4ABF-BA4A-D576786ABC5A",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-25T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "1496EF3C-0CB6-4A63-8991-5CB0AB591826",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-25T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 141,
+        "id": "AFF695FE-14EF-466B-AB42-7E8A35A3654E",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-25T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 99,
+        "id": "E0B4DB6C-F436-46CC-B531-6158DE92DF45",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-02-23T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "375E550F-D4BC-4511-BC6B-F86310B19C70",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-23T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 142,
+        "id": "456CC8C4-4E7C-4EEE-AFD8-87443502EEC3",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-23T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 102,
+        "id": "B60D9B24-32D7-48A0-9B44-65424FFA5BD4",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-02-21T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "37C1A562-A69E-4C44-AAF1-A9BC66B6BAD6",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-21T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 143,
+        "id": "B16B1369-799D-4D83-B561-DC9A990EBC50",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-21T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 103,
+        "id": "CC543FF4-2195-4ECB-83F9-9B24ABE0CABD",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-02-19T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "8DC17BA4-8678-4505-8581-FCDFF2107693",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-19T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 138,
+        "id": "F11F9F7E-5860-4D91-AC0B-681850E4ED08",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-19T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 103,
+        "id": "A0C45D93-39AB-4BBD-86F9-6E3A27AF1973",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-17T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "E2698049-2A78-46E7-B276-027353BD9EFB",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-17T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 143,
+        "id": "9B5361FF-3B98-47ED-859E-BA7C6BB48C4F",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-17T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 102,
+        "id": "A8F51AEE-AABB-4C86-B31C-F4484B65A93A",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-02-15T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 106,
+        "id": "F1743ABA-0986-4D9C-ABDC-8468E48283F5",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-15T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 144,
+        "id": "9B40C4AE-8938-479F-87FA-E50B185CDA2D",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-15T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 104,
+        "id": "F0DCAC5C-1BF8-4452-ADE8-990D1109E8C3",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-13T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "F79392CE-ADA1-4B57-863B-37B584D57B97",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-13T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 142,
+        "id": "F55743C5-C236-4BE1-8D81-C995E9EF899F",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-13T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "FDA80E64-093D-454F-B957-11D12FD0300D",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-02-11T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 108,
+        "id": "DC66374B-14B6-4447-96A0-910BEB7C9341",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-11T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 148,
+        "id": "53DB5B81-4D1A-4EFC-AC96-A61FA55C5A5B",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-11T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 103,
+        "id": "75796CFE-6C7F-4C79-AA23-73A00A9674E6",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-02-09T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "F274ED37-57EA-44DF-A7AB-EAEB840469FC",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-09T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 146,
+        "id": "9D8E8638-6A5B-4CF7-8B91-03A926B9047A",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-09T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 108,
+        "id": "4781E7DE-BBD2-4B90-93B0-734E11994391",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-02-07T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 108,
+        "id": "3A2D8916-A1E2-4548-8631-8D71EB7BBA60",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-07T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 142,
+        "id": "9B28B5AF-81B6-4C1F-B2A7-CA6E10AAC0AA",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-07T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 107,
+        "id": "90EAD21A-87AC-4E60-86E9-E6DB4609691E",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-05T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 111,
+        "id": "1C4555EF-B029-4C53-8FC5-72233DF861E9",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-05T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 145,
+        "id": "5CC9EBCE-314A-439E-888C-A1B0DC72D104",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-05T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 107,
+        "id": "37F45E85-7448-49CA-B3CB-5F4132995F90",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-02-03T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "D502C494-4982-4336-B787-2527042AB9C9",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-03T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 144,
+        "id": "2811DE94-DAC0-47A9-9945-05ABDC888011",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-03T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 107,
+        "id": "550A1F4B-F0B9-42EC-9734-A05B76913C03",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-01T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 114,
+        "id": "6A6AFAF1-F82A-4A57-8F07-181A70F991C3",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-01T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 149,
+        "id": "67DFAEE4-5AA6-49E8-A780-3B80FC359D78",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-01T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "B54FE121-14A2-43EF-8204-191B6ED4654F",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-01-30T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 114,
+        "id": "950E9F6F-8367-4329-B161-84C76D107B32",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-30T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 150,
+        "id": "7295B856-61F3-44D8-BD48-542CAA2EE4A8",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-30T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "77811379-60FD-4C0C-9FFF-3724D5DD2875",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-01-28T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 111,
+        "id": "A0C03B43-E99C-4FB5-9450-23F0AAEB223A",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-28T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 147,
+        "id": "40EF08D1-0922-416D-8CEE-69B80AF7BDC0",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-28T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 106,
+        "id": "24E429E3-B609-4DA8-B9BC-B8512321EF0A",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-01-26T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "E2F9D215-F641-44E6-BC79-339B8C6B26B7",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-26T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 151,
+        "id": "BDAB000E-4FB7-4CC5-A563-D3120935EA25",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-26T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "AC6B15E3-10B5-41A5-8FD5-3420667A509C",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-01-24T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 115,
+        "id": "7B0DBF98-E1BA-412F-8AA8-36D31DBC4028",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-24T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 152,
+        "id": "E3A91FC9-8E43-4BCD-AC70-6598852C6AB1",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-24T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "BC67D26C-ED0E-4E1A-8433-6FBAC65142B5",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-01-22T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "8B3CABC2-3A15-42B4-91CD-92372A1002AC",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-22T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 152,
+        "id": "7665EA38-DB4B-409A-8BE2-C740A48EDA22",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-22T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 112,
+        "id": "73679736-89F7-4904-BAEF-396E884AE94F",
+        "mealContext": "oatmeal breakfast",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-01-20T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 113,
+        "id": "365CA665-6E29-4BFA-883F-70C71A958F84",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-20T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 149,
+        "id": "0215852F-D7C8-46FA-86F3-613642582DB9",
+        "mealContext": "chicken quinoa bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-20T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "5B2A7DCF-0A3F-4F0E-BB30-E3DFE68D8F23",
+        "mealContext": "Morning baseline",
+        "notes": "Fasting morning check",
+        "readingType": "fasting",
+        "timestamp": "2026-01-18T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 111,
+        "id": "E7CEC638-6862-43FE-B545-0C1D911B4693",
+        "mealContext": "salmon dinner",
+        "notes": "Before lunch",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-18T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 156,
+        "id": "6CE8581D-8F37-4AE8-A2DA-14B0EF4D7948",
+        "mealContext": "salmon dinner",
+        "notes": "Post-meal reading",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-18T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 113,
+        "id": "BF4CCBD0-390F-49A8-B5A6-F72F4629B7C1",
+        "mealContext": "Before coffee",
+        "notes": "Before eating anything",
+        "readingType": "fasting",
+        "timestamp": "2026-01-16T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 116,
+        "id": "C5108079-4577-453E-8441-656C72C77CAE",
+        "mealContext": "rice and beans",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-16T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 154,
+        "id": "1696F6E4-5340-4025-8378-69F8C6EFB315",
+        "mealContext": "rice and beans",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-16T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 111,
+        "id": "452F3709-EB9A-4162-87E0-83F241B4C315",
+        "mealContext": "Morning routine",
+        "notes": "Morning reading",
+        "readingType": "fasting",
+        "timestamp": "2026-01-14T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 112,
+        "id": "4AD53952-180D-4B52-866A-2B2602A3B1B5",
+        "mealContext": "veggie stir-fry",
+        "notes": "About to eat",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-14T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 152,
+        "id": "6236E262-4E31-45C1-943C-0AA85B90088E",
+        "mealContext": "veggie stir-fry",
+        "notes": "Checked after eating",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-14T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 114,
+        "id": "9020ECC6-089F-431D-9EB3-28ED0F790332",
+        "mealContext": "Pre-breakfast check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-01-12T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 116,
+        "id": "BFFF710D-DB3A-4185-9294-A2CB6FE793A2",
+        "mealContext": "lentil soup",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-12T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 152,
+        "id": "B2C904FD-3B86-4472-8907-8D715541C136",
+        "mealContext": "lentil soup",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-12T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "755A7298-A441-46CF-9121-D8B3143E7148",
+        "mealContext": "Woke up reading",
+        "notes": "Steady energy today",
+        "readingType": "fasting",
+        "timestamp": "2026-01-10T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 115,
+        "id": "621D0637-7EF9-4C58-84D5-1A968E54325C",
+        "mealContext": "protein smoothie",
+        "notes": "Felt a crash",
+        "readingType": "before_meal",
+        "timestamp": "2026-01-10T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 152,
+        "id": "29BD0A35-E17F-4B3B-AF8B-4B09DEEBFDDD",
+        "mealContext": "protein smoothie",
+        "notes": "Steady energy today",
+        "readingType": "after_meal",
+        "timestamp": "2026-01-10T14:00:00.000Z"
+      }
+    ],
+    "cycleEntries": [
+      {
+        "createdAt": "2025-09-24T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-24T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "D778F41B-B20B-4531-B708-0E78DFFA3E6A",
+        "isPeriodDay": true,
+        "notes": "Period started"
+      },
+      {
+        "createdAt": "2025-09-25T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-25T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "B41C520E-0416-4E3F-824D-5EE5DF6D9166",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-09-26T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-26T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "891A42E2-1903-4EE0-A96D-D962FF520157",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-09-27T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-27T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "C9A42D32-7CF9-4F4B-AE81-FFC14EC85637",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-09-28T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-28T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "D6E8924B-4748-4CCF-A5B0-B879A93D38E5",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-09-29T12:00:00.000Z",
+        "cycleID": "A68A4366-709B-4041-A987-280FC27C5609",
+        "cyclePhase": "menstrual",
+        "date": "2025-09-29T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "2ACBB51C-34FE-4AD7-800D-1C040187B96F",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-11-03T12:00:00.000Z",
+        "cycleID": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "cyclePhase": "menstrual",
+        "date": "2025-11-03T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "104907FD-D3E2-48EB-8FD9-A6CCB16F46D1",
+        "isPeriodDay": true,
+        "notes": "Period started"
+      },
+      {
+        "createdAt": "2025-11-04T12:00:00.000Z",
+        "cycleID": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "cyclePhase": "menstrual",
+        "date": "2025-11-04T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "F3B5E9A9-DCD7-4C03-B892-75C52BBED5D6",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-11-05T12:00:00.000Z",
+        "cycleID": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "cyclePhase": "menstrual",
+        "date": "2025-11-05T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "5E846736-7185-47A4-8369-89D6CF828AAE",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-11-06T12:00:00.000Z",
+        "cycleID": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "cyclePhase": "menstrual",
+        "date": "2025-11-06T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "933C263B-A26A-4F8F-B62F-01EC15B681F9",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-11-07T12:00:00.000Z",
+        "cycleID": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "cyclePhase": "menstrual",
+        "date": "2025-11-07T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "DE7F14E8-F21A-4723-AE96-E0B47467C7FB",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-11T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-11T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "B40EB1D1-8BA5-469A-8133-427ED670F550",
+        "isPeriodDay": true,
+        "notes": "Period started"
+      },
+      {
+        "createdAt": "2025-12-12T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-12T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "D1C4E77A-E4A4-48CE-B6AF-AD1B56A8D0F0",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-13T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-13T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "AF73AE6B-FA2E-4EFF-886A-C5FF6AF9412C",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-14T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-14T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "E461B03E-9D9C-4EEF-B9B1-D79329DEC816",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-15T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-15T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "2077D265-754C-4C7C-B6CC-647FD93A7A92",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-16T12:00:00.000Z",
+        "cycleID": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-16T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "44DE90D5-3205-4938-B003-87809C62B57E",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-24T12:00:00.000Z",
+        "cycleID": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-24T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "124F96FD-28F1-4A27-8651-874D1194FDDE",
+        "isPeriodDay": true,
+        "notes": "Period started"
+      },
+      {
+        "createdAt": "2026-01-25T12:00:00.000Z",
+        "cycleID": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-25T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "BACB3107-C12D-4D67-9A64-6472F54DD55F",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-26T12:00:00.000Z",
+        "cycleID": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-26T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "F0A32CCF-945B-4C6C-99A5-6552F420D899",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-27T12:00:00.000Z",
+        "cycleID": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-27T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "53D2BA01-DFF6-45FE-9C0A-8413FECF48E4",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-28T12:00:00.000Z",
+        "cycleID": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-28T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "DEC8F43F-85CE-4DF9-9213-D3899B71F2F9",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-05T12:00:00.000Z",
+        "cycleID": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-05T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "42190971-962F-49FC-8645-D0846EBF8A48",
+        "isPeriodDay": true,
+        "notes": "Period started"
+      },
+      {
+        "createdAt": "2026-03-06T12:00:00.000Z",
+        "cycleID": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-06T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "98950154-1609-44DF-8229-C42314FC8C92",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-07T12:00:00.000Z",
+        "cycleID": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-07T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "A4D70EB4-600B-46F0-9C3C-13150CEAFECA",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-08T12:00:00.000Z",
+        "cycleID": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-08T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "B62D0589-73BC-4D0A-8EE6-3B52608AC101",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-09T12:00:00.000Z",
+        "cycleID": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-09T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "AE45A984-99D7-4D02-A649-3A06AEC5B415",
+        "isPeriodDay": true
+      }
+    ],
+    "cycles": [
+      {
+        "endDate": "2025-11-02T12:00:00.000Z",
+        "id": "A68A4366-709B-4041-A987-280FC27C5609",
+        "isPredicted": false,
+        "lengthDays": 40,
+        "ovulationStatus": "unknown",
+        "startDate": "2025-09-24T12:00:00.000Z"
+      },
+      {
+        "endDate": "2025-12-10T12:00:00.000Z",
+        "id": "D927D251-C0FE-40DC-B5C5-3A8F4ADE040F",
+        "isPredicted": false,
+        "lengthDays": 38,
+        "ovulationStatus": "unknown",
+        "startDate": "2025-11-03T12:00:00.000Z"
+      },
+      {
+        "endDate": "2026-01-23T12:00:00.000Z",
+        "id": "6D914B3D-9484-4A84-B438-0BB9723CA412",
+        "isPredicted": false,
+        "lengthDays": 44,
+        "ovulationStatus": "unknown",
+        "startDate": "2025-12-11T12:00:00.000Z"
+      },
+      {
+        "endDate": "2026-03-04T12:00:00.000Z",
+        "id": "217BCBC0-1643-4050-88FE-8E2766C5025B",
+        "isPredicted": false,
+        "lengthDays": 40,
+        "ovulationStatus": "unknown",
+        "startDate": "2026-01-24T12:00:00.000Z"
+      },
+      {
+        "id": "A210AA14-CF35-43E1-AB71-8DECBD29FE57",
+        "isPredicted": false,
+        "ovulationStatus": "unknown",
+        "startDate": "2026-03-05T12:00:00.000Z"
+      }
+    ],
+    "dailyLogs": [
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-21T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "961B5EF2-8C2C-499C-BA2B-3D905B28C375",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 6.1,
+        "stressLevel": 3,
+        "waterOz": 96,
+        "weight": 166.6
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-20T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "02EF7B44-BEC0-41F0-AA08-E66E95E10CB1",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 7.4,
+        "stressLevel": 2,
+        "waterOz": 60,
+        "weight": 166.8
+      },
+      {
+        "activeMinutes": 48,
+        "date": "2026-03-19T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "35263C62-10B2-4A9D-8221-5C41F8363D83",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 7.7,
+        "stressLevel": 3,
+        "waterOz": 71,
+        "weight": 167.6
+      },
+      {
+        "activeMinutes": 34,
+        "date": "2026-03-18T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "7A9E6E5E-B940-4406-92A4-869C4158E548",
+        "restingHeartRateBPM": 66,
+        "sleepHours": 7.4,
+        "stressLevel": 4,
+        "waterOz": 67,
+        "weight": 167.6
+      },
+      {
+        "activeMinutes": 41,
+        "date": "2026-03-17T12:00:00.000Z",
+        "energyLevel": 5,
+        "id": "767A2F4E-19AA-4BF7-849C-6A0E524E54EF",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 7.6,
+        "stressLevel": 4,
+        "waterOz": 80,
+        "weight": 167.3
+      },
+      {
+        "activeMinutes": 39,
+        "date": "2026-03-16T12:00:00.000Z",
+        "energyLevel": 5,
+        "id": "3F2399F1-D047-4B80-80A5-12E509A48FD2",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 7.8,
+        "stressLevel": 3,
+        "waterOz": 88,
+        "weight": 167.9
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-15T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "E27E1A85-CBD6-4A9B-A210-C3E5184DCA47",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.5,
+        "stressLevel": 3,
+        "waterOz": 77,
+        "weight": 167.9
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-03-14T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "11D580B3-C387-4796-ABE3-90EDBB7F0AC5",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.0,
+        "stressLevel": 3,
+        "waterOz": 64,
+        "weight": 167.9
+      },
+      {
+        "activeMinutes": 30,
+        "date": "2026-03-13T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "C1145162-E545-4659-B8FC-7797264B078C",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 6.5,
+        "stressLevel": 4,
+        "waterOz": 68,
+        "weight": 167.9
+      },
+      {
+        "activeMinutes": 24,
+        "date": "2026-03-12T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "8BA00BD9-9D02-4DD9-BE11-5F8FC6863E97",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 6.8,
+        "stressLevel": 2,
+        "waterOz": 86,
+        "weight": 167.4
+      },
+      {
+        "activeMinutes": 21,
+        "date": "2026-03-11T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "DCD6ACF1-13DE-467F-A615-4AC59DD96136",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 6.9,
+        "stressLevel": 3,
+        "waterOz": 61,
+        "weight": 167.7
+      },
+      {
+        "activeMinutes": 32,
+        "date": "2026-03-10T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "33A50588-EA23-40E0-A1BB-05FDD7713343",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.5,
+        "stressLevel": 2,
+        "waterOz": 79,
+        "weight": 168.3
+      },
+      {
+        "activeMinutes": 50,
+        "date": "2026-03-09T12:00:00.000Z",
+        "energyLevel": 5,
+        "id": "D8F3E34D-34BC-488A-8570-60258985D490",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 7.7,
+        "stressLevel": 4,
+        "waterOz": 94,
+        "weight": 168.3
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-08T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "17A41522-A6AA-4C1B-AF2A-F750D70DD246",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.8,
+        "stressLevel": 3,
+        "waterOz": 91,
+        "weight": 168.4
+      },
+      {
+        "activeMinutes": 41,
+        "date": "2026-03-07T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "3153B828-3A11-45F7-971D-EC30F3AA2688",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 6.7,
+        "stressLevel": 4,
+        "waterOz": 89,
+        "weight": 167.7
+      },
+      {
+        "activeMinutes": 37,
+        "date": "2026-03-06T12:00:00.000Z",
+        "energyLevel": 5,
+        "id": "210603F1-505D-43D2-A843-6100AEEAAE08",
+        "restingHeartRateBPM": 66,
+        "sleepHours": 8.0,
+        "stressLevel": 3,
+        "waterOz": 96,
+        "weight": 168.7
+      },
+      {
+        "activeMinutes": 33,
+        "date": "2026-03-05T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "A7372339-840C-47DB-9D4A-0A6235C5299E",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 6.2,
+        "stressLevel": 3,
+        "waterOz": 63,
+        "weight": 168.5
+      },
+      {
+        "activeMinutes": 34,
+        "date": "2026-03-04T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "74466D0B-9F9D-4B02-B412-29F73B66B207",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 6.7,
+        "stressLevel": 3,
+        "waterOz": 77,
+        "weight": 168.2
+      },
+      {
+        "activeMinutes": 28,
+        "date": "2026-03-03T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "0EB838A5-2169-4024-AA87-E0AD88B5E01C",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 7.7,
+        "stressLevel": 3,
+        "waterOz": 94,
+        "weight": 168.8
+      },
+      {
+        "activeMinutes": 27,
+        "date": "2026-03-02T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "1B83D554-720E-45B5-B2C7-595EAAE94A29",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 7.9,
+        "stressLevel": 4,
+        "waterOz": 61,
+        "weight": 168.2
+      },
+      {
+        "activeMinutes": 20,
+        "date": "2026-03-01T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "310B4488-41E9-41CB-BC22-CF8523F976D9",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 6.4,
+        "stressLevel": 2,
+        "waterOz": 90,
+        "weight": 169.1
+      },
+      {
+        "activeMinutes": 26,
+        "date": "2026-02-28T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "D355BB5D-E704-486C-BE5A-5ECCC427C778",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.1,
+        "stressLevel": 4,
+        "waterOz": 83,
+        "weight": 168.9
+      },
+      {
+        "activeMinutes": 43,
+        "date": "2026-02-27T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "890E9F57-00EE-4406-8815-68A21C68ACE9",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 7.2,
+        "stressLevel": 2,
+        "waterOz": 66,
+        "weight": 168.5
+      },
+      {
+        "activeMinutes": 38,
+        "date": "2026-02-26T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "E155B327-35FF-444F-AEC6-FC2CA28A3A6B",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 7.9,
+        "stressLevel": 3,
+        "waterOz": 72,
+        "weight": 169.0
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-02-25T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "EFFF8D99-E044-489C-966D-E45BEBBF16E8",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.4,
+        "stressLevel": 2,
+        "waterOz": 79,
+        "weight": 168.6
+      },
+      {
+        "activeMinutes": 23,
+        "date": "2026-02-24T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "DCC2C189-5531-484D-A642-B19F84F28D8E",
+        "restingHeartRateBPM": 66,
+        "sleepHours": 7.2,
+        "stressLevel": 3,
+        "waterOz": 87,
+        "weight": 169.5
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-02-23T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "5BE1E3B3-46DF-4A87-B69D-2964FA25AD9E",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 6.1,
+        "stressLevel": 2,
+        "waterOz": 91,
+        "weight": 169.4
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-02-22T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "79B8BE6A-D5EF-4961-9C1E-66C5C90DA2ED",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.9,
+        "stressLevel": 4,
+        "waterOz": 87,
+        "weight": 168.9
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-02-21T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "592CCB56-D97D-44ED-A0C5-70698BF95E4D",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 7.0,
+        "stressLevel": 4,
+        "waterOz": 90,
+        "weight": 169.0
+      },
+      {
+        "activeMinutes": 38,
+        "date": "2026-02-20T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "29B69E4C-AE96-47D3-9DFE-BB401D364FB6",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 7.7,
+        "stressLevel": 3,
+        "waterOz": 65,
+        "weight": 169.4
+      },
+      {
+        "activeMinutes": 44,
+        "date": "2026-02-19T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "2DF4460A-849C-4964-B73E-EB4E1BD6A7C1",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 6.9,
+        "stressLevel": 4,
+        "waterOz": 84,
+        "weight": 169.3
+      },
+      {
+        "activeMinutes": 30,
+        "date": "2026-02-18T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "617707BA-FB57-4AE6-A835-9B4518E7348A",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.0,
+        "stressLevel": 3,
+        "waterOz": 82,
+        "weight": 169.5
+      },
+      {
+        "activeMinutes": 48,
+        "date": "2026-02-17T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "F81F093B-743E-4976-AFAF-6850735C51F7",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.7,
+        "stressLevel": 4,
+        "waterOz": 93,
+        "weight": 170.0
+      },
+      {
+        "activeMinutes": 43,
+        "date": "2026-02-16T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "D7C83D84-F1C5-400B-8392-3ADBFD205AAC",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 6.2,
+        "stressLevel": 3,
+        "waterOz": 75,
+        "weight": 170.2
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-02-15T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "6D8661D0-A94E-4251-BD8C-794C13AB5484",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.3,
+        "stressLevel": 2,
+        "waterOz": 78,
+        "weight": 170.1
+      },
+      {
+        "activeMinutes": 29,
+        "date": "2026-02-14T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "03EFD6A2-8D11-42C3-AA0E-155A1EC532CD",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 7.4,
+        "stressLevel": 3,
+        "waterOz": 93,
+        "weight": 169.7
+      },
+      {
+        "activeMinutes": 37,
+        "date": "2026-02-13T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "A6F929B1-F767-4808-BAFC-DE4F6CF0A023",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 8.0,
+        "stressLevel": 3,
+        "waterOz": 77,
+        "weight": 169.9
+      },
+      {
+        "activeMinutes": 43,
+        "date": "2026-02-12T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "4FEBCA8E-3AB0-4A76-BF95-91082066282B",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 6.5,
+        "stressLevel": 3,
+        "waterOz": 94,
+        "weight": 169.9
+      },
+      {
+        "activeMinutes": 26,
+        "date": "2026-02-11T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "4FB47D53-F14D-4CAE-8126-1B0BDD4EA1BD",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.4,
+        "stressLevel": 4,
+        "waterOz": 77,
+        "weight": 170.7
+      },
+      {
+        "activeMinutes": 36,
+        "date": "2026-02-10T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "0B42BFC2-9913-4672-8464-EFD08E36F5D9",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 8.0,
+        "stressLevel": 2,
+        "waterOz": 78,
+        "weight": 170.5
+      },
+      {
+        "activeMinutes": 20,
+        "date": "2026-02-09T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "45EDF2C4-443A-48AA-8B28-58B62F86BC8A",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 6.4,
+        "stressLevel": 2,
+        "waterOz": 62,
+        "weight": 170.1
+      },
+      {
+        "activeMinutes": 42,
+        "date": "2026-02-08T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "6DA51B73-3B80-4BD3-B559-06E64B92ACAB",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.1,
+        "stressLevel": 4,
+        "waterOz": 66,
+        "weight": 170.9
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-02-07T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "F16BDEFB-76F5-4B87-B70A-82437F6A3597",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.1,
+        "stressLevel": 3,
+        "waterOz": 71,
+        "weight": 170.9
+      },
+      {
+        "activeMinutes": 47,
+        "date": "2026-02-06T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "B700B0EF-FA7B-4CE8-B131-0EBF519CDD4A",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 6.5,
+        "stressLevel": 2,
+        "waterOz": 85,
+        "weight": 171.1
+      },
+      {
+        "activeMinutes": 41,
+        "date": "2026-02-05T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "BFE7F161-6267-478C-8C3E-2E309AD32258",
+        "restingHeartRateBPM": 66,
+        "sleepHours": 7.2,
+        "stressLevel": 2,
+        "waterOz": 96,
+        "weight": 170.7
+      },
+      {
+        "activeMinutes": 27,
+        "date": "2026-02-04T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "6EFA6A71-2EEC-4245-99CD-8F5BDBC94F99",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 6.2,
+        "stressLevel": 4,
+        "waterOz": 74,
+        "weight": 171.3
+      },
+      {
+        "activeMinutes": 49,
+        "date": "2026-02-03T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "F8B92CFC-9C43-4CC3-B792-884EC0FC3CBF",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 6.8,
+        "stressLevel": 3,
+        "waterOz": 79,
+        "weight": 171.2
+      },
+      {
+        "activeMinutes": 50,
+        "date": "2026-02-02T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "358BCB96-98CC-4289-999C-D6BD2FC5F8BF",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 6.1,
+        "stressLevel": 2,
+        "waterOz": 76,
+        "weight": 171.1
+      },
+      {
+        "activeMinutes": 25,
+        "date": "2026-02-01T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "F81EDFF7-1407-4DF0-9575-DC3FEFBE8A50",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 6.3,
+        "stressLevel": 2,
+        "waterOz": 60,
+        "weight": 171.2
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-01-31T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "693920DC-9E00-4F0F-856D-623B2C878EF2",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 7.4,
+        "stressLevel": 2,
+        "waterOz": 78,
+        "weight": 171.1
+      },
+      {
+        "activeMinutes": 34,
+        "date": "2026-01-30T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "1D638C7F-DB63-40EA-B3F0-FDCD56F4931A",
+        "restingHeartRateBPM": 67,
+        "sleepHours": 7.4,
+        "stressLevel": 4,
+        "waterOz": 76,
+        "weight": 171.4
+      },
+      {
+        "activeMinutes": 41,
+        "date": "2026-01-29T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "8B094223-2D29-44FB-A2C2-44DE61E88B9E",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.3,
+        "stressLevel": 3,
+        "waterOz": 94,
+        "weight": 171.6
+      },
+      {
+        "activeMinutes": 28,
+        "date": "2026-01-28T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "ED955E8F-6499-41B1-8EDE-E37E1881175B",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 6.3,
+        "stressLevel": 2,
+        "waterOz": 70,
+        "weight": 171.1
+      },
+      {
+        "activeMinutes": 46,
+        "date": "2026-01-27T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "3470A074-F02E-4B58-B1E1-952C26CF30DD",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 7.2,
+        "stressLevel": 3,
+        "waterOz": 89,
+        "weight": 171.8
+      },
+      {
+        "activeMinutes": 50,
+        "date": "2026-01-26T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "FE64AA2C-8827-442B-9F81-09DF109282AE",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 7.4,
+        "stressLevel": 4,
+        "waterOz": 88,
+        "weight": 171.8
+      },
+      {
+        "activeMinutes": 33,
+        "date": "2026-01-25T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "22584286-9236-4690-9252-DFEC2BDA1FFD",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 6.1,
+        "stressLevel": 4,
+        "waterOz": 61,
+        "weight": 171.2
+      },
+      {
+        "activeMinutes": 46,
+        "date": "2026-01-24T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "B26FD9AB-EE43-4F76-83CB-69E6AD8EF393",
+        "restingHeartRateBPM": 66,
+        "sleepHours": 7.9,
+        "stressLevel": 4,
+        "waterOz": 96,
+        "weight": 171.3
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-01-23T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "05862B40-AD6B-4F0A-B5F4-322D7E2F5F11",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 7.5,
+        "stressLevel": 4,
+        "waterOz": 77,
+        "weight": 171.4
+      },
+      {
+        "activeMinutes": 40,
+        "date": "2026-01-22T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "8E232D0D-CC32-44BF-B0C4-4B0B1D1D2E98",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 7.2,
+        "stressLevel": 2,
+        "waterOz": 82,
+        "weight": 171.6
+      },
+      {
+        "activeMinutes": 23,
+        "date": "2026-01-21T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "F318760B-8E51-4D55-83D3-431608B129FF",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 6.6,
+        "stressLevel": 3,
+        "waterOz": 91,
+        "weight": 171.9
+      }
+    ],
+    "hairPhotos": [
+      {
+        "analysisResult": "Estimated density score: 55/100 (Scalp Part, heuristic).",
+        "date": "2025-12-12T12:00:00.000Z",
+        "id": "49DF96AF-5048-42B9-B37F-65C9EDA092B8",
+        "notes": "Consistent lighting and angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "scalp_part"
+      },
+      {
+        "analysisResult": "Estimated density score: 57/100 (Hairline, Core ML).",
+        "date": "2026-01-01T12:00:00.000Z",
+        "id": "AF46DDD7-C32F-4D42-9C55-3F96ECAF5C7F",
+        "notes": "Consistent lighting and angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "hairline"
+      },
+      {
+        "analysisResult": "Estimated density score: 59/100 (Chin, heuristic).",
+        "date": "2026-01-21T12:00:00.000Z",
+        "id": "77514AF8-763C-4B09-8865-08AC17CE35A5",
+        "notes": "Consistent lighting and angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "face_chin"
+      },
+      {
+        "analysisResult": "Estimated density score: 61/100 (Scalp Part, Core ML).",
+        "date": "2026-02-10T12:00:00.000Z",
+        "id": "858F9C36-5E13-4C50-9A83-54A5F8D72F42",
+        "notes": "Consistent lighting and angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "scalp_part"
+      },
+      {
+        "analysisResult": "Estimated density score: 63/100 (Hairline, heuristic).",
+        "date": "2026-03-02T12:00:00.000Z",
+        "id": "EAC8FE36-DA1C-4826-A8D7-D91E93E0BF7D",
+        "notes": "Consistent lighting and angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "hairline"
+      }
+    ],
+    "insights": [
+      {
+        "actionable": true,
+        "confidence": 0.81,
+        "content": "Your average post-meal glucose was 155 mg/dL in January and is now 130 mg/dL, a 16% improvement over 3 months of consistent tracking (n=108, 81% confidence).",
+        "dataPointsUsed": 108,
+        "generatedDate": "2026-03-17T12:00:00.000Z",
+        "id": "312E6AD2-D911-4319-A5D7-A82BF5AADB77",
+        "insightType": "diet_impact",
+        "relatedSymptoms": [
+          "energy_crash",
+          "cravings"
+        ],
+        "title": "Post-meal glucose spikes have decreased 16% since you started logging"
+      },
+      {
+        "actionable": true,
+        "confidence": 0.78,
+        "content": "On days following Berberine intake, your fasting glucose averaged 98 mg/dL versus 107 mg/dL on days without (Δ 9 mg/dL, n=160, 78% confidence).",
+        "dataPointsUsed": 160,
+        "generatedDate": "2026-03-18T12:00:00.000Z",
+        "id": "4817F356-7D20-4F79-865B-09B9DF35DECD",
+        "insightType": "supplement_efficacy",
+        "title": "Berberine correlates with lower fasting glucose readings",
+        "relatedSymptoms": [
+
+        ]
+      },
+      {
+        "actionable": true,
+        "confidence": 0.72,
+        "content": "Across 4 completed cycles, your average length is 40.5 days (range 38-44). This is consistent with longer PCOS cycles but within a stable range (n=4, 72% confidence).",
+        "dataPointsUsed": 4,
+        "generatedDate": "2026-03-19T12:00:00.000Z",
+        "id": "A7D143B3-5B84-4A65-B044-81B1F1851F5C",
+        "insightType": "cycle_pattern",
+        "title": "Your cycles average 40 days with moderate variability",
+        "relatedSymptoms": [
+
+        ]
+      },
+      {
+        "actionable": true,
+        "confidence": 0.75,
+        "content": "You logged energy crashes 2.4x more frequently the day after medium/high GI meals compared to low-GI meal days (n=80, 75% confidence).",
+        "dataPointsUsed": 80,
+        "generatedDate": "2026-03-20T12:00:00.000Z",
+        "id": "C693AAD1-7F40-42AB-ADDC-43058BE81BD5",
+        "insightType": "symptom_correlation",
+        "relatedSymptoms": [
+          "energy_crash"
+        ],
+        "title": "Energy crashes tend to follow high-GI meals the next day"
+      },
+      {
+        "actionable": true,
+        "confidence": 0.68,
+        "content": "On days with 35+ active minutes, your average sleep was 7.4 hours versus 6.5 hours on less active days (Δ 0.9h, n=45, 68% confidence).",
+        "dataPointsUsed": 45,
+        "generatedDate": "2026-03-21T12:00:00.000Z",
+        "id": "2BE8EC37-E939-4279-9E0B-2DD91B44FCFD",
+        "insightType": "sleep_activity",
+        "title": "Active days above 35 minutes correlate with better sleep quality",
+        "relatedSymptoms": [
+
+        ]
+      }
+    ],
+    "meals": [
+      {
+        "carbsGrams": 12,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "5B850D21-D678-4C57-BEB2-66866A874D26",
+        "mealDescription": "Egg scramble with spinach and avocado",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-21T10:00:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 22,
+        "timestamp": "2026-03-21T08:00:00.000Z"
+      },
+      {
+        "carbsGrams": 28,
+        "fatGrams": 14,
+        "glycemicImpact": "low",
+        "id": "32365EF1-2F03-4682-845D-385B88389F96",
+        "mealDescription": "Protein smoothie with berries and almond butter",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 25,
+        "timestamp": "2026-03-21T08:30:00.000Z"
+      },
+      {
+        "carbsGrams": 42,
+        "fatGrams": 10,
+        "glycemicImpact": "medium",
+        "id": "93682633-B30D-4268-B922-1D8F51AB9F8A",
+        "mealDescription": "Steel cut oats with walnuts and cinnamon",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 12,
+        "timestamp": "2026-03-20T07:30:00.000Z"
+      },
+      {
+        "carbsGrams": 35,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "E68D8F81-EB4B-4788-A413-359113CC0143",
+        "mealDescription": "Grilled chicken quinoa bowl with roasted vegetables",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-20T14:30:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 32,
+        "timestamp": "2026-03-20T12:30:00.000Z"
+      },
+      {
+        "carbsGrams": 38,
+        "fatGrams": 8,
+        "glycemicImpact": "low",
+        "id": "3A3A3A4F-5987-4BF9-BF17-53D7540A531C",
+        "mealDescription": "Lentil soup with side salad",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-19T14:00:00.000Z",
+        "postMealSymptomNote": "A bit heavy",
+        "postMealSymptomSeverity": 3,
+        "proteinGrams": 18,
+        "timestamp": "2026-03-19T12:00:00.000Z"
+      },
+      {
+        "carbsGrams": 15,
+        "fatGrams": 10,
+        "glycemicImpact": "low",
+        "id": "28A7686B-C202-4A97-9E1E-01E688F47A60",
+        "mealDescription": "Turkey lettuce wraps",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-19T14:15:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-19T12:15:00.000Z"
+      },
+      {
+        "carbsGrams": 32,
+        "fatGrams": 16,
+        "glycemicImpact": "medium",
+        "id": "C12EE9EB-9CE6-4BA0-AF52-E1770A574B09",
+        "mealDescription": "Salmon with asparagus and sweet potato",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 30,
+        "timestamp": "2026-03-18T18:30:00.000Z"
+      },
+      {
+        "carbsGrams": 18,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "C9FE2BE6-01B8-42A7-A277-E3B6E7BE0624",
+        "mealDescription": "Tofu stir-fry with cauliflower rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-18T21:00:00.000Z",
+        "postMealSymptomNote": "Slight bloating after 30 min",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 20,
+        "timestamp": "2026-03-18T19:00:00.000Z"
+      },
+      {
+        "carbsGrams": 40,
+        "fatGrams": 14,
+        "glycemicImpact": "medium",
+        "id": "666E2C07-CF90-4BB6-B0A5-C774E5D0DE06",
+        "mealDescription": "Chicken tikka with brown rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-17T20:00:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-17T18:00:00.000Z"
+      },
+      {
+        "carbsGrams": 22,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "D5A07933-75F1-4CAC-8A56-68054C4FB6DD",
+        "mealDescription": "Apple slices with almond butter",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-17T17:00:00.000Z",
+        "postMealSymptomNote": "Good sustained energy",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 6,
+        "timestamp": "2026-03-17T15:00:00.000Z"
+      },
+      {
+        "carbsGrams": 8,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "754AAD94-E8FB-4839-93A3-B576B7F143A2",
+        "mealDescription": "Handful of mixed nuts",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-16T12:30:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 7,
+        "timestamp": "2026-03-16T10:30:00.000Z"
+      },
+      {
+        "carbsGrams": 12,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "A8195F6E-4391-4998-8851-8A4C1D0B7BFC",
+        "mealDescription": "Egg scramble with spinach and avocado",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-16T10:00:00.000Z",
+        "postMealSymptomNote": "Slight bloating",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 22,
+        "timestamp": "2026-03-16T08:00:00.000Z"
+      },
+      {
+        "carbsGrams": 28,
+        "fatGrams": 14,
+        "glycemicImpact": "low",
+        "id": "BCA09673-3AFD-45C1-90DF-4B52B119A2AE",
+        "mealDescription": "Protein smoothie with berries and almond butter",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-15T10:30:00.000Z",
+        "postMealSymptomNote": "No crash!",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 25,
+        "timestamp": "2026-03-15T08:30:00.000Z"
+      },
+      {
+        "carbsGrams": 42,
+        "fatGrams": 10,
+        "glycemicImpact": "medium",
+        "id": "363E48B1-98FB-4689-A2D1-D0CC2387626E",
+        "mealDescription": "Steel cut oats with walnuts and cinnamon",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-15T09:30:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 12,
+        "timestamp": "2026-03-15T07:30:00.000Z"
+      },
+      {
+        "carbsGrams": 35,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "17F065D5-5D03-457A-90C3-2482731A793C",
+        "mealDescription": "Grilled chicken quinoa bowl with roasted vegetables",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-14T14:30:00.000Z",
+        "postMealSymptomNote": "A bit heavy",
+        "postMealSymptomSeverity": 3,
+        "proteinGrams": 32,
+        "timestamp": "2026-03-14T12:30:00.000Z"
+      },
+      {
+        "carbsGrams": 38,
+        "fatGrams": 8,
+        "glycemicImpact": "low",
+        "id": "98E90E6D-A0C3-49BC-A616-F79A4D9A82DE",
+        "mealDescription": "Lentil soup with side salad",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-14T14:00:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 18,
+        "timestamp": "2026-03-14T12:00:00.000Z"
+      },
+      {
+        "carbsGrams": 15,
+        "fatGrams": 10,
+        "glycemicImpact": "low",
+        "id": "17DA57F8-7B15-4892-B6E8-738291DDFD02",
+        "mealDescription": "Turkey lettuce wraps",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-13T14:15:00.000Z",
+        "postMealSymptomNote": "No crash!",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-13T12:15:00.000Z"
+      },
+      {
+        "carbsGrams": 32,
+        "fatGrams": 16,
+        "glycemicImpact": "medium",
+        "id": "0882ABFC-D00B-4D46-B0AE-E68FC6509E56",
+        "mealDescription": "Salmon with asparagus and sweet potato",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-13T20:30:00.000Z",
+        "postMealSymptomNote": "Slight bloating after 30 min",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 30,
+        "timestamp": "2026-03-13T18:30:00.000Z"
+      },
+      {
+        "carbsGrams": 18,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "33AF6A54-77E7-4E80-AB7A-9ECCDC1AB641",
+        "mealDescription": "Tofu stir-fry with cauliflower rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-12T21:00:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 20,
+        "timestamp": "2026-03-12T19:00:00.000Z"
+      },
+      {
+        "carbsGrams": 40,
+        "fatGrams": 14,
+        "glycemicImpact": "medium",
+        "id": "908E60EF-7AE2-492E-9B6D-01C65015B9FF",
+        "mealDescription": "Chicken tikka with brown rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 28,
+        "timestamp": "2026-03-12T18:00:00.000Z"
+      },
+      {
+        "carbsGrams": 22,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "CAF5864B-4806-4E8F-8FE5-C331DCBF362D",
+        "mealDescription": "Apple slices with almond butter",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-11T17:00:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 6,
+        "timestamp": "2026-03-11T15:00:00.000Z"
+      },
+      {
+        "carbsGrams": 8,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "E49C05B7-85FE-4FAF-BF68-822EAAE55150",
+        "mealDescription": "Handful of mixed nuts",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-11T12:30:00.000Z",
+        "postMealSymptomNote": "Slight bloating",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 7,
+        "timestamp": "2026-03-11T10:30:00.000Z"
+      },
+      {
+        "carbsGrams": 12,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "7735ACD7-6D34-48E4-8D5E-3219640ACF6C",
+        "mealDescription": "Egg scramble with spinach and avocado",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 22,
+        "timestamp": "2026-03-10T08:00:00.000Z"
+      },
+      {
+        "carbsGrams": 28,
+        "fatGrams": 14,
+        "glycemicImpact": "low",
+        "id": "45E97B45-9D9F-4DFE-A132-6AF69E90CEB2",
+        "mealDescription": "Protein smoothie with berries and almond butter",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-10T10:30:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 25,
+        "timestamp": "2026-03-10T08:30:00.000Z"
+      },
+      {
+        "carbsGrams": 42,
+        "fatGrams": 10,
+        "glycemicImpact": "medium",
+        "id": "C269FECC-28F5-4564-8C14-C66D23B67516",
+        "mealDescription": "Steel cut oats with walnuts and cinnamon",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-09T09:30:00.000Z",
+        "postMealSymptomNote": "A bit heavy",
+        "postMealSymptomSeverity": 3,
+        "proteinGrams": 12,
+        "timestamp": "2026-03-09T07:30:00.000Z"
+      },
+      {
+        "carbsGrams": 35,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "94CE82FA-32DF-4024-A092-ACC9C37FF2C4",
+        "mealDescription": "Grilled chicken quinoa bowl with roasted vegetables",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-09T14:30:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 32,
+        "timestamp": "2026-03-09T12:30:00.000Z"
+      },
+      {
+        "carbsGrams": 38,
+        "fatGrams": 8,
+        "glycemicImpact": "low",
+        "id": "2D635607-C719-469B-8A62-F70CEB66AF4B",
+        "mealDescription": "Lentil soup with side salad",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-08T14:00:00.000Z",
+        "postMealSymptomNote": "No crash!",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 18,
+        "timestamp": "2026-03-08T12:00:00.000Z"
+      },
+      {
+        "carbsGrams": 15,
+        "fatGrams": 10,
+        "glycemicImpact": "low",
+        "id": "51B62D06-BB37-4EDA-8D21-28B9DC8FCB76",
+        "mealDescription": "Turkey lettuce wraps",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-08T14:15:00.000Z",
+        "postMealSymptomNote": "Slight bloating after 30 min",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-08T12:15:00.000Z"
+      },
+      {
+        "carbsGrams": 32,
+        "fatGrams": 16,
+        "glycemicImpact": "medium",
+        "id": "BF49AB33-EE36-43E8-B4C7-C4CB33B147AE",
+        "mealDescription": "Salmon with asparagus and sweet potato",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 30,
+        "timestamp": "2026-03-07T18:30:00.000Z"
+      },
+      {
+        "carbsGrams": 18,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "7C5AF76E-38C7-4444-91A8-8B76C75D21A8",
+        "mealDescription": "Tofu stir-fry with cauliflower rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 20,
+        "timestamp": "2026-03-07T19:00:00.000Z"
+      },
+      {
+        "carbsGrams": 40,
+        "fatGrams": 14,
+        "glycemicImpact": "medium",
+        "id": "B2F7FFA4-CE62-45FE-ADBA-BB1242B76C75",
+        "mealDescription": "Chicken tikka with brown rice",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-06T20:00:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-06T18:00:00.000Z"
+      },
+      {
+        "carbsGrams": 22,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "AE6281E2-AD5D-4201-A0A5-AFC8521B74DD",
+        "mealDescription": "Apple slices with almond butter",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-06T17:00:00.000Z",
+        "postMealSymptomNote": "Slight bloating",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 6,
+        "timestamp": "2026-03-06T15:00:00.000Z"
+      },
+      {
+        "carbsGrams": 8,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "B92ADA3B-8767-460E-80EC-58DB05B8437C",
+        "mealDescription": "Handful of mixed nuts",
+        "mealType": "snack",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-05T12:30:00.000Z",
+        "postMealSymptomNote": "No crash!",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 7,
+        "timestamp": "2026-03-05T10:30:00.000Z"
+      },
+      {
+        "carbsGrams": 12,
+        "fatGrams": 18,
+        "glycemicImpact": "low",
+        "id": "D933780E-B222-4591-ADFF-D842AF36642B",
+        "mealDescription": "Egg scramble with spinach and avocado",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-05T10:00:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 22,
+        "timestamp": "2026-03-05T08:00:00.000Z"
+      },
+      {
+        "carbsGrams": 28,
+        "fatGrams": 14,
+        "glycemicImpact": "low",
+        "id": "B883EC3A-37D1-405A-9D55-1339FCC6D429",
+        "mealDescription": "Protein smoothie with berries and almond butter",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-04T10:30:00.000Z",
+        "postMealSymptomNote": "A bit heavy",
+        "postMealSymptomSeverity": 3,
+        "proteinGrams": 25,
+        "timestamp": "2026-03-04T08:30:00.000Z"
+      },
+      {
+        "carbsGrams": 42,
+        "fatGrams": 10,
+        "glycemicImpact": "medium",
+        "id": "0AC34276-C0FC-4CCF-B53E-A75E4DCC56E5",
+        "mealDescription": "Steel cut oats with walnuts and cinnamon",
+        "mealType": "breakfast",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-04T09:30:00.000Z",
+        "postMealSymptomNote": "Steady energy for hours",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 12,
+        "timestamp": "2026-03-04T07:30:00.000Z"
+      },
+      {
+        "carbsGrams": 35,
+        "fatGrams": 12,
+        "glycemicImpact": "low",
+        "id": "06D854BF-A60D-4000-88E6-1DC6722887D2",
+        "mealDescription": "Grilled chicken quinoa bowl with roasted vegetables",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 32,
+        "timestamp": "2026-03-03T12:30:00.000Z"
+      },
+      {
+        "carbsGrams": 38,
+        "fatGrams": 8,
+        "glycemicImpact": "low",
+        "id": "7A5E1979-29A3-43C6-A051-C9626D3A828C",
+        "mealDescription": "Lentil soup with side salad",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-03T14:00:00.000Z",
+        "postMealSymptomNote": "Slight bloating after 30 min",
+        "postMealSymptomSeverity": 2,
+        "proteinGrams": 18,
+        "timestamp": "2026-03-03T12:00:00.000Z"
+      },
+      {
+        "carbsGrams": 15,
+        "fatGrams": 10,
+        "glycemicImpact": "low",
+        "id": "CAD4ACD9-2F08-4350-8E16-EAC27DB59EF2",
+        "mealDescription": "Turkey lettuce wraps",
+        "mealType": "lunch",
+        "notes": "Tracked for GI awareness",
+        "postMealFeedbackTimestamp": "2026-03-02T14:15:00.000Z",
+        "postMealSymptomNote": "Felt great after this one",
+        "postMealSymptomSeverity": 1,
+        "proteinGrams": 28,
+        "timestamp": "2026-03-02T12:15:00.000Z"
+      },
+      {
+        "carbsGrams": 32,
+        "fatGrams": 16,
+        "glycemicImpact": "medium",
+        "id": "4EE9E254-B2ED-4CB2-8B36-307D8ACC4CD7",
+        "mealDescription": "Salmon with asparagus and sweet potato",
+        "mealType": "dinner",
+        "notes": "Tracked for GI awareness",
+        "proteinGrams": 30,
+        "timestamp": "2026-03-02T18:30:00.000Z"
+      }
+    ],
+    "supplements": [
+      {
+        "brand": "Thorne",
+        "date": "2026-03-22T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "F6139AB8-5E28-4E00-918B-5B425A09D30D",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-22T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "F77E0AFD-DCEB-4D05-B731-B2ADA4CDBC22",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-22T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "56775413-5244-483C-A65F-F95C8B461FD6",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-03-22T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-21T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "53EAAED5-6149-4DEA-BA40-E48DB9D39C68",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-21T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "F9162664-1DCB-4C8B-A61B-53C2D68FEED8",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-21T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "7D3CB62B-E58B-4603-B0A6-6C5264BEDD69",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-21T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-20T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "9B5F1E2E-552D-4394-A12B-182BD8270188",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-03-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-20T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "237CCFD6-358C-46BB-83C9-2FE257A4F9C4",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-20T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "E2DF7742-67AF-4FAB-A183-D9D9AC8AB48B",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-20T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-19T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "C737FCBF-E0F8-4E22-AF2A-EFF09633EF0A",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-19T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "F80B20FE-0228-4BFC-B32D-96B997D6CA19",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-03-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-19T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "A4A8D1D7-8225-492F-BF06-D5902F280DD7",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-03-19T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-18T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "C6A6193C-697B-41D6-84F9-4F7DFC2EF24D",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-18T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "DBF4EF70-3F32-4809-BA89-A4D09041ECED",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-18T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "40F6A79C-4111-478E-A2D2-6026FC53AF4D",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-18T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-17T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D7C7F913-6E0D-4407-9FEF-E286F4542378",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-17T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "0CB3E1F4-5676-421E-AAFB-FD76642A2970",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-17T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "4B11AF74-69BB-45F0-BA09-AE939C3BED28",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-17T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-16T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "DA58CABA-D11C-4461-A3D5-60483BF4E259",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-03-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-16T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "5A1B8D0E-6409-4E1C-87C9-9898623841DA",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-16T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D3B1F735-FB5B-4BF7-8F17-4A0F7CC54E50",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-16T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-15T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "97EEE5BC-2553-4670-9AF4-9DDBBB3D7842",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-15T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7E97D60D-65DF-4E8D-B657-FD2B280FA93A",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-15T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "9710CDA3-B77E-45DE-A73C-AAAD067E4036",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-15T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-14T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D3DA2BAB-37E7-4DEA-A30C-296B91842449",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-14T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "1D6AE588-8BBE-4208-99BB-DCBE457C1061",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-14T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "E68C57EF-9A98-4F06-895D-B051E44C0AF4",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-14T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-13T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "7F18398D-1440-4EE5-948B-A3ED5B9BA59B",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-13T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "155BAC44-B54B-4A94-99AE-DF098CEA174C",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-13T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "138DB8E3-06DF-4A31-BEC4-4CA9D5671034",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-13T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-12T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "6DB1AA86-9EE7-441F-B455-06DB5A56FAB2",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-12T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7F4FC051-588B-4E62-83E8-909CF214A4A4",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-12T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "96B48777-57F9-457C-93E9-DD20BF879070",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-12T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-11T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "9D920B21-3EEB-45A4-A294-E982002AEA50",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-11T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "FB8E5911-9AAB-4378-AFE7-78D5A8BA1EB9",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-11T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "F6973EB0-CBCE-44AE-9C8B-283A24C587B0",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-11T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-10T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "C26EA63D-7F76-494A-BAB5-CEA8C7AFDEFD",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-03-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-10T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "A925FBA1-533E-4E39-A9BF-98785FF5F074",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-10T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "18391ADA-A4D1-44F8-BDEC-E9F72D4D38BA",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-10T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-09T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "7A405336-0F37-4CB1-9C35-B60C5CA60B54",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-09T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "47172396-B78F-422C-9C3B-54D3F8D513E2",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-09T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "DA75646F-D80B-4945-858D-2DA8A74FF4B5",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-09T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-08T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "A9A9954A-9845-4367-BE26-031278ACCB9F",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-08T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "155F525F-6B16-4170-960C-717409344EC9",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-08T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "EDA4CEA2-C70D-4890-8B66-B6358D538CA1",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-08T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-07T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D466E777-35D0-4108-99EB-2593771B6E37",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-03-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-07T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "F4FE3411-CDE9-46F1-A1D4-033DB1B297FD",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-07T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "2FA028E5-2187-4C2F-907D-185C8B4A990E",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-07T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-06T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "54022D91-108D-453F-8D1E-8F2739617979",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-06T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "926B94C2-7B86-48D9-B3F1-9A8EBA24BF94",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-06T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "BACE0839-713A-4774-96C7-59CDFED1B650",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-06T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-05T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "3DE5980E-48EF-470B-AAF3-D9BF0973C87F",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-05T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "224A1BEE-9CF8-4DB6-9C66-1D9030DE6759",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-05T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "8BEB97DD-5CEA-4BAA-B31B-4620B827453E",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-05T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-04T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "30183B84-D90E-42CE-9E60-EF53E4F9E985",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-04T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "DC28BC05-C143-4DFB-9A06-9D964E3817AA",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-04T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "08527BA8-2AA0-4122-B7B6-21B04ABBD18B",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-04T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-03T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D3959BCF-0B53-49BD-BAA6-453C6F1EC486",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-03T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "078C0A40-59BC-44E2-B0CE-AED1480F1DE8",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-03-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-03T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "811C8941-76C2-4D9A-8FD9-760D83D1AF26",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-03T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-02T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "29E26309-6451-4593-9CA1-B5A80D442F0A",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-02T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "118269B8-04A1-4591-8D1D-BA38D2303F24",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-03-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-02T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "FD48EB72-8D27-4084-8721-BBE64C61EFF2",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-02T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-03-01T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D0599B58-B9A3-47D9-BC23-3A343C726D16",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-03-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-03-01T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "63380937-51A4-4E61-9F1A-EE0317729D24",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-03-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-03-01T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "4C0C4E37-5ABB-420D-8DF7-2F2F5D857A6F",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-03-01T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-28T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "0874A2E3-E102-4D41-84FD-694327011A62",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-28T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "EE33AC42-8ACA-48E7-8537-BE459AADFB35",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-28T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "AC0D9E35-C043-4955-8737-26C31B0E63BA",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-28T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-27T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "52C8DC07-DE2F-4762-AF9B-CB668A65CFF4",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-27T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "FBA571D7-AC04-48E4-B74B-AA4605094A42",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-27T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "4DDCB11F-07A8-4147-A2EB-21660D9E2FAA",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-02-27T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-26T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "DA8F0897-22EC-49D1-8DD8-6F139DFEFAFE",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-26T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "D96C5830-D8F6-4DD5-AE03-E6052349CA7F",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-26T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "68C58FCE-1993-4A6F-9919-C6A6742BB510",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-26T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-25T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "F0BE1B70-D4E1-40D9-BE2D-C4D807B25319",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-25T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "36C1A582-20D3-4301-90CA-DCBE57DA14C6",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-02-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-25T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D5E78BEF-0174-40AA-93F5-C77FB6994451",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-25T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-24T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "4493F91D-FA1C-4CDB-983B-4A1E4DFB8836",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-24T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "34F13FAF-ABAD-41D2-9E3C-CE23272A0F19",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-24T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "93B211C7-5AF5-48DA-8524-428AF73055FA",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-24T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-23T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "A2512C9A-B510-4246-886B-3C86E3B9CB83",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-23T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "CCA4C606-F34E-4785-ABB8-75AD089CDFBC",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-23T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "BE9CB218-F043-4253-BB2B-7D652D26A29A",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-23T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-22T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "ABFC76B4-9F83-4A78-BCD6-7BF3C5641F0B",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-22T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "A0E07F9A-B128-4D48-8B33-B37A666629D0",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-22T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "88BFB53A-FE0D-473A-81F0-8A84805DE338",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-22T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-21T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "5EE4B592-E745-4EC4-B070-193ADDD9FFD6",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-21T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "30412446-64A9-4171-B0F9-A2519DF053AE",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-21T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "9B8EAAA6-EC85-4AFC-87F8-BDBAAB691E53",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-21T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-20T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "FF1B52F9-DDB5-451D-927E-4D00DA1F0BD9",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-20T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "EE2A9337-2769-4704-816C-054CFA8B7F71",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-20T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "AB312C29-E29D-4EA9-9DFB-AAEF027DA117",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-02-20T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-19T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "7A9BAF25-8883-4C06-ADA5-0C439282AFE4",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-19T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "81B6BF18-C788-469A-A903-F77E37AEAB9E",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-19T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "5B209243-2B10-4A65-B278-4256A7C5DB27",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-19T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-18T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "569D5F32-C2A6-4D23-A043-BD3F313BAA5E",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-18T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "57F2C131-F909-48C3-A9D5-934D654E246F",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-18T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "7475B2D6-070A-47BA-AC91-350850DCBE80",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-18T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-17T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "151C6FC5-6B3C-4A7E-8196-A87D96900B9A",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-17T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "276DD092-B14D-43F0-A1B9-B5742E6B56C6",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-17T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "9378C188-3BDE-42EC-8004-46F5F3BE5DB5",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-02-17T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-16T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "947DEFCF-EC48-460A-8021-F5C09AA5FD03",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-16T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "EF569912-C0A0-42A4-876B-DC3A7BB31CD2",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-16T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "6407C5D9-8D6F-4FE6-9BBF-CFEC9148BA9C",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-16T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-15T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "312FB30E-64BE-4C8E-A254-0ABA9F8C4BCF",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-15T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "956C05CB-001F-4DDF-B02D-10F57A05255B",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-15T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "C5B29580-1612-4F1A-9190-A53FB9BF93A7",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-15T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-14T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "46F3225F-0889-45AE-A8C5-99B3809030E4",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-14T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "83CA7BB5-DB82-42F8-AD07-3D89F55421E5",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-14T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "3136BCA5-FE0A-484C-9354-F0CFE5AFB227",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-14T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-13T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "C93310BC-E2B4-4D04-892A-270BA3C7D6E4",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-13T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "97AC67B1-E284-43FA-BBBA-645BAA48BA80",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-13T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "600B2A64-A70C-4163-A56B-3899F463029C",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-13T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-12T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "A2E6FA3A-6120-4724-848C-6CB30A5CB67F",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-12T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7E00C9B8-50F0-4CB7-AF09-B416549D7A9E",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-12T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "90E7BBBB-88AA-4DBD-9FF4-EB9C02074E4E",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-02-12T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-11T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "E466146B-6AE6-4FA7-8062-C3B30974E0A3",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-11T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "A1FB93DA-6131-46C2-85FD-24E6678109BA",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-11T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "17BD5D3D-5469-42FA-8FC1-3F4581115F18",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-11T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-10T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "8393BB48-8D9D-47E5-A80B-287E286D3785",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-10T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "54305112-CC70-4295-8B0F-3C1E70EE5B28",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-10T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "91F5F362-559F-4052-AA07-1A995166C45A",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-10T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-09T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "E0D118A2-3F0E-47B2-9327-24B20CAD78E2",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-09T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "E3C15009-962D-4C5D-99B8-F0D070CF90B9",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-09T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "FAB86115-23C9-4F04-8239-A53CBAB46EC5",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-09T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-08T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "AA477F94-684D-42FC-B0AF-8B977EFDA99C",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-08T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "FD40FDFC-E3CA-4260-9951-99E5F6933320",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-08T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "E615617F-D128-4CDB-AC81-FC38BDF60F61",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-08T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-07T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "D0102354-3720-4646-861D-5F57DD439949",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-07T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "CEAB7749-B681-4859-AA5E-C743F48EA997",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-07T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "3FA38DEE-A13B-4FC4-92E2-6CA2D0AD7489",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-07T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-06T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "EA28DEC6-8C1F-4390-9A62-AFF729B326B8",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-06T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "2FD69478-7498-47D8-A8DC-BF0584F09F9C",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-06T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "DA3C46BB-9532-4166-BFA6-5FC80D109867",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-06T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-05T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "BB7012DA-4BAE-4766-AA97-C585C66A85FC",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-05T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "2BC888DA-2DD5-471C-859F-5180CD931818",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-05T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "0BD74063-95D2-4A61-BB5A-7AA7A07348F0",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-02-05T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-04T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "1E9C681B-B4CD-46DE-BEE3-81EEAFD0D834",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-04T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "8DD8E27E-FF6C-4B85-B6ED-3DFCE18199E3",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-02-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-04T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "549B74EA-7AEB-4AEC-AF3D-E81887C7B774",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-04T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-03T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "807EF20E-C53A-49B8-90A5-BC5EDF657219",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-02-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-03T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "187D66AC-790F-4FDC-B29E-D913B3E5AE53",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-03T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "4991A47F-4244-40AE-A7BE-841861A67914",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-03T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-02T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "295CD042-0733-4828-B6CF-07BCADFABCBA",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-02T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "54B7D886-D43C-4B2E-B233-55F8323A9A5E",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-02-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-02T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "93E7C772-E376-4612-8C91-B5B6995B2166",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-02T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-02-01T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "4E1B1FBD-59CF-4BC0-ABD2-CC3EA80D8316",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-02-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-02-01T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "8A3B59AF-74EA-4B83-97C6-932FB0503B1F",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-02-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-02-01T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "B386D226-3305-4867-BA07-0BC89C1D90A1",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-02-01T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-31T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "6A077381-2EC6-4F15-845E-923D91203F27",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-31T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-31T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "DBB1F717-019C-4163-B533-EE329C77BF16",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-01-31T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-31T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "745C69F4-2702-48B9-95E4-85AB5EC74FE6",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-31T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-30T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "3310E972-1E44-4707-9968-D9B1978AFF01",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-30T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-30T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7B562DC0-0585-4473-99F2-EF973DFAC67A",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-30T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-30T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D316FE22-A6C4-4F36-A832-02944857F217",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-30T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-29T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "B93ED436-8092-4277-ACB2-1C401EC5ED07",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-29T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-29T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "C46FA82B-D025-45F0-858A-247F65F4BA6C",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-29T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-29T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "7B82FB15-096E-4CAB-8228-63C97D36DCD0",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-29T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-28T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "FD46A0B9-7505-4B68-B36F-6C0EA9B34EC1",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-28T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "ABF6872D-0989-4CF8-B1A8-F8950117DDBA",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-28T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "2A6E7F0E-6949-437F-B618-925A347C4888",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-28T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-27T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "4473F246-98DE-44E3-A02D-160C4CA75F7A",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-27T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "273CA5AC-D2E9-494D-AD40-C9E5B5AEC379",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-27T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "5A8650A4-FDEE-431A-86A1-888B0E65388B",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-27T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-26T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "03309709-2386-4069-8915-CCD4C041E1EC",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-26T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7D828655-C959-41F8-B86F-F0089EBF3A3A",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-26T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D9CB9015-289A-4A84-BF26-C29D9A9B0FA2",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-26T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-25T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "2126E2E6-2A9E-48A2-9A73-523D0908DB97",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-25T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "64653518-045B-4525-80E3-B4446FAA2873",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-25T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D8D838EC-7EDA-45CA-A755-422AFF8AC91B",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-25T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-24T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "90D52BA3-8112-44D9-A8C4-0B7DB0BC02EB",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-24T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "6ACD44DF-48E5-4F9D-922C-9F62A0B6D249",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-24T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D5B7A42A-EB97-4CCA-B7AE-9D2B2F31C363",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-24T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-23T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "BA88AFF2-607C-4922-AF62-75B162512357",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-01-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-23T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "C3CF3DD9-351D-468E-A4AA-35CA67AFA6C1",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-23T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "B090E70E-997A-46EB-ADE1-C865072801C5",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-23T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-22T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "24DAD2E8-9C8B-4382-A6E1-7D6FE9DF6587",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-22T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "B1E59527-3C4F-4C98-9443-4F0397748FD1",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-22T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D89D8BD2-8BAF-4E17-B9BE-BF866AA9098A",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-22T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-21T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "0D9ED514-8AFC-49F2-9EAF-1ACCFBA2C0EB",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-21T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "1AA42B0D-5744-4C5B-ABBD-48517EDFB973",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-01-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-21T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "6119D0F5-B1E3-43FA-8EEE-E32A3B0B3D70",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-21T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-20T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "2474C54A-F28E-4020-B746-7A81991CE14F",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-20T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "019C9D12-53DD-4672-8837-E1E7E61EB765",
+        "supplementName": "Chromium",
+        "taken": false,
+        "timeTaken": "2026-01-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-20T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "1792B6D2-6E02-4C6E-BA76-8F20CE874226",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-20T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-19T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "4A6C8EE4-A1A7-481B-A9C4-0F1A58554DFD",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-19T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "8BF9230B-9D25-41C0-97C4-CE253C3A8D4F",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-19T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "FCD78A3B-0800-499D-8403-3028B0F8ABD1",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-19T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-18T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "E9C2D7A3-AD8C-43E4-9314-82D2560388F4",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-18T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "445AB9B2-BAE0-4778-8ABB-7B25FA4A5FC6",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-18T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "04A2815C-954F-4CFB-957D-FD2688221CB9",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-18T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-17T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "2DFA0E7F-D733-4D43-9F49-F25B02C30854",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-17T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "596EFC79-06E6-48B7-A3A9-2A700ACB0D27",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-17T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "EF2817A7-D899-45CE-BA5A-D9DB85B6DEFF",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-17T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-16T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "B879F591-B1C0-4C69-A668-E8973A41543F",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-16T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "6AC8269E-0FA4-4AEA-B284-0CA56A138E9A",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-16T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "557CA87A-F233-4400-89B1-1CC5C2C7A3EA",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-16T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-15T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "74804788-A67E-4EF3-B744-E8EF5E5A99CC",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-15T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "E23A86F2-0785-4AB1-8453-6F849BA19D45",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-15T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "383C80AD-05BA-4259-8615-4B5D407A1EE7",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-15T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-14T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "3ACE0754-0C33-49A8-A57E-612F083D7E43",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-14T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "625846EB-17B9-4D44-8296-1ECB722FEEFF",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-14T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "143B603A-CC68-454E-A265-834622466D24",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-14T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-13T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "948C8A96-83C9-4213-BF69-1A996D479153",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-13T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "EB24EC41-406F-4999-B2D5-B33A46601374",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-13T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "F23BC647-BDB2-4CFC-A866-3ED600C6C059",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-13T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-12T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "64E65B7E-681C-4BB3-90E9-85754203A3B5",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-12T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "7935A341-2834-4987-A59A-ED04FFD1F1FE",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-12T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "9D0723AF-FEFD-43D0-81CD-BEEBEBF53F0E",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-12T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-11T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "3F8B68CD-3F2B-4EC9-9F2A-98790C5F4A27",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-11T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "EE719D1B-8BF4-4647-A255-8388609CD6A3",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-11T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "C3D05409-3747-484A-81E5-636FCD5796A5",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-11T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-10T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "EAC06554-EFA0-44FB-88E8-0BE8354CC4D9",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-10T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "4A8101D2-905D-48B2-B2B4-9A5FD8CCBAB7",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-10T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "0F614D1D-9EB4-4BF4-85ED-B69F9183E53F",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-10T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-09T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "271CA76B-ADF1-4242-8D3A-F003D9BC7A26",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-09T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "A7B7E0B9-E05A-4B33-9D94-0C668C2C179D",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-09T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "0F010BF8-DD22-498C-8944-0D133972252C",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-09T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-08T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "3E71559C-6436-46D6-AA09-BDC6FC74C188",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-01-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-08T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "11017A97-3720-40D4-BC9A-296ED3D7950F",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-08T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "90D3C4E5-80BF-479E-9CD1-0745251DE9F7",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-08T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-07T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "0F6F6BB7-DD81-4D7F-A6DE-F1632B7F5AEA",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-01-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-07T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "54C1E77A-0320-458F-8C65-2EEF9C174BA2",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-07T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "95E68B75-0092-493D-97E9-E35B8B52C366",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-07T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-06T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "147F6F76-EFCE-4B15-A301-A203D37D728E",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-06T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "492769C8-1556-4E31-AFE3-29902673F370",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-06T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "2B40C833-2ABF-4CED-89AA-C840152B01F3",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-06T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-05T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "AA937381-2A8E-4253-BED1-56EFA80A829C",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-01-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-05T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "88EA1CE0-C1F4-40A5-B1DB-C456DD0FC3C7",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-05T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "D78FCDAA-AA1D-414E-A7F5-F6265D40A625",
+        "supplementName": "Omega-3",
+        "taken": false,
+        "timeTaken": "2026-01-05T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-04T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "F7C1EFE7-427E-4C63-A600-BED03DB915F7",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-04T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "1EBE7981-3DDB-40BD-858E-E907F7130C34",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-04T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "98D8E0D6-20E0-4F63-979B-2D2D9A032178",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-04T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-03T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "B88DF9CE-5EA6-4382-87AA-215DD4139E88",
+        "supplementName": "Berberine",
+        "taken": true,
+        "timeTaken": "2026-01-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-03T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "01F435DD-297C-411C-90B5-880AC974B334",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-03T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "CF7EBE88-D8D6-43DB-912F-291F84B4E8F7",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-03T18:00:00.000Z"
+      },
+      {
+        "brand": "Thorne",
+        "date": "2026-01-02T12:00:00.000Z",
+        "dosageMg": 500,
+        "id": "73F3C861-5C60-4113-A82E-562ECC3EF252",
+        "supplementName": "Berberine",
+        "taken": false,
+        "timeTaken": "2026-01-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Pure Encapsulations",
+        "date": "2026-01-02T12:00:00.000Z",
+        "dosageMg": 200,
+        "id": "22E695B9-7C4F-4F6E-A227-7A8DD4B3EC19",
+        "supplementName": "Chromium",
+        "taken": true,
+        "timeTaken": "2026-01-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Nordic Naturals",
+        "date": "2026-01-02T12:00:00.000Z",
+        "dosageMg": 1000,
+        "id": "6C76851A-148B-44FA-A95F-02CA69E35C4D",
+        "supplementName": "Omega-3",
+        "taken": true,
+        "timeTaken": "2026-01-02T18:00:00.000Z"
+      }
+    ],
+    "symptoms": [
+      {
+        "category": "pain",
+        "cycleEntryID": "D778F41B-B20B-4531-B708-0E78DFFA3E6A",
+        "date": "2025-09-24T12:00:00.000Z",
+        "id": "1DF9C77A-1CD7-4545-99DA-46B413B5A1C0",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "D778F41B-B20B-4531-B708-0E78DFFA3E6A",
+        "date": "2025-09-24T12:00:00.000Z",
+        "id": "4D0F109C-1B25-4F57-A7C2-F3B8CE789603",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "D778F41B-B20B-4531-B708-0E78DFFA3E6A",
+        "date": "2025-09-24T12:00:00.000Z",
+        "id": "E6F6B21B-5213-4E97-B55D-1245C3C75CD6",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "B41C520E-0416-4E3F-824D-5EE5DF6D9166",
+        "date": "2025-09-25T12:00:00.000Z",
+        "id": "7BF52129-FF62-4042-984F-1BC6EF8C99DD",
+        "notes": "Period day 2 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "B41C520E-0416-4E3F-824D-5EE5DF6D9166",
+        "date": "2025-09-25T12:00:00.000Z",
+        "id": "EDA6058B-F07C-4105-8CF4-AB1E84975606",
+        "notes": "Bloating during period",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "B41C520E-0416-4E3F-824D-5EE5DF6D9166",
+        "date": "2025-09-25T12:00:00.000Z",
+        "id": "03766DD8-0AFC-4E83-BF63-590F64BF3390",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "891A42E2-1903-4EE0-A96D-D962FF520157",
+        "date": "2025-09-26T12:00:00.000Z",
+        "id": "8FA0E2CE-8AB7-4760-BF43-D7DEBEE7791C",
+        "notes": "Period day 3 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "891A42E2-1903-4EE0-A96D-D962FF520157",
+        "date": "2025-09-26T12:00:00.000Z",
+        "id": "CDF5F543-393C-49E8-9BDB-BED1D0407804",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "C9A42D32-7CF9-4F4B-AE81-FFC14EC85637",
+        "date": "2025-09-27T12:00:00.000Z",
+        "id": "80EFBB11-54C6-4072-8171-9B1D49D9BCE5",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "D6E8924B-4748-4CCF-A5B0-B879A93D38E5",
+        "date": "2025-09-28T12:00:00.000Z",
+        "id": "5D8C1507-625B-4432-BC53-CC312DB6FAED",
+        "notes": "Period day 5 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "2ACBB51C-34FE-4AD7-800D-1C040187B96F",
+        "date": "2025-09-29T12:00:00.000Z",
+        "id": "31075CDF-D207-4697-8FEA-D8ED2321DBFA",
+        "notes": "Period day 6 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "104907FD-D3E2-48EB-8FD9-A6CCB16F46D1",
+        "date": "2025-11-03T12:00:00.000Z",
+        "id": "203795B9-340B-4718-A38A-3E617CB41712",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "104907FD-D3E2-48EB-8FD9-A6CCB16F46D1",
+        "date": "2025-11-03T12:00:00.000Z",
+        "id": "93501A81-C589-4072-BD38-0A68754286D6",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "104907FD-D3E2-48EB-8FD9-A6CCB16F46D1",
+        "date": "2025-11-03T12:00:00.000Z",
+        "id": "9D5257FB-94D4-4AAD-920F-83344AC8C617",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "F3B5E9A9-DCD7-4C03-B892-75C52BBED5D6",
+        "date": "2025-11-04T12:00:00.000Z",
+        "id": "65E5202D-AD68-4CB3-AC36-4BB07075AA42",
+        "notes": "Period day 2 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "F3B5E9A9-DCD7-4C03-B892-75C52BBED5D6",
+        "date": "2025-11-04T12:00:00.000Z",
+        "id": "93635641-C988-406D-9453-B2C4BF2E6174",
+        "notes": "Bloating during period",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "F3B5E9A9-DCD7-4C03-B892-75C52BBED5D6",
+        "date": "2025-11-04T12:00:00.000Z",
+        "id": "EAE32D5D-5F8A-483F-95BD-5D0463773B13",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "5E846736-7185-47A4-8369-89D6CF828AAE",
+        "date": "2025-11-05T12:00:00.000Z",
+        "id": "EC280F85-FBAA-444D-8654-65399BE721F0",
+        "notes": "Period day 3 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "5E846736-7185-47A4-8369-89D6CF828AAE",
+        "date": "2025-11-05T12:00:00.000Z",
+        "id": "0E53D998-477E-4518-972A-4EF2B4370068",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "933C263B-A26A-4F8F-B62F-01EC15B681F9",
+        "date": "2025-11-06T12:00:00.000Z",
+        "id": "9253B831-5FF0-486B-93C4-4E6C084B045A",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "DE7F14E8-F21A-4723-AE96-E0B47467C7FB",
+        "date": "2025-11-07T12:00:00.000Z",
+        "id": "CC8FB11B-F260-476D-B7DF-DF7B0E08A9DB",
+        "notes": "Period day 5 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "B40EB1D1-8BA5-469A-8133-427ED670F550",
+        "date": "2025-12-11T12:00:00.000Z",
+        "id": "DC8DE222-4547-4C47-B003-76FADB135802",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "B40EB1D1-8BA5-469A-8133-427ED670F550",
+        "date": "2025-12-11T12:00:00.000Z",
+        "id": "F1469C87-CE2D-44F7-A604-DADEB79FDDB3",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "B40EB1D1-8BA5-469A-8133-427ED670F550",
+        "date": "2025-12-11T12:00:00.000Z",
+        "id": "55A15211-CD4B-41AA-BD4E-D370D30ECF16",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "D1C4E77A-E4A4-48CE-B6AF-AD1B56A8D0F0",
+        "date": "2025-12-12T12:00:00.000Z",
+        "id": "A8FA4C7D-9BF2-49CE-BF27-DC0B9D6144F0",
+        "notes": "Period day 2 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "D1C4E77A-E4A4-48CE-B6AF-AD1B56A8D0F0",
+        "date": "2025-12-12T12:00:00.000Z",
+        "id": "70CF05AA-1DC4-4600-A522-95AF1628AB78",
+        "notes": "Bloating during period",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "D1C4E77A-E4A4-48CE-B6AF-AD1B56A8D0F0",
+        "date": "2025-12-12T12:00:00.000Z",
+        "id": "F3BBA0CE-9585-4B59-9046-A11A1836F8B6",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "AF73AE6B-FA2E-4EFF-886A-C5FF6AF9412C",
+        "date": "2025-12-13T12:00:00.000Z",
+        "id": "2FD3E52C-7C54-4857-8CE1-050178E6C144",
+        "notes": "Period day 3 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "AF73AE6B-FA2E-4EFF-886A-C5FF6AF9412C",
+        "date": "2025-12-13T12:00:00.000Z",
+        "id": "004641FA-C6AA-4CA3-BF35-71E2BEDD0239",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "E461B03E-9D9C-4EEF-B9B1-D79329DEC816",
+        "date": "2025-12-14T12:00:00.000Z",
+        "id": "E3235D21-30D1-465D-95F2-571528A64692",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "2077D265-754C-4C7C-B6CC-647FD93A7A92",
+        "date": "2025-12-15T12:00:00.000Z",
+        "id": "58C2F241-A8EB-4FE5-B7C4-19FF9AF4906E",
+        "notes": "Period day 5 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "44DE90D5-3205-4938-B003-87809C62B57E",
+        "date": "2025-12-16T12:00:00.000Z",
+        "id": "2A770842-6982-4D3B-AE55-6EA80C79F687",
+        "notes": "Period day 6 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "124F96FD-28F1-4A27-8651-874D1194FDDE",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "43A8E8FE-512C-4033-9213-5991DB574AAB",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "124F96FD-28F1-4A27-8651-874D1194FDDE",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "439BA210-B6DD-4EAC-857A-B993286C618B",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "124F96FD-28F1-4A27-8651-874D1194FDDE",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "0138953A-EF64-4974-8CD9-6547E8BB6F2E",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "BACB3107-C12D-4D67-9A64-6472F54DD55F",
+        "date": "2026-01-25T12:00:00.000Z",
+        "id": "0DFAEFE0-7310-42E1-9BB5-23D269807873",
+        "notes": "Period day 2 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "BACB3107-C12D-4D67-9A64-6472F54DD55F",
+        "date": "2026-01-25T12:00:00.000Z",
+        "id": "1F7E1F44-9A43-4E6B-80E9-2A415982B13D",
+        "notes": "Bloating during period",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "BACB3107-C12D-4D67-9A64-6472F54DD55F",
+        "date": "2026-01-25T12:00:00.000Z",
+        "id": "28FCB69F-A722-415A-9398-5E41673B30DF",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "F0A32CCF-945B-4C6C-99A5-6552F420D899",
+        "date": "2026-01-26T12:00:00.000Z",
+        "id": "724CA353-A530-4617-AAC6-7322311D8574",
+        "notes": "Period day 3 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "F0A32CCF-945B-4C6C-99A5-6552F420D899",
+        "date": "2026-01-26T12:00:00.000Z",
+        "id": "64C685A0-28A8-4895-883C-89E994593DDE",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "53D2BA01-DFF6-45FE-9C0A-8413FECF48E4",
+        "date": "2026-01-27T12:00:00.000Z",
+        "id": "A5CB19BB-5E72-43DD-80A1-704FE96711B9",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "DEC8F43F-85CE-4DF9-9213-D3899B71F2F9",
+        "date": "2026-01-28T12:00:00.000Z",
+        "id": "9C3BB71E-09E3-47C0-96AD-84CC90453C96",
+        "notes": "Period day 5 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "42190971-962F-49FC-8645-D0846EBF8A48",
+        "date": "2026-03-05T12:00:00.000Z",
+        "id": "E883DBF5-0D1E-4CF0-99F1-63F276AF19F8",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "42190971-962F-49FC-8645-D0846EBF8A48",
+        "date": "2026-03-05T12:00:00.000Z",
+        "id": "E71EF869-2D1A-48BF-8DEA-EE2644098D10",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "42190971-962F-49FC-8645-D0846EBF8A48",
+        "date": "2026-03-05T12:00:00.000Z",
+        "id": "6FCE0918-8EEA-4940-B3A5-FC6C8F903208",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "98950154-1609-44DF-8229-C42314FC8C92",
+        "date": "2026-03-06T12:00:00.000Z",
+        "id": "AA659590-2C92-4AB6-96E2-0502C4E07FA8",
+        "notes": "Period day 2 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "98950154-1609-44DF-8229-C42314FC8C92",
+        "date": "2026-03-06T12:00:00.000Z",
+        "id": "990ADEA1-67B7-42E1-B22C-0966EDD0197C",
+        "notes": "Bloating during period",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "98950154-1609-44DF-8229-C42314FC8C92",
+        "date": "2026-03-06T12:00:00.000Z",
+        "id": "2500FA41-F43F-42B1-8ED8-7D9C0C088BF3",
+        "notes": "Fatigue during period",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "A4D70EB4-600B-46F0-9C3C-13150CEAFECA",
+        "date": "2026-03-07T12:00:00.000Z",
+        "id": "373C5A96-8032-47BC-B120-AD7780330F06",
+        "notes": "Period day 3 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "A4D70EB4-600B-46F0-9C3C-13150CEAFECA",
+        "date": "2026-03-07T12:00:00.000Z",
+        "id": "89EFC66F-A820-4CD5-8A68-D0F5600F7A50",
+        "notes": "Bloating during period",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "B62D0589-73BC-4D0A-8EE6-3B52608AC101",
+        "date": "2026-03-08T12:00:00.000Z",
+        "id": "9CF37AE5-88AB-445A-878C-E446737EA757",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "AE45A984-99D7-4D02-A649-3A06AEC5B415",
+        "date": "2026-03-09T12:00:00.000Z",
+        "id": "54B6EFFD-84B3-4746-98D0-86BE013DCA2C",
+        "notes": "Period day 5 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-10-15T12:00:00.000Z",
+        "id": "FD4E89C4-9A5D-4682-AEB5-6326336ECDD5",
+        "notes": "Sugar cravings after meals",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-10-18T12:00:00.000Z",
+        "id": "50AD8A3E-2A6E-479D-8CE7-9EA55BA647FD",
+        "notes": "Afternoon energy dip",
+        "severity": 3,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "physical",
+        "date": "2025-10-21T12:00:00.000Z",
+        "id": "C7E20B98-BC75-4D59-ACEC-28A530D00B57",
+        "notes": "Bloating after eating",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "digestive",
+        "date": "2025-10-24T12:00:00.000Z",
+        "id": "3C0752D6-0CFE-45B2-891E-627104665E19",
+        "notes": "Mild nausea in the morning",
+        "severity": 3,
+        "symptomType": "nausea"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-10-27T12:00:00.000Z",
+        "id": "E88C34E7-D75B-4219-ABED-84F2258862D4",
+        "notes": "Intense hunger between meals",
+        "severity": 3,
+        "symptomType": "hunger"
+      },
+      {
+        "category": "physical",
+        "date": "2025-10-30T12:00:00.000Z",
+        "id": "7DA30C87-944C-42EF-B07C-C29AB33B9987",
+        "notes": "Tension headache",
+        "severity": 3,
+        "symptomType": "headache"
+      },
+      {
+        "category": "mood",
+        "date": "2025-11-02T12:00:00.000Z",
+        "id": "FF79C5D2-CD99-4F6D-9462-8369AD43D074",
+        "notes": "Mood fluctuations noted",
+        "severity": 3,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-11-08T12:00:00.000Z",
+        "id": "77D1F897-BDED-45A1-8056-FF38AE18F2EB",
+        "notes": "Sugar cravings after meals",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-11-11T12:00:00.000Z",
+        "id": "5882268B-647D-4C42-952D-612E709B9798",
+        "notes": "Afternoon energy dip",
+        "severity": 4,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "physical",
+        "date": "2025-11-14T12:00:00.000Z",
+        "id": "4C4507AE-925B-4D21-8093-4671D9D2FB22",
+        "notes": "Bloating after eating",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "digestive",
+        "date": "2025-11-17T12:00:00.000Z",
+        "id": "11728E96-D5E1-46D3-B432-DDC04AD32D46",
+        "notes": "Mild nausea in the morning",
+        "severity": 3,
+        "symptomType": "nausea"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-11-20T12:00:00.000Z",
+        "id": "E8D27886-3DF5-4108-A446-0AD38FE0625F",
+        "notes": "Intense hunger between meals",
+        "severity": 3,
+        "symptomType": "hunger"
+      },
+      {
+        "category": "physical",
+        "date": "2025-11-23T12:00:00.000Z",
+        "id": "65488D5F-9CE3-41A6-8D83-914444CEE2A4",
+        "notes": "Tension headache",
+        "severity": 3,
+        "symptomType": "headache"
+      },
+      {
+        "category": "mood",
+        "date": "2025-11-26T12:00:00.000Z",
+        "id": "63C5062D-D7A5-4285-84A5-09D970CB6665",
+        "notes": "Mood fluctuations noted",
+        "severity": 3,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-11-29T12:00:00.000Z",
+        "id": "E999E32F-57F9-4BFE-A6CB-BA8EA7827B39",
+        "notes": "Sugar cravings after meals",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-12-02T12:00:00.000Z",
+        "id": "9CD404C6-276D-457F-8324-777BFE3E90CB",
+        "notes": "Afternoon energy dip",
+        "severity": 3,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "physical",
+        "date": "2025-12-05T12:00:00.000Z",
+        "id": "76C80CBD-E891-4306-9235-184E621DDFF1",
+        "notes": "Bloating after eating",
+        "severity": 4,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "digestive",
+        "date": "2025-12-08T12:00:00.000Z",
+        "id": "58E13A15-4FB4-4CEE-ACF8-12A3421E5667",
+        "notes": "Mild nausea in the morning",
+        "severity": 3,
+        "symptomType": "nausea"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-12-17T12:00:00.000Z",
+        "id": "8A880A7B-2D6C-4393-8277-9E9D216E3389",
+        "notes": "Intense hunger between meals",
+        "severity": 4,
+        "symptomType": "hunger"
+      },
+      {
+        "category": "physical",
+        "date": "2025-12-20T12:00:00.000Z",
+        "id": "9FAFA342-D5B0-4F02-96F7-F7C7A2C89E5B",
+        "notes": "Tension headache",
+        "severity": 4,
+        "symptomType": "headache"
+      },
+      {
+        "category": "mood",
+        "date": "2025-12-23T12:00:00.000Z",
+        "id": "4AC29216-E948-4995-ABD8-0E4F1696C432",
+        "notes": "Mood fluctuations noted",
+        "severity": 3,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-12-26T12:00:00.000Z",
+        "id": "2E8A4ED1-9249-4F64-AFB8-1CFC31339720",
+        "notes": "Sugar cravings after meals",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2025-12-29T12:00:00.000Z",
+        "id": "CBB9B19C-7FED-4157-81D2-CEE4E7780641",
+        "notes": "Afternoon energy dip",
+        "severity": 4,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "physical",
+        "date": "2026-01-01T12:00:00.000Z",
+        "id": "8A585202-8EB0-42E8-A5F4-570532CC1374",
+        "notes": "Bloating after eating",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "digestive",
+        "date": "2026-01-04T12:00:00.000Z",
+        "id": "5E28DA94-A8F2-4B2F-A4B0-D0BEEC7BF7E1",
+        "notes": "Mild nausea in the morning",
+        "severity": 3,
+        "symptomType": "nausea"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-01-07T12:00:00.000Z",
+        "id": "A540D920-B7D6-4AA5-BD17-2702B1224DDB",
+        "notes": "Intense hunger between meals",
+        "severity": 3,
+        "symptomType": "hunger"
+      },
+      {
+        "category": "physical",
+        "date": "2026-01-10T12:00:00.000Z",
+        "id": "CE8A3D18-9249-4FDD-B43F-7D2C7659F387",
+        "notes": "Tension headache",
+        "severity": 3,
+        "symptomType": "headache"
+      },
+      {
+        "category": "mood",
+        "date": "2026-01-13T12:00:00.000Z",
+        "id": "82356B6D-2656-4499-8C40-D15F1F3E4193",
+        "notes": "Mood fluctuations noted",
+        "severity": 3,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-01-16T12:00:00.000Z",
+        "id": "88204540-6CD7-4437-B1DE-D998DC7FC739",
+        "notes": "Sugar cravings after meals",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-01-19T12:00:00.000Z",
+        "id": "19C6B77D-0FA7-4873-BA0B-1310D02F45BD",
+        "notes": "Afternoon energy dip",
+        "severity": 3,
+        "symptomType": "energy_crash"
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "source": {
+    "kind": "user_export"
+  }
+}

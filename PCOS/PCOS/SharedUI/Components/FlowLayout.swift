@@ -1,4 +1,17 @@
 import SwiftUI
+import os
+
+enum LayoutDimensionSanitizer {
+    static func frameDimension(from value: CGFloat?) -> CGFloat {
+        guard let value, value.isFinite else { return 0 }
+        return max(0, value)
+    }
+
+    static func normalizedProgress(from value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 0 }
+        return min(max(value, 0), 1)
+    }
+}
 
 /// A layout that wraps content horizontally, flowing to the next line when space runs out.
 struct FlowLayout: Layout {
@@ -83,24 +96,47 @@ struct FlowLayout: Layout {
     private func sanitizedSubviewSizes(_ subviews: Subviews) -> [CGSize] {
         subviews.map { subview in
             let measured = subview.sizeThatFits(.unspecified)
+#if DEBUG
+            debugLogInvalidMeasurement(measured, context: "measuredSubview")
+#endif
             return CGSize(
-                width: (measured.width.isFinite && measured.width > 0) ? measured.width : 0,
-                height: (measured.height.isFinite && measured.height > 0) ? measured.height : 0
+                width: LayoutDimensionSanitizer.frameDimension(from: measured.width),
+                height: LayoutDimensionSanitizer.frameDimension(from: measured.height)
             )
         }
     }
 
     private func sanitizedSubviewSizes(_ sizes: [CGSize]) -> [CGSize] {
         sizes.map { size in
-            CGSize(
-                width: (size.width.isFinite && size.width > 0) ? size.width : 0,
-                height: (size.height.isFinite && size.height > 0) ? size.height : 0
+#if DEBUG
+            debugLogInvalidMeasurement(size, context: "debugSizeThatFits")
+#endif
+            return CGSize(
+                width: LayoutDimensionSanitizer.frameDimension(from: size.width),
+                height: LayoutDimensionSanitizer.frameDimension(from: size.height)
             )
         }
     }
 
     private func normalizedWidth(from width: CGFloat?) -> CGFloat? {
-        guard let width, width.isFinite else { return nil }
-        return max(0, width)
+        guard let width else { return nil }
+#if DEBUG
+        if !width.isFinite || width < 0 {
+            Logger.ui.debug(
+                "FlowLayout sanitized invalid proposed width. value=\(String(describing: width), privacy: .public)"
+            )
+        }
+#endif
+        guard width.isFinite else { return nil }
+        return LayoutDimensionSanitizer.frameDimension(from: width)
     }
+
+#if DEBUG
+    private func debugLogInvalidMeasurement(_ size: CGSize, context: StaticString) {
+        guard !size.width.isFinite || !size.height.isFinite || size.width < 0 || size.height < 0 else { return }
+        Logger.ui.debug(
+            "FlowLayout sanitized invalid size. context=\(context) width=\(size.width, privacy: .public) height=\(size.height, privacy: .public)"
+        )
+    }
+#endif
 }

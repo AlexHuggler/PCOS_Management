@@ -6,6 +6,13 @@ struct SupplementAdherenceChart: View {
     let missed: Int
 
     private var total: Int { taken + missed }
+    private var takenLabel: String {
+        String(localized: "Taken", comment: "Supplement adherence status label for doses that were taken.")
+    }
+
+    private var missedLabel: String {
+        String(localized: "Missed", comment: "Supplement adherence status label for doses that were missed.")
+    }
 
     private var percentage: Int {
         guard total > 0 else { return 0 }
@@ -14,8 +21,8 @@ struct SupplementAdherenceChart: View {
 
     private var chartData: [(label: String, count: Int, color: Color)] {
         [
-            ("Taken", taken, AppTheme.sage),
-            ("Missed", missed, Color.gray.opacity(0.4)),
+            (takenLabel, taken, AppTheme.sage),
+            (missedLabel, missed, Color.gray.opacity(0.4)),
         ]
     }
 
@@ -23,7 +30,10 @@ struct SupplementAdherenceChart: View {
         VStack(spacing: AppTheme.spacing12) {
             Chart(chartData, id: \.label) { item in
                 SectorMark(
-                    angle: .value("Count", item.count),
+                    angle: .value(
+                        String(localized: "Count", comment: "Chart value label for supplement count."),
+                        item.count
+                    ),
                     innerRadius: .ratio(0.6),
                     angularInset: 1.5
                 )
@@ -34,20 +44,32 @@ struct SupplementAdherenceChart: View {
             .chartBackground { _ in
                 VStack(spacing: 2) {
                     Text("\(percentage)%")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .appFont(.title2, weight: .bold)
                         .foregroundStyle(.primary)
-                    Text("adherence")
-                        .font(.caption2)
+                    Text(String(localized: "adherence", comment: "Supplement adherence chart summary label."))
+                        .appFont(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
 
             // Legend
             HStack(spacing: AppTheme.spacing16) {
-                legendItem(color: AppTheme.sage, label: "Taken (\(taken))")
-                legendItem(color: Color.gray.opacity(0.4), label: "Missed (\(missed))")
+                legendItem(
+                    color: AppTheme.sage,
+                    label: String(
+                        localized: "Taken (\(taken))",
+                        comment: "Legend label showing how many supplement doses were taken."
+                    )
+                )
+                legendItem(
+                    color: Color.gray.opacity(0.4),
+                    label: String(
+                        localized: "Missed (\(missed))",
+                        comment: "Legend label showing how many supplement doses were missed."
+                    )
+                )
             }
-            .font(.caption)
+            .appFont(.caption)
         }
     }
 

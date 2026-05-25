@@ -4,33 +4,40 @@ import SwiftData
 @testable import PCOS
 
 private let insightEngineSourceCandidates = [
-    "../PCOS/Core/ML/InsightEngine.swift",
-    "../CycleBalance/Core/ML/InsightEngine.swift"
+    "../PCOS/Core/ML/InsightEngine.swift"
 ]
 
 private let mealLogViewSourceCandidates = [
     "../PCOS/Features/Meals/Views/MealLogView.swift",
-    "../CycleBalance/Features/Meals/Views/MealLogView.swift",
 ]
 
 private let photoCaptureViewSourceCandidates = [
     "../PCOS/Features/PhotoJournal/Views/PhotoCaptureView.swift",
-    "../CycleBalance/Features/PhotoJournal/Views/PhotoCaptureView.swift",
 ]
 
 private let todayViewSourceCandidates = [
     "../PCOS/Features/Cycle/Views/TodayView.swift",
-    "../CycleBalance/Features/Cycle/Views/TodayView.swift",
 ]
 
 private let premiumStateBridgeSourceCandidates = [
     "../PCOS/Core/StoreKit/PremiumStateBridge.swift",
-    "../CycleBalance/Core/StoreKit/PremiumStateBridge.swift",
 ]
 
 private let subscriptionManagerSourceCandidates = [
     "../PCOS/Core/StoreKit/SubscriptionManager.swift",
-    "../CycleBalance/Core/StoreKit/SubscriptionManager.swift",
+]
+
+private let saveInteractionCoordinatorSourceCandidates = [
+    "../PCOS/Core/SaveInteractionCoordinator.swift",
+]
+
+private let alertDrivenSaveViewSourceCandidates = [
+    "../PCOS/Features/Meals/Views/MealLogView.swift",
+    "../PCOS/Features/Symptoms/Views/SymptomLogView.swift",
+    "../PCOS/Features/BloodSugar/Views/BloodSugarLogView.swift",
+    "../PCOS/Features/PhotoJournal/Views/PhotoCaptureView.swift",
+    "../PCOS/Features/Supplements/Views/SupplementLogView.swift",
+    "../PCOS/Features/Cycle/Views/CycleLogView.swift",
 ]
 
 private func resolveInsightEngineURL(from testFileURL: URL) -> URL? {
@@ -111,6 +118,19 @@ private func resolveSubscriptionManagerURL(from testFileURL: URL) -> URL? {
     return nil
 }
 
+private func resolveSaveInteractionCoordinatorURL(from testFileURL: URL) -> URL? {
+    for candidate in saveInteractionCoordinatorSourceCandidates {
+        let candidateURL = testFileURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(candidate)
+            .standardizedFileURL
+        if FileManager.default.fileExists(atPath: candidateURL.path) {
+            return candidateURL
+        }
+    }
+    return nil
+}
+
 @Suite("StoreKit Lifecycle Regressions", .serialized)
 @MainActor
 struct StoreKitLifecycleRegressionTests {
@@ -118,7 +138,7 @@ struct StoreKitLifecycleRegressionTests {
     func premiumStateBridgeExposesLifecycleTeardown() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let premiumStateBridgeURL = resolvePremiumStateBridgeURL(from: testFileURL) else {
-            Issue.record("Unable to locate PremiumStateBridge.swift in expected mirrored paths.")
+            Issue.record("Unable to locate PremiumStateBridge.swift in active PCOS paths.")
             return
         }
 
@@ -132,7 +152,7 @@ struct StoreKitLifecycleRegressionTests {
     func subscriptionManagerExposesListenerTeardown() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let subscriptionManagerURL = resolveSubscriptionManagerURL(from: testFileURL) else {
-            Issue.record("Unable to locate SubscriptionManager.swift in expected mirrored paths.")
+            Issue.record("Unable to locate SubscriptionManager.swift in active PCOS paths.")
             return
         }
 
@@ -145,6 +165,43 @@ struct StoreKitLifecycleRegressionTests {
     }
 }
 
+@Suite("Haptic Feedback Regressions", .serialized)
+@MainActor
+struct HapticFeedbackRegressionTests {
+    @Test("SaveInteractionCoordinator exposes single-path error feedback API")
+    func saveCoordinatorUsesSingleErrorFeedbackPath() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let coordinatorURL = resolveSaveInteractionCoordinatorURL(from: testFileURL) else {
+            Issue.record("Unable to locate SaveInteractionCoordinator.swift in active PCOS paths.")
+            return
+        }
+
+        let source = try String(contentsOf: coordinatorURL)
+        #expect(source.contains("func showErrorFeedback()"))
+        #expect(!source.contains("func showErrorHaptic()"))
+        #expect(source.contains("func emit(_ event: SaveFeedbackEvent)"))
+    }
+
+    @Test("Alert-based save forms do not double-fire warning sensory feedback")
+    func alertBasedSaveFormsAvoidDuplicateWarningHaptics() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+
+        for candidate in alertDrivenSaveViewSourceCandidates {
+            let candidateURL = testFileURL
+                .deletingLastPathComponent()
+                .appendingPathComponent(candidate)
+                .standardizedFileURL
+
+            guard FileManager.default.fileExists(atPath: candidateURL.path) else {
+                continue
+            }
+
+            let source = try String(contentsOf: candidateURL)
+            #expect(!source.contains(".sensoryFeedback(.warning, trigger: activeAlert?.id)"))
+        }
+    }
+}
+
 @Suite("Insight Error Handling Regressions", .serialized)
 @MainActor
 struct InsightErrorHandlingRegressionTests {
@@ -152,7 +209,7 @@ struct InsightErrorHandlingRegressionTests {
     func insightEngineHasNoSilentFetchFallbacks() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let insightEngineURL = resolveInsightEngineURL(from: testFileURL) else {
-            Issue.record("Unable to locate InsightEngine.swift in expected mirrored paths.")
+            Issue.record("Unable to locate InsightEngine.swift in active PCOS paths.")
             return
         }
 
@@ -168,7 +225,7 @@ struct InsightArchitectureRegressionTests {
     func insightEngineDelegatesToSplitComponents() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let insightEngineURL = resolveInsightEngineURL(from: testFileURL) else {
-            Issue.record("Unable to locate InsightEngine.swift in expected mirrored paths.")
+            Issue.record("Unable to locate InsightEngine.swift in active PCOS paths.")
             return
         }
 
@@ -265,7 +322,7 @@ struct SilentFailureRegressionTests {
     func mealPhotoImportAvoidsSilentTransferableFallback() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let mealLogViewURL = resolveMealLogViewURL(from: testFileURL) else {
-            Issue.record("Unable to locate MealLogView.swift in expected mirrored paths.")
+            Issue.record("Unable to locate MealLogView.swift in active PCOS paths.")
             return
         }
 
@@ -277,7 +334,7 @@ struct SilentFailureRegressionTests {
     func photoJournalImportAvoidsSilentTransferableFallback() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let photoCaptureViewURL = resolvePhotoCaptureViewURL(from: testFileURL) else {
-            Issue.record("Unable to locate PhotoCaptureView.swift in expected mirrored paths.")
+            Issue.record("Unable to locate PhotoCaptureView.swift in active PCOS paths.")
             return
         }
 
@@ -291,7 +348,7 @@ struct SilentFailureRegressionTests {
     func todayQuickLogAvoidsSilentFetchFallback() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let todayViewURL = resolveTodayViewURL(from: testFileURL) else {
-            Issue.record("Unable to locate TodayView.swift in expected mirrored paths.")
+            Issue.record("Unable to locate TodayView.swift in active PCOS paths.")
             return
         }
 
@@ -303,12 +360,41 @@ struct SilentFailureRegressionTests {
     func todayQuickLogAvoidsSilentCatchSuppression() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let todayViewURL = resolveTodayViewURL(from: testFileURL) else {
-            Issue.record("Unable to locate TodayView.swift in expected mirrored paths.")
+            Issue.record("Unable to locate TodayView.swift in active PCOS paths.")
             return
         }
 
         let source = try String(contentsOf: todayViewURL)
         #expect(!source.contains("Quick log is best-effort; full form available via sheet"))
+    }
+
+    @Test("Today hero uses explicit render state without animated placeholder reuse")
+    func todayHeroUsesStableRenderState() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let todayViewURL = resolveTodayViewURL(from: testFileURL) else {
+            Issue.record("Unable to locate TodayView.swift in active PCOS paths.")
+            return
+        }
+
+        let source = try String(contentsOf: todayViewURL)
+        #expect(source.contains("private enum TodayHeroState"))
+        #expect(source.contains("@State private var heroState: TodayHeroState = .welcome"))
+        #expect(source.contains("private func syncHeroState"))
+        #expect(source.contains(".id(heroState.renderIdentity)"))
+        #expect(source.contains(".accessibilityIdentifier(\"today.hero.container\")"))
+        #expect(source.contains(".accessibilityIdentifier(\"today.quick_period_log\")"))
+        #expect(!source.contains(".animation(.easeInOut(duration: 0.3), value: viewModel?.currentCycleDayCount)"))
+
+        let sourceLines = source.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard let currentCycleLabelLine = sourceLines.firstIndex(where: { $0.contains("today.hero.current_cycle_label") }) else {
+            Issue.record("Unable to locate the Today hero current-cycle label accessibility identifier.")
+            return
+        }
+
+        let windowStart = max(0, currentCycleLabelLine - 20)
+        let windowEnd = min(sourceLines.count - 1, currentCycleLabelLine + 20)
+        let nearbyHeroLines = sourceLines[windowStart...windowEnd].joined(separator: "\n")
+        #expect(!nearbyHeroLines.contains(".contentTransition(.numericText())"))
     }
 
     // MARK: - SymptomViewModel.frequentSymptoms uses do/catch
@@ -468,7 +554,7 @@ struct SilentFailureRegressionTests {
         #expect(result.isEmpty)
     }
 
-    @Test("CycleViewModel loadData does not crash on empty database")
+@Test("CycleViewModel loadData does not crash on empty database")
     func cycleViewModelLoadDataEmpty() throws {
         let container = try TestHelpers.makeModelContainer()
         let context = container.mainContext
@@ -479,5 +565,158 @@ struct SilentFailureRegressionTests {
         #expect(vm.cycles.isEmpty)
         #expect(vm.currentCycleEntries.isEmpty)
         #expect(vm.prediction == nil)
+    }
+}
+
+private let privacyBoundaryAppSourceRootRelativePath = "PCOS/PCOS"
+
+private let forbiddenTelemetryImportModules = [
+    "Amplitude",
+    "AppCenter",
+    "Datadog",
+    "FirebaseAnalytics",
+    "MetricKit",
+    "Mixpanel",
+    "PostHog",
+    "Segment",
+    "Sentry",
+]
+
+private let forbiddenClientIdentifiers = [
+    "AnalyticsClient",
+    "AnalyticsService",
+    "APIClient",
+    "APIService",
+    "BackendClient",
+    "BackendService",
+    "EventTracker",
+    "NetworkClient",
+    "NetworkService",
+    "TelemetryClient",
+    "TelemetryService",
+    "TrackingClient",
+]
+
+private let forbiddenNetworkTokens = [
+    "HTTPURLResponse",
+    "URLRequest",
+    "URLResponse",
+    "URLSession",
+]
+
+private func privacyBoundaryProjectRoot(from testFileURL: URL) throws -> URL {
+    var candidateURL = testFileURL.deletingLastPathComponent()
+    let fileManager = FileManager.default
+
+    while candidateURL.path != "/" {
+        if fileManager.fileExists(atPath: candidateURL.appendingPathComponent("project.yml").path) {
+            return candidateURL
+        }
+
+        let parentURL = candidateURL.deletingLastPathComponent()
+        if parentURL == candidateURL {
+            break
+        }
+        candidateURL = parentURL
+    }
+
+    throw NSError(
+        domain: "PrivacyBoundaryRegressionTests",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Unable to locate project root from \(testFileURL.path)."]
+    )
+}
+
+private func privacyBoundaryAppSourceRoot(from testFileURL: URL) throws -> URL {
+    try privacyBoundaryProjectRoot(from: testFileURL)
+        .appendingPathComponent(privacyBoundaryAppSourceRootRelativePath, isDirectory: true)
+        .standardizedFileURL
+}
+
+private func privacyBoundaryAppSwiftFiles(from testFileURL: URL) throws -> [URL] {
+    let sourceRoot = try privacyBoundaryAppSourceRoot(from: testFileURL)
+    let enumerator = FileManager.default.enumerator(
+        at: sourceRoot,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    )
+
+    var files: [URL] = []
+    while let element = enumerator?.nextObject() {
+        guard let url = element as? URL else {
+            continue
+        }
+
+        guard url.pathExtension == "swift" else {
+            continue
+        }
+
+        files.append(url.standardizedFileURL)
+    }
+
+    return files
+}
+
+private func privacyBoundaryFileMatchesImport(_ source: String, module: String) -> Bool {
+    source
+        .split(whereSeparator: \.isNewline)
+        .contains { line in
+            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmedLine.hasPrefix("import \(module)")
+                || trimmedLine.hasPrefix("@_exported import \(module)")
+        }
+}
+
+@Suite("Privacy Boundary Regressions", .serialized)
+struct PrivacyBoundaryRegressionTests {
+    @Test("App sources do not import telemetry SDKs")
+    func appSourcesDoNotImportTelemetrySDKs() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        let appFiles = try privacyBoundaryAppSwiftFiles(from: testFileURL)
+
+        var violations: [(file: String, module: String)] = []
+
+        for fileURL in appFiles {
+            let source = try String(contentsOf: fileURL)
+            for module in forbiddenTelemetryImportModules where privacyBoundaryFileMatchesImport(source, module: module) {
+                violations.append((file: fileURL.path, module: module))
+            }
+        }
+
+        #expect(
+            violations.isEmpty,
+            """
+            Forbidden telemetry SDK import(s) found in the active app tree:
+            \(violations.map { " - \($0.module) in \($0.file)" }.joined(separator: "\n"))
+            """
+        )
+    }
+
+    @Test("App sources do not introduce app-owned backend client scaffolding")
+    func appSourcesDoNotIntroduceBackendClientScaffolding() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        let appFiles = try privacyBoundaryAppSwiftFiles(from: testFileURL)
+
+        var violations: [(file: String, token: String)] = []
+
+        for fileURL in appFiles {
+            let source = try String(contentsOf: fileURL)
+
+            for token in forbiddenClientIdentifiers where source.contains(token) {
+                violations.append((file: fileURL.path, token: token))
+            }
+
+            for token in forbiddenNetworkTokens where source.contains(token) {
+                violations.append((file: fileURL.path, token: token))
+            }
+        }
+
+        #expect(
+            violations.isEmpty,
+            """
+            App-owned backend/network client pattern(s) found in the active app tree:
+            \(violations.map { " - \($0.token) in \($0.file)" }.joined(separator: "\n"))
+            """
+        )
     }
 }

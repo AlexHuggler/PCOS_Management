@@ -2,7 +2,8 @@
 
 Audit date: 2026-03-11  
 Evidence refresh run date: 2026-03-12  
-Scope: current dirty working tree (`PCOS/PCOS`, `PCOS/PCOSTests`, `PCOS/PCOSUITests`) with parity mirror context in `CycleBalance`.
+Source policy refresh date: 2026-05-18
+Scope: current dirty working tree (`PCOS/PCOS`, `PCOS/PCOSTests`, `PCOS/PCOSUITests`). Previous `CycleBalance` parity mirror references below are historical only.
 
 Severity policy:
 - Critical: crash, data loss, or guaranteed App Store rejection

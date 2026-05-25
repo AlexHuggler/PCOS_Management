@@ -3,16 +3,32 @@ import SwiftData
 
 struct CalendarMonthView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
     @State private var displayedMonth = Date()
     @State private var entries: [Int: CycleEntry] = [:]
     @State private var predictedDays: Set<Int> = []
+    @State private var fertileWindowDays: Set<Int> = []
+    @State private var ovulationDay: Int?
     @State private var showingLogSheet = false
     @State private var showingDayLogSheet = false
+    @State private var showingMonthPicker = false
     @State private var selectedDayDate: Date?
+    @State private var pregnancyViewModel: PregnancyViewModel?
 
-    private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible(), spacing: AppTheme.spacing4), count: 7)
+    private let freeTierPolicy: any FreeTierPolicyEnforcing = FreeTierPolicyService()
+
+    private enum CalendarGridCell: Hashable {
+        case placeholder(Int)
+        case day(Int)
+    }
+
+    private var calendar: Calendar {
+        var localizedCalendar = Calendar.autoupdatingCurrent
+        localizedCalendar.locale = L10n.locale(for: appState.selectedAppLanguage)
+        return localizedCalendar
+    }
 
     /// Locale-aware short weekday symbols starting from the calendar's first weekday
     private var orderedWeekdaySymbols: [String] {
@@ -24,10 +40,21 @@ struct CalendarMonthView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.warmNeutral.ignoresSafeArea()
+                BotanicalScreenBackground(style: .dashboard)
 
                 ScrollView {
                     VStack(spacing: AppTheme.spacing16) {
+                        BotanicalPosterHeader(
+                            title: monthYearString,
+                            subtitle: L10n.string(
+                                "Notice your cycle rhythm across moons, symptoms, and flow patterns.",
+                                defaultValue: "Notice your cycle rhythm across moons, symptoms, and flow patterns."
+                            ),
+                            emblemAssetName: "botanical-calendar-illustration",
+                            dividerStyle: .moon
+                        )
+                        .padding(.top, AppTheme.spacing8)
+
                         // Month navigation header
                         monthHeader
 
@@ -41,20 +68,32 @@ struct CalendarMonthView: View {
                         cycleInfoSection
                     }
                     .padding()
+                    .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
                 }
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("screen.calendar")
+            .id(appState.languageRenderKey)
             .refreshable {
                 await Task.yield()
                 viewModel?.loadData()
                 loadMonthEntries()
             }
-            .navigationTitle("Calendar")
+            .navigationTitle(
+                L10n.string(
+                    "Calendar",
+                    defaultValue: "Calendar",
+                    language: appState.selectedAppLanguage
+                )
+            )
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingLogSheet = true
-                    } label: {
-                        Label("Log Period", systemImage: "plus")
+                    if appState.lifecycleMode != .pregnant {
+                        Button {
+                            showingLogSheet = true
+                        } label: {
+                            Label(L10n.string("Log Period", defaultValue: "Log Period"), systemImage: "plus")
+                        }
                     }
                 }
             }
@@ -76,6 +115,11 @@ struct CalendarMonthView: View {
                     vm.loadData()
                     viewModel = vm
                 }
+                if pregnancyViewModel == nil {
+                    let pvm = PregnancyViewModel(modelContext: modelContext)
+                    pvm.loadData()
+                    pregnancyViewModel = pvm
+                }
                 loadMonthEntries()
             }
             .onChange(of: displayedMonth) { _, _ in
@@ -92,15 +136,44 @@ struct CalendarMonthView: View {
                 moveMonth(by: -1)
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.title3)
+                    .appFont(.title3)
             }
-            .accessibilityLabel("Previous month")
+            .accessibilityLabel(
+                L10n.string("Previous month", defaultValue: "Previous month")
+            )
 
             Spacer()
 
-            Text(monthYearString)
-                .font(.title2)
-                .fontWeight(.semibold)
+            Button {
+                showingMonthPicker = true
+            } label: {
+                HStack(spacing: AppTheme.spacing4) {
+                    Text(monthYearString)
+                        .appHeadingFont(.title2, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "chevron.down")
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                L10n.format(
+                    "Jump to month, %@",
+                    defaultValue: "Jump to month, %@",
+                    monthYearString
+                )
+            )
+            .accessibilityHint(
+                L10n.string(
+                    "Double tap to open month and year picker",
+                    defaultValue: "Double tap to open month and year picker"
+                )
+            )
 
             Spacer()
 
@@ -108,53 +181,88 @@ struct CalendarMonthView: View {
                 moveMonth(by: 1)
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.title3)
+                    .appFont(.title3)
             }
-            .accessibilityLabel("Next month")
+            .accessibilityLabel(
+                L10n.string("Next month", defaultValue: "Next month")
+            )
         }
         .padding(.horizontal)
+        .cardStyle(cornerRadius: AppTheme.defaultCardCornerRadius)
         .sensoryFeedback(.selection, trigger: displayedMonth)
         .sensoryFeedback(.selection, trigger: showingDayLogSheet)
+        .sheet(isPresented: $showingMonthPicker) {
+            MonthYearPicker(
+                selectedDate: $displayedMonth,
+                hasPremiumAccess: appState.allowsPremiumAccess,
+                freeTierPolicy: freeTierPolicy
+            )
+            .presentationDetents([.medium])
+        }
     }
 
     private var daysOfWeekHeader: some View {
         LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
-            ForEach(orderedWeekdaySymbols, id: \.self) { day in
+            ForEach(Array(orderedWeekdaySymbols.enumerated()), id: \.offset) { index, day in
                 Text(day)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .appFont(.caption, weight: .medium)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .accessibilityIdentifier("calendar.weekday.\(index)")
             }
         }
+        .accessibilityIdentifier("calendar.weekdays")
     }
 
     private var calendarGrid: some View {
         LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
-            // Blank cells for offset
-            ForEach(0..<firstWeekdayOffset, id: \.self) { _ in
-                Color.clear
-                    .frame(minHeight: 44)
-            }
-
-            // Day cells
-            ForEach(1...daysInMonth, id: \.self) { day in
-                CalendarDayCell(
-                    day: day,
-                    isToday: isToday(day: day),
-                    entry: entries[day],
-                    isPredicted: predictedDays.contains(day),
-                    monthDate: displayedMonth
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if let date = dateForDay(day), date <= Date() {
-                        selectedDayDate = date
-                        showingDayLogSheet = true
+            ForEach(calendarGridCells, id: \.self) { cell in
+                switch cell {
+                case .placeholder:
+                    Color.clear
+                        .frame(minHeight: 44)
+                case .day(let day):
+                    Group {
+                        if appState.lifecycleMode == .pregnant, isPregnancyDay(day: day) {
+                            PregnancyCalendarDayCell(
+                                day: day,
+                                isToday: isToday(day: day),
+                                isPregnancyDay: true,
+                                monthDate: displayedMonth,
+                                locale: appState.renderLocale
+                            )
+                        } else {
+                            CalendarDayCell(
+                                day: day,
+                                isToday: isToday(day: day),
+                                entry: entries[day],
+                                isPredicted: predictedDays.contains(day),
+                                isFertileWindow: fertileWindowDays.contains(day),
+                                isOvulationDay: ovulationDay == day,
+                                monthDate: displayedMonth,
+                                locale: appState.renderLocale
+                            )
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if let date = dateForDay(day), date <= Date() {
+                            guard freeTierPolicy.isCycleDateAccessible(date, now: Date(), isPremium: appState.allowsPremiumAccess) else {
+                                appState.presentPremiumPaywall()
+                                return
+                            }
+                            selectedDayDate = date
+                            showingDayLogSheet = true
+                        }
                     }
                 }
             }
         }
+        .padding(AppTheme.isBotanicalJournal ? AppTheme.spacing12 : 0)
+        .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+        .accessibilityIdentifier("calendar.grid")
     }
 
     private var cycleInfoSection: some View {
@@ -166,17 +274,36 @@ struct CalendarMonthView: View {
                     HStack {
                         Image(systemName: "calendar.badge.clock")
                             .foregroundStyle(AppTheme.accentColor)
-                        Text("Day \(dayCount) of current cycle")
-                            .font(.subheadline)
+                        Text(
+                            L10n.format(
+                                "Day %lld of current cycle",
+                                defaultValue: "Day %lld of current cycle",
+                                dayCount
+                            )
+                        )
+                            .appFont(.subheadline)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
-                if let predictionText = viewModel?.predictionRangeText {
+                if let predictionText = viewModel?.predictionPrimaryText {
                     HStack {
                         Image(systemName: "sparkles")
                             .foregroundStyle(AppTheme.coralAccent)
-                        Text(predictionText)
-                            .font(.subheadline)
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text(predictionText)
+                                .appFont(.subheadline)
+                                .lineLimit(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let secondaryText = viewModel?.predictionSecondaryText {
+                                Text(secondaryText)
+                                    .appFont(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
                     }
                 }
 
@@ -185,18 +312,20 @@ struct CalendarMonthView: View {
                         Image(systemName: "chart.bar")
                             .foregroundStyle(.secondary)
                         Text(avgText)
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
 
                 HStack {
-                    Text("Cycle Details")
-                        .font(.caption)
+                    Text(L10n.string("Cycle Details", defaultValue: "Cycle Details"))
+                        .appFont(.caption)
                         .foregroundStyle(AppTheme.accentColor)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.caption)
+                        .appFont(.caption)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -204,6 +333,7 @@ struct CalendarMonthView: View {
             .cardStyle()
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("calendar.cycle_details.card")
     }
 
     // MARK: - Helpers
@@ -211,14 +341,13 @@ struct CalendarMonthView: View {
     private var year: Int { calendar.component(.year, from: displayedMonth) }
     private var month: Int { calendar.component(.month, from: displayedMonth) }
 
-    private static let monthYearFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter
-    }()
-
     private var monthYearString: String {
-        Self.monthYearFormatter.string(from: displayedMonth)
+        displayedMonth.formatted(
+            Date.FormatStyle()
+                .locale(L10n.locale(for: appState.selectedAppLanguage))
+                .month(.wide)
+                .year()
+        )
     }
 
     private var firstWeekdayOffset: Int {
@@ -230,6 +359,12 @@ struct CalendarMonthView: View {
         let weekday = calendar.component(.weekday, from: firstDay)
         // Offset relative to the calendar's configured first weekday
         return (weekday - calendar.firstWeekday + 7) % 7
+    }
+
+    private var calendarGridCells: [CalendarGridCell] {
+        let placeholders = (0..<firstWeekdayOffset).map(CalendarGridCell.placeholder)
+        let days = (1...daysInMonth).map(CalendarGridCell.day)
+        return placeholders + days
     }
 
     private var daysInMonth: Int {
@@ -251,6 +386,13 @@ struct CalendarMonthView: View {
 
     private func moveMonth(by value: Int) {
         if let newDate = calendar.date(byAdding: .month, value: value, to: displayedMonth) {
+            if !appState.allowsPremiumAccess,
+               value < 0,
+               let earliestDate = freeTierPolicy.earliestAccessibleCycleHistoryDate(now: Date(), isPremium: appState.allowsPremiumAccess),
+               newDate < calendar.startOfMonth(for: earliestDate) ?? earliestDate {
+                appState.presentPremiumPaywall()
+                return
+            }
             displayedMonth = newDate
         }
     }
@@ -263,13 +405,24 @@ struct CalendarMonthView: View {
         return calendar.date(from: components)
     }
 
+    private func isPregnancyDay(day: Int) -> Bool {
+        guard let pregnancy = pregnancyViewModel?.activePregnancy,
+              let date = dateForDay(day) else { return false }
+        let start = Calendar.current.startOfDay(for: pregnancy.startDate)
+        let dayDate = Calendar.current.startOfDay(for: date)
+        return dayDate >= start && dayDate <= Date()
+    }
+
     private func loadMonthEntries() {
-        entries = viewModel?.entriesForMonth(year: year, month: month) ?? [:]
+        let earliestDate = freeTierPolicy.earliestAccessibleCycleHistoryDate(now: Date(), isPremium: appState.allowsPremiumAccess)
+        entries = viewModel?.entriesForMonth(year: year, month: month, earliestDate: earliestDate) ?? [:]
         loadPredictedDays()
+        loadOvulationMarkers()
     }
 
     private func loadPredictedDays() {
-        guard let prediction = viewModel?.prediction else {
+        guard let prediction = viewModel?.prediction,
+              viewModel?.hasActionablePrediction == true else {
             predictedDays = []
             return
         }
@@ -285,6 +438,51 @@ struct CalendarMonthView: View {
         }
         predictedDays = days
     }
+
+    private func loadOvulationMarkers() {
+        fertileWindowDays = []
+        ovulationDay = nil
+
+        guard let viewModel,
+              let currentCycle = viewModel.cycles.last,
+              currentCycle.endDate == nil,
+              let monthStart = calendar.startOfMonth(for: displayedMonth),
+              let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)
+        else {
+            return
+        }
+
+        let fetchEnd = max(monthEnd, Date())
+        let observationStore = OvulationObservationStore(modelContext: modelContext)
+        let observations = (try? observationStore.observations(in: DateInterval(start: currentCycle.startDate, end: fetchEnd))) ?? []
+        let predictionService = OvulationPredictionService(calendar: calendar)
+
+        guard let prediction = predictionService.prediction(
+            for: currentCycle,
+            cycleHistory: viewModel.cycles,
+            observations: observations
+        ) else {
+            return
+        }
+
+        var fertileDays = Set<Int>()
+        var date = prediction.fertileWindowStart
+        while date <= prediction.fertileWindowEnd {
+            if calendar.component(.year, from: date) == year,
+               calendar.component(.month, from: date) == month {
+                fertileDays.insert(calendar.component(.day, from: date))
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
+            date = next
+        }
+
+        fertileWindowDays = fertileDays
+
+        if calendar.component(.year, from: prediction.predictedOvulationDate) == year,
+           calendar.component(.month, from: prediction.predictedOvulationDate) == month {
+            ovulationDay = calendar.component(.day, from: prediction.predictedOvulationDate)
+        }
+    }
 }
 
 // MARK: - Calendar Day Cell
@@ -294,13 +492,10 @@ struct CalendarDayCell: View {
     let isToday: Bool
     let entry: CycleEntry?
     var isPredicted: Bool = false
+    var isFertileWindow: Bool = false
+    var isOvulationDay: Bool = false
     let monthDate: Date
-
-    private static let accessibilityDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        return formatter
-    }()
+    let locale: Locale
 
     var body: some View {
         ZStack {
@@ -308,9 +503,19 @@ struct CalendarDayCell: View {
             if let entry, entry.isPeriodDay {
                 Circle()
                     .fill(colorForFlow(entry.flowIntensity))
-            } else if isPredicted {
+            } else if isFertileWindow {
+                Circle()
+                    .fill(AppTheme.sage.opacity(AppTheme.opacityMedium))
+            }
+
+            if isPredicted {
                 Circle()
                     .strokeBorder(AppTheme.coralAccent.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+            }
+
+            if isOvulationDay {
+                Circle()
+                    .strokeBorder(AppTheme.accentColor, lineWidth: 2.5)
             } else if isToday {
                 Circle()
                     .strokeBorder(AppTheme.accentColor, lineWidth: 2)
@@ -318,17 +523,25 @@ struct CalendarDayCell: View {
 
             VStack(spacing: 0) {
                 Text("\(day)")
-                    .font(.subheadline)
-                    .fontWeight(isToday ? .bold : .regular)
+                    .appFont(.subheadline, weight: isToday ? .bold : .regular)
                     .foregroundStyle(entry?.isPeriodDay == true ? .white : isPredicted ? AppTheme.coralAccent : .primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 if let entry, entry.isPeriodDay, let intensity = entry.flowIntensity {
                     Text(intensity.shortLabel)
-                        .font(.caption2)
-                        .fontWeight(.bold)
+                        .appFont(.caption2, weight: .bold)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .foregroundStyle(entry.isPeriodDay ? .white.opacity(0.8) : .secondary)
+                } else if isOvulationDay {
+                    Image(systemName: "sparkle")
+                        .appFont(.caption2)
+                        .foregroundStyle(AppTheme.accentColor)
+                } else if isFertileWindow {
+                    Circle()
+                        .fill(AppTheme.sage)
+                        .frame(width: 5, height: 5)
                 }
             }
         }
@@ -343,18 +556,41 @@ struct CalendarDayCell: View {
         components.day = day
         let dateString: String
         if let date = calendar.date(from: components) {
-            dateString = Self.accessibilityDateFormatter.string(from: date)
+            dateString = date.formatted(
+                Date.FormatStyle(date: .long, time: .omitted)
+                    .locale(locale)
+            )
         } else {
-            dateString = "Day \(day)"
+            dateString = L10n.format(
+                "Day %lld",
+                defaultValue: "Day %lld",
+                day
+            )
         }
 
         var parts = [dateString]
-        if isToday { parts.append("today") }
+        if isToday {
+            parts.append(L10n.string("Today", defaultValue: "today"))
+        }
         if let entry, entry.isPeriodDay {
-            let flowName = entry.flowIntensity?.displayName ?? "period"
-            parts.append("\(flowName) flow")
-        } else if isPredicted {
-            parts.append("predicted period")
+            let flowName = entry.flowIntensity?.displayName ?? L10n.string("Period", defaultValue: "period")
+            parts.append(
+                L10n.format(
+                    "%@ flow",
+                    defaultValue: "%@ flow",
+                    flowName
+                )
+            )
+        } else {
+            if isPredicted {
+                parts.append(L10n.string("Predicted period", defaultValue: "predicted period"))
+            }
+            if isFertileWindow {
+                parts.append(L10n.string("Predicted fertile window", defaultValue: "predicted fertile window"))
+            }
+            if isOvulationDay {
+                parts.append(L10n.string("Predicted ovulation day", defaultValue: "predicted ovulation day"))
+            }
         }
         return parts.joined(separator: ", ")
     }
@@ -370,7 +606,103 @@ struct CalendarDayCell: View {
     }
 }
 
+// MARK: - Month/Year Quick Jump Picker
+
+struct MonthYearPicker: View {
+    @Binding var selectedDate: Date
+    let hasPremiumAccess: Bool
+    let freeTierPolicy: any FreeTierPolicyEnforcing
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var pickerMonth: Int
+    @State private var pickerYear: Int
+
+    private let calendar = Calendar.autoupdatingCurrent
+
+    init(selectedDate: Binding<Date>, hasPremiumAccess: Bool, freeTierPolicy: any FreeTierPolicyEnforcing) {
+        self._selectedDate = selectedDate
+        let cal = Calendar.autoupdatingCurrent
+        self._pickerMonth = State(initialValue: cal.component(.month, from: selectedDate.wrappedValue))
+        self._pickerYear = State(initialValue: cal.component(.year, from: selectedDate.wrappedValue))
+        self.hasPremiumAccess = hasPremiumAccess
+        self.freeTierPolicy = freeTierPolicy
+    }
+
+    private var yearRange: ClosedRange<Int> {
+        let currentYear = calendar.component(.year, from: Date())
+        let minYear = hasPremiumAccess ? currentYear - 5 : currentYear - 1
+        return minYear...currentYear + 1
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: AppTheme.spacing16) {
+                HStack(spacing: 0) {
+                    Picker(L10n.string("Month", defaultValue: "Month"), selection: $pickerMonth) {
+                        ForEach(1...12, id: \.self) { month in
+                            Text(calendar.monthSymbols[month - 1]).tag(month)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+
+                    Picker(L10n.string("Year", defaultValue: "Year"), selection: $pickerYear) {
+                        ForEach(yearRange, id: \.self) { year in
+                            Text(String(year)).tag(year)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                }
+
+                Button {
+                    jumpToSelectedMonth()
+                    dismiss()
+                } label: {
+                    Text(L10n.string("Go to Month", defaultValue: "Go to Month"))
+                        .appFont(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.vertical, 12)
+                        .background(Capsule().fill(AppTheme.accentColor))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal)
+
+                Button(L10n.string("Today", defaultValue: "Today")) {
+                    selectedDate = Date()
+                    dismiss()
+                }
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.accentColor)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical)
+            .navigationTitle(L10n.string("Jump to Month", defaultValue: "Jump to Month"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func jumpToSelectedMonth() {
+        var components = DateComponents()
+        components.year = pickerYear
+        components.month = pickerMonth
+        components.day = 1
+        if let date = calendar.date(from: components) {
+            selectedDate = date
+        }
+    }
+}
+
 #Preview {
     CalendarMonthView()
-        .modelContainer(for: [CycleEntry.self, Cycle.self], inMemory: true)
+        .modelContainer(for: [CycleEntry.self, Cycle.self, OvulationObservation.self], inMemory: true)
 }

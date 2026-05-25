@@ -2,43 +2,85 @@ import SwiftUI
 
 struct PremiumGateModifier: ViewModifier {
     @Environment(AppState.self) private var appState
-    @State private var showPaywall = false
 
     func body(content: Content) -> some View {
         content
             .overlay {
-                if !appState.isPremium {
-                    ZStack {
-                        Color(.systemBackground)
-                            .opacity(0.8)
-
-                        VStack(spacing: AppTheme.spacing16) {
-                            Image(systemName: "lock.fill")
-                                .font(.largeTitle)
-                                .foregroundStyle(AppTheme.accentColor)
-
-                            Text("Premium Feature")
-                                .font(.headline)
-
-                            Text("Unlock this feature and more with CycleBalance Premium.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, AppTheme.spacing24)
-
-                            Button("Unlock Premium") {
-                                showPaywall = true
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(AppTheme.coralAccent)
-                            .sensoryFeedback(.selection, trigger: showPaywall)
-                        }
+                if !appState.allowsPremiumAccess {
+                    PremiumGateOverlay {
+                        appState.presentPremiumPaywall()
                     }
                 }
             }
-            .sheet(isPresented: $showPaywall) {
-                PaywallView()
+    }
+}
+
+private struct PremiumGateOverlay: View {
+    let unlockAction: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color(.systemBackground).opacity(0.6)
+                .background(.ultraThinMaterial)
+
+            Button(action: unlockAction) {
+                VStack(spacing: AppTheme.spacing12) {
+                    Image(systemName: "sparkles")
+                        .appFont(.title2)
+                        .foregroundStyle(AppTheme.coralAccent)
+                        .accessibilityHidden(true)
+
+                    VStack(spacing: AppTheme.spacing4) {
+                        Text(L10n.string("Premium Feature", defaultValue: "Premium Feature"))
+                            .appFont(.headline)
+                            .foregroundStyle(.primary)
+
+                        Text(
+                            L10n.string(
+                                "Unlock this feature and more with CycleBalance Premium.",
+                                defaultValue: "Unlock this feature and more with CycleBalance Premium."
+                            )
+                        )
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    }
+
+                    Label(
+                        L10n.string("Unlock Premium", defaultValue: "Unlock Premium"),
+                        systemImage: "sparkles"
+                    )
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppTheme.spacing16)
+                    .padding(.vertical, AppTheme.spacing8)
+                    .background(Capsule().fill(AppTheme.accentColor))
+                }
+                .padding(AppTheme.spacing16)
+                .frame(maxWidth: 280)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
+                        .fill(.regularMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
+                        .stroke(AppTheme.accentColor.opacity(AppTheme.opacityStrong), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+                .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                L10n.string("Premium Feature", defaultValue: "Premium Feature")
+            )
+            .accessibilityHint(
+                L10n.string(
+                    "Unlock this feature and more with CycleBalance Premium.",
+                    defaultValue: "Unlock this feature and more with CycleBalance Premium."
+                )
+            )
+            .accessibilityIdentifier("premium_gate.unlock")
+        }
     }
 }
 

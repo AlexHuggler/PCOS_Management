@@ -31,12 +31,16 @@ struct SuggestionProvider {
         defaultsStore.recordRecentBloodSugarNote(value)
     }
 
-    func recordMealDescription(_ value: String) {
-        defaultsStore.recordRecentMealDescription(value)
+    func recordMealDescription(_ value: String, mealType: MealType) {
+        defaultsStore.recordRecentMealDescription(value, mealType: mealType)
     }
 
-    func recordMealNote(_ value: String) {
-        defaultsStore.recordRecentMealNote(value)
+    func recordMealNote(_ value: String, mealType: MealType) {
+        defaultsStore.recordRecentMealNote(value, mealType: mealType)
+    }
+
+    func recordPhotoNote(_ value: String, photoType: HairPhotoType) {
+        defaultsStore.recordRecentPhotoNote(value, photoType: photoType)
     }
 
     func recordPeriodNote(_ value: String, flowIntensity: FlowIntensity) {
@@ -57,13 +61,25 @@ struct SuggestionProvider {
         limit: Int = 6
     ) -> [String] {
         let curated = curatedMealDescriptions(for: mealType)
-        let learned = defaultsStore.recentMealDescriptions(limit: max(limit * 2, 10))
+        let learned = defaultsStore.recentMealDescriptions(
+            mealType: mealType,
+            limit: max(limit * 2, 10)
+        )
         return rankedSuggestions(query: query, curated: curated, learned: learned, limit: limit)
     }
 
-    func mealNoteSuggestions(query: String, limit: Int = 6) -> [String] {
-        let curated = curatedMealNotes
-        let learned = defaultsStore.recentMealNotes(limit: max(limit * 2, 10))
+    func mealNoteSuggestions(query: String, mealType: MealType, limit: Int = 6) -> [String] {
+        let curated = curatedMealNotes(for: mealType)
+        let learned = defaultsStore.recentMealNotes(
+            mealType: mealType,
+            limit: max(limit * 2, 10)
+        )
+        return rankedSuggestions(query: query, curated: curated, learned: learned, limit: limit)
+    }
+
+    func photoNoteSuggestions(photoType: HairPhotoType, query: String, limit: Int = 8) -> [String] {
+        let curated = curatedPhotoNotes(for: photoType)
+        let learned = defaultsStore.recentPhotoNotes(photoType: photoType, limit: max(limit * 2, 12))
         return rankedSuggestions(query: query, curated: curated, learned: learned, limit: limit)
     }
 
@@ -185,6 +201,14 @@ struct SuggestionProvider {
                 "Turkey sausage + eggs",
                 "Avocado + cottage cheese bowl",
                 "Muesli + yogurt",
+                "Breakfast sandwich",
+                "Sweet potato hash + eggs",
+                "Yogurt parfait",
+                "Protein pancakes",
+                "Breakfast tacos",
+                "Egg white bites",
+                "Tofu breakfast burrito",
+                "Smoothie bowl",
             ]
         case .lunch:
             [
@@ -213,6 +237,14 @@ struct SuggestionProvider {
                 "Farro + roasted veggie bowl",
                 "Turkey burger bowl",
                 "Caprese chicken salad",
+                "Chicken burrito bowl",
+                "Turkey sandwich + fruit",
+                "Mediterranean bowl",
+                "Soup + half sandwich",
+                "Poke bowl",
+                "Sushi bowl",
+                "Chicken pasta salad",
+                "Taco salad",
             ]
         case .dinner:
             [
@@ -241,6 +273,14 @@ struct SuggestionProvider {
                 "Shakshuka + side salad",
                 "Roasted tofu + carrots",
                 "Grilled shrimp + quinoa salad",
+                "Sheet-pan chicken + veggies",
+                "Chicken curry + rice",
+                "Salmon rice bowl",
+                "Turkey burger + salad",
+                "Beef tacos + slaw",
+                "Turkey stuffed sweet potato",
+                "Veggie frittata + salad",
+                "Chicken soup + salad",
             ]
         case .snack:
             [
@@ -269,18 +309,63 @@ struct SuggestionProvider {
                 "Boiled egg + almonds",
                 "Yogurt + granola",
                 "Pear + walnuts",
+                "String cheese + fruit",
+                "Jerky + fruit",
+                "Cottage cheese cup",
+                "Dates + nuts",
+                "Mini smoothie",
+                "Veggie chips + hummus",
+                "Rice cake + nut butter",
+                "Protein bites",
             ]
         }
     }
 
-    private var curatedMealNotes: [String] {
-        [
-            "High stress",
-            "Poor sleep",
-            "Late meal",
-            "Post-workout",
+    private func curatedMealNotes(for mealType: MealType) -> [String] {
+        let common = [
+            "Balanced meal",
             "Ate out",
+            "Meal prep",
+            "Large portion",
+            "Craving-driven",
         ]
+
+        let specific: [String] = switch mealType {
+        case .breakfast:
+            [
+                "Skipped breakfast",
+                "Coffee first",
+                "Sweet breakfast",
+                "High protein",
+                "On the go",
+            ]
+        case .lunch:
+            [
+                "Desk lunch",
+                "Packed lunch",
+                "Light lunch",
+                "High carb",
+                "Restaurant lunch",
+            ]
+        case .dinner:
+            [
+                "Late dinner",
+                "Heavy dinner",
+                "Family meal",
+                "Takeout",
+                "High carb",
+            ]
+        case .snack:
+            [
+                "Pre-workout",
+                "Post-workout",
+                "Sweet snack",
+                "Salty snack",
+                "Late-night snack",
+            ]
+        }
+
+        return common + specific
     }
 
     private var curatedBloodSugarContexts: [String] {
@@ -318,39 +403,89 @@ struct SuggestionProvider {
             []
         case .spotting:
             [
-                "Spotting duration",
-                "Brown spotting",
-                "Pink spotting",
-                "Mild cramps",
-                "Mood changes",
-                "After exercise",
+                L10n.string("Spotting duration", defaultValue: "Spotting duration"),
+                L10n.string("Brown spotting", defaultValue: "Brown spotting"),
+                L10n.string("Pink spotting", defaultValue: "Pink spotting"),
+                L10n.string("Mild cramps", defaultValue: "Mild cramps"),
+                L10n.string("Mood changes", defaultValue: "Mood changes"),
+                L10n.string("After exercise", defaultValue: "After exercise"),
             ]
         case .light:
             [
-                "Small clots",
-                "Mild cramps",
-                "Mood changes",
-                "Low energy",
-                "Spotting duration",
-                "Headache",
+                L10n.string("Small clots", defaultValue: "Small clots"),
+                L10n.string("Mild cramps", defaultValue: "Mild cramps"),
+                L10n.string("Mood changes", defaultValue: "Mood changes"),
+                L10n.string("Low energy", defaultValue: "Low energy"),
+                L10n.string("Spotting duration", defaultValue: "Spotting duration"),
+                L10n.string("Headache", defaultValue: "Headache"),
             ]
         case .medium:
             [
-                "Clotting",
-                "Moderate cramps",
-                "Back pain",
-                "Mood changes",
-                "Fatigue",
-                "Bloating",
+                L10n.string("Clotting", defaultValue: "Clotting"),
+                L10n.string("Moderate cramps", defaultValue: "Moderate cramps"),
+                L10n.string("Back pain", defaultValue: "Back pain"),
+                L10n.string("Mood changes", defaultValue: "Mood changes"),
+                L10n.string("Fatigue", defaultValue: "Fatigue"),
+                L10n.string("Bloating", defaultValue: "Bloating"),
             ]
         case .heavy:
             [
-                "Heavy clotting",
-                "Severe cramps",
-                "Frequent product change",
-                "Mood changes",
-                "Low energy",
-                "Dizziness",
+                L10n.string("Heavy clotting", defaultValue: "Heavy clotting"),
+                L10n.string("Severe cramps", defaultValue: "Severe cramps"),
+                L10n.string("Frequent product change", defaultValue: "Frequent product change"),
+                L10n.string("Mood changes", defaultValue: "Mood changes"),
+                L10n.string("Low energy", defaultValue: "Low energy"),
+                L10n.string("Dizziness", defaultValue: "Dizziness"),
+            ]
+        }
+    }
+
+    private func curatedPhotoNotes(for photoType: HairPhotoType) -> [String] {
+        switch photoType {
+        case .scalpPart:
+            [
+                "Same part placement",
+                "More shedding",
+                "Less shedding",
+                "New growth",
+                "Dry scalp",
+                "Oily scalp",
+            ]
+        case .hairline:
+            [
+                "Baby hairs",
+                "Temple thinning",
+                "Fill-in growth",
+                "Breakage",
+                "Redness",
+                "Same angle",
+            ]
+        case .faceChin:
+            [
+                "New coarse hairs",
+                "Less dense",
+                "Post-removal",
+                "Ingrown hairs",
+                "Irritated skin",
+                "Same lighting",
+            ]
+        case .faceUpperLip:
+            [
+                "Darker hairs",
+                "Less visible",
+                "Post-removal",
+                "Shadowing",
+                "Irritated skin",
+                "Same lighting",
+            ]
+        case .body:
+            [
+                "Area tracked today",
+                "Coarser hair",
+                "Patchy growth",
+                "Less growth",
+                "Post-removal",
+                "Same angle",
             ]
         }
     }

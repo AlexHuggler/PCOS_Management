@@ -89,9 +89,39 @@
               "description" : "Unlock all CycleBalance premium features billed monthly.",
               "displayName" : "CycleBalance Premium Monthly",
               "locale" : "en_US"
+            },
+            {
+              "description" : "CycleBalanceのすべてのプレミアム機能を毎月課金で利用できます。",
+              "displayName" : "CycleBalance プレミアム 月額",
+              "locale" : "ja_JP"
+            },
+            {
+              "description" : "Sblocca tutte le funzionalità premium di CycleBalance con fatturazione mensile.",
+              "displayName" : "CycleBalance Premium Mensile",
+              "locale" : "it_IT"
+            },
+            {
+              "description" : "매월 결제로 CycleBalance의 모든 프리미엄 기능을 이용하세요.",
+              "displayName" : "CycleBalance 프리미엄 월간",
+              "locale" : "ko_KR"
+            },
+            {
+              "description" : "Débloquez toutes les fonctionnalités premium de CycleBalance avec une facturation mensuelle.",
+              "displayName" : "CycleBalance Premium Mensuel",
+              "locale" : "fr_FR"
+            },
+            {
+              "description" : "Schalten Sie alle Premium-Funktionen von CycleBalance mit monatlicher Abrechnung frei.",
+              "displayName" : "CycleBalance Premium Monatlich",
+              "locale" : "de_DE"
+            },
+            {
+              "description" : "Ontgrendel alle premiumfuncties van CycleBalance met maandelijkse facturering.",
+              "displayName" : "CycleBalance Premium Maandelijks",
+              "locale" : "nl_NL"
             }
           ],
-          "productID" : "com.cyclebalance.premium.monthly",
+          "productID" : "cyclebalance.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "CycleBalance Premium Monthly",
           "subscriptionGroupID" : "PCOS_PREMIUM_GROUP",
@@ -116,9 +146,39 @@
               "description" : "Unlock all CycleBalance premium features billed annually.",
               "displayName" : "CycleBalance Premium Yearly",
               "locale" : "en_US"
+            },
+            {
+              "description" : "CycleBalanceのすべてのプレミアム機能を年額課金で利用できます。",
+              "displayName" : "CycleBalance プレミアム 年額",
+              "locale" : "ja_JP"
+            },
+            {
+              "description" : "Sblocca tutte le funzionalità premium di CycleBalance con fatturazione annuale.",
+              "displayName" : "CycleBalance Premium Annuale",
+              "locale" : "it_IT"
+            },
+            {
+              "description" : "연간 결제로 CycleBalance의 모든 프리미엄 기능을 이용하세요.",
+              "displayName" : "CycleBalance 프리미엄 연간",
+              "locale" : "ko_KR"
+            },
+            {
+              "description" : "Débloquez toutes les fonctionnalités premium de CycleBalance avec une facturation annuelle.",
+              "displayName" : "CycleBalance Premium Annuel",
+              "locale" : "fr_FR"
+            },
+            {
+              "description" : "Schalten Sie alle Premium-Funktionen von CycleBalance mit jährlicher Abrechnung frei.",
+              "displayName" : "CycleBalance Premium Jährlich",
+              "locale" : "de_DE"
+            },
+            {
+              "description" : "Ontgrendel alle premiumfuncties van CycleBalance met jaarlijkse facturering.",
+              "displayName" : "CycleBalance Premium Jaarlijks",
+              "locale" : "nl_NL"
             }
           ],
-          "productID" : "com.cyclebalance.premium.yearly",
+          "productID" : "cyclebalance.premium.annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "CycleBalance Premium Yearly",
           "subscriptionGroupID" : "PCOS_PREMIUM_GROUP",

@@ -8,6 +8,7 @@ struct BloodSugarLogView: View {
     @State private var saveCoordinator = SaveInteractionCoordinator()
     @State private var activeAlert: ActiveAlert?
     @State private var dirtyTracker: FormDirtyTracker<FormSnapshot>?
+    @State private var errorHapticTrigger = false
     @FocusState private var focusedField: FocusedField?
 
     private enum FocusedField: Hashable {
@@ -42,6 +43,7 @@ struct BloodSugarLogView: View {
                 if let viewModel {
                     ScrollView {
                         VStack(spacing: AppTheme.spacing16) {
+                            inlineHistoryShortcut
                             glucoseSection(viewModel: viewModel)
                             readingTypeSection(viewModel: viewModel)
                             mealContextSection(viewModel: viewModel)
@@ -51,17 +53,25 @@ struct BloodSugarLogView: View {
                         .padding()
                     }
                 } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ScrollView {
+                        VStack(spacing: AppTheme.spacing16) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                SkeletonListRow()
+                                    .cardStyle()
+                            }
+                            SkeletonChart()
+                        }
+                        .padding()
+                    }
                 }
 
                 saveBar
             }
-            .navigationTitle("Log Blood Sugar")
+            .navigationTitle(L10n.string("Log Blood Sugar", defaultValue: "Log Blood Sugar"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
                             activeAlert = .cancel
                         } else {
@@ -73,21 +83,21 @@ struct BloodSugarLogView: View {
                     NavigationLink {
                         BloodSugarHistoryView()
                     } label: {
-                        Label("History", systemImage: "clock.arrow.circlepath")
+                        Label(L10n.string("History", defaultValue: "History"), systemImage: "clock.arrow.circlepath")
                     }
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     if focusedField == .glucose {
-                        Button("Next") {
+                        Button(L10n.string("Next", defaultValue: "Next")) {
                             focusedField = .mealContext
                         }
                     } else if focusedField == .mealContext {
-                        Button("Next") {
+                        Button(L10n.string("Next", defaultValue: "Next")) {
                             focusedField = .notes
                         }
                     }
                     Spacer()
-                    Button("Done") {
+                    Button(L10n.string("Done", defaultValue: "Done")) {
                         focusedField = nil
                     }
                 }
@@ -110,12 +120,13 @@ struct BloodSugarLogView: View {
                     )
                 }
             }
-            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if saveCoordinator.isShowingSavedFeedback {
                     SavedFeedbackOverlay()
                 }
             }
+            .sensoryFeedback(.success, trigger: saveCoordinator.isShowingSavedFeedback)
+            .sensoryFeedback(.error, trigger: errorHapticTrigger)
             .onAppear {
                 let vm = BloodSugarViewModel(modelContext: modelContext)
                 viewModel = vm
@@ -128,10 +139,49 @@ struct BloodSugarLogView: View {
         .premiumGated()
     }
 
+    private var inlineHistoryShortcut: some View {
+        NavigationLink {
+            BloodSugarHistoryView()
+        } label: {
+            HStack(spacing: AppTheme.spacing12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .appFont(.title3)
+                    .foregroundStyle(AppTheme.accentColor)
+
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    Text(L10n.string("View History & Trends", defaultValue: "View History & Trends"))
+                        .appFont(.headline)
+                        .foregroundStyle(.primary)
+
+                    Text(
+                        L10n.string(
+                            "Review past readings and recent patterns",
+                            defaultValue: "Review past readings and recent patterns"
+                        )
+                    )
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("blood_sugar_log.inline_history_button")
+    }
+
     private func glucoseSection(viewModel: BloodSugarViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Glucose Value")
-                .font(.headline)
+                .appFont(.headline)
 
             HStack(spacing: AppTheme.spacing8) {
                 TextField("Enter value", text: Binding(
@@ -141,17 +191,32 @@ struct BloodSugarLogView: View {
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
                 .focused($focusedField, equals: .glucose)
+                .onChange(of: viewModel.glucoseValueText) { _, newValue in
+                    // Auto-advance when user enters a valid 3+ digit glucose value
+                    let digits = newValue.filter(\.isNumber)
+                    if digits.count >= 3, viewModel.isValidGlucose {
+                        focusedField = .mealContext
+                    }
+                }
 
                 Text("mg/dL")
-                    .font(.subheadline)
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
             }
 
             if !viewModel.glucoseValueText.isEmpty && !viewModel.isValidGlucose {
                 Text("Value must be between 40 and 600 mg/dL")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.red)
             }
+
+            // Range reference hints
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Fasting: 70–100 mg/dL normal")
+                Text("Post-meal: under 140 mg/dL typical")
+            }
+            .appFont(.caption2)
+            .foregroundStyle(.tertiary)
         }
         .cardStyle()
     }
@@ -159,7 +224,7 @@ struct BloodSugarLogView: View {
     private func readingTypeSection(viewModel: BloodSugarViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Reading Type")
-                .font(.headline)
+                .appFont(.headline)
 
             Picker("Reading Type", selection: Binding(
                 get: { viewModel.readingType },
@@ -172,12 +237,23 @@ struct BloodSugarLogView: View {
             .pickerStyle(.segmented)
         }
         .cardStyle()
+        .sensoryFeedback(.selection, trigger: viewModel.readingType)
     }
 
     private func mealContextSection(viewModel: BloodSugarViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Meal Context")
-                .font(.headline)
+                .appFont(.headline)
+
+            Text(
+                L10n.string(
+                    "Pair this reading with a meal or snack if you can.",
+                    defaultValue: "Pair this reading with a meal or snack if you can."
+                )
+            )
+                .appFont(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             TextField("e.g., After breakfast", text: Binding(
                 get: { viewModel.mealContext },
@@ -192,33 +268,22 @@ struct BloodSugarLogView: View {
 
             if !viewModel.mealContextSuggestions.isEmpty {
                 Text("Quick context")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.secondary)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: AppTheme.spacing8) {
                         ForEach(viewModel.mealContextSuggestions, id: \.self) { suggestion in
-                            Button {
+                            ChipButton(title: suggestion, color: AppTheme.accentColor) {
                                 viewModel.applyMealContextSuggestion(suggestion)
-                            } label: {
-                                Text(suggestion)
-                                    .font(.caption)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        Capsule()
-                                            .fill(AppTheme.accentColor.opacity(0.12))
-                                    )
-                                    .foregroundStyle(AppTheme.accentColor)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
             }
 
-            Text("Optional")
-                .font(.caption)
+            Text(L10n.string("Optional", defaultValue: "Optional"))
+                .appFont(.caption)
                 .foregroundStyle(.tertiary)
         }
         .cardStyle()
@@ -226,8 +291,8 @@ struct BloodSugarLogView: View {
 
     private func dateSection(viewModel: BloodSugarViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-            Text("Date & Time")
-                .font(.headline)
+            Text(L10n.string("Date & Time", defaultValue: "Date & Time"))
+                .appFont(.headline)
 
             DatePicker(
                 "Reading date",
@@ -245,8 +310,8 @@ struct BloodSugarLogView: View {
 
     private func notesSection(viewModel: BloodSugarViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-            Text("Notes")
-                .font(.headline)
+            Text(L10n.string("Notes", defaultValue: "Notes"))
+                .appFont(.headline)
 
             TextField("Any additional notes", text: Binding(
                 get: { viewModel.notes },
@@ -258,40 +323,20 @@ struct BloodSugarLogView: View {
 
             if !viewModel.noteSuggestions.isEmpty {
                 Text("Quick notes")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.secondary)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: AppTheme.spacing8) {
-                        ForEach(viewModel.noteSuggestions, id: \.self) { suggestion in
-                            let isSelected = viewModel.isNoteSuggestionSelected(suggestion)
-                            Button {
-                                viewModel.toggleNoteSuggestion(suggestion)
-                            } label: {
-                                HStack(spacing: 4) {
-                                    if isSelected {
-                                        Image(systemName: "checkmark")
-                                            .font(.caption2)
-                                    }
-                                    Text(suggestion)
-                                        .font(.caption)
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(isSelected ? AppTheme.sage.opacity(0.26) : AppTheme.sage.opacity(0.18))
-                                )
-                                .foregroundStyle(AppTheme.sage)
-                            }
-                            .buttonStyle(.plain)
+                FlowLayout(spacing: AppTheme.spacing8) {
+                    ForEach(viewModel.noteSuggestions, id: \.self) { suggestion in
+                        ChipButton(title: suggestion, isSelected: viewModel.isNoteSuggestionSelected(suggestion), color: AppTheme.sage) {
+                            viewModel.toggleNoteSuggestion(suggestion)
                         }
                     }
                 }
             }
 
-            Text("Optional")
-                .font(.caption)
+            Text(L10n.string("Optional", defaultValue: "Optional"))
+                .appFont(.caption)
                 .foregroundStyle(.tertiary)
         }
         .cardStyle()
@@ -303,11 +348,11 @@ struct BloodSugarLogView: View {
             HStack {
                 if let viewModel, viewModel.isValidGlucose {
                     Text("Ready to save")
-                        .font(.subheadline)
+                        .appFont(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
                     Text("Enter a glucose value to save")
-                        .font(.caption)
+                        .appFont(.caption)
                         .foregroundStyle(.tertiary)
                 }
 
@@ -317,7 +362,7 @@ struct BloodSugarLogView: View {
                     saveReading()
                 } label: {
                     Text("Save")
-                        .font(.headline)
+                        .appFont(.headline)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
                         .background(
@@ -341,14 +386,29 @@ struct BloodSugarLogView: View {
     }
 
     private func saveReading() {
+        guard let viewModel else { return }
+
         do {
-            try viewModel?.saveReading()
-            saveCoordinator.showSuccessAndDismiss {
-                dismiss()
+            try viewModel.saveReading()
+
+            if var dirtyTracker {
+                dirtyTracker.reset(to: snapshot(for: viewModel))
+                self.dirtyTracker = dirtyTracker
+            } else {
+                dirtyTracker = FormDirtyTracker(initial: snapshot(for: viewModel))
             }
+
+            saveCoordinator.showSuccessTransient()
+            focusedField = .glucose
         } catch {
-            saveCoordinator.showErrorHaptic()
-            activeAlert = .error("Could not save reading: \(error.localizedDescription)")
+            saveCoordinator.showErrorFeedback()
+            errorHapticTrigger.toggle()
+            activeAlert = .error(
+                String(
+                    localized: "Could not save reading: \(error.localizedDescription)",
+                    comment: "Error shown when a blood sugar reading cannot be saved."
+                )
+            )
         }
     }
 

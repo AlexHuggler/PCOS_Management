@@ -1,0 +1,2435 @@
+/* PDF report inline cycle length suffix. */
+" (%lld days)" = "(%lld 日)";
+
+/* No comment provided by engineer. */
+"%@ (g)" = "%@ (g)";
+
+/* Subscription price displayed together with the billing period. */
+"%@ / %@" = "%@ / %@";
+
+/* PDF report value for average cycle length in days. */
+"%@ days" = "%@ 日";
+
+/* No comment provided by engineer. */
+"%@ flow" = "%@ フロー";
+
+/* Insight title describing a supplement that may correlate with better symptom scores. */
+"%@ may be helping" = "%@ が役立つかもしれません";
+
+/* CSV export dosage value in milligrams. */
+"%@ mg" = "%@ mg";
+
+/* Sample symptom note used in demo data. */
+"%@ noted during routine tracking" = "日常的な追跡中に%@が記録されました";
+
+/* Insight title describing a pair of symptoms that often happen on the same day. */
+"%@ often appear together" = "%@ は一緒に現れることが多い";
+
+/* Accessibility label for an individual severity level button. */
+"%@ severity" = "%@ 重大度";
+
+/* No comment provided by engineer. */
+"%@, %@" = "%@、%@";
+
+/* Accessibility label for a symptom selection tile. */
+"%@, severity %@" = "%@、重大度 %@";
+
+/* Accessibility label for a symptom chip, including the symptom name and severity. */
+"%@, severity %lld of 5, %@" = "%@、重大度 %lld/5、%@";
+
+/* PDF report line showing blood sugar average by reading type. */
+"%@: %@ mg/dL (%lld readings)" = "%@: %@ mg/dL (%lld 読み取り値)";
+
+/* No comment provided by engineer. */
+"%@: %@, %@" = "%@: %@、%@";
+
+/* No comment provided by engineer. */
+"%@: %@. %@" = "%@: %@。 %@";
+
+/* PDF report line for average symptom severity. */
+"%@: %@/5" = "%@: %@/5";
+
+/* PDF report line for symptom frequency and average severity. */
+"%@: %lld occurrences, avg severity %@/5" = "%@: %lld 回の発生、平均重大度 %@/5";
+
+/* PDF report line showing supplement adherence by supplement. */
+"%@: %lld taken, %lld missed (%lld%% adherence)" = "%@: %lld が取得され、%lld が失敗しました (%lld%% 遵守)";
+
+/* Sample cycle note used in demo data when a new period begins. */
+"%@: period started" = "%@: 期間が開始されました";
+
+/* Accessibility label for a tracking hub card, including title and subtitle. */
+"%@. %@" = "%@。 %@";
+
+/* No comment provided by engineer. */
+"%@g" = "%@g";
+
+/* No comment provided by engineer. */
+"%lld" = "%lld";
+
+/* PDF report value for cycle length range in days. */
+"%lld - %lld days" = "%lld ～ %lld 日";
+
+/* No comment provided by engineer. */
+"%lld days" = "%lld 日";
+
+/* No comment provided by engineer. */
+"%lld mg" = "%lld mg";
+
+/* No comment provided by engineer. */
+"%lld mg/dL" = "%lld mg/dL";
+
+/* No comment provided by engineer. */
+"%lld missed" = "%lld回未服用";
+
+/* Questionnaire progress text showing how many symptom focus areas are selected.
+Text showing how many symptom focus areas are selected during onboarding. */
+"%lld of %lld selected" = "%lld中%lldが選択されました";
+
+/* Summary showing how many scheduled supplements were marked taken today. */
+"%lld of %lld taken today" = "今日は %lld / %lld 件を服用しました";
+
+/* No comment provided by engineer. */
+"%lld records • schema v%lld" = "%lld レコード • スキーマ v%lld";
+
+/* No comment provided by engineer. */
+"%lld/%lld" = "%lld/%lld";
+
+/* No comment provided by engineer. */
+"%lld%%" = "%lld%%";
+
+/* Supporting text showing the confidence percentage for an insight. */
+"%lld%% confidence" = "%lld%% の信頼度";
+
+/* Insight content about a high proportion of high glycemic index meals. */
+"%lld%% of your logged meals are high glycemic impact. For PCOS management, aiming for more low-GI meals may help with insulin sensitivity and symptom management." = "記録された食事のうち %lld%% は血糖への影響が高くなります。 PCOS の管理では、より低 GI の食事を目指すと、インスリン感受性と症状の管理に役立つ可能性があります。";
+
+/* Insight content about a high proportion of low glycemic index meals. */
+"%lld%% of your logged meals are low glycemic impact. This is great for PCOS management and insulin sensitivity. Keep it up!" = "記録された食事のうち %lld%% は血糖への影響が低いものです。これは、PCOS の管理とインスリン感受性の管理に最適です。それを維持する！";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld day](inflect: true)" = "^[%lld日](活用: true)";
+
+/* Badge showing the user's current logging streak in days. */
+"^[%lld day](inflect: true) logging streak" = "^[%lld 日](活用: true) 連続ロギング";
+
+/* Summary showing how many meals were logged today. */
+"^[%lld meal](inflect: true) logged today" = "^[%lld 食事](活用: true) が今日記録されました";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld month](inflect: true)" = "^[%lld 月](活用: true)";
+
+/* Summary showing how many blood sugar readings were logged today. */
+"^[%lld reading](inflect: true) today" = "^[%lld 読書](活用: true) 今日";
+
+/* Subtitle showing how many symptoms were copied from yesterday. */
+"^[%lld symptom](inflect: true)" = "^[%lld 症状](活用: true)";
+
+/* Footer text showing how many symptoms are currently selected. */
+"^[%lld symptom](inflect: true) selected" = "^[%lld 症状](活用: true) が選択されました";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld week](inflect: true)" = "^[%lld 週](活用: true)";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld year](inflect: true)" = "^[%lld年](活用: true)";
+
+/* No comment provided by engineer. */
+"0" = "0";
+
+/* Sample blood sugar meal context used in demo data. */
+"2h post meal" = "食後2時間";
+
+/* No comment provided by engineer. */
+"About" = "について";
+
+/* No comment provided by engineer. */
+"Account" = "アカウント";
+
+/* Symptom label. */
+"Acne" = "ニキビ";
+
+/* No comment provided by engineer. */
+"Add any observations..." = "所見があれば追加してください...";
+
+/* No comment provided by engineer. */
+"Add more %@ photos to compare changes over time." = "%@ 個の写真を追加して、時間の経過による変化を比較します。";
+
+/* No comment provided by engineer. */
+"Add one more photo to compare progress." = "進捗状況を比較するために写真をもう 1 枚追加します。";
+
+/* No comment provided by engineer. */
+"Add Photo" = "写真を追加";
+
+/* No comment provided by engineer. */
+"Add photos for %@ to start comparing changes over time." = "%@ の写真を追加して、経時的な変化の比較を開始します。";
+
+/* No comment provided by engineer. */
+"Add Supplement" = "補足を追加";
+
+/* No comment provided by engineer. */
+"adherence" = "遵守率";
+
+/* Blood sugar reading type. */
+"After Meal" = "食後";
+
+/* Insight content describing worse symptoms after shorter sleep. */
+"After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after good sleep. Prioritizing sleep may help reduce PCOS symptoms." = "睡眠時間が %lld 時間未満の夜の場合、症状の重症度は平均 %@/5 ですが、十分な睡眠の後は %@/5 になります。睡眠を優先すると、PCOS の症状を軽減できる可能性があります。";
+
+/* No comment provided by engineer. */
+"All reminders stay on your device." = "すべてのリマインダーはデバイス上に残ります。";
+
+/* No comment provided by engineer. */
+"Allow CycleBalance to read your health data" = "CycleBalance に健康データの読み取りを許可する";
+
+/* Symptom label. */
+"Anxiety" = "不安";
+
+/* No comment provided by engineer. */
+"Any additional notes" = "追加の注意事項";
+
+/* No comment provided by engineer. */
+"Any additional notes..." = "追加の注意点は...";
+
+/* No comment provided by engineer. */
+"Apple Health" = "Appleヘルス";
+
+/* No comment provided by engineer. */
+"Apple Health is not available on this device. HealthKit integration requires a physical iPhone." = "Apple Health はこのデバイスでは使用できません。 HealthKit の統合には物理的な iPhone が必要です。";
+
+/* Sample symptom note used in demo data for a menstrual-phase symptom. */
+"Associated symptom during menstrual phase" = "月経期の関連症状";
+
+/* No comment provided by engineer. */
+"Authorization" = "認可";
+
+/* No comment provided by engineer. */
+"Average" = "平均";
+
+/* PDF report subheading for blood sugar averages by reading type. */
+"Average by Reading Type" = "読み取りタイプ別の平均";
+
+/* PDF report summary line showing average cycle length. */
+"Average length: %@" = "平均長: %@";
+
+/* PDF report subheading for average symptom severity. */
+"Average Severity per Symptom" = "症状ごとの平均重症度";
+
+/* Chart annotation showing average cycle length in days. */
+"Avg: %@d" = "平均: %@d";
+
+/* Symptom label. */
+"Back Pain" = "腰痛";
+
+/* Backup import error shown when the selected backup file is malformed. */
+"Backup data is invalid: %@" = "バックアップ データが無効です: %@";
+
+/* Backup import error shown when imported data references a missing cycle record. */
+"Backup references missing cycle %@." = "バックアップ参照にサイクル %@ がありません。";
+
+/* Backup import error shown when imported data references a missing cycle entry record. */
+"Backup references missing cycle entry %@." = "バックアップ参照にサイクル エントリ %@ がありません。";
+
+/* Supporting text showing how many records were used to generate an insight. */
+"Based on %lld data points" = "%lld データ ポイントに基づく";
+
+/* Blood sugar reading type. */
+"Before Meal" = "食前";
+
+/* No comment provided by engineer. */
+"Billing Mode" = "課金モード";
+
+/* Symptom label. */
+"Bloating" = "膨満感";
+
+/* CSV export row type value.
+PDF report section title. */
+"Blood Sugar" = "血糖値";
+
+/* No comment provided by engineer. */
+"Blood Sugar History" = "血糖値の歴史";
+
+/* Photo journal body area label. */
+"Body" = "体";
+
+/* Symptom label. */
+"Body Hair" = "体毛";
+
+/* No comment provided by engineer. */
+"Brand (optional)" = "ブランド (オプション)";
+
+/* Meal type label. */
+"Breakfast" = "朝食";
+
+/* Symptom label for acne or skin breakouts. */
+"Breakouts" = "吹き出物";
+
+/* Symptom label. */
+"Breast Tenderness" = "乳房の圧痛";
+
+/* Tab title. */
+"Calendar" = "カレンダー";
+
+/* No comment provided by engineer. */
+"Camera Access Needed" = "カメラへのアクセスが必要です";
+
+/* No comment provided by engineer. */
+"Camera Unavailable" = "カメラが使用できません";
+
+/* No comment provided by engineer. */
+"Cancel" = "キャンセル";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Check the Calendar tab to see your cycle at a glance." = "[カレンダー] タブをチェックすると、自分の周期が一目でわかります。";
+
+/* Sample meal description used in demo data. */
+"Chicken wrap with hummus" = "フムス入りチキンラップ";
+
+/* Photo journal body area label. */
+"Chin" = "顎";
+
+/* No comment provided by engineer. */
+"Clear" = "クリア";
+
+/* No comment provided by engineer. */
+"Clear all" = "すべてクリア";
+
+/* No comment provided by engineer. */
+"Close" = "閉じる";
+
+/* No comment provided by engineer. */
+"CloudKit Sync" = "CloudKit 同期";
+
+/* No comment provided by engineer. */
+"Common on period days" = "生理日によくあること";
+
+/* No comment provided by engineer. */
+"Compare Photos" = "写真を比較する";
+
+/* No comment provided by engineer. */
+"Confidence" = "自信";
+
+/* No comment provided by engineer. */
+"Connect to Apple Health" = "Apple Health に接続します";
+
+/* No comment provided by engineer. */
+"Connected to Apple Health" = "Apple Health に接続されました";
+
+/* Follow-up guidance when symptom severity is worsening. */
+"Consider reviewing recent changes to your routine." = "最近のルーティンの変更を確認することを検討してください。";
+
+/* Sample demo insight title. */
+"Consistent inositol use tracks with fewer cravings" = "一貫したイノシトールを使用すると、食欲が減ります";
+
+/* Sample photo journal note used in demo data. */
+"Consistent lighting and angle" = "一貫した照明と角度";
+
+/* Symptom label. */
+"Constipation" = "便秘";
+
+/* No comment provided by engineer. */
+"Continue" = "続く";
+
+/* Error shown when CSV export generation fails. */
+"Could not create CSV export: %@" = "CSV エクスポートを作成できませんでした: %@";
+
+/* Error shown when JSON backup generation fails. */
+"Could not create JSON backup: %@" = "JSON バックアップを作成できませんでした: %@";
+
+/* Error shown when report generation throws an error. */
+"Could not generate report: %@" = "レポートを生成できませんでした: %@";
+
+/* Fallback error shown when importing a JSON backup fails. */
+"Could not import backup: %@" = "バックアップをインポートできませんでした: %@";
+
+/* Fallback error shown when loading a debug demo scenario fails. */
+"Could not import demo data: %@" = "デモ データをインポートできませんでした: %@";
+
+/* Error shown when importing a meal photo fails.
+Error shown when importing a progress photo fails. */
+"Could not import photo: %@" = "写真をインポートできませんでした: %@";
+
+/* Error shown when a period day cannot be saved. */
+"Could not log period: %@" = "期間を記録できませんでした: %@";
+
+/* Error shown when the user selects an unreadable backup file. */
+"Could not open backup: %@" = "バックアップを開けませんでした: %@";
+
+/* Paywall error shown when restoring purchases fails. */
+"Could not restore purchases. Please try again." = "購入を復元できませんでした。もう一度試してください。";
+
+/* No comment provided by engineer. */
+"Could not Save" = "保存できませんでした";
+
+/* Error shown when a meal entry cannot be saved. */
+"Could not save meal: %@" = "食事を保存できませんでした: %@";
+
+/* Error shown when a progress photo cannot be saved. */
+"Could not save photo: %@" = "写真を保存できませんでした: %@";
+
+/* Error shown when a blood sugar reading cannot be saved. */
+"Could not save reading: %@" = "読み取り値を保存できませんでした: %@";
+
+/* Error shown when a supplement log cannot be saved. */
+"Could not save supplement: %@" = "サプリメントを保存できませんでした: %@";
+
+/* Error shown when symptom entries cannot be saved. */
+"Could not save symptoms: %@" = "症状を保存できませんでした: %@";
+
+/* Error shown when skipping a period fails. */
+"Could not skip period: %@" = "ピリオドをスキップできませんでした: %@";
+
+/* Fallback error shown when the app cannot generate or load insights. */
+"Couldn't refresh insights right now. Please try again." = "現在分析情報を更新できませんでした。もう一度試してください。";
+
+/* Inline error shown when quick-logging a period day fails. */
+"Couldn't save quick log. Please try again." = "クイックログを保存できませんでした。もう一度試してください。";
+
+/* No comment provided by engineer. */
+"Count" = "件数";
+
+/* Symptom label. */
+"Cramps" = "痙攣";
+
+/* Symptom label. */
+"Cravings" = "渇望";
+
+/* Sample cycle label used in demo data notes. */
+"Current cycle" = "現在のサイクル";
+
+/* No comment provided by engineer. */
+"Custom supplement name" = "カスタムサプリメント名";
+
+/* CSV export row type value. */
+"Cycle" = "サイクル";
+
+/* Sample cycle label used in demo data notes. */
+"Cycle %lld" = "サイクル%lld";
+
+/* PDF report subheading for the list of cycle date ranges. */
+"Cycle Dates" = "サイクルの日付";
+
+/* No comment provided by engineer. */
+"Cycle Details" = "サイクルの詳細";
+
+/* No comment provided by engineer. */
+"Cycle Length Trend" = "サイクル長の傾向";
+
+/* Insight category label. */
+"Cycle Pattern" = "サイクルパターン";
+
+/* Insight generation stage name used in an error message. */
+"cycle patterns" = "サイクルパターン";
+
+/* No comment provided by engineer. */
+"Cycle Statistics" = "周期統計";
+
+/* PDF report section title. */
+"Cycle Summary" = "サイクルの概要";
+
+/* No comment provided by engineer. */
+"CycleBalance" = "CycleBalance";
+
+/* PDF report cover title. Keep the CycleBalance brand name in English.
+Share sheet preview title for the generated PDF health report. */
+"CycleBalance Health Report" = "CycleBalance ヘルスレポート";
+
+/* No comment provided by engineer. */
+"CycleBalance identifies patterns after you've logged at least 2 complete cycles. Keep tracking — your first insights are on the way!" = "CycleBalance は、少なくとも 2 つの完全なサイクルを記録した後のパターンを識別します。追跡を続けてください。最初の洞察が得られつつあります。";
+
+/* No comment provided by engineer. */
+"CycleBalance reads health data to enrich your daily logs. No data is written to Apple Health." = "CycleBalance は健康データを読み取り、毎日のログを充実させます。 Apple Health にはデータが書き込まれません。";
+
+/* No comment provided by engineer. */
+"Cycles" = "サイクル";
+
+/* Insight generation stage name used in an error message. */
+"cycles for symptom correlation" = "症状相関関係のサイクル";
+
+/* No comment provided by engineer. */
+"Daily Logging" = "毎日のログ記録";
+
+/* Insight generation stage name used in an error message. */
+"daily logs" = "毎日のログ";
+
+/* No comment provided by engineer. */
+"Data" = "データ";
+
+/* No comment provided by engineer. */
+"Data Types" = "データ型";
+
+/* No comment provided by engineer. */
+"Date" = "日付";
+
+/* No comment provided by engineer. */
+"Date & Time" = "日付と時刻";
+
+/* No comment provided by engineer. */
+"Date Range" = "期間";
+
+/* Large heading showing the current cycle day number on the Today screen. */
+"Day %lld" = "%lld 日";
+
+/* No comment provided by engineer. */
+"Day %lld of current cycle" = "現在のサイクルの%lld日";
+
+/* No comment provided by engineer. */
+"Days" = "日数";
+
+/* Insight content about high glycemic index meals and symptoms. */
+"Days following high-GI meals show an average symptom severity of %@/5, compared to %@/5 after low-GI meals. Consider swapping some high-GI foods for lower-GI alternatives." = "GI の高い食事の後の数日間は、平均症状の重症度が %@/5 であったのに対し、GI の低い食事の後は %@/5 でした。 GI の高い食品の一部を、GI の低い代替品に交換することを検討してください。";
+
+/* Sample demo insight body. */
+"Days with low-GI meal logs show fewer energy crashes the following morning." = "食事ログが GI 未満の日は、翌朝のエネルギー クラッシュが少なくなります。";
+
+/* No comment provided by engineer. */
+"Debug: Demo Data" = "デバッグ: デモデータ";
+
+/* No comment provided by engineer. */
+"Debug: Premium QA" = "デバッグ: プレミアム QA";
+
+/* No comment provided by engineer. */
+"Delete" = "消去";
+
+/* No comment provided by engineer. */
+"Delete All Data" = "すべてのデータを削除する";
+
+/* No comment provided by engineer. */
+"Delete All Data?" = "すべてのデータを削除しますか?";
+
+/* No comment provided by engineer. */
+"Delete Everything" = "すべて削除";
+
+/* No comment provided by engineer. */
+"Delete Photo" = "写真の削除";
+
+/* Sample meal note used in demo data. */
+"Demo meal entry" = "デモミールエントリー";
+
+/* No comment provided by engineer. */
+"Description" = "説明";
+
+/* No comment provided by engineer. */
+"Details" = "詳細";
+
+/* Symptom label. */
+"Diarrhea" = "下痢";
+
+/* Insight category label. */
+"Diet Impact" = "ダイエットへの影響";
+
+/* Symptom focus area title in onboarding. */
+"Digestion & weight" = "消化と体重";
+
+/* Symptom category label. */
+"Digestive" = "消化器系";
+
+/* Meal type label. */
+"Dinner" = "夕食";
+
+/* No comment provided by engineer. */
+"Discard" = "破棄";
+
+/* No comment provided by engineer. */
+"Discard changes?" = "変更を破棄しますか?";
+
+/* PDF report line summarizing the meal glycemic impact distribution. */
+"Distribution: %lld%% Low, %lld%% Medium, %lld%% High" = "分布: %lld%% 低、%lld%% 中、%lld%% 高";
+
+/* No comment provided by engineer. */
+"Done" = "終わり";
+
+/* No comment provided by engineer. */
+"Dosage" = "投与量";
+
+/* Accessibility hint for the selected severity button. */
+"Double tap to deselect" = "ダブルタップして選択を解除します";
+
+/* Accessibility hint for an unselected severity button. */
+"Double tap to select" = "ダブルタップして選択します";
+
+/* No comment provided by engineer. */
+"Double tap to select %@ flow intensity" = "ダブルタップして %@ フロー強度を選択します";
+
+/* Symptom label. */
+"Dry Skin" = "乾燥肌";
+
+/* No comment provided by engineer. */
+"e.g., After breakfast" = "例：朝食後";
+
+/* No comment provided by engineer. */
+"e.g., clotting, mood changes, spotting duration..." = "例: 凝固、気分の変化、スポッティング期間...";
+
+/* Sample meal description used in demo data. */
+"Egg scramble, avocado, greens" = "スクランブルエッグ、アボカド、グリーン";
+
+/* No comment provided by engineer. */
+"Elevated" = "高架";
+
+/* No comment provided by engineer. */
+"Enable camera access in Settings to capture photos directly." = "写真を直接キャプチャするには、設定でカメラへのアクセスを有効にします。";
+
+/* No comment provided by engineer. */
+"Enable Notifications" = "通知を有効にする";
+
+/* No comment provided by engineer. */
+"End Date" = "終了日";
+
+/* Symptom label for a sudden drop in energy. */
+"Energy Crash" = "エネルギークラッシュ";
+
+/* No comment provided by engineer. */
+"Enter a glucose value to save" = "保存するグルコース値を入力してください";
+
+/* No comment provided by engineer. */
+"Enter value" = "値を入力してください";
+
+/* No comment provided by engineer. */
+"Entitlement" = "権利";
+
+/* No comment provided by engineer. */
+"Error" = "エラー";
+
+/* Demo data scenario subtitle. */
+"Established routine with symptom and metabolic patterns" = "症状と代謝パターンを考慮した確立されたルーチン";
+
+/* No comment provided by engineer. */
+"Even if your period isn't today, you can log your most recent one. This starts your cycle tracking." = "生理が今日ではない場合でも、最近の生理を記録できます。これにより、周期の追跡が始まります。";
+
+/* Insight generation stage name used in an error message. */
+"existing insights" = "既存の洞察";
+
+/* No comment provided by engineer. */
+"Export Backup (JSON)" = "バックアップのエクスポート (JSON)";
+
+/* No comment provided by engineer. */
+"Export Data (CSV)" = "データのエクスポート (CSV)";
+
+/* Symptom label. */
+"Facial Hair" = "顔の毛";
+
+/* Error shown when deleting all app data fails. */
+"Failed to delete data: %@" = "データの削除に失敗しました: %@";
+
+/* Error shown when a PDF report could not be created. */
+"Failed to generate PDF report." = "PDF レポートの生成に失敗しました。";
+
+/* Blood sugar reading type. */
+"Fasting" = "断食";
+
+/* Symptom label. */
+"Fatigue" = "倦怠感";
+
+/* Sample demo insight title. */
+"Fatigue often clusters around period start" = "生理開始前後に疲労が集中することが多い";
+
+/* Sample demo insight body. */
+"Fatigue scores were higher in the first two days of menstrual bleeding." = "疲労スコアは月経出血の最初の 2 日間で高かった。";
+
+/* No comment provided by engineer. */
+"Feature" = "機能";
+
+/* Sample demo insight title. */
+"Fertility windows are broad across irregular cycles" = "不規則な周期でも受胎可能期間は広い";
+
+/* Primary onboarding goal description. */
+"Find patterns between your symptoms and your cycle." = "症状と周期の間のパターンを見つけます。";
+
+/* No comment provided by engineer. */
+"Flow Intensity" = "流量強度";
+
+/* Cycle phase name. */
+"Follicular" = "濾胞性";
+
+/* No comment provided by engineer. */
+"Free" = "無料";
+
+/* Debug premium status label. */
+"Free tier" = "無料利用枠";
+
+/* No comment provided by engineer. */
+"Frequent this cycle" = "このサイクルが頻繁に起こる";
+
+/* No comment provided by engineer. */
+"Generate Report" = "レポートの生成";
+
+/* PDF report cover label showing when the report was created. */
+"Generated on %@" = "%@ に生成されました";
+
+/* No comment provided by engineer. */
+"Generating insights..." = "洞察を生成しています...";
+
+/* No comment provided by engineer. */
+"Generating report..." = "レポートを生成中...";
+
+/* No comment provided by engineer. */
+"Get Started" = "始めましょう";
+
+/* No comment provided by engineer. */
+"Get the full CycleBalance experience" = "完全な CycleBalance エクスペリエンスを手に入れましょう";
+
+/* No comment provided by engineer. */
+"Glucose Value" = "血糖値";
+
+/* Validation error shown when a blood sugar value is outside the supported range. */
+"Glucose value must be between 40 and 600 mg/dL." = "グルコース値は 40 ～ 600 mg/dL でなければなりません。";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "血糖への影響";
+
+/* No comment provided by engineer. */
+"Got it" = "わかった";
+
+/* Sample meal description used in demo data. */
+"Greek yogurt, berries, chia" = "ギリシャヨーグルト、ベリー、チア";
+
+/* Single-character abbreviation for heavy flow in the calendar. Keep very short. */
+"H" = "H";
+
+/* Symptom category label. */
+"Hair" = "髪";
+
+/* Symptom label. */
+"Hair Shedding" = "抜け毛";
+
+/* Photo journal body area label. */
+"Hairline" = "ヘアライン";
+
+/* Symptom label. */
+"Headache" = "頭痛";
+
+/* No comment provided by engineer. */
+"Health" = "健康";
+
+/* No comment provided by engineer. */
+"Health Report" = "健康レポート";
+
+/* No comment provided by engineer. */
+"HealthKit Access" = "HealthKit アクセス";
+
+/* No comment provided by engineer. */
+"HealthKit Unavailable" = "HealthKit 利用できません";
+
+/* Cycle flow intensity option for heavy bleeding. */
+"Heavy" = "多い";
+
+/* Compact severity label for level 4 symptoms.
+Full severity label for level 4 symptoms. */
+"High" = "高い";
+
+/* Glycemic impact label. GI means glycemic index. */
+"High GI" = "高 GI";
+
+/* PDF report line showing high glycemic index meal count. */
+"High GI: %lld meals" = "高 GI: %lld 回の食事";
+
+/* Insight title about high glycemic index meals and symptoms. */
+"High-GI meals may worsen symptoms" = "高GIの食事は症状を悪化させる可能性があります";
+
+/* Sample demo insight title. */
+"Higher stress days correlate with lower energy" = "ストレスが多い日はエネルギーの低下と相関する";
+
+/* No comment provided by engineer. */
+"History" = "歴史";
+
+/* Sample blood sugar note used in demo data. */
+"Home finger-stick meter" = "家庭用指刺しメーター";
+
+/* No comment provided by engineer. */
+"How are you feeling today?" = "今日の気分はどうですか？";
+
+/* No comment provided by engineer. */
+"How long have you been managing PCOS?" = "PCOS を管理してどれくらいですか?";
+
+/* Symptom label. */
+"Hunger" = "飢え";
+
+/* No comment provided by engineer. */
+"I skipped a period" = "ピリオドを飛ばしてしまいました";
+
+/* PCOS experience option in onboarding. */
+"I think I might have PCOS" = "PCOS を持っているかもしれないと思います";
+
+/* PCOS experience option in onboarding. */
+"I was recently diagnosed" = "最近診断されました";
+
+/* PCOS experience option in onboarding. */
+"I've been managing for a while" = "しばらく管理してきました";
+
+/* No comment provided by engineer. */
+"Impact" = "インパクト";
+
+/* No comment provided by engineer. */
+"Import Backup" = "インポートバックアップ";
+
+/* No comment provided by engineer. */
+"Import Backup (JSON)" = "バックアップのインポート (JSON)";
+
+/* No comment provided by engineer. */
+"Importing a backup will replace all existing app data." = "バックアップをインポートすると、既存のアプリ データがすべて置き換えられます。";
+
+/* No comment provided by engineer. */
+"Include Sections" = "セクションを含める";
+
+/* Insight refresh error shown when a required dataset cannot be read. */
+"Insight generation couldn't read %@. Please try again." = "インサイト生成で %@ を読み取ることができませんでした。もう一度試してください。";
+
+/* No comment provided by engineer. */
+"Insight refresh error. %@" = "インサイトの更新エラー。 %@";
+
+/* PDF report section title.
+Tab title. */
+"Insights" = "分析";
+
+/* Primary onboarding goal description. */
+"Irregular cycles are unpredictable. Let's change that." = "不規則な周期は予測できません。それを変えてみましょう。";
+
+/* Symptom label. */
+"Irritability" = "イライラ";
+
+/* No comment provided by engineer. */
+"Keep Editing" = "編集を続ける";
+
+/* Encouraging follow-up when symptom severity is improving. */
+"Keep up what you're doing!" = "やっていることを続けてください！";
+
+/* Single-character abbreviation for light flow in the calendar. Keep very short. */
+"L" = "L";
+
+/* No comment provided by engineer. */
+"Last Import" = "最終インポート";
+
+/* No comment provided by engineer. */
+"Last Synced" = "最終同期";
+
+/* CSV export detail value for cycle length. */
+"Length" = "長さ";
+
+/* PDF report summary line showing the range of cycle lengths. */
+"Length range: %@" = "長さの範囲: %@";
+
+/* Sample meal description used in demo data. */
+"Lentil bowl with tahini dressing" = "レンズ豆のボウル タヒニドレッシング添え";
+
+/* Insight title describing worse symptoms after shorter sleep. */
+"Less sleep, more symptoms" = "睡眠が減ると症状が増える";
+
+/* No comment provided by engineer. */
+"Let's log your first period day" = "最初の生理日を記録しましょう";
+
+/* PCOS experience description in onboarding. */
+"Let's make your tracking more powerful." = "追跡をさらに強力にしてみましょう。";
+
+/* Cycle flow intensity option for light bleeding. */
+"Light" = "少ない";
+
+/* No comment provided by engineer. */
+"Load %@" = "%@ をロードします";
+
+/* No comment provided by engineer. */
+"Local Test Mode" = "ローカルテストモード";
+
+/* No comment provided by engineer. */
+"Log a period to start tracking" = "追跡を開始するために期間を記録します";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Blood Sugar" = "血糖値を記録する";
+
+/* Onboarding tooltip encouraging daily symptom logging for digestion and weight. */
+"Log digestive symptoms daily to surface connections with your cycle." = "消化器症状を毎日記録して、生理周期との関連性を明らかにします。";
+
+/* Onboarding completion message for users focused on symptoms. */
+"Log how you feel each day. After 2 cycles, you'll see your first insights." = "毎日どう感じているかを記録します。 2 サイクル後に、最初の洞察が表示されます。";
+
+/* Onboarding tooltip encouraging daily symptom logging for mood and energy. */
+"Log how you're feeling each day — patterns emerge within a cycle or two." = "毎日の気分を記録します。パターンは 1 ～ 2 サイクル以内に現れます。";
+
+/* Welcome guidance on the Today screen for users focused on mood and energy. */
+"Log how you're feeling to start finding patterns" = "パターンを見つけるために自分の気分を記録する";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Meal" = "ログミール";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Period" = "ログ期間";
+
+/* No comment provided by engineer. */
+"Log Period Day" = "ログ期間の日";
+
+/* Welcome guidance on the Today screen for users focused on skin and hair. */
+"Log skin and hair changes to start spotting patterns" = "皮膚と髪の変化を記録してパターンの発見を開始する";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Supplements" = "ログの補足";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Symptoms" = "ログの症状";
+
+/* Welcome guidance on the Today screen for users focused on symptoms. */
+"Log symptoms to start finding patterns" = "症状をログに記録してパターンを見つけ始めます";
+
+/* Welcome guidance on the Today screen for users focused on pain and cramps. */
+"Log symptoms to start tracking pain patterns" = "症状を記録して痛みのパターンの追跡を開始する";
+
+/* No comment provided by engineer. */
+"Log your first blood sugar reading to start tracking." = "追跡を開始するには、最初の血糖測定値を記録します。";
+
+/* Welcome guidance on the Today screen for users focused on cycle tracking. */
+"Log your period to start tracking your cycle" = "生理周期を記録して周期の追跡を開始する";
+
+/* Onboarding completion message for users focused on cycle tracking. */
+"Log your period when it arrives and CycleBalance will start predicting your next one." = "生理が来たら記録すると、CycleBalance が次の生理の予測を開始します。";
+
+/* Daily symptom reminder notification title. */
+"Log Your Symptoms" = "症状を記録する";
+
+/* Confirmation banner after the user quick-logs a period day. */
+"Logged %@ flow for today" = "今日の %@ フローを記録しました";
+
+/* Onboarding tooltip encouraging daily symptom logging. */
+"Logging symptoms daily helps surface patterns with your cycle." = "症状を毎日記録することは、周期のパターンを明らかにするのに役立ちます。";
+
+/* Demo data scenario subtitle. */
+"Long irregular cycles with early tracking habits" = "初期の追跡習慣による長くて不規則な周期";
+
+/* Compact severity label for level 2 symptoms.
+Full severity label for level 2 symptoms. */
+"Low" = "低い";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Low GI" = "低GI";
+
+/* PDF report line showing low glycemic index meal count. */
+"Low GI: %lld meals" = "低GIの食事: %lld回";
+
+/* Symptom label for depressed or low mood. */
+"Low Mood" = "気分の落ち込み";
+
+/* Sample demo insight title. */
+"Lower-GI meals align with steadier energy" = "GI 未満の食事はより安定したエネルギーと一致します";
+
+/* Meal type label. */
+"Lunch" = "ランチ";
+
+/* Cycle phase name. */
+"Luteal" = "黄体";
+
+/* Single-character abbreviation for medium flow in the calendar. Keep very short. */
+"M" = "M";
+
+/* No comment provided by engineer. */
+"Macros (Optional)" = "マクロ (オプション)";
+
+/* Sample supplement name used in demo data. */
+"Magnesium" = "マグネシウム";
+
+/* No comment provided by engineer. */
+"Manage individual supplement times from the Supplements tab." = "[サプリメント] タブから個々のサプリメント時間を管理します。";
+
+/* Insight title about a high proportion of high glycemic index meals. */
+"Many of your meals are high-GI" = "あなたの食事の多くは高価です-GI";
+
+/* CSV export row type value. */
+"Meal" = "食事";
+
+/* No comment provided by engineer. */
+"Meal Context" = "食事の内容";
+
+/* No comment provided by engineer. */
+"Meal Date" = "食事デート";
+
+/* PDF report section title. */
+"Meal GI Distribution" = "食事GIの配布";
+
+/* No comment provided by engineer. */
+"Meal History" = "食事履歴";
+
+/* No comment provided by engineer. */
+"Meal Type" = "食事の種類";
+
+/* Insight generation stage name used in an error message. */
+"meals" = "食事";
+
+/* No comment provided by engineer. */
+"Meals" = "食事";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "記録した食事がここに表示されます。";
+
+/* Compact severity label for level 3 symptoms. */
+"Med" = "メッド";
+
+/* Cycle flow intensity option for moderate bleeding. */
+"Medium" = "中程度";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Medium GI" = "中 GI";
+
+/* PDF report line showing medium glycemic index meal count. */
+"Medium GI: %lld meals" = "中 GI: %lld 食";
+
+/* Cycle phase name. */
+"Menstrual" = "月経";
+
+/* Symptom category label. */
+"Metabolic" = "代謝";
+
+/* No comment provided by engineer. */
+"mg" = "mg";
+
+/* No comment provided by engineer. */
+"mg/dL" = "mg/dL";
+
+/* Compact severity label for level 1 symptoms.
+Full severity label for level 1 symptoms. */
+"Mild" = "軽度";
+
+/* CSV export supplement status value. */
+"Missed" = "未服用";
+
+/* Full severity label for level 3 symptoms. */
+"Moderate" = "適度";
+
+/* Symptom focus area description in onboarding. */
+"Monitor acne, hair changes, and skin patterns." = "ニキビ、毛髪の変化、皮膚のパターンを監視します。";
+
+/* Symptom category label. */
+"Mood" = "気分";
+
+/* Symptom focus area title in onboarding. */
+"Mood & energy" = "気分とエネルギー";
+
+/* Symptom label. */
+"Mood Swings" = "気分の変動";
+
+/* Sample blood sugar meal context used in demo data. */
+"Morning baseline" = "朝のベースライン";
+
+/* PDF report placeholder for unavailable values. */
+"N/A" = "該当なし";
+
+/* Symptom label. */
+"Nausea" = "吐き気";
+
+/* Demo data scenario name. */
+"Newly Diagnosed" = "新たに診断された";
+
+/* No comment provided by engineer. */
+"Next" = "次";
+
+/* No comment provided by engineer. */
+"Next month" = "来月";
+
+/* No comment provided by engineer. */
+"Next Period Estimate" = "次の期間の見積もり";
+
+/* CSV export boolean value. */
+"No" = "いいえ";
+
+/* No comment provided by engineer. */
+"No Active Cycle" = "アクティブなサイクルがありません";
+
+/* PDF report empty state for the blood sugar section. */
+"No blood sugar data recorded in this period." = "この期間には血糖値データは記録されませんでした。";
+
+/* Insight title describing a supplement that does not show a clear symptom benefit. */
+"No clear benefit from %@" = "%@ から明らかなメリットはない";
+
+/* PDF report empty state for the cycle summary section. */
+"No cycle data recorded in this period." = "この期間に記録されたサイクルデータはありません。";
+
+/* No comment provided by engineer. */
+"No data is shared with notification servers." = "データは通知サーバーと共有されません。";
+
+/* Supplement picker helper text when a supplement has no default dosage. */
+"No default dosage" = "デフォルトの投与量はありません";
+
+/* PDF report empty state for the insights section. */
+"No insights generated in this period." = "この期間中に生成された洞察はありません。";
+
+/* No comment provided by engineer. */
+"No Insights Yet" = "まだ洞察はありません";
+
+/* PDF report empty state for the meal section. */
+"No meal data recorded in this period." = "この期間の食事データは記録されていません。";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "食事が記録されていません";
+
+/* No comment provided by engineer. */
+"No Photos" = "写真なし";
+
+/* No comment provided by engineer. */
+"No Photos Yet" = "まだ写真がありません";
+
+/* No comment provided by engineer. */
+"No Readings Yet" = "まだ測定値はありません";
+
+/* Billing error shown when no subscription products are available. */
+"No subscription products are available right now." = "現在利用できるサブスクリプション製品はありません。";
+
+/* No comment provided by engineer. */
+"No supplement data" = "サプリの記録がありません";
+
+/* PDF report empty state for the supplement section. */
+"No supplement data recorded in this period." = "この期間に記録された補足データはありません。";
+
+/* No comment provided by engineer. */
+"No supplements logged today" = "今日記録されたサプリメントはありません";
+
+/* PDF report empty state for the symptom summary section. */
+"No symptom data recorded in this period." = "この期間に記録された症状データはありません。";
+
+/* No comment provided by engineer. */
+"No wrong answers — this helps us set the right pace." = "間違った答えはありません。これは、適切なペースを設定するのに役立ちます。";
+
+/* Accessibility severity label when no symptom severity is selected.
+CSV export value meaning no period flow was logged.
+Cycle flow intensity option meaning no bleeding. */
+"None" = "なし";
+
+/* No comment provided by engineer. */
+"Normal" = "普通";
+
+/* No comment provided by engineer. */
+"Not a medical device. Always consult your healthcare provider." = "医療機器ではありません。必ず医療提供者にご相談ください。";
+
+/* No comment provided by engineer. */
+"Not Now" = "今じゃない";
+
+/* No comment provided by engineer. */
+"Notes" = "注意事項";
+
+/* No comment provided by engineer. */
+"Notifications" = "通知";
+
+/* No comment provided by engineer. */
+"Notifications Enabled" = "通知が有効になっています";
+
+/* No comment provided by engineer. */
+"Occurrences" = "出来事";
+
+/* No comment provided by engineer. */
+"of current cycle" = "現在のサイクルの";
+
+/* Symptom label. */
+"Oily Skin" = "脂性肌";
+
+/* No comment provided by engineer. */
+"OK" = "わかりました";
+
+/* Insight content describing a supplement that may correlate with better symptom scores. */
+"On days you take %@, your average symptom severity is %@/5, compared to %@/5 on days you miss it. This %@-point difference suggests a potential benefit." = "%@ を摂取した日の平均症状重症度は、%@/5 ですが、摂取しなかった日は %@/5 です。この %@ ポイントの差は、潜在的なメリットを示唆しています。";
+
+/* PDF report label for an active cycle with no end date. */
+"ongoing" = "継続中";
+
+/* CSV export value for a cycle that has not ended yet. */
+"Ongoing" = "進行中";
+
+/* No comment provided by engineer. */
+"Open Paywall" = "ペイウォールを開く";
+
+/* No comment provided by engineer. */
+"Open Settings" = "設定を開く";
+
+/* No comment provided by engineer. */
+"Operation Failed" = "操作が失敗しました";
+
+/* No comment provided by engineer. */
+"Optional" = "オプション";
+
+/* PDF report line showing overall supplement adherence. */
+"Overall adherence: %lld%%" = "全体的な遵守度: %lld%%";
+
+/* PDF report line showing the average blood sugar reading. */
+"Overall average: %@ mg/dL" = "全体の平均: %@ mg/dL";
+
+/* Sample meal description used in demo data. */
+"Overnight oats with flaxseed" = "亜麻仁入りオーバーナイトオーツ";
+
+/* Cycle phase name. */
+"Ovulatory" = "排卵期";
+
+/* Symptom category label. */
+"Pain" = "痛み";
+
+/* Symptom focus area title in onboarding. */
+"Pain & cramps" = "痛みとけいれん";
+
+/* Welcome onboarding page body. */
+"PCOS makes every cycle unique. CycleBalance tracks your patterns without assuming regularity." = "PCOS により、すべてのサイクルが一意になります。 CycleBalance は、規則性を前提とせずにパターンを追跡します。";
+
+/* Symptom label. */
+"Pelvic Pain" = "骨盤痛";
+
+/* PDF report subheading for supplement adherence by supplement. */
+"Per-Supplement Breakdown" = "サプリメントごとの内訳";
+
+/* CSV export row type value. */
+"Period" = "期間";
+
+/* No comment provided by engineer. */
+"Period date" = "期間の日付";
+
+/* Sample symptom note used in demo data for period discomfort. */
+"Period day %lld discomfort" = "生理日 %lld 不快感";
+
+/* No comment provided by engineer. */
+"Period Estimate" = "期間の目安";
+
+/* Notification title sent before a predicted period. */
+"Period May Be Coming" = "生理が近いかもしれません";
+
+/* No comment provided by engineer. */
+"Period Predictions" = "期間予測";
+
+/* No comment provided by engineer. */
+"Period Reminders" = "生理リマインダー";
+
+/* No comment provided by engineer. */
+"Period today?" = "今日生理ですか？";
+
+/* No comment provided by engineer. */
+"Photo (Optional)" = "写真（オプション）";
+
+/* No comment provided by engineer. */
+"Photo Date" = "撮影デート";
+
+/* No comment provided by engineer. */
+"Photo Detail" = "写真の詳細";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Photo Journal" = "写真日記";
+
+/* No comment provided by engineer. */
+"Photo Type" = "写真の種類";
+
+/* Symptom category label. */
+"Physical" = "物理的な";
+
+/* No comment provided by engineer. */
+"Please wait..." = "お待ちください...";
+
+/* No comment provided by engineer. */
+"Premium" = "プレミアム";
+
+/* Debug premium status label. */
+"Premium active" = "プレミアム有効";
+
+/* No comment provided by engineer. */
+"Premium Feature" = "プレミアム機能";
+
+/* Sample supplement name used in demo data. */
+"Prenatal" = "出生前";
+
+/* No comment provided by engineer. */
+"Previous month" = "前月";
+
+/* No comment provided by engineer. */
+"Privacy Policy" = "プライバシーポリシー";
+
+/* Welcome onboarding page headline. */
+"Private by Design" = "設計によるプライベート";
+
+/* No comment provided by engineer. */
+"Product IDs" = "プロダクトID";
+
+/* Paywall error shown when a subscription purchase fails. */
+"Purchase failed. Please try again." = "購入に失敗しました。もう一度試してください。";
+
+/* No comment provided by engineer. */
+"Quick context" = "クイックコンテキスト";
+
+/* No comment provided by engineer. */
+"Quick notes" = "簡単なメモ";
+
+/* Heading above suggested quick period notes for the selected flow intensity. */
+"Quick notes for %@ flow" = "%@ フローの簡単なメモ";
+
+/* Blood sugar reading type. */
+"Random" = "ランダム";
+
+/* No comment provided by engineer. */
+"Reading date" = "読書日";
+
+/* No comment provided by engineer. */
+"Reading Type" = "読み取りタイプ";
+
+/* No comment provided by engineer. */
+"Ready to save" = "保存する準備ができました";
+
+/* Tracking hub label for the most recently used logging shortcut. */
+"Recent" = "最近の";
+
+/* No comment provided by engineer. */
+"Recent brands" = "最近のブランド";
+
+/* Sample demo insight body. */
+"Recent cycle lengths between 45 and 72 days suggest wider ovulation uncertainty windows." = "最近の周期が 45 ～ 72 日であることは、排卵の不確実性の範囲が広いことを示唆しています。";
+
+/* No comment provided by engineer. */
+"Recent Cycles" = "最近のサイクル";
+
+/* Sample demo insight body. */
+"Recent cycles ranged from 37 to 63 days. This is common with PCOS and improves with consistent tracking." = "最近の周期は 37 日から 63 日の範囲でした。これは PCOS に共通であり、一貫した追跡により改善されます。";
+
+/* No comment provided by engineer. */
+"Recent supplements" = "最近のサプリメント";
+
+/* Supplement picker helper text showing the recommended dosage in milligrams. */
+"Recommended dosage: %@ mg" = "推奨用量: %@ mg";
+
+/* Tracking hub card subtitle. */
+"Record flow intensity and notes" = "フロー強度とメモを記録する";
+
+/* Tracking hub card subtitle. */
+"Record glucose readings" = "グルコース測定値を記録する";
+
+/* Tracking hub card subtitle. */
+"Record meals and glycemic impact" = "食事と血糖への影響を記録する";
+
+/* Recovery suggestion shown after an insight refresh error. */
+"Refresh insights again in a moment." = "すぐに分析情報を再度更新します。";
+
+/* No comment provided by engineer. */
+"Refresh Premium Status" = "プレミアムステータスを更新";
+
+/* No comment provided by engineer. */
+"Regenerate Report" = "レポートの再生成";
+
+/* Recovery suggestion for a paywall product loading failure. */
+"Reload the paywall and try again." = "ペイウォールをリロードして、もう一度試してください。";
+
+/* No comment provided by engineer. */
+"Reminder Time" = "リマインダー時間";
+
+/* No comment provided by engineer. */
+"Remove" = "取り除く";
+
+/* No comment provided by engineer. */
+"Replace Existing Data?" = "既存のデータを置き換えますか?";
+
+/* No comment provided by engineer. */
+"Replaces existing data with realistic irregular-cycle demo scenarios." = "既存のデータを現実的な不規則サイクルのデモ シナリオに置き換えます。";
+
+/* No comment provided by engineer. */
+"Replay Welcome Tour" = "リプレイ ウェルカム ツアー";
+
+/* No comment provided by engineer. */
+"Report Error" = "エラーを報告する";
+
+/* No comment provided by engineer. */
+"Restore Purchases" = "購入を復元する";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat is not configured. Add `REVENUECAT_PUBLIC_SDK_KEY` in Config/LocalSecrets.xcconfig." = "RevenueCat が構成されていません。 Config/LocalSecrets.xcconfig に「REVENUECAT_PUBLIC_SDK_KEY」を追加します。";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat offering '%@' was not found." = "「%@」を提供する RevenueCat が見つかりませんでした。";
+
+/* Sample meal description used in demo data. */
+"Rice bowl with teriyaki chicken" = "テリヤキチキン丼";
+
+/* Single-character abbreviation for spotting flow in the calendar. Keep very short. */
+"S" = "S";
+
+/* Sample meal description used in demo data. */
+"Salmon, quinoa, roasted vegetables" = "サーモン、キヌア、ロースト野菜";
+
+/* No comment provided by engineer. */
+"Same as yesterday" = "昨日と同じ";
+
+/* Compact button label for copying the same symptoms as the previous day. */
+"Same as yesterday (%lld)" = "昨日と同じ (%lld)";
+
+/* No comment provided by engineer. */
+"Save" = "保存";
+
+/* Paywall badge showing the percentage saved by choosing the yearly subscription. */
+"Save %lld%%" = "%lld%%お得";
+
+/* No comment provided by engineer. */
+"Save Meal" = "食事を節約する";
+
+/* No comment provided by engineer. */
+"Save Photo" = "写真を保存";
+
+/* No comment provided by engineer. */
+"Saved" = "保存されました";
+
+/* Photo journal body area label. */
+"Scalp (Part Line)" = "頭皮（パートライン）";
+
+/* Insight category label. */
+"Seasonal Pattern" = "季節柄";
+
+/* Symptom focus area description in onboarding. */
+"See how cramps and pain relate to your cycle." = "けいれんや痛みが周期にどのように関係しているかを確認してください。";
+
+/* No comment provided by engineer. */
+"Select..." = "選択してください...";
+
+/* Recovery suggestion for a missing RevenueCat API key. */
+"Set your RevenueCat public SDK key and relaunch the app." = "RevenueCat 公開 SDK キーを設定し、アプリを再起動します。";
+
+/* Tab title. */
+"Settings" = "設定";
+
+/* Compact severity label for level 5 symptoms.
+Full severity label for level 5 symptoms. */
+"Severe" = "重度";
+
+/* No comment provided by engineer. */
+"Share CSV Export" = "CSV を共有してエクスポート";
+
+/* No comment provided by engineer. */
+"Share JSON Backup" = "JSON バックアップを共有する";
+
+/* No comment provided by engineer. */
+"Share Report" = "シェアレポート";
+
+/* Symptom category label. */
+"Skin" = "肌";
+
+/* Symptom focus area title in onboarding. */
+"Skin & hair" = "肌と髪";
+
+/* No comment provided by engineer. */
+"Skip" = "スキップ";
+
+/* No comment provided by engineer. */
+"Skip Period" = "スキップ期間";
+
+/* No comment provided by engineer. */
+"Skip symptom focus selection and continue setup" = "症状の焦点の選択をスキップしてセットアップを続行する";
+
+/* No comment provided by engineer. */
+"Skip the questionnaire and continue setup" = "アンケートをスキップしてセットアップを続行してください";
+
+/* No comment provided by engineer. */
+"Skip the welcome tour and go directly to the app" = "ウェルカムツアーをスキップしてアプリに直接アクセスしてください";
+
+/* No comment provided by engineer. */
+"Skip this period?" = "この期間をスキップしますか?";
+
+/* No comment provided by engineer. */
+"Skip this step and go to the dashboard" = "この手順をスキップしてダッシュボードに移動します";
+
+/* Insight category label. */
+"Sleep & Activity" = "睡眠と活動";
+
+/* Meal type label. */
+"Snack" = "スナック";
+
+/* Symptom focus area description in onboarding. */
+"Spot trends in bloating, cravings, and weight." = "膨満感、食欲、体重の傾向を特定します。";
+
+/* Cycle flow intensity option for very light bleeding. */
+"Spotting" = "少量出血";
+
+/* Sample photo journal analysis summary used in demo data. */
+"Stable vs prior photo" = "安定した写真と以前の写真";
+
+/* No comment provided by engineer. */
+"Start Date" = "開始日";
+
+/* No comment provided by engineer. */
+"Start Exploring" = "探検を始めましょう";
+
+/* Onboarding tooltip encouraging daily symptom logging for skin and hair. */
+"Start logging skin or hair changes to track patterns over time." = "皮膚や髪の変化の記録を開始して、経時的なパターンを追跡します。";
+
+/* No comment provided by engineer. */
+"Start logging supplements to see your history here." = "サプリを記録すると、ここに履歴が表示されます。";
+
+/* Welcome guidance on the Today screen before the user has onboarding preferences. */
+"Start tracking by logging your period" = "生理を記録して追跡を開始する";
+
+/* No comment provided by engineer. */
+"Start tracking changes by adding your first photo." = "最初の写真を追加して、変更の追跡を開始します。";
+
+/* Onboarding progress text showing the current step out of four total steps. */
+"Step %lld of 4" = "ステップ %lld/4";
+
+/* No comment provided by engineer. */
+"Subscription" = "サブスクリプション";
+
+/* Paywall error shown when premium billing is not configured correctly. */
+"Subscription setup is incomplete." = "サブスクリプションの設定が不完全です。";
+
+/* No comment provided by engineer. */
+"Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage your subscriptions in your Apple ID settings." = "現在の期間が終了する少なくとも 24 時間前にキャンセルしない限り、サブスクリプションは自動的に更新されます。 Apple ID 設定でサブスクリプションを管理できます。";
+
+/* No comment provided by engineer. */
+"Subscriptions Unavailable" = "購読は利用できません";
+
+/* CSV export row type value. */
+"Supplement" = "補足";
+
+/* PDF report section title. */
+"Supplement Adherence" = "サプリメントの遵守";
+
+/* Insight category label. */
+"Supplement Efficacy" = "サプリメントの効能";
+
+/* No comment provided by engineer. */
+"Supplement History" = "サプリ履歴";
+
+/* No comment provided by engineer. */
+"Supplement name" = "サプリメント名";
+
+/* Supplement reminder notification title. */
+"Supplement Reminder" = "サプリメントリマインダー";
+
+/* No comment provided by engineer. */
+"Supplement Reminders" = "サプリメントのリマインダー";
+
+/* Insight generation stage name used in an error message. */
+"supplements" = "サプリメント";
+
+/* No comment provided by engineer. */
+"Supplements" = "サプリメント";
+
+/* CSV export row type value. */
+"Symptom" = "症状";
+
+/* Insight category label. */
+"Symptom Correlation" = "症状の相関関係";
+
+/* Insight generation stage name used in an error message. */
+"symptom correlations" = "症状の相関関係";
+
+/* Demo data scenario name. */
+"Symptom Management" = "症状の管理";
+
+/* No comment provided by engineer. */
+"Symptom Reminders" = "症状のリマインダー";
+
+/* Insight title describing symptom severity increasing or decreasing. */
+"Symptom severity is %@" = "症状の重大度は%@です";
+
+/* PDF report section title. */
+"Symptom Summary" = "症状の概要";
+
+/* No comment provided by engineer. */
+"Symptoms" = "症状";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for diet impact" = "食事の影響による症状";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for sleep and activity analysis" = "睡眠と活動の分析のための症状";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for supplement analysis" = "サプリメント分析のための症状";
+
+/* Insight title describing the cycle phase with the highest symptom severity. */
+"Symptoms peak during %@ phase" = "症状は%@段階でピークに達します";
+
+/* No comment provided by engineer. */
+"Sync" = "同期";
+
+/* No comment provided by engineer. */
+"Sync Now" = "今すぐ同期";
+
+/* No comment provided by engineer. */
+"Syncing..." = "同期中...";
+
+/* Daily symptom reminder notification body. */
+"Take a moment to record how you're feeling today." = "今日の気分を記録してみましょう。";
+
+/* CSV export supplement status value. */
+"Taken" = "服用済み";
+"7 Days" = "7日間";
+"30 Days" = "30日間";
+"90 Days" = "90日間";
+"By Supplement" = "サプリ別";
+"Missed (%lld)" = "未服用 (%lld)";
+"Taken (%lld)" = "服用済み (%lld)";
+"Total" = "合計";
+
+/* No comment provided by engineer. */
+"Tap a symptom to get started" = "症状をタップして開始します";
+
+/* No comment provided by engineer. */
+"Tap any symptoms you're experiencing. Even logging once helps start building your pattern." = "発生している症状をタップします。一度ログを記録するだけでも、パターンの構築を開始するのに役立ちます。";
+
+/* Onboarding tooltip introducing the quick period logging buttons. */
+"Tap Light, Medium, or Heavy to log today's flow in one tap." = "「軽め」、「中程度」、または「重め」をタップすると、ワンタップで今日のフローを記録できます。";
+
+/* No comment provided by engineer. */
+"Tap the button below to add your first supplement." = "最初のサプリメントを追加するには、下のボタンをタップしてください。";
+
+/* Accessibility hint explaining how to change symptom severity and announcing the current level. */
+"Tap to cycle severity, long press for direct selection. Currently %lld of 5." = "タップして重大度を切り替え、長押しして直接選択します。現在 %lld / 5。";
+
+/* No comment provided by engineer. */
+"Tap to update permissions in Health app" = "タップしてヘルスケアアプリの権限を更新します";
+
+/* No comment provided by engineer. */
+"Terms of Service" = "利用規約";
+
+/* Billing error shown when a subscription product cannot be loaded. */
+"The selected product '%@' is not available for purchase yet." = "選択した製品「%@」はまだ購入できません。";
+
+/* Insight content describing a symptom pair that often occurs together. */
+"These symptoms co-occur on %lld%% of your tracked days (%lld out of %lld days). Understanding symptom clusters can help you and your provider target treatments more effectively." = "これらの症状は、追跡された日のうち %lld%% 日 (%lld 日のうち %lld 日) に同時に発生します。症状群を理解することは、あなたとあなたの医療提供者がより効果的に治療の目標を定めるのに役立ちます。";
+
+/* Backup import error shown when the selected backup file uses a newer or older schema version. */
+"This backup uses schema v%lld. This app currently supports v%lld." = "このバックアップではスキーマ v%lld を使用します。このアプリは現在 v%lld をサポートしています。";
+
+/* No comment provided by engineer. */
+"This device does not have a camera available right now." = "現在、このデバイスには使用可能なカメラがありません。";
+
+/* No comment provided by engineer. */
+"This helps us focus on what matters most to you." = "これにより、お客様にとって最も重要なことに集中できるようになります。";
+
+/* PDF report medical disclaimer. */
+"This report is for informational purposes only and is not a substitute for professional medical advice." = "このレポートは情報提供のみを目的としており、専門的な医学的アドバイスに代わるものではありません。";
+
+/* No comment provided by engineer. */
+"This will close your current cycle and start a new one from today. This action cannot be undone." = "これにより、現在のサイクルが終了し、今日から新しいサイクルが始まります。この操作は元に戻すことができません。";
+
+/* No comment provided by engineer. */
+"This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone." = "これにより、周期データ、症状、洞察がすべて完全に削除されます。この操作は元に戻すことができません。";
+
+/* No comment provided by engineer. */
+"Time" = "時間";
+
+/* No comment provided by engineer. */
+"Time Taken" = "かかった時間";
+
+/* Supplement reminder notification body with the supplement name. */
+"Time to take your %@." = "%@ を受け取りましょう。";
+
+/* Tab title. */
+"Today" = "今日";
+
+/* No comment provided by engineer. */
+"Today's Symptoms" = "今日の症状";
+
+/* Sample meal description used in demo data. */
+"Tofu stir-fry with brown rice" = "豆腐の玄米炒め";
+
+/* PDF report subheading for the most frequently logged symptoms. */
+"Top Symptoms by Frequency" = "頻度別の主な症状";
+
+/* PDF report summary line showing how many cycles are included. */
+"Total cycles: %lld" = "合計サイクル: %lld";
+
+/* PDF report line showing how many meals are included. */
+"Total meals logged: %lld" = "記録された食事の合計: %lld";
+
+/* PDF report line showing the number of blood sugar readings. */
+"Total readings: %lld" = "合計読み取り数: %lld";
+
+/* Tab title. */
+"Track" = "記録";
+
+/* Tracking hub card subtitle. */
+"Track hair and skin changes" = "髪と肌の変化を追跡する";
+
+/* Tracking hub card subtitle. */
+"Track how you're feeling today" = "今日の気分を追跡する";
+
+/* Symptom focus area description in onboarding. */
+"Track mood swings, anxiety, and energy crashes." = "気分の変動、不安、エネルギーの低下を追跡します。";
+
+/* Primary onboarding goal title. */
+"Track my periods" = "生理を追跡する";
+
+/* Tracking hub card subtitle. */
+"Track your daily supplements" = "毎日のサプリメントを追跡する";
+
+/* Sample blood sugar note used in demo data. */
+"Tracked after mixed meal" = "混合食後の追跡";
+
+/* Onboarding tooltip encouraging daily symptom logging for pain and cramps. */
+"Tracking pain alongside your cycle helps spot which days hit hardest." = "生理周期に合わせて痛みを追跡すると、最も痛む日を特定するのに役立ちます。";
+
+/* PCOS experience description in onboarding. */
+"Tracking symptoms can help you and your doctor." = "症状を追跡することは、あなたと医師の助けになります。";
+
+/* Demo data scenario subtitle. */
+"Trying-to-conceive tracking with variable cycle lengths" = "可変サイクル長での追跡を構想中";
+
+/* Demo data scenario name. */
+"TTC / Fertility" = "TTC / 生殖能力";
+
+/* Sample meal description used in demo data. */
+"Turkey chili with vegetables" = "ターキーチリと野菜";
+
+/* No comment provided by engineer. */
+"Type" = "タイプ";
+
+/* No comment provided by engineer. */
+"Unable to load subscription options. Please check your connection and try again." = "サブスクリプション オプションを読み込めません。接続を確認して、もう一度試してください。";
+
+/* Paywall error shown when subscription products cannot be loaded. */
+"Unable to load subscriptions. Please try again." = "サブスクリプションを読み込めません。もう一度試してください。";
+
+/* Paywall error shown when subscription status cannot be refreshed. */
+"Unable to refresh subscription status." = "サブスクリプションのステータスを更新できません。";
+
+/* Primary onboarding goal title. */
+"Understand my symptoms" = "私の症状を理解してください";
+
+/* No comment provided by engineer. */
+"Undo" = "元に戻す";
+
+/* Fallback debug label when the billing mode is unavailable.
+Fallback debug label when the premium entitlement status is unavailable. */
+"Unknown" = "未知";
+
+/* No comment provided by engineer. */
+"Unlock Premium" = "プレミアムをアンロック";
+
+/* No comment provided by engineer. */
+"Unlock this feature and more with CycleBalance Premium." = "CycleBalance プレミアムを使用すると、この機能などのロックを解除できます。";
+
+/* Photo journal body area label. */
+"Upper Lip" = "上唇";
+
+/* No comment provided by engineer. */
+"Use recommended dose" = "推奨用量を使用してください";
+
+/* No comment provided by engineer. */
+"Value must be between 40 and 600 mg/dL" = "値は 40 ～ 600 である必要があります mg/dL";
+
+/* Recovery suggestion for a missing RevenueCat offering. */
+"Verify RevenueCat has an offering with the configured identifier and mapped packages." = "RevenueCat に、構成された識別子とマップされたパッケージを備えたオファリングがあることを確認します。";
+
+/* Recovery suggestion for a missing product configuration. */
+"Verify your products exist in App Store Connect and RevenueCat." = "製品が App Store Connect および RevenueCat に存在することを確認します。";
+
+/* No comment provided by engineer. */
+"Version" = "バージョン";
+
+/* Sample supplement name used in demo data. */
+"Vitamin D3" = "ビタミンD3";
+
+/* PCOS experience description in onboarding. */
+"We'll help you get started step by step." = "一歩ずつ始められるようお手伝いいたします。";
+
+/* No comment provided by engineer. */
+"We'll highlight these on your dashboard. You can always change this later." = "これらはダッシュボード上で強調表示されます。これは後でいつでも変更できます。";
+
+/* Sample demo insight body. */
+"Weeks with higher supplement adherence show lower cravings severity." = "サプリメントの遵守率が高い週は、渇望の重症度が低いことを示しています。";
+
+/* No comment provided by engineer. */
+"Welcome" = "いらっしゃいませ";
+
+/* Accessibility label announcing the current welcome onboarding page. */
+"Welcome page %lld of %lld" = "%lld のようこそページ %lld";
+
+/* No comment provided by engineer. */
+"What brings you to CycleBalance?" = "CycleBalance に興味を持ったのは何ですか?";
+
+/* No comment provided by engineer. */
+"What did you eat?" = "何を食べましたか？";
+
+/* Sample demo insight body. */
+"When stress level is 4+, energy logs trend lower the next day." = "ストレスレベルが 4+ の場合、翌日のエネルギーログは低下する傾向があります。";
+
+/* No comment provided by engineer. */
+"Which symptoms matter most to you?" = "あなたにとって最も重要な症状はどれですか?";
+
+/* CSV export boolean value. */
+"Yes" = "はい";
+
+/* Onboarding tooltip introducing quick period logging for users focused on symptoms. */
+"You can quickly log your period here — even if that's not your main focus." = "たとえそれが主な焦点でなくても、ここで月経をすぐに記録できます。";
+
+/* No comment provided by engineer. */
+"You have unsaved changes that will be lost." = "保存されていない変更は失われます。";
+
+/* No comment provided by engineer. */
+"You have unsaved supplement details that will be lost." = "保存されていないサプリメントの詳細は失われます。";
+
+/* No comment provided by engineer. */
+"You'll be reminded 2 days before your predicted period." = "生理予定日の 2 日前に通知が届きます。";
+
+/* No comment provided by engineer. */
+"You're all set!" = "準備は完了です!";
+
+/* Insight content describing the energy trend across the tracking period. */
+"Your average energy level has gone from %@ to %@ (out of 5) over your tracking period. Average energy: %@/5." = "追跡期間中に、あなたの平均エネルギー レベルは %@ から %@ (5 段階中) になりました。平均エネルギー: %@/5。";
+
+/* Insight content describing symptom severity trends over time. */
+"Your average symptom severity has been %@ recently (from %@ to %@ out of 5). %@" = "最近の症状の平均重症度は %@ でした (5 段階中 %@ から %@ まで)。 %@";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Your Calendar is in the second tab." = "カレンダーは 2 番目のタブにあります。";
+
+/* Welcome onboarding page headline. */
+"Your Cycle, Your Way" = "あなたのサイクル、あなたの方法";
+
+/* Generic onboarding completion message. */
+"Your CycleBalance journey starts now." = "あなたの CycleBalance の旅が今始まります。";
+
+/* Insight title for highly variable cycle lengths. */
+"Your cycles are irregular" = "生理周期が不規則です";
+
+/* Insight title for stable cycle lengths. */
+"Your cycles are regular" = "あなたの周期は規則的です";
+
+/* Insight title for mildly irregular cycle lengths. */
+"Your cycles are somewhat irregular" = "生理周期がやや不規則です";
+
+/* Average cycle length summary shown in the calendar and cycle detail screens. */
+"Your cycles average %@ days (range: %@)" = "あなたの生理周期は平均 %@ 日 (範囲: %@)";
+
+/* Insight content for mildly irregular cycle lengths. */
+"Your cycles average %@ days but vary by about %@ days. Some variation is common with PCOS. Consistent tracking helps identify what influences your cycle length." = "あなたの周期は平均%@日ですが、約%@日の差があります。一部のバリエーションは PCOS と共通です。一貫した追跡は、周期の長さに影響を与えるものを特定するのに役立ちます。";
+
+/* Insight content for stable cycle lengths. */
+"Your cycles average %@ days with low variation. This consistency is a positive sign for tracking and planning." = "あなたの生理周期は平均 %@ 日で、ばらつきは少ないです。この一貫性は、追跡と計画にとって前向きな兆候です。";
+
+/* Insight content for highly variable cycle lengths. */
+"Your cycles average %@ days with significant variation (range: %lld-%lld days). Irregular cycles are common with PCOS. Consider discussing cycle-regulating strategies with your provider." = "あなたの生理周期は平均 %@ 日ですが、大きなばらつきがあります (範囲: %lld ～ %lld 日)。 PCOS では不規則なサイクルが一般的です。サイクル調整戦略についてプロバイダーと話し合うことを検討してください。";
+
+/* Sample demo insight title. */
+"Your cycles vary widely" = "生理周期は大きく異なります";
+
+/* Insight title about a high proportion of low glycemic index meals. */
+"Your diet is mostly low-GI" = "あなたの食事はほとんど少食です - GI";
+
+/* Insight title describing energy levels improving or declining. */
+"Your energy levels are %@" = "あなたのエネルギーレベルは%@です";
+
+/* Tooltip shown when the app presents the user's first period prediction. */
+"Your first period estimate is here! It'll get more accurate as you log more cycles." = "最初の期間の見積もりはここにあります。より多くのサイクルを記録するほど、より正確になります。";
+
+/* Welcome onboarding page body. */
+"Your health data stays on your device. No accounts, no servers, no exceptions." = "あなたの健康データはデバイス上に残ります。アカウントもサーバーも例外もありません。";
+
+/* Insight content describing recent cycle length trends. */
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A %@ trend may be worth mentioning to your healthcare provider if it continues." = "過去 3 サイクルの平均は %@ 日でしたが、全体の平均は %@ 日でした。 %@ の傾向が続く場合は、医療提供者に知らせる価値があるかもしれません。";
+
+/* Insight content describing which cycle phase has the highest symptom severity. */
+"Your most intense symptoms occur during the %@ phase, with an average severity of %@/5. Common symptoms in this phase: %@." = "最も激しい症状は %@ 段階で発生し、平均重症度は %@/5 です。このフェーズで一般的な症状: %@。";
+
+/* Notification body for a broader predicted period date range. */
+"Your period is expected between %@ and %@." = "生理予定日は %@ から %@ の間です。";
+
+/* Notification body for a narrow predicted period window. */
+"Your period is expected in about 2 days." = "生理予定日は約2日後です。";
+
+/* Prediction summary shown on the calendar and cycle detail screens. */
+"Your period may arrive between %@–%@" = "生理は%@～%@の間に来る可能性があります";
+
+/* Insight title describing recent cycle lengths becoming longer or shorter. */
+"Your recent cycles are getting %@" = "最近のサイクルは %@ を獲得しています";
+
+/* Insight content describing a supplement that does not show a clear symptom benefit. */
+"Your symptom severity doesn't appear lower on days you take %@ (taken: %@/5 vs missed: %@/5). Consider discussing this with your provider." = "%@ を摂取した日でも、症状の重症度は低下しません (摂取日: %@/5 対、摂取しなかった日: %@/5)。これについてはプロバイダーと話し合うことを検討してください。";
+"Your recent cycles are getting longer" = "最近の周期は長くなる傾向があります";
+"Your recent cycles are getting shorter" = "最近の周期は短くなる傾向があります";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A lengthening trend may be worth mentioning to your healthcare provider if it continues." = "過去3周期の平均は%@日で、全体平均の%@日より長くなっています。この傾向が続く場合は、医療提供者に相談する価値があります。";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A shortening trend may be worth mentioning to your healthcare provider if it continues." = "過去3周期の平均は%@日で、全体平均の%@日より短くなっています。この傾向が続く場合は、医療提供者に相談する価値があります。";
+"Your energy levels are improving" = "エネルギーレベルは改善しています";
+"Your energy levels are declining" = "エネルギーレベルは低下しています";
+"Symptom severity is increasing" = "症状の重さが増しています";
+"Symptom severity is decreasing" = "症状の重さが軽くなっています";
+"Your average symptom severity has been worsening recently (from %@ to %@ out of 5). Consider reviewing recent changes to your routine." = "最近、症状の平均的な重さが悪化しています（5点中%@から%@へ）。最近の生活習慣の変化を見直してみてください。";
+"Your average symptom severity has been improving recently (from %@ to %@ out of 5). Keep up what you're doing!" = "最近、症状の平均的な重さが改善しています（5点中%@から%@へ）。今の取り組みを続けましょう。";
+"Language changes apply immediately. Some system surfaces update the next time they appear." = "言語の変更はすぐに適用されます。一部のシステム画面は、次回表示時に更新されます。";
+"%lld inserted • %lld updated • %lld skipped" = "%lld 件追加 • %lld 件更新 • %lld 件スキップ";
+
+/* UX improvement: Cycle Detail tooltips */
+"tooltip.prediction_settings" = "これらの設定は、CycleBalanceがあなた固有の周期パターンに基づいて次の生理をより正確に予測するのに役立ちます。";
+"tooltip.manual_override" = "すでに典型的な周期の長さを知っている場合（例：医師との追跡記録から）、これをオンにしてください。アプリは自動計算の代わりにこの値を使用します。";
+"tooltip.ovulation_status" = "不明：デフォルト – アプリは排卵パターンを想定せずに予測します。\n\n排卵あり：OPKやBBTで排卵を追跡している場合に選択してください。\n\n無排卵：周期に通常排卵が含まれない場合に選択してください。PCOSではよくあることです。";
+"tooltip.cycle_statistics" = "周期履歴の概要です。「平均」は典型的な周期の長さ、「範囲」は最短から最長、「周期数」は追跡した完全な周期の数です。";
+
+/* UX improvement: Display settings */
+"Display" = "表示";
+"Show Scientific Details" = "科学的詳細を表示";
+"Display confidence percentages, sample sizes, and statistical notation on insight cards." = "インサイトカードに信頼度パーセント、サンプルサイズ、統計表記を表示します。";
+
+/* UX improvement: Friendly confidence labels */
+"Strong confidence" = "高い信頼度";
+"Moderate confidence" = "中程度の信頼度";
+"Growing confidence" = "成長中の信頼度";
+
+/* UX improvement: Friendly data basis labels */
+"Based on %lld cycles" = "%lld周期に基づく";
+"Based on initial data" = "初期データに基づく";
+"Based on %lld weeks of data" = "%lld週間のデータに基づく";
+
+/* UX improvement: Rewritten analyzer content strings */
+"Your average symptom severity was %@/5 on days you took %@, compared to %@/5 on days you missed it — symptoms were %@ when you took it." = "%@を服用した日の平均症状の重症度は%@/5で、服用しなかった日の%@/5と比較して、服用時の症状は%@でした。";
+"Your cycles were about %@ days %@ in months when you consistently took %@ (%@ vs %@ days on average)." = "%@を継続的に服用した月では、周期は約%@日%@でした（平均%@日 vs %@日）。";
+"The day after high-GI meals, your symptom severity averaged %@/5, compared to %@/5 after low-GI days. Choosing lower-GI options may help reduce next-day symptoms." = "高GI食の翌日、症状の重症度は平均%@/5で、低GI日後の%@/5と比較されました。低GIの選択肢は翌日の症状を軽減するのに役立つかもしれません。";
+"About %@ after high-GI meals, breakout severity averaged %@/5, compared to %@/5 after low-GI days. Diet changes may help with skin symptoms." = "高GI食の約%@後、ニキビの重症度は平均%@/5で、低GI日後の%@/5と比較されました。食事の変更は肌の症状に役立つかもしれません。";
+"%lld%% of your logged meals were high GI. With PCOS, reducing high-GI meals may help manage blood sugar and symptoms." = "記録した食事の%lld%%が高GIでした。PCOSでは、高GI食を減らすことで血糖値と症状の管理に役立つかもしれません。";
+"%lld%% of your logged meals were low GI — this is a great pattern for managing PCOS symptoms." = "記録した食事の%lld%%が低GIでした – これはPCOS症状を管理するための素晴らしいパターンです。";
+
+/* Narrative insight content — friendly versions */
+"A good portion of your recent meals have been on the higher-GI side. With PCOS, even small shifts toward balanced meals can make a difference for blood sugar and how you feel." = "最近の食事の多くが高GI寄りでした。PCOSでは、バランスの取れた食事への小さな変化でも、血糖値や体調に違いをもたらすことがあります。";
+
+"In months when you were consistent with %@, your cycles ran a bit longer. This isn't necessarily a concern — it's worth discussing with your provider if it continues." = "%@を継続して摂取した月は、周期がやや長くなりました。必ずしも心配する必要はありませんが、続くようであれば医師に相談する価値があります。";
+
+"In months when you were consistent with %@, your cycles tended to be shorter and more predictable. Keeping up a regular routine may help your cycle find its rhythm." = "%@を継続して摂取した月は、周期が短く予測しやすい傾向がありました。規則的なルーティンを続けることで、周期のリズムが整うかもしれません。";
+
+"Most of your recent meals have been low-GI — that's a really positive pattern for managing PCOS. Keep it up!" = "最近の食事のほとんどが低GIでした — PCOSの管理にとって本当に良いパターンです。この調子で続けましょう！";
+
+"On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. Staying consistent could be worth the effort." = "%@を摂取した日は、飲まなかった日と比べて症状が%@軽い傾向がありました。継続する価値があるかもしれません。";
+
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "来週、症状は全体的に%@に感じるかもしれません。今最も重要と思われる要因は%@です — それらの分野での小さな変化が助けになるかもしれません。";
+
+"There seems to be a connection between high-GI meals and skin breakouts a couple of days later. Adjusting what you eat could help your skin feel calmer." = "高GI食と数日後の肌荒れに関連があるようです。食事内容を調整することで、肌が落ち着くかもしれません。";
+
+"These two symptoms seem to travel together — they show up on the same days quite often. Mentioning this to your provider could help find treatments that address both." = "この2つの症状は一緒に現れることが多いようです — 同じ日に出ることがかなり頻繁にあります。医師に伝えることで、両方に対応する治療法を見つける助けになるかもしれません。";
+
+"Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Even small improvements in sleep can make a real difference with PCOS." = "あなたの体は睡眠に反応するようです — 短い夜の後は、症状が%@悪化する傾向があります。睡眠のわずかな改善でも、PCOSに大きな違いをもたらすことがあります。";
+
+"Your cycles have been quite variable — sometimes shorter, sometimes longer. This is one of the most common PCOS patterns, and it's worth discussing with your healthcare provider to explore what might help." = "周期がかなり変動しています — 短いときもあれば、長いときもあります。これはPCOSで最もよく見られるパターンの1つで、何が役立つか医療提供者と相談する価値があります。";
+
+"Your cycles tend to come about every %@ days, though they can shift by a few days. This kind of variation is really common with PCOS, and tracking helps spot what's behind it." = "周期は約%@日ごとに来る傾向がありますが、数日ずれることがあります。このような変動はPCOSでは非常に一般的で、記録を続けることで原因を特定する助けになります。";
+
+"Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted." = "最近エネルギーが低下しています。睡眠、活動、ルーティンの変化を確認して、何が変わったか見てみる価値があるかもしれません。";
+
+"Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!" = "最近エネルギーが上昇傾向にあります — 何をしていても効果があるようです。この調子で続けましょう！";
+
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "次の周期はおそらく約%lld日、前後数日でしょう。より多くの周期を記録するにつれて、この予測を改善していきます。";
+
+"Your symptoms didn't seem to improve on days you took %@. This doesn't necessarily mean it's not helping — it may take longer, or other factors may be at play." = "%@を摂取した日に症状の改善は見られませんでした。必ずしも効果がないということではありません — もっと時間がかかるか、他の要因が関係しているかもしれません。";
+
+"Your symptoms have been easing up recently — whatever you've been doing seems to be working. Keep going!" = "最近症状が和らいできています — 何をしていても効果があるようです。続けましょう！";
+
+"Your symptoms have been trending a bit harder recently. It might help to think about what's changed — sleep, stress, diet, or activity — and see if something stands out." = "最近症状がやや悪化傾向にあります。何が変わったか考えてみると良いかもしれません — 睡眠、ストレス、食事、活動 — 何か目立つものがないか確認してみてください。";
+
+"Your symptoms tend to be stronger around %@ and calmer around %@. Planning ahead — adjusting sleep, diet, or supplements before tougher months — could help you feel more prepared." = "症状は%@頃に強く、%@頃に穏やかになる傾向があります。事前に計画を立てて — 大変な月の前に睡眠、食事、サプリメントを調整すること — がより準備万端に感じる助けになるかもしれません。";
+
+"Your symptoms tend to be strongest during your %@ phase — especially %@. Knowing this pattern means you can plan gentler days or extra self-care during that time." = "症状は%@フェーズ中に最も強くなる傾向があります — 特に%@。このパターンを知ることで、その期間に穏やかな日やセルフケアを計画できます。";
+
+"Your symptoms tend to feel %@ worse the day after meals that spike blood sugar. Choosing more balanced options when you can might help you feel better the next day." = "血糖値を上げる食事の翌日、症状が%@悪化する傾向があります。できるときにバランスの取れた選択をすることで、翌日の気分が良くなるかもしれません。";
+
+/* Narrative helpers — qualitative words */
+"mild" = "軽度";
+"light" = "軽い";
+"moderate" = "中程度";
+"noticeable" = "顕著";
+"significant" = "著しい";
+"slightly" = "わずかに";
+"noticeably" = "目立って";
+"meaningfully" = "かなり";
+"significantly" = "大幅に";
+
+/* Cycle prediction qualitative labels */
+"Strong estimate" = "信頼性の高い予測";
+"Moderate estimate" = "中程度の予測";
+"Rough estimate" = "おおよその予測";
+"Borderline" = "境界域";
+"flow" = "フロー";
+"today" = "今日";
+"period" = "生理";
+"predicted period" = "予測された生理";
+"No flow" = "出血なし";
+"Very light, occasional drops" = "ごく少量で、時々数滴";
+"Light flow, minimal pad or tampon use" = "軽い出血、ナプキンやタンポンの使用は最小限";
+"Moderate, regular pad or tampon use" = "中程度の出血、ナプキンやタンポンを通常どおり使用";
+"Heavy flow, frequent pad or tampon changes" = "多い出血、ナプキンやタンポンの交換が頻繁";
+"Language" = "言語";
+"App Language" = "アプリの言語";
+"FSA/HSA Tools" = "FSA/HSAツール";
+"Download CSV Template" = "CSVテンプレートをダウンロード";
+"Share CSV Template" = "CSVテンプレートを共有";
+"Import External Data (CSV)" = "外部データを取り込む (CSV)";
+"Generate a Letter of Medical Necessity for FSA/HSA reimbursement of PCOS-related wellness expenses." = "PCOS関連のウェルネス費用について、FSA/HSA払い戻し用の医療必要性証明書を作成します。";
+"An unknown error occurred." = "不明なエラーが発生しました。";
+"Get in Touch with the Dev Team ⚡!" = "開発チームに連絡する ⚡!";
+"Jump to month, %@" = "月へ移動, %@";
+"Double tap to open month and year picker" = "ダブルタップして月と年の選択を開きます";
+"7-day symptom severity forecast" = "7日間の症状の重さ予測";
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "今後1週間は、全体として症状が%@に感じられるかもしれません。今特に影響が大きそうな要因は%@です。これらの点を少し調整すると役立つ可能性があります。";
+"Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Top weighted drivers: %@. Forecast confidence: %lld%%." = "今後7日間の予測症状の重さは平均%@/5（範囲 %@-%@/5）です。重みの高い主な要因: %@。予測信頼度: %lld%%。";
+"Cycle length forecast range" = "周期の長さの予測範囲";
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "次の周期はおよそ%lld日続く可能性が高く、数日の幅があります。より多くの周期を記録するほど、この推定はさらに精密になります。";
+
+/* Prediction settings section header. */
+"Prediction Settings" = "予測設定";
+
+/* Toggle label for manual override. */
+"Manual cycle length override" = "周期の長さの手動設定";
+
+/* Stepper label for expected cycle length. */
+"Expected cycle length: %lld days" = "予想される周期の長さ: %lld 日";
+
+/* Picker label for ovulation status. */
+"Ovulation status" = "排卵状態";
+
+/* Button to apply prediction settings. */
+"Apply Settings" = "設定を適用";
+
+/* Free tier limitation note. */
+"Free tier shows cycle history for the last 30 days." = "無料プランでは過去30日間の周期履歴が表示されます。";
+
+/* Statistic item title. */
+"Range" = "範囲";
+
+/* Month picker label. */
+"Month" = "月";
+
+/* Year picker label. */
+"Year" = "年";
+
+/* Button to navigate to month. */
+"Go to Month" = "月へ移動";
+
+/* Navigation title for month picker. */
+"Jump to Month" = "月を選択";
+
+/* Loading text for insights. */
+"Generating insights..." = "インサイトを生成中...";
+
+/* Upgrade button for premium. */
+"Upgrade" = "アップグレード";
+
+/* Symptom history navigation title. */
+"Symptom History" = "症状の履歴";
+
+/* Use recommended button. */
+"Use recommended" = "推奨を使用";
+
+/* Onboarding question. */
+"Which symptoms matter most to you?" = "最も気になる症状はどれですか？";
+
+/* Onboarding description. */
+"We'll highlight these on your dashboard. You can always change this later." = "ダッシュボードでこれらをハイライト表示します。後からいつでも変更できます。";
+
+/* Period note suggestion. */
+"Spotting duration" = "不正出血の期間";
+
+/* Period note suggestion. */
+"Brown spotting" = "茶色の不正出血";
+
+/* Period note suggestion. */
+"Pink spotting" = "ピンクの不正出血";
+
+/* Period note suggestion. */
+"Mild cramps" = "軽い腹痛";
+
+/* Period note suggestion. */
+"Mood changes" = "気分の変動";
+
+/* Period note suggestion. */
+"After exercise" = "運動後";
+
+/* Period note suggestion. */
+"Small clots" = "小さな血の塊";
+
+/* Period note suggestion. */
+"Low energy" = "エネルギー不足";
+
+/* Period note suggestion. */
+"Clotting" = "血の塊";
+
+/* Period note suggestion. */
+"Moderate cramps" = "中程度の腹痛";
+
+/* Period note suggestion. */
+"Back pain" = "腰痛";
+
+/* Period note suggestion. */
+"Heavy clotting" = "大きな血の塊";
+
+/* Period note suggestion. */
+"Severe cramps" = "重度の腹痛";
+
+/* Period note suggestion. */
+"Frequent product change" = "頻繁なナプキン交換";
+
+/* Period note suggestion. */
+"Dizziness" = "めまい";
+
+/* Missing L10n keys that need translations. */
+"Anovulatory" = "無排卵";
+
+"Demo Data Import" = "デモデータの取り込み";
+
+"External CSV Import" = "外部CSVの取り込み";
+
+"higher" = "高め";
+
+"JSON Backup Import" = "JSONバックアップの取り込み";
+
+"longer" = "長め";
+
+"lower" = "低め";
+
+"Predicted period" = "予測される生理";
+
+"shorter" = "短め";
+
+"System Default" = "システムデフォルト";
+"Predicted next cycle length is %lld days (range %lld-%lld days, %lld%% confidence)." = "次の周期の予測日数は%lld日です（範囲 %lld-%lld日、信頼度 %lld%%）。";
+
+/* Prediction primary text for uncertain state. */
+"Your next period is harder to estimate right now." = "次の生理は現在予測が難しい状況です。";
+
+/* Prediction secondary text for actionable state. */
+"%lld%% confidence • %lld-day window" = "%lld%%の信頼度 • %lld日間の予測範囲";
+
+/* Prediction explanation for wide window. */
+"Recent cycle variability is creating a broad %lld-day estimate." = "最近の周期の変動により、%lld日間の広い予測範囲となっています。";
+
+/* Prediction explanation for low confidence. */
+"Forecast confidence is %lld%% right now." = "現在の予測信頼度は%lld%%です。";
+
+/* Prediction explanation for wide window and low confidence. */
+"Recent cycle variability is creating a broad %lld-day estimate, and forecast confidence is %lld%%." = "最近の周期の変動により%lld日間の広い予測範囲となっており、予測信頼度は%lld%%です。";
+
+/* Prediction suffix text. */
+"Keep logging period starts and symptoms to narrow future estimates." = "生理の開始日と症状を記録し続けると、今後の予測がより正確になります。";
+
+/* Short confidence label. */
+"%lld%% confidence" = "%lld%%の信頼度";
+"CSV Import Guide" = "CSVインポートガイド";
+"Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank." = "CSVを取り込むときはテンプレートを使ってください。各行には record_type が必要で、未使用の列は空欄のままでかまいません。";
+"Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here." = "Export Data (CSV) は閲覧用レポートを書き出します。Import External Data (CSV) では、ここに示すテンプレート列が必要です。";
+"Supported Record Types" = "対応するレコードタイプ";
+"Format Rules" = "形式ルール";
+"Required fields" = "必須フィールド";
+"Optional fields" = "任意フィールド";
+"Accepted values" = "使用できる値";
+"date uses YYYY-MM-DD" = "date は YYYY-MM-DD を使います";
+"timestamp uses ISO8601" = "timestamp は ISO8601 を使います";
+"time_taken uses HH:mm" = "time_taken は HH:mm を使います";
+"taken uses true or false" = "taken には true または false を使います";
+"severity, stress_level, and energy_level use 1-5" = "severity、stress_level、energy_level には 1-5 を使います";
+"daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz." = "daily_log では weight、sleep_hours、active_minutes、stress_level、energy_level、water_oz のいずれか少なくとも1つが必要です。";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "血糖値への影響";
+
+/* No comment provided by engineer. */
+"Macros" = "マクロ栄養素";
+
+/* No comment provided by engineer. */
+"Carbs" = "炭水化物";
+
+/* No comment provided by engineer. */
+"Protein" = "タンパク質";
+
+/* No comment provided by engineer. */
+"Fat" = "脂質";
+
+/* No comment provided by engineer. */
+"Post-Meal Feedback" = "食後のフィードバック";
+
+/* No comment provided by engineer. */
+"Symptom severity" = "症状の重さ";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "食事の記録なし";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "記録した食事がここに表示されます。";
+
+/* No comment provided by engineer. */
+"Post-meal symptom: %lld/5" = "食後の症状: %lld/5";
+
+/* No comment provided by engineer. */
+"Low" = "低";
+
+/* No comment provided by engineer. */
+"Med" = "中";
+
+/* No comment provided by engineer. */
+"High" = "高";
+
+/* No comment provided by engineer. */
+"Meal entry deleted" = "食事の記録を削除しました";
+
+"CycleBalance Premium Monthly" = "CycleBalance プレミアム 月額";
+"CycleBalance Premium Yearly" = "CycleBalance プレミアム 年額";
+"Basic cycle tracking" = "基本の周期記録";
+"Symptom logging" = "症状記録";
+"Calendar view" = "カレンダー表示";
+"Insights engine" = "インサイト機能";
+"PDF reports" = "PDFレポート";
+"Charts & trends" = "チャートと傾向";
+"HealthKit sync" = "HealthKit同期";
+"Priority support" = "優先サポート";
+"Loading Premium Options..." = "プレミアムオプションを読み込み中...";
+"Try Again" = "もう一度試す";
+
+/* Pregnancy and postpartum surfaces. */
+"Cycle Recovery" = "周期の回復";
+"Cycle tracking and predictions are paused while pregnancy mode is active. Your previous cycle data is safe and will be used to improve predictions once you return to normal tracking." = "妊娠モードが有効な間は、周期の記録と予測は一時停止されます。これまでの周期データは安全に保持され、通常の記録に戻った後の予測精度向上に活用されます。";
+"Cycle tracking will be paused and your current cycle will be closed. You can return to cycle tracking from Settings." = "周期の記録は一時停止され、現在の周期は終了として扱われます。設定からいつでも周期の記録に戻れます。";
+"Cycle tracking will resume. Your pregnancy data will be preserved." = "周期の記録が再開されます。妊娠データは保持されます。";
+"Delivery" = "出産";
+"Due date" = "出産予定日";
+"End Pregnancy Mode" = "妊娠モードを終了";
+"End Pregnancy Mode?" = "妊娠モードを終了しますか？";
+"End Reason" = "終了理由";
+"Enter Pregnancy Mode" = "妊娠モードに入る";
+"Enter Pregnancy Mode?" = "妊娠モードに入りますか？";
+"Estimated Due Date" = "出産予定日";
+"I have an estimated due date" = "出産予定日がわかっている";
+"Log your first period to resume cycle tracking." = "最初の生理を記録すると周期の記録が再開されます。";
+"Not active" = "未開始";
+"Other" = "その他";
+"Postpartum" = "産後";
+"Postpartum — Day %lld" = "産後 — %lld日目";
+"Pregnancy" = "妊娠";
+"Pregnancy & Postpartum" = "妊娠と産後";
+"Pregnancy Mode" = "妊娠モード";
+"Pregnancy Start Date" = "妊娠開始日";
+"Pregnancy loss" = "流産・死産";
+"Reason" = "理由";
+"Return to Normal Tracking" = "通常の記録に戻る";
+"Start date" = "開始日";
+"This will pause cycle tracking. You can return to cycle tracking anytime from Settings." = "これにより周期の記録は一時停止されます。設定からいつでも周期の記録に戻れます。";
+"Undo Activation" = "有効化を取り消す";
+"Week %lld" = "%lld週";
+"Week %lld • Trimester %lld" = "%lld週 • 第%lld三半期";
+"We're learning your new cycle pattern. Keep logging period starts and we'll have an estimate for you soon." = "新しい周期パターンを学習中です。生理の開始日を引き続き記録していただければ、まもなく予測を表示できます。";
+"Your cycles may be irregular as your body recovers. Log your first period when it arrives to resume cycle tracking. CycleBalance will adapt its predictions as your cycles stabilize." = "体の回復に伴って周期が不規則になることがあります。最初の生理が来たら記録して、周期の記録を再開してください。CycleBalance は周期が安定するにつれて予測を調整していきます。";
+"Pregnancy mode pauses cycle tracking and predictions while you're expecting. Your existing cycle data is preserved. When you're ready, postpartum mode helps you ease back into tracking as your cycles return." = "妊娠中は、妊娠モードによって周期の記録と予測が一時停止されます。これまでの周期データは保持されます。準備ができたら、産後モードが周期の再開に合わせて無理なく記録へ戻れるようサポートします。";
+
+/* App Store onboarding localization remediation. */
+"CycleBalance will help you find your rhythm" = "CycleBalanceがあなたのリズム探しをサポートします";
+"CycleBalance will help you decode your symptoms" = "CycleBalanceがあなたの症状の意味をひも解くお手伝いをします";
+"CycleBalance is ready to help" = "CycleBalanceはあなたをサポートする準備ができています";
+"Starting fresh is the hardest part — we'll guide you step by step." = "最初の一歩がいちばん大変です。ひとつずつ丁寧にご案内します。";
+"You already know your body. Let's make your data work harder." = "あなたはすでに自分の体をよく知っています。その気づきをデータでもっと活かしていきましょう。";
+"Tracking is a powerful first step toward answers." = "記録を始めることは、答えに近づくための力強い第一歩です。";
+"Your personalized tracking starts now." = "あなたに合わせた記録が今始まります。";
+"68% of recently diagnosed users say tracking helped them feel more in control within 30 days." = "最近診断を受けたユーザーの68%が、記録を始めて30日以内に自分でコントロールしやすくなったと感じています。";
+"Women who track consistently report 40% better conversations with their doctors." = "継続して記録している女性は、医師との会話が40%改善したと感じています。";
+"3 in 4 women exploring PCOS say symptom tracking gave them clarity before their next appointment." = "PCOSの可能性を探っている女性の4人に3人が、次の受診前に症状記録で状況を整理できたと答えています。";
+"Join 10,000+ women tracking their PCOS journey with CycleBalance." = "10,000人以上の女性がCycleBalanceでPCOSの記録を続けています。";
+"Perfect for spotting patterns in your mood and energy levels." = "気分やエネルギーレベルの変化パターンを見つけるのに最適です。";
+"Ideal for tracking how pain and cramps relate to your cycle." = "痛みやけいれんが周期とどう関係するかを記録するのにぴったりです。";
+"Great for tracking how your skin and hair change across your cycle." = "周期に合わせた肌や髪の変化を記録するのに役立ちます。";
+"Perfect for spotting trends in your bloating and cravings." = "むくみや食欲の傾向を見つけるのに最適です。";
+"Smart Cycle Calendar" = "スマート生理カレンダー";
+"See your cycle at a glance. CycleBalance learns your pattern — even when it's irregular." = "周期をひと目で確認できます。不規則でも、CycleBalanceがあなたのパターンを学習します。";
+"Predictions That Adapt" = "変化に合わせて進化する予測";
+"Our predictions improve with every log. No 28-day assumptions." = "記録するたびに予測精度が高まります。28日周期を前提にしません。";
+"Daily Symptom Tracking" = "毎日の症状記録";
+"Log symptoms in seconds. We'll find the patterns you can't see." = "数秒で症状を記録できます。見えにくいパターンを一緒に見つけます。";
+"Cycle–Symptom Insights" = "周期と症状のインサイト";
+"Discover how your symptoms relate to your cycle phase." = "症状が周期のどの段階と関係しているかを見つけましょう。";
+"Your Personal Health Hub" = "あなたのパーソナル健康ハブ";
+"Track periods, symptoms, and more — all in one private place." = "生理や症状、そのほかの記録をひとつのプライベートな場所でまとめて管理できます。";
+"Cycle calendar" = "生理カレンダー";
+"See your cycle history at a glance" = "周期の履歴をひと目で確認";
+"Period predictions" = "生理予測";
+"Smarter forecasts after each cycle" = "周期を重ねるごとに賢くなる予測";
+"Symptom dashboard" = "症状ダッシュボード";
+"All your symptoms organized in one place" = "すべての症状をひとつの場所で整理";
+"Pattern insights" = "パターンのインサイト";
+"Connections you can't spot on your own" = "自分だけでは気づきにくいつながり";
+"Personalized tracking" = "あなた向けの記録";
+"A dashboard built around your needs" = "あなたのニーズに合わせたダッシュボード";
+"Highlighted on your dashboard" = "ダッシュボードで強調表示";
+"Your plan is set — let's get your first data point." = "プランの準備ができました。まずは最初の記録を残しましょう。";
+"Your insights start with today's first log." = "インサイトは今日の最初の記録から始まります。";
+"Let's capture your first entry." = "最初の記録を残しましょう。";
+"We're a small team building this for you — find \"Share Feedback\" in Settings anytime." = "私たちはあなたのためにこのアプリを作っている小さなチームです。設定の「フィードバックを共有」からいつでもご意見を送れます。";
+"Everything's set. Log when you're ready — CycleBalance adapts to your rhythm, not the other way around." = "準備はすべて整いました。あなたのタイミングで記録を始めてください。CycleBalanceがあなたのリズムに合わせます。";
+"Your tracking journey starts now. You're part of a growing community of women making sense of their symptoms." = "あなたの記録の旅は今ここから始まります。症状を理解しようとする女性たちの広がるコミュニティの一員です。";
+"You're part of a growing community of women taking control of their PCOS. We're glad you're here." = "あなたはPCOSと向き合う女性たちの広がるコミュニティの一員です。ここに来てくれてうれしいです。";
+"Help CycleBalance work better" = "CycleBalanceをもっと役立てるために";
+"These permissions are optional. You can change them anytime in Settings." = "これらの許可は任意です。設定からいつでも変更できます。";
+"Your data stays on your device. No accounts, no servers, no exceptions." = "あなたのデータは端末内にのみ保存されます。アカウントもサーバーもなく、例外はありません。";
+"Camera" = "カメラ";
+"Take photos for your hair & skin journal to track changes over time." = "髪や肌の記録用に写真を撮って、時間とともに変化を追跡できます。";
+"See skin and hair changes side by side over months." = "数か月にわたる肌や髪の変化を並べて比較できます。";
+"Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights." = "体重、睡眠、歩数、血糖値、活動量、心拍数を同期して、より深いインサイトを得られます。";
+"Get deeper insights when health data is connected." = "健康データを連携すると、より深いインサイトが得られます。";
+"Skip for now" = "今はスキップ";
+"Support our mission" = "私たちの取り組みを応援してください";
+"We're a small team dedicated to giving women with PCOS actionable insights from their data, to manage and improve their lives. A rating on the App Store helps others find us." = "私たちは、PCOSの女性が自分のデータから行動につながる気づきを得て、毎日をより良く管理できるよう支援する小さなチームです。App Storeでの評価は、必要としている人に見つけてもらう助けになります。";
+"Leave a Quick Review" = "簡単にレビューする";
+"Maybe later" = "後で";
+"I finally understand why I feel different on certain days. This app connected the dots." = "どうして特定の日に気分が違うのか、やっと分かりました。このアプリが点と点をつないでくれました。";
+"Recently Diagnosed" = "最近診断された方";
+"After 3 months of logging, I brought my data to my doctor and we adjusted my treatment plan together." = "3か月記録を続けて、データを主治医に見せたら、一緒に治療計画を見直すことができました。";
+"Symptom Tracking" = "症状の記録";
+"I was skeptical, but seeing my symptom patterns mapped to my cycle was a game-changer." = "半信半疑でしたが、症状のパターンが周期と結び付いて見えたとき、本当に世界が変わりました。";
+"Pattern Recognition" = "パターンの把握";
+"What women are saying" = "みんなの声";
+"Built and tested with 200+ women in our beta community" = "ベータコミュニティの200人以上の女性と一緒に作り、検証してきました";
+"Built to give women with PCOS the insights they deserve." = "PCOSの女性が本来得るべきインサイトを届けるために作られました。";
+"Purchase is pending. Approve the transaction in the StoreKit session or App Store account and try refreshing premium status again." = "購入は保留中です。StoreKit セッションまたは App Store アカウントで取引を承認してから、もう一度プレミアム状態を更新してください。";
+"%lld day" = "%lld 日";
+"%lld week" = "%lld 週間";
+"%lld weeks" = "%lld 週間";
+"%lld month" = "%lld か月";
+"%lld months" = "%lld か月";
+"%lld year" = "%lld 年";
+"%lld years" = "%lld 年";
+"increase" = "増加";
+"decrease" = "減少";
+"Import Failed" = "インポートに失敗しました";
+"Import Completed with Issues" = "問題付きでインポートが完了しました";
+"Import Counts" = "インポート件数";
+"Inserted" = "追加";
+"Updated" = "更新";
+"Skipped" = "スキップ";
+"Rejected" = "却下";
+"Example Issues" = "問題の例";
+"And %lld more issues..." = "さらに %lld 件の問題があります...";
+"No records were imported because the backup could not be validated." = "バックアップを検証できなかったため、レコードはインポートされませんでした。";
+"No records were imported because the CSV file could not be validated." = "CSV ファイルを検証できなかったため、レコードはインポートされませんでした。";
+"No records were imported. %lld records need attention." = "レコードはインポートされませんでした。%lld 件のレコードに確認が必要です。";
+"%lld records were applied. %lld records need attention." = "%lld 件のレコードを適用しました。%lld 件のレコードに確認が必要です。";
+"%lld inserted • %lld updated • %lld skipped • %lld rejected" = "%lld 件追加 • %lld 件更新 • %lld 件スキップ • %lld 件却下";
+"%lld imported • %lld rejected • schema v%lld" = "%lld 件インポート • %lld 件却下 • スキーマ v%lld";
+"How this works" = "仕組み";
+"What the confidence means" = "信頼度の意味";
+"Research context" = "研究の背景";
+"Sources" = "出典";
+"View Source" = "出典を見る";
+"Evidence strength" = "エビデンスの強さ";
+"PCOS-studied" = "PCOSで研究済み";
+"Mixed evidence" = "エビデンスは一貫していません";
+"Emerging evidence" = "新たなエビデンス";
+"Limited evidence" = "限定的なエビデンス";
+"General guidance" = "一般的な指針";
+"Insights are based on your personal data and on-device analysis. They are not medical advice." = "インサイトはあなたの個人データとデバイス上の分析に基づいています。医療上の助言ではありません。";
+"How to read your insights" = "インサイトの見方";
+"Built from your logs" = "あなたの記録から作成";
+"Each insight comes from patterns in the cycle, symptom, meal, supplement, sleep, and daily data you track on this device." = "各インサイトは、この端末で記録した周期、症状、食事、サプリ、睡眠、日々のデータのパターンから作られます。";
+"Confidence shows pattern strength" = "信頼度はパターンの強さを示します";
+"Higher confidence usually means the app has seen the same pattern more than once in your recent history." = "信頼度が高いほど、アプリが最近の履歴で同じパターンを複数回確認できていることを意味する場合が多いです。";
+"Research adds context" = "研究は背景を補足します";
+"Research helps explain why a pattern may matter, but it does not prove that a study finding caused your specific result." = "研究はそのパターンが重要かもしれない理由を説明する助けになりますが、研究結果があなたの結果を引き起こしたと証明するものではありません。";
+"Why you're seeing this" = "これが表示される理由";
+"Evidence overview" = "エビデンスの概要";
+"References" = "参考文献";
+"Forecast cards compare your recent cycle, symptom, meal, supplement, blood sugar, and daily-log history on this device to estimate a likely range. If the app does not have enough recent or consistent data, it stays cautious or skips the forecast." = "予測カードは、この端末での最近の周期、症状、食事、サプリ、血糖、日次記録の履歴を比較して、起こりやすい範囲を見積もります。最近のデータが十分でない、または一貫していない場合、アプリは慎重になり予測を表示しないことがあります。";
+"This forecast is driven mostly by your own logging history rather than a specific external study, so it should be treated as a personalized estimate, not a medical prediction." = "この予測は特定の外部研究よりも、あなた自身の記録履歴に主に基づいています。そのため、医療的な予測ではなく、個別化された見積もりとして受け止めてください。";
+"This card compares the length and variability of your completed, non-predicted cycles logged on this device." = "このカードは、この端末に記録された完了済みで予測ではない周期の長さとばらつきを比較します。";
+"PCOS guidelines and review papers treat cycle regularity as an important signal, but this card is still describing your own logged cycle pattern rather than making a diagnosis." = "PCOS のガイドラインや総説では周期の規則性を重要な手がかりとみなしますが、このカードが示しているのはあくまであなた自身の記録パターンであり、診断ではありません。";
+"This card looks for symptom timing, clustering, and trend changes across the symptom days and cycle phases you have logged." = "このカードは、記録した症状日と周期フェーズ全体から、症状の出るタイミング、まとまり、傾向の変化を探します。";
+"PCOS research shows that symptom burden can affect daily life and emotional wellbeing, but this card is still a personal pattern from your own symptom history rather than proof of a cause." = "PCOS 研究では症状の負担が日常生活や気分に影響しうることが示されていますが、このカードもあくまであなた自身の症状履歴から見えた個人的なパターンであり、原因の証明ではありません。";
+"This card compares the glycemic pattern of your logged meals with later symptoms and breakout timing from meals saved on this device." = "このカードは、記録した食事のグリセミックパターンと、その後の症状や肌荒れの出るタイミングを比較します。";
+"PCOS lifestyle guidance often focuses on meal quality, blood sugar, and sustainable activity habits. This card uses that context, but the relationship shown here still comes from your own meal and symptom logs." = "PCOS の生活習慣ガイダンスでは、食事の質、血糖、続けやすい活動習慣がよく重視されます。このカードもその文脈を使いますが、ここで示される関係はあなた自身の食事と症状の記録から出たものです。";
+"This card compares your logged sleep, energy, and activity trends with symptom severity from daily logs saved on this device." = "このカードは、記録した睡眠、エネルギー、活動の傾向を、この端末に保存された日次ログの症状の強さと比較します。";
+"Sleep problems are more common in PCOS populations, but this card is still mainly a personal recovery-pattern check from your own logs rather than proof of a cause." = "睡眠の問題は PCOS 集団でより多くみられますが、このカードもあくまであなた自身の記録に基づく回復パターンの確認であり、原因の証明ではありません。";
+"This card compares symptom averages across months using the history you have logged on this device." = "このカードは、この端末に記録した履歴を使って、月ごとの症状平均を比較します。";
+"Seasonal shifts are not a core benchmark topic in PCOS research, so this card should be read mostly as a personal pattern from your own logs." = "季節による変化は PCOS 研究で中心的な基準テーマではないため、このカードは主にあなた自身の記録から見えた個人的なパターンとして読んでください。";
+"These catalog presets are tracking-friendly starting points for commonly discussed supplements. They are not prescriptions, treatment plans, or personalized medical recommendations." = "これらのカタログプリセットは、よく話題に上るサプリを記録しやすくするための出発点です。処方、治療計画、または個別の医療推奨ではありません。";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns from supplement entries saved on this device." = "このカードは、この端末に保存されたサプリ記録から、服用した日と飲み忘れた日、症状の強さ、周期パターンを比較します。";
+"This result is mostly a personal adherence pattern from your own logs. Because the supplement does not match a curated preset, the app avoids attaching a broader study list that could feel misleading." = "この結果は主に、あなた自身の記録から見えた個人的な継続パターンです。このサプリは厳選プリセットに一致しないため、誤解を招く可能性のある広い研究一覧は付けていません。";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns for the supplement you tracked." = "このカードは、あなたが記録したサプリについて、服用した日と飲み忘れた日、症状の強さ、周期パターンを比較します。";
+"Your card still does not prove that the supplement caused the change; it highlights a pattern worth tracking over time." = "このカードだけで、そのサプリが変化の原因だったとはまだ証明できません。時間をかけて追う価値のあるパターンを示しています。";
+"Benchmark international guideline used for broad PCOS assessment and management context." = "PCOS の評価と管理の広い文脈で使われる国際的な基準ガイドラインです。";
+"High-level review explaining core PCOS mechanisms and why cycle and metabolic patterns matter." = "PCOS の中心的な仕組みと、周期や代謝のパターンがなぜ重要かを説明する総説です。";
+"Guideline-linked review summarizing diet and activity patterns discussed in PCOS care." = "PCOS ケアで話題になる食事と活動パターンを要約した、ガイドライン関連の総説です。";
+"Commonly cited evidence showing why exercise and lifestyle patterns are discussed in PCOS management." = "なぜ運動や生活習慣のパターンが PCOS 管理で重視されるのかを示す、よく引用されるエビデンスです。";
+"Overview of sleep-related difficulties reported more often in PCOS populations." = "PCOS 集団でより多く報告される睡眠関連の困りごとをまとめた概要です。";
+"Shows why symptom burden and emotional wellbeing are often discussed together in PCOS care." = "なぜ症状の負担と心の健康が PCOS ケアで一緒に語られることが多いのかを示します。";
+"Direct study or review for this supplement in PCOS." = "このサプリに関する PCOS の直接研究または総説です。";
+
+/* Insight explanation localization additions. */
+"Analyzing your data..." = "データを分析しています...";
+"BMJ Medicine review (2023)" = "BMJ Medicine総説（2023）";
+"Build your first cycle insights" = "最初の周期インサイトを作成しましょう";
+"Build your first insights" = "最初のインサイトを作成しましょう";
+"Build your first symptom insights" = "最初の症状インサイトを作成しましょう";
+"Cycle pattern summaries become reliable after 3 complete cycles. Keep logging each period start so your pattern can stabilize." = "周期パターンの要約は、3 回の完了した周期がそろうと信頼しやすくなります。パターンが安定するように、生理開始日を記録し続けてください。";
+"Cycle pattern summaries need 3 complete cycles, and symptom correlations need about 14 tracked days. Keep logging period starts and daily symptoms." = "周期パターンの要約には完了した周期が 3 回必要で、症状の相関には約 14 日分の記録が必要です。生理開始日と毎日の症状を記録し続けてください。";
+"Insights are still taking shape" = "インサイトはまだ形になっている途中です";
+"International PCOS guideline (2023)" = "PCOS国際ガイドライン（2023）";
+"Keep logging consistently. As your data fills in, this tab will highlight stronger cycle and symptom patterns." = "記録を継続してください。データが増えるにつれて、このタブではよりはっきりした周期と症状のパターンが表示されます。";
+"Keep logging period starts and symptoms so this tab can start surfacing useful patterns." = "生理開始日と症状の記録を続けると、このタブで役立つパターンが表示され始めます。";
+"Log meals, supplements, sleep, activity, or blood sugar to unlock deeper lifestyle correlations and predictive insights." = "食事、サプリ、睡眠、活動、または血糖を記録すると、より深い生活習慣の相関や予測インサイトが利用できるようになります。";
+"Meal impact insights" = "食事の影響インサイト";
+"More cycle data will sharpen your insights" = "周期データが増えるとインサイトがより明確になります";
+"More symptom days will unlock correlations" = "症状記録の日数が増えると相関が見えてきます";
+"Predictive forecasts" = "予測見通し";
+"Premium Insights" = "プレミアムインサイト";
+"PubMed meta-analysis (2019)" = "PubMedメタ分析（2019）";
+"PubMed overview (2024)" = "PubMed概説（2024）";
+"PubMed review (2019)" = "PubMed総説（2019）";
+"PubMed systematic review (2019)" = "PubMed系統的レビュー（2019）";
+"References expanded" = "参考文献を展開";
+"Saving insights..." = "インサイトを保存しています...";
+"Seasonal pattern insights" = "季節パターンのインサイト";
+"Sleep and activity insights" = "睡眠と活動のインサイト";
+"Supplement response insights" = "サプリ反応インサイト";
+"Symptom correlations and trends need about 14 tracked days. Daily symptom check-ins are the fastest way to make this tab more useful." = "症状の相関と傾向には約 14 日分の記録が必要です。このタブをより役立てる最も早い方法は、毎日の症状チェックです。";
+"Symptom correlations need about 14 tracked days, and cycle pattern summaries need 3 complete cycles. Start with daily symptoms and period starts." = "症状の相関には約 14 日分の記録が必要で、周期パターンの要約には完了した周期が 3 回必要です。まずは毎日の症状と生理開始日から記録しましょう。";
+"Unlock adherence and symptom-delta insights for the supplements you track." = "記録しているサプリについて、継続状況と症状差分のインサイトを利用できるようになります。";
+"Unlock forecast ranges for cycle length and next-week symptom severity when enough data is available." = "十分なデータが集まると、周期の長さや来週の症状の強さの予測レンジが利用できるようになります。";
+"Unlock meal and glycemic impact correlations tied to your next-day symptoms." = "翌日の症状に関連する食事とグリセミック影響の相関が利用できるようになります。";
+"Unlock month-to-month symptom pattern changes as you log across seasons." = "季節をまたいで記録すると、月ごとの症状パターンの変化が利用できるようになります。";
+"Unlock sleep, activity, and recovery patterns linked to symptom severity." = "症状の強さに関連する睡眠、活動、回復のパターンが利用できるようになります。";
+"You have the basics covered" = "基本の記録はそろっています";
+"blood sugar readings for predictive forecasts" = "予測用の血糖測定値";
+"cycles for predictive forecasts" = "予測用の周期データ";
+"cycles for supplement analysis" = "サプリ分析用の周期データ";
+"daily logs for predictive forecasts" = "予測用の日次ログ";
+"meals for predictive forecasts" = "予測用の食事データ";
+"seasonal patterns" = "季節パターン";
+"supplements for predictive forecasts" = "予測用のサプリ記録";
+"symptoms for predictive forecasts" = "予測用の症状データ";
+"symptoms for seasonal analysis" = "季節分析用の症状データ";
+
+/* Supplement evidence localization additions. */
+"Inositol has direct PCOS literature support, especially for insulin-related and reproductive outcomes, though benefit size varies across trials." = "イノシトールには PCOS に関する直接的な文献的裏づけがあり、特にインスリン関連と生殖関連の転帰で支持されていますが、効果の大きさは試験によって異なります。";
+"Vitamin D has direct PCOS trial and meta-analysis support, but results vary and deficiency status may matter." = "ビタミンDには PCOS に関する直接的な試験とメタ分析の裏づけがありますが、結果にはばらつきがあり、欠乏の有無が重要な場合があります。";
+"Omega-3 has direct PCOS meta-analysis support for selected cardiometabolic markers, though effects are not uniform across outcomes." = "オメガ3には、特定の心血管代謝マーカーについて PCOS の直接的なメタ分析の裏づけがありますが、効果はすべての転帰で一様ではありません。";
+"Berberine has direct PCOS meta-analysis support for metabolic outcomes, but the trial base is smaller than for core guideline-backed therapies." = "ベルベリンには代謝関連の転帰について PCOS の直接的なメタ分析の裏づけがありますが、試験の蓄積は主要ガイドラインで支えられた治療ほど多くありません。";
+"N-acetylcysteine has direct PCOS meta-analysis support, but findings are still interpreted cautiously alongside standard care." = "N-アセチルシステインには PCOS の直接的なメタ分析の裏づけがありますが、標準治療とあわせて慎重に解釈する必要があります。";
+"Zinc appears in newer mineral-supplement analyses for PCOS, but the overall evidence base is still mixed and not strong enough for a broad treatment claim." = "亜鉛は PCOS の新しいミネラルサプリ分析に含まれていますが、全体のエビデンスはまだ一貫しておらず、広い治療効果を主張できるほど強くはありません。";
+"Magnesium appears in newer mineral-supplement analyses for PCOS, but the evidence base is still emerging and should be framed conservatively." = "マグネシウムは PCOS の新しいミネラルサプリ分析に含まれていますが、エビデンスはまだ発展途上であり、慎重に位置づける必要があります。";
+"Spearmint tea has small-trial support for androgen-related symptoms, but the evidence base remains limited." = "スペアミントティーにはアンドロゲン関連症状に対する小規模試験の裏づけがありますが、エビデンス基盤は依然として限定的です。";
+"Folate is included as broader preconception and reproductive-health guidance rather than as a direct PCOS treatment recommendation." = "葉酸は、PCOS の直接的な治療推奨というより、妊娠前と生殖の健康に関するより広いガイダンスとして含まれています。";
+"Chromium has direct PCOS meta-analysis support for some insulin-resistance markers, but the overall evidence remains mixed." = "クロミウムには一部のインスリン抵抗性指標について PCOS の直接的なメタ分析の裏づけがありますが、全体のエビデンスはまだ一致していません。";
+"PubMed umbrella review (2024)" = "PubMedアンブレラレビュー（2024）";
+"PubMed meta-analysis (2017)" = "PubMedメタ分析（2017）";
+"PubMed meta-analysis (2018)" = "PubMedメタ分析（2018）";
+"PubMed meta-analysis (2021)" = "PubMedメタ分析（2021）";
+"PubMed meta-analysis (2024)" = "PubMedメタ分析（2024）";
+"PubMed randomized trial (2010)" = "PubMedランダム化比較試験（2010）";
+"USPSTF recommendation" = "USPSTF勧告";
+
+/* HealthKit data transparency section. */
+"Active Energy Burned" = "アクティブエネルギー";
+"Blood Glucose" = "血糖値";
+"Body Mass" = "体重";
+"Connected" = "接続済み";
+"CycleBalance reads data only after you grant permission. Data stays on your device and helps enrich logs, trends, and insights." = "CycleBalance は許可を得た後にのみデータを読み取ります。データはデバイス上に保持され、ログ、トレンド、インサイトを充実させるために役立ちます。";
+"CycleBalance reads these Apple Health data types only after you grant permission. Data stays on your device and is used to enrich logs, trends, and insights. CycleBalance does not write data to Apple Health." = "CycleBalance は、許可を得た後にのみこれらの Apple Health データタイプを読み取ります。データはデバイス上に保持され、ログ、トレンド、インサイトを充実させるために使用されます。CycleBalance は Apple Health にデータを書き込みません。";
+"Health Data Access" = "ヘルスデータアクセス";
+"Health data stays private" = "ヘルスデータは非公開のままです";
+"HealthKit type: Active Energy Burned" = "HealthKitタイプ: アクティブエネルギー消費量";
+"HealthKit type: Blood Glucose" = "HealthKitタイプ: 血糖値";
+"HealthKit type: Body Mass" = "HealthKitタイプ: 体重";
+"HealthKit type: Resting Heart Rate" = "HealthKitタイプ: 安静時心拍数";
+"HealthKit type: Sleep Analysis" = "HealthKitタイプ: 睡眠分析";
+"HealthKit type: Step Count" = "HealthKitタイプ: 歩数";
+"Manage the optional Apple Health connection for CycleBalance." = "CycleBalance の任意の Apple Health 接続を管理します。";
+"No writes to Apple Health" = "Apple Health への書き込みなし";
+"On device" = "デバイス上";
+"Read-only" = "読み取り専用";
+"Read when connected" = "接続時に読み取り";
+"Requested for activity context; not saved or used for insights." = "活動コンテキストのために要求されます。保存されず、インサイトにも使用されません。";
+"Requested for activity context. CycleBalance does not currently save step count or use it for insights." = "活動コンテキストのためにリクエストされます。CycleBalance は現在、歩数を保存せず、インサイトにも使用しません。";
+"Resting Heart Rate" = "安静時心拍数";
+"Sleep Analysis" = "睡眠分析";
+"Step Count" = "歩数";
+"These data types are read only after you connect Apple Health." = "これらのデータタイプは、Apple Health に接続した後にのみ読み取られます。";
+"Used as activity context for daily logs and activity insights." = "毎日のログとアクティビティインサイトの活動コンテキストとして使用されます。";
+"Used for blood sugar history and metabolic insight context." = "血糖履歴と代謝インサイトのコンテキストに使用されます。";
+"Used for daily resting BPM and recovery context." = "毎日の安静時BPMと回復コンテキストに使用されます。";
+"Used for daily weight and weight trends." = "毎日の体重と体重トレンドに使用されます。";
+"Used for sleep hours and sleep/recovery insights." = "睡眠時間と睡眠/回復のインサイトに使用されます。";
+"Learn more" = "詳しく見る";

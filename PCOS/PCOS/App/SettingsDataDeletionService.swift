@@ -11,6 +11,7 @@ struct SettingsDataDeletionService {
     func deleteAllData() throws {
         try modelContext.delete(model: CycleEntry.self)
         try modelContext.delete(model: Cycle.self)
+        try modelContext.delete(model: OvulationObservation.self)
         try modelContext.delete(model: SymptomEntry.self)
         try modelContext.delete(model: Insight.self)
         try modelContext.delete(model: BloodSugarReading.self)
@@ -18,6 +19,7 @@ struct SettingsDataDeletionService {
         try modelContext.delete(model: MealEntry.self)
         try modelContext.delete(model: HairPhotoEntry.self)
         try modelContext.delete(model: DailyLog.self)
+        try modelContext.delete(model: PregnancyRecord.self)
         try modelContext.save()
     }
 }

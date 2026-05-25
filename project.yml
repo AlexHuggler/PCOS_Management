@@ -56,20 +56,16 @@ targets:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+          CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.debug.entitlements
         Release:
           SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
           SWIFT_COMPILATION_MODE: wholemodule
-    entitlements:
-      path: PCOS/PCOS.entitlements
-      properties:
-        com.apple.developer.icloud-container-identifiers:
-          - "iCloud.com.cyclebalance.app"
-        com.apple.developer.icloud-services:
-          - CloudKit
-        com.apple.developer.healthkit: true
+          CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements
     dependencies:
       - package: RevenueCat
         product: RevenueCat
+      - package: RevenueCat
+        product: RevenueCatUI
 
   PCOSTests:
     type: bundle.unit-test
@@ -119,20 +115,19 @@ schemes:
         PCOSUITests: [test]
     run:
       config: Debug
-      environmentVariables:
-        PREMIUM_BILLING_MODE_OVERRIDE: local_storekit
+      commandLineArguments:
+        "-billing.backendMode": true
+        "revenuecat": true
     test:
       config: Debug
       gatherCoverageData: false
-      environmentVariables:
-        PREMIUM_BILLING_MODE_OVERRIDE: local_storekit
       targets:
         - name: PCOSTests
         - name: PCOSUITests
     archive:
       config: Release
 
-  PCOS-LocalStoreKit:
+  PCOS Local StoreKit:
     build:
       targets:
         PCOS: all
@@ -140,15 +135,13 @@ schemes:
         PCOSUITests: [test]
     run:
       config: Debug
-      environmentVariables:
-        PREMIUM_BILLING_MODE_OVERRIDE: local_storekit
       storeKitConfiguration: PCOS/PCOS/StoreKit/PCOS.storekit
+      commandLineArguments:
+        "-billing.backendMode": true
+        "local_storekit": true
     test:
       config: Debug
       gatherCoverageData: false
-      environmentVariables:
-        PREMIUM_BILLING_MODE_OVERRIDE: local_storekit
-      storeKitConfiguration: PCOS/PCOS/StoreKit/PCOS.storekit
       targets:
         - name: PCOSTests
         - name: PCOSUITests

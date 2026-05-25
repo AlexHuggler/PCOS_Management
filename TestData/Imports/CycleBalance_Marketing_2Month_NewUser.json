@@ -1,0 +1,1828 @@
+{
+  "appVersion": "marketing-2month-newuser",
+  "exportedAt": "2026-03-22T12:00:00.000Z",
+  "records": {
+    "bloodSugarReadings": [
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 102,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000001",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-22T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 108,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000002",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-22T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 142,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000003",
+        "mealContext": "after pasta dinner",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-22T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 98,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000004",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-18T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 104,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000005",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-18T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 138,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000006",
+        "mealContext": "after rice bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-18T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 96,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000007",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-14T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 100,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000008",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-14T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 128,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000009",
+        "mealContext": "after chicken salad",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-14T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 105,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000010",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-10T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 112,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000011",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-10T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 148,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000012",
+        "mealContext": "after pasta dinner",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-10T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 100,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000013",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-06T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 106,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000014",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-06T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 135,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000015",
+        "mealContext": "after sandwich",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-06T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 108,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000016",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-03-02T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 110,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000017",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-03-02T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 145,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000018",
+        "mealContext": "after cereal",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-03-02T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 97,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000019",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-26T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 103,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000020",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-26T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 132,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000021",
+        "mealContext": "after yogurt bowl",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-26T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 104,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000022",
+        "mealContext": "Morning check",
+        "notes": "Home finger-stick meter",
+        "readingType": "fasting",
+        "timestamp": "2026-02-22T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 109,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000023",
+        "mealContext": "before lunch",
+        "notes": "Pre-meal check",
+        "readingType": "before_meal",
+        "timestamp": "2026-02-22T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit": false,
+        "glucoseValue": 140,
+        "id": "A1B2C3D4-1111-4A01-B001-000000000024",
+        "mealContext": "after pasta dinner",
+        "notes": "2h post meal",
+        "readingType": "after_meal",
+        "timestamp": "2026-02-22T14:00:00.000Z"
+      }
+    ],
+    "cycleEntries": [
+      {
+        "createdAt": "2025-12-05T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-05T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "CE100001-AAAA-4B01-9001-000000000001",
+        "isPeriodDay": true,
+        "notes": "Cycle 1: period started"
+      },
+      {
+        "createdAt": "2025-12-06T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-06T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE100001-AAAA-4B01-9001-000000000002",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-07T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-07T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE100001-AAAA-4B01-9001-000000000003",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-08T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-08T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE100001-AAAA-4B01-9001-000000000004",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-09T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-09T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE100001-AAAA-4B01-9001-000000000005",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2025-12-10T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000001",
+        "cyclePhase": "menstrual",
+        "date": "2025-12-10T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "CE100001-AAAA-4B01-9001-000000000006",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-22T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-22T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "CE200001-BBBB-4B01-9001-000000000001",
+        "isPeriodDay": true,
+        "notes": "Cycle 2: period started"
+      },
+      {
+        "createdAt": "2026-01-23T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-23T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE200001-BBBB-4B01-9001-000000000002",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-24T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-24T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE200001-BBBB-4B01-9001-000000000003",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-25T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-25T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE200001-BBBB-4B01-9001-000000000004",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-26T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-26T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE200001-BBBB-4B01-9001-000000000005",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-27T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-27T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "CE200001-BBBB-4B01-9001-000000000006",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-01-28T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000002",
+        "cyclePhase": "menstrual",
+        "date": "2026-01-28T12:00:00.000Z",
+        "flowIntensity": "spotting",
+        "id": "CE200001-BBBB-4B01-9001-000000000007",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-15T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000003",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-15T12:00:00.000Z",
+        "flowIntensity": "light",
+        "id": "CE300001-CCCC-4B01-9001-000000000001",
+        "isPeriodDay": true,
+        "notes": "Current cycle: period started"
+      },
+      {
+        "createdAt": "2026-03-16T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000003",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-16T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE300001-CCCC-4B01-9001-000000000002",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-17T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000003",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-17T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE300001-CCCC-4B01-9001-000000000003",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-18T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000003",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-18T12:00:00.000Z",
+        "flowIntensity": "heavy",
+        "id": "CE300001-CCCC-4B01-9001-000000000004",
+        "isPeriodDay": true
+      },
+      {
+        "createdAt": "2026-03-19T12:00:00.000Z",
+        "cycleID": "C1A00001-AAAA-4B01-9001-000000000003",
+        "cyclePhase": "menstrual",
+        "date": "2026-03-19T12:00:00.000Z",
+        "flowIntensity": "medium",
+        "id": "CE300001-CCCC-4B01-9001-000000000005",
+        "isPeriodDay": true
+      }
+    ],
+    "cycles": [
+      {
+        "endDate": "2026-01-21T12:00:00.000Z",
+        "id": "C1A00001-AAAA-4B01-9001-000000000001",
+        "isPredicted": false,
+        "lengthDays": 48,
+        "ovulationStatus": "unknown",
+        "startDate": "2025-12-05T12:00:00.000Z"
+      },
+      {
+        "endDate": "2026-03-14T12:00:00.000Z",
+        "id": "C1A00001-AAAA-4B01-9001-000000000002",
+        "isPredicted": false,
+        "lengthDays": 52,
+        "ovulationStatus": "unknown",
+        "startDate": "2026-01-22T12:00:00.000Z"
+      },
+      {
+        "id": "C1A00001-AAAA-4B01-9001-000000000003",
+        "isPredicted": false,
+        "ovulationStatus": "unknown",
+        "startDate": "2026-03-15T12:00:00.000Z"
+      }
+    ],
+    "dailyLogs": [
+      {
+        "activeMinutes": 20,
+        "date": "2026-03-22T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000001",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 6.0,
+        "stressLevel": 4,
+        "waterOz": 48,
+        "weight": 165.2
+      },
+      {
+        "activeMinutes": 25,
+        "date": "2026-03-21T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000002",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.5,
+        "stressLevel": 3,
+        "waterOz": 52,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 15,
+        "date": "2026-03-20T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000003",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 5.5,
+        "stressLevel": 5,
+        "waterOz": 40,
+        "weight": 165.4
+      },
+      {
+        "activeMinutes": 30,
+        "date": "2026-03-19T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000004",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 7.0,
+        "stressLevel": 3,
+        "waterOz": 56,
+        "weight": 164.8
+      },
+      {
+        "activeMinutes": 18,
+        "date": "2026-03-18T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000005",
+        "restingHeartRateBPM": 76,
+        "sleepHours": 5.75,
+        "stressLevel": 4,
+        "waterOz": 44,
+        "weight": 165.6
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-17T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000006",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.5,
+        "stressLevel": 2,
+        "waterOz": 64,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 22,
+        "date": "2026-03-16T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000007",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 6.0,
+        "stressLevel": 5,
+        "waterOz": 42,
+        "weight": 165.2
+      },
+      {
+        "activeMinutes": 28,
+        "date": "2026-03-15T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "40000000-0000-4000-8000-000000000008",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.25,
+        "stressLevel": 2,
+        "waterOz": 60,
+        "weight": 164.6
+      },
+      {
+        "activeMinutes": 16,
+        "date": "2026-03-14T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000009",
+        "restingHeartRateBPM": 75,
+        "sleepHours": 5.5,
+        "stressLevel": 4,
+        "waterOz": 46,
+        "weight": 165.8
+      },
+      {
+        "activeMinutes": 32,
+        "date": "2026-03-13T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000010",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.75,
+        "stressLevel": 3,
+        "waterOz": 54,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 19,
+        "date": "2026-03-12T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000011",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 6.0,
+        "stressLevel": 5,
+        "waterOz": 40,
+        "weight": 165.4
+      },
+      {
+        "activeMinutes": 26,
+        "date": "2026-03-11T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000012",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 7.0,
+        "stressLevel": 2,
+        "waterOz": 58,
+        "weight": 164.8
+      },
+      {
+        "activeMinutes": 34,
+        "date": "2026-03-10T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "40000000-0000-4000-8000-000000000013",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.5,
+        "stressLevel": 2,
+        "waterOz": 62,
+        "weight": 164.6
+      },
+      {
+        "activeMinutes": 17,
+        "date": "2026-03-09T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000014",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 5.75,
+        "stressLevel": 4,
+        "waterOz": 44,
+        "weight": 165.2
+      },
+      {
+        "activeMinutes": 24,
+        "date": "2026-03-08T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000015",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.5,
+        "stressLevel": 3,
+        "waterOz": 50,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 30,
+        "date": "2026-03-07T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000016",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 6.25,
+        "stressLevel": 4,
+        "waterOz": 48,
+        "weight": 165.4
+      },
+      {
+        "activeMinutes": 21,
+        "date": "2026-03-06T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000017",
+        "restingHeartRateBPM": 76,
+        "sleepHours": 5.5,
+        "stressLevel": 5,
+        "waterOz": 42,
+        "weight": 165.6
+      },
+      {
+        "activeMinutes": 33,
+        "date": "2026-03-05T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000018",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.25,
+        "stressLevel": 2,
+        "waterOz": 60,
+        "weight": 164.8
+      },
+      {
+        "activeMinutes": 15,
+        "date": "2026-03-04T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000019",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 6.0,
+        "stressLevel": 4,
+        "waterOz": 46,
+        "weight": 165.2
+      },
+      {
+        "activeMinutes": 27,
+        "date": "2026-03-03T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "40000000-0000-4000-8000-000000000020",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.0,
+        "stressLevel": 3,
+        "waterOz": 56,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 18,
+        "date": "2026-03-02T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000021",
+        "restingHeartRateBPM": 72,
+        "sleepHours": 5.75,
+        "stressLevel": 5,
+        "waterOz": 40,
+        "weight": 165.6
+      },
+      {
+        "activeMinutes": 35,
+        "date": "2026-03-01T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000022",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.5,
+        "stressLevel": 3,
+        "waterOz": 52,
+        "weight": 164.8
+      },
+      {
+        "activeMinutes": 23,
+        "date": "2026-02-28T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000023",
+        "restingHeartRateBPM": 75,
+        "sleepHours": 5.5,
+        "stressLevel": 4,
+        "waterOz": 44,
+        "weight": 165.4
+      },
+      {
+        "activeMinutes": 29,
+        "date": "2026-02-27T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000024",
+        "restingHeartRateBPM": 71,
+        "sleepHours": 7.25,
+        "stressLevel": 2,
+        "waterOz": 58,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 16,
+        "date": "2026-02-26T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000025",
+        "restingHeartRateBPM": 73,
+        "sleepHours": 6.0,
+        "stressLevel": 4,
+        "waterOz": 46,
+        "weight": 165.2
+      },
+      {
+        "activeMinutes": 31,
+        "date": "2026-02-25T12:00:00.000Z",
+        "energyLevel": 4,
+        "id": "40000000-0000-4000-8000-000000000026",
+        "restingHeartRateBPM": 69,
+        "sleepHours": 7.5,
+        "stressLevel": 2,
+        "waterOz": 64,
+        "weight": 164.6
+      },
+      {
+        "activeMinutes": 20,
+        "date": "2026-02-24T12:00:00.000Z",
+        "energyLevel": 2,
+        "id": "40000000-0000-4000-8000-000000000027",
+        "restingHeartRateBPM": 74,
+        "sleepHours": 6.25,
+        "stressLevel": 5,
+        "waterOz": 42,
+        "weight": 165.4
+      },
+      {
+        "activeMinutes": 26,
+        "date": "2026-02-23T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000028",
+        "restingHeartRateBPM": 70,
+        "sleepHours": 6.75,
+        "stressLevel": 3,
+        "waterOz": 50,
+        "weight": 165.0
+      },
+      {
+        "activeMinutes": 33,
+        "date": "2026-02-22T12:00:00.000Z",
+        "energyLevel": 1,
+        "id": "40000000-0000-4000-8000-000000000029",
+        "restingHeartRateBPM": 76,
+        "sleepHours": 5.5,
+        "stressLevel": 4,
+        "waterOz": 44,
+        "weight": 165.6
+      },
+      {
+        "activeMinutes": 22,
+        "date": "2026-02-21T12:00:00.000Z",
+        "energyLevel": 3,
+        "id": "40000000-0000-4000-8000-000000000030",
+        "restingHeartRateBPM": 68,
+        "sleepHours": 7.0,
+        "stressLevel": 2,
+        "waterOz": 56,
+        "weight": 164.8
+      }
+    ],
+    "hairPhotos": [
+      {
+        "analysisResult": "Estimated density score: 48/100 (Scalp Part, heuristic).",
+        "date": "2026-02-05T12:00:00.000Z",
+        "id": "50000000-0000-4000-8000-000000000001",
+        "notes": "First photo",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "scalp_part"
+      },
+      {
+        "analysisResult": "Estimated density score: 49/100 (Hairline, heuristic).",
+        "date": "2026-02-20T12:00:00.000Z",
+        "id": "50000000-0000-4000-8000-000000000002",
+        "notes": "Trying same angle",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "hairline"
+      },
+      {
+        "analysisResult": "Estimated density score: 50/100 (Chin, heuristic).",
+        "date": "2026-03-21T12:00:00.000Z",
+        "id": "50000000-0000-4000-8000-000000000003",
+        "notes": "Morning light",
+        "photoData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType": "face_chin"
+      }
+    ],
+    "insights": [
+      {
+        "actionable": true,
+        "confidence": 0.58,
+        "content": "Your last two completed cycles were 48 and 52 days long, well above the typical 21-35 day range. Irregular cycles are common with PCOS and worth discussing with your provider.",
+        "dataPointsUsed": 2,
+        "generatedDate": "2026-03-18T12:00:00.000Z",
+        "id": "60000000-0000-4000-8000-000000000001",
+        "insightType": "cycle_pattern",
+        "relatedSymptoms": [
+          "cramps",
+          "fatigue"
+        ],
+        "title": "Your cycles appear highly irregular"
+      },
+      {
+        "actionable": true,
+        "confidence": 0.62,
+        "content": "Cramps and fatigue tend to co-occur on the same days, appearing together in 80% of your logged period days. Managing one may help the other.",
+        "dataPointsUsed": 24,
+        "generatedDate": "2026-03-19T12:00:00.000Z",
+        "id": "60000000-0000-4000-8000-000000000002",
+        "insightType": "symptom_correlation",
+        "relatedSymptoms": [
+          "cramps",
+          "fatigue"
+        ],
+        "title": "Cramps and fatigue tend to occur together"
+      },
+      {
+        "actionable": true,
+        "confidence": 0.55,
+        "content": "On days following less than 6 hours of sleep, your average symptom severity was 3.4/5 compared to 2.1/5 after 7+ hours. Prioritizing sleep may reduce symptom burden.",
+        "dataPointsUsed": 20,
+        "generatedDate": "2026-03-20T12:00:00.000Z",
+        "id": "60000000-0000-4000-8000-000000000003",
+        "insightType": "sleep_activity",
+        "relatedSymptoms": [
+          "fatigue",
+          "energy_crash"
+        ],
+        "title": "Lower sleep seems to precede harder days"
+      }
+    ],
+    "meals": [
+      {
+        "glycemicImpact": "high",
+        "id": "30000000-0000-4000-8000-000000000001",
+        "mealDescription": "Cereal with milk",
+        "mealType": "breakfast",
+        "notes": "Quick morning meal",
+        "postMealFeedbackTimestamp": "2026-03-22T10:00:00.000Z",
+        "postMealSymptomNote": "Felt an energy crash about an hour later.",
+        "postMealSymptomSeverity": 3,
+        "timestamp": "2026-03-22T08:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "low",
+        "id": "30000000-0000-4000-8000-000000000002",
+        "mealDescription": "Grilled chicken salad",
+        "mealType": "lunch",
+        "notes": "Trying to eat healthier",
+        "timestamp": "2026-03-22T12:30:00.000Z"
+      },
+      {
+        "glycemicImpact": "high",
+        "id": "30000000-0000-4000-8000-000000000003",
+        "mealDescription": "Pasta with marinara",
+        "mealType": "dinner",
+        "notes": "Comfort food night",
+        "postMealFeedbackTimestamp": "2026-03-21T21:00:00.000Z",
+        "postMealSymptomNote": "Bloating and cravings after.",
+        "postMealSymptomSeverity": 4,
+        "timestamp": "2026-03-21T19:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "low",
+        "id": "30000000-0000-4000-8000-000000000004",
+        "mealDescription": "Greek yogurt with berries",
+        "mealType": "breakfast",
+        "notes": "Light and easy",
+        "timestamp": "2026-03-21T08:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "medium",
+        "id": "30000000-0000-4000-8000-000000000005",
+        "mealDescription": "Turkey sandwich on white bread",
+        "mealType": "lunch",
+        "notes": "Grabbed at deli",
+        "postMealFeedbackTimestamp": "2026-03-20T14:00:00.000Z",
+        "postMealSymptomNote": "Slight bloating.",
+        "postMealSymptomSeverity": 2,
+        "timestamp": "2026-03-20T12:30:00.000Z"
+      },
+      {
+        "glycemicImpact": "low",
+        "id": "30000000-0000-4000-8000-000000000006",
+        "mealDescription": "Salmon with roasted vegetables",
+        "mealType": "dinner",
+        "notes": "Cooked at home",
+        "timestamp": "2026-03-20T19:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "high",
+        "id": "30000000-0000-4000-8000-000000000007",
+        "mealDescription": "Bagel with cream cheese",
+        "mealType": "breakfast",
+        "notes": "Quick grab before work",
+        "postMealFeedbackTimestamp": "2026-03-19T10:00:00.000Z",
+        "postMealSymptomNote": "Energy crash mid-morning.",
+        "postMealSymptomSeverity": 3,
+        "timestamp": "2026-03-19T08:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "medium",
+        "id": "30000000-0000-4000-8000-000000000008",
+        "mealDescription": "Chicken stir-fry with rice",
+        "mealType": "dinner",
+        "notes": "Home cooked",
+        "postMealFeedbackTimestamp": "2026-03-19T21:00:00.000Z",
+        "postMealSymptomNote": "Felt okay, mild cravings later.",
+        "postMealSymptomSeverity": 2,
+        "timestamp": "2026-03-19T19:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "low",
+        "id": "30000000-0000-4000-8000-000000000009",
+        "mealDescription": "Egg scramble with spinach",
+        "mealType": "breakfast",
+        "notes": "Protein-focused",
+        "timestamp": "2026-03-18T08:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "high",
+        "id": "30000000-0000-4000-8000-000000000010",
+        "mealDescription": "Pizza slices",
+        "mealType": "dinner",
+        "notes": "Ordered delivery",
+        "postMealFeedbackTimestamp": "2026-03-18T21:00:00.000Z",
+        "postMealSymptomNote": "Heavy bloating and sluggish.",
+        "postMealSymptomSeverity": 4,
+        "timestamp": "2026-03-18T19:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "low",
+        "id": "30000000-0000-4000-8000-000000000011",
+        "mealDescription": "Greek yogurt with berries",
+        "mealType": "breakfast",
+        "notes": "Quick breakfast",
+        "timestamp": "2026-03-17T08:00:00.000Z"
+      },
+      {
+        "glycemicImpact": "medium",
+        "id": "30000000-0000-4000-8000-000000000012",
+        "mealDescription": "Bean and cheese burrito",
+        "mealType": "lunch",
+        "notes": "Lunch out",
+        "postMealFeedbackTimestamp": "2026-03-17T14:00:00.000Z",
+        "postMealSymptomNote": "Some bloating but manageable.",
+        "postMealSymptomSeverity": 2,
+        "timestamp": "2026-03-17T12:30:00.000Z"
+      }
+    ],
+    "supplements": [
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-22T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000001",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-21T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000002",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-20T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000003",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-19T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000004",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-03-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-18T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000005",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-17T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000006",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-16T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000007",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-15T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000008",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-03-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-14T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000009",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-13T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000010",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-12T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000011",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-11T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000012",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-03-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-10T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000013",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-09T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000014",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-08T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000015",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-07T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000016",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-03-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-06T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000017",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-05T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000018",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-04T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000019",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-03T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000020",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-03-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-02T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000021",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-03-01T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000022",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-03-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-28T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000023",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-27T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000024",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-26T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000025",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-25T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000026",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-24T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000027",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-23T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000028",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-22T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000029",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-22T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-21T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000030",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-21T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-20T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000031",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-20T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-19T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000032",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-19T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-18T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000033",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-18T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-17T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000034",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-17T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-16T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000035",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-16T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-15T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000036",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-15T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-14T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000037",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-14T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-13T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000038",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-13T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-12T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000039",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-12T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-11T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000040",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-11T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-10T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000041",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-10T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-09T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000042",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-09T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-08T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000043",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-08T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-07T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000044",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-07T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-06T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000045",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-06T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-05T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000046",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-05T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-04T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000047",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-04T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-03T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000048",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-02-03T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-02T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000049",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-02T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-02-01T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000050",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-02-01T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-31T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000051",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-01-31T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-30T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000052",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-30T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-29T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000053",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-29T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-28T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000054",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-28T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-27T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000055",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-01-27T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-26T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000056",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-26T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-25T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000057",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-25T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-24T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000058",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-24T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-23T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000059",
+        "supplementName": "Inositol",
+        "taken": false,
+        "timeTaken": "2026-01-23T08:00:00.000Z"
+      },
+      {
+        "brand": "Wholesome Story",
+        "date": "2026-01-22T12:00:00.000Z",
+        "dosageMg": 2000,
+        "id": "20000000-0000-4000-8000-000000000060",
+        "supplementName": "Inositol",
+        "taken": true,
+        "timeTaken": "2026-01-22T08:00:00.000Z"
+      }
+    ],
+    "symptoms": [
+      {
+        "category": "pain",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000001",
+        "date": "2025-12-05T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000001",
+        "notes": "Period day 1 discomfort",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000001",
+        "date": "2025-12-05T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "notes": "Low energy on period day 1",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000002",
+        "date": "2025-12-06T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000003",
+        "notes": "Period day 2 discomfort",
+        "severity": 4,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000002",
+        "date": "2025-12-06T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000004",
+        "notes": "Exhausted on period day 2",
+        "severity": 4,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000003",
+        "date": "2025-12-07T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000005",
+        "notes": "Bloated on heavy day",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000003",
+        "date": "2025-12-07T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000006",
+        "notes": "Lower back ache",
+        "severity": 3,
+        "symptomType": "back_pain"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000004",
+        "date": "2025-12-08T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000007",
+        "notes": "Period day 4 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE100001-AAAA-4B01-9001-000000000004",
+        "date": "2025-12-08T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000008",
+        "notes": "Still bloated",
+        "severity": 2,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000001",
+        "date": "2026-01-22T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000009",
+        "notes": "Period day 1 cramps",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000001",
+        "date": "2026-01-22T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000010",
+        "notes": "Tired on period start",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000002",
+        "date": "2026-01-23T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000011",
+        "notes": "Period day 2 cramps worsening",
+        "severity": 4,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000002",
+        "date": "2026-01-23T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000012",
+        "notes": "Very fatigued",
+        "severity": 4,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000003",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000013",
+        "notes": "Bloating on heavy day",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000003",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000014",
+        "notes": "Back pain with cramps",
+        "severity": 3,
+        "symptomType": "back_pain"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000004",
+        "date": "2026-01-25T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000015",
+        "notes": "Heavy day cramps",
+        "severity": 4,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE200001-BBBB-4B01-9001-000000000004",
+        "date": "2026-01-25T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000016",
+        "notes": "Bloated and uncomfortable",
+        "severity": 2,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000001",
+        "date": "2026-03-15T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000017",
+        "notes": "Current cycle period day 1",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000001",
+        "date": "2026-03-15T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000018",
+        "notes": "Tired at period start",
+        "severity": 3,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000002",
+        "date": "2026-03-16T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000019",
+        "notes": "Period day 2 cramps",
+        "severity": 4,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000002",
+        "date": "2026-03-16T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000020",
+        "notes": "Very fatigued day 2",
+        "severity": 4,
+        "symptomType": "fatigue"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000003",
+        "date": "2026-03-17T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000021",
+        "notes": "Bloating on heavy flow day",
+        "severity": 3,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000003",
+        "date": "2026-03-17T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000022",
+        "notes": "Back pain during heavy flow",
+        "severity": 2,
+        "symptomType": "back_pain"
+      },
+      {
+        "category": "pain",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000004",
+        "date": "2026-03-18T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000023",
+        "notes": "Cramps still strong on day 4",
+        "severity": 3,
+        "symptomType": "cramps"
+      },
+      {
+        "category": "physical",
+        "cycleEntryID": "CE300001-CCCC-4B01-9001-000000000004",
+        "date": "2026-03-18T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000024",
+        "notes": "Still bloated",
+        "severity": 2,
+        "symptomType": "bloating"
+      },
+      {
+        "category": "mood",
+        "date": "2026-03-20T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000025",
+        "notes": "Mood swings noted",
+        "severity": 3,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "skin",
+        "date": "2026-03-17T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000026",
+        "notes": "Chin breakout",
+        "severity": 3,
+        "symptomType": "acne"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-03-13T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000027",
+        "notes": "Sugar cravings after lunch",
+        "severity": 4,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "mood",
+        "date": "2026-03-10T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000028",
+        "notes": "Feeling anxious for no reason",
+        "severity": 3,
+        "symptomType": "anxious"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-03-07T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000029",
+        "notes": "Afternoon crash",
+        "severity": 3,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "mood",
+        "date": "2026-03-03T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000030",
+        "notes": "Irritable and moody",
+        "severity": 2,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "skin",
+        "date": "2026-02-28T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000031",
+        "notes": "Acne flare on forehead",
+        "severity": 3,
+        "symptomType": "acne"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-02-24T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000032",
+        "notes": "Craving carbs all day",
+        "severity": 4,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "mood",
+        "date": "2026-02-21T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000033",
+        "notes": "Anxiety spike in the evening",
+        "severity": 3,
+        "symptomType": "anxious"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-02-17T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000034",
+        "notes": "Energy crash after lunch",
+        "severity": 3,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "mood",
+        "date": "2026-02-13T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000035",
+        "notes": "Feeling up and down all day",
+        "severity": 2,
+        "symptomType": "mood_swings"
+      },
+      {
+        "category": "skin",
+        "date": "2026-02-09T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000036",
+        "notes": "Jawline acne",
+        "severity": 3,
+        "symptomType": "acne"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-02-05T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000037",
+        "notes": "Sweet cravings at night",
+        "severity": 3,
+        "symptomType": "cravings"
+      },
+      {
+        "category": "mood",
+        "date": "2026-02-01T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000038",
+        "notes": "Anxious about work",
+        "severity": 2,
+        "symptomType": "anxious"
+      },
+      {
+        "category": "metabolic",
+        "date": "2026-01-28T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000039",
+        "notes": "Energy dipped hard mid-afternoon",
+        "severity": 4,
+        "symptomType": "energy_crash"
+      },
+      {
+        "category": "skin",
+        "date": "2026-01-24T12:00:00.000Z",
+        "id": "10000000-0000-4000-8000-000000000040",
+        "notes": "Breakout during period",
+        "severity": 2,
+        "symptomType": "acne"
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "source": {
+    "kind": "user_export"
+  }
+}

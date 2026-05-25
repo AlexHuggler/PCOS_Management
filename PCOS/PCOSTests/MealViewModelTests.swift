@@ -6,6 +6,13 @@ import SwiftData
 @Suite("Meal ViewModel", .serialized)
 @MainActor
 struct MealViewModelTests {
+    private enum MockMealFetchError: LocalizedError {
+        case dedupeFetchFailed
+
+        var errorDescription: String? {
+            "Meal dedupe fetch failed in test"
+        }
+    }
 
     /// Creates an in-memory ModelContainer that includes MealEntry.
     private func makeMealContainer() throws -> ModelContainer {
@@ -16,6 +23,30 @@ struct MealViewModelTests {
             cloudKitDatabase: .none
         )
         return try ModelContainer(for: schema, configurations: [config])
+    }
+
+    private func makePersistentMealContainer() throws -> (container: ModelContainer, cleanupURL: URL) {
+        let schema = Schema([MealEntry.self])
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.temporaryDirectory.appendingPathComponent(
+            "MealViewModelTests-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let config = ModelConfiguration(
+            schema: schema,
+            url: directoryURL.appendingPathComponent("Meal.sqlite"),
+            cloudKitDatabase: .none
+        )
+
+        return (try ModelContainer(for: schema, configurations: [config]), directoryURL)
+    }
+
+    private func mealLogViewSource() throws -> String {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let sourceURL = projectRoot.appendingPathComponent("PCOS/PCOS/Features/Meals/Views/MealLogView.swift")
+        return try String(contentsOf: sourceURL)
     }
 
     @Test("Valid meal saves correctly")
@@ -71,8 +102,8 @@ struct MealViewModelTests {
 
         try vm.saveMeal()
 
-        #expect(defaultsStore.recentMealDescriptions(limit: 1) == ["Eggs + avocado toast"])
-        #expect(defaultsStore.recentMealNotes(limit: 1) == ["Post-workout"])
+        #expect(defaultsStore.recentMealDescriptions(mealType: .breakfast, limit: 1) == ["Eggs + avocado toast"])
+        #expect(defaultsStore.recentMealNotes(mealType: .breakfast, limit: 1) == ["Post-workout"])
     }
 
     @Test("Empty description fails validation")
@@ -213,16 +244,157 @@ struct MealViewModelTests {
         let container = try makeMealContainer()
         let vm = MealViewModel(modelContext: container.mainContext)
 
-        vm.toggleMealNoteSuggestion("High stress")
-        #expect(vm.notes == "High stress")
-        #expect(vm.isMealNoteSelected("High stress"))
+        vm.toggleMealNoteSuggestion("Balanced meal")
+        #expect(vm.notes == "Balanced meal")
+        #expect(vm.isMealNoteSelected("Balanced meal"))
 
-        vm.toggleMealNoteSuggestion("Late meal")
-        #expect(vm.notes == "High stress, Late meal")
-        #expect(vm.isMealNoteSelected("Late meal"))
+        vm.toggleMealNoteSuggestion("Ate out")
+        #expect(vm.notes == "Balanced meal, Ate out")
+        #expect(vm.isMealNoteSelected("Ate out"))
 
-        vm.toggleMealNoteSuggestion("High stress")
-        #expect(vm.notes == "Late meal")
-        #expect(!vm.isMealNoteSelected("High stress"))
+        vm.toggleMealNoteSuggestion("Balanced meal")
+        #expect(vm.notes == "Ate out")
+        #expect(!vm.isMealNoteSelected("Balanced meal"))
+    }
+
+    @Test("Meal suggestions are scoped by meal type")
+    func mealSuggestionsAreScopedByMealType() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(modelContext: container.mainContext)
+
+        vm.mealType = .breakfast
+        vm.mealDescription = "parfait"
+        #expect(vm.mealDescriptionSuggestions == ["Yogurt parfait"])
+        #expect(vm.mealNoteSuggestions.contains("Coffee first"))
+        #expect(!vm.mealNoteSuggestions.contains("Late dinner"))
+
+        vm.mealType = .dinner
+        vm.mealDescription = "parfait"
+        #expect(vm.mealDescriptionSuggestions.isEmpty)
+        #expect(vm.mealNoteSuggestions.contains("Late dinner"))
+        #expect(!vm.mealNoteSuggestions.contains("Coffee first"))
+    }
+
+    @Test("Selected meal notes remain visible after multi-select")
+    func selectedMealNotesRemainVisible() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(modelContext: container.mainContext)
+
+        vm.mealType = .dinner
+        vm.toggleMealNoteSuggestion("Balanced meal")
+        vm.toggleMealNoteSuggestion("Late dinner")
+
+        #expect(vm.mealNoteSuggestions.contains("Balanced meal"))
+        #expect(vm.mealNoteSuggestions.contains("Late dinner"))
+        #expect(vm.mealNoteSuggestions.contains("High carb"))
+    }
+
+    @Test("Applying a meal template updates description, type, GI, and template id")
+    func applyMealTemplateUpdatesFields() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(modelContext: container.mainContext)
+
+        let template = try #require(vm.mealTemplates.first)
+        vm.applyMealTemplate(template)
+
+        #expect(vm.mealType == template.mealType)
+        #expect(vm.mealDescription == template.description)
+        #expect(vm.glycemicImpact == template.glycemicImpact)
+        #expect(vm.selectedTemplateID == template.id)
+    }
+
+    @Test("High GI meal description surfaces deterministic swap suggestions")
+    func highGIMealSwapSuggestions() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(modelContext: container.mainContext)
+
+        vm.glycemicImpact = .high
+        vm.mealDescription = "White rice and soda"
+
+        #expect(!vm.swapSuggestions.isEmpty)
+        #expect(vm.swapSuggestions.contains(where: { $0.localizedCaseInsensitiveContains("cauliflower rice") }))
+    }
+
+    @Test("Save persists post-meal feedback and selected template id")
+    func savePersistsPostMealFeedback() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(modelContext: container.mainContext)
+
+        vm.mealDescription = "Test meal"
+        vm.selectedTemplateID = "template-id"
+        vm.postMealSymptomSeverity = 4
+        vm.postMealSymptomNote = "Bloated"
+
+        try vm.saveMeal()
+
+        let saved = try #require(vm.fetchTodaysMeals().first)
+        #expect(saved.selectedTemplateID == "template-id")
+        #expect(saved.postMealSymptomSeverity == 4)
+        #expect(saved.postMealSymptomNote == "Bloated")
+        #expect(saved.postMealFeedbackTimestamp != nil)
+    }
+
+    @Test("Meal log source exposes post-meal feedback controls")
+    func mealLogSourceExposesPostMealFeedbackControls() throws {
+        let source = try mealLogViewSource()
+
+        #expect(source.contains("After-meal check-in"))
+        #expect(source.contains("postMealSymptomSeverity"))
+        #expect(source.contains("postMealSymptomNote"))
+    }
+
+    @Test("Save dedupes matching meals in a persisted SwiftData store")
+    func saveDedupesMatchingMealsInPersistedStore() throws {
+        let (container, cleanupURL) = try makePersistentMealContainer()
+        defer { try? FileManager.default.removeItem(at: cleanupURL) }
+
+        let context = container.mainContext
+        let timestamp = Date(timeIntervalSince1970: 1_700_111_111)
+        let existingMeal = MealEntry(
+            timestamp: timestamp,
+            mealType: .lunch,
+            mealDescription: "Old lunch",
+            glycemicImpact: .low
+        )
+        context.insert(existingMeal)
+        try context.save()
+
+        let vm = MealViewModel(modelContext: context)
+        vm.mealDate = timestamp
+        vm.mealType = .lunch
+        vm.mealDescription = "Updated lunch"
+        vm.glycemicImpact = .medium
+
+        try vm.saveMeal()
+
+        let storedMeals = try context.fetch(
+            FetchDescriptor<MealEntry>(
+                sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+            )
+        )
+        #expect(storedMeals.count == 1)
+        #expect(storedMeals.first?.mealDescription == "Updated lunch")
+        #expect(storedMeals.first?.glycemicImpact == .medium)
+    }
+
+    @Test("Save continues when the meal dedupe fetch path fails")
+    func saveContinuesWhenDedupeFetchFails() throws {
+        let container = try makeMealContainer()
+        let vm = MealViewModel(
+            modelContext: container.mainContext,
+            existingMealsResolver: { _, _, _ in
+                throw MockMealFetchError.dedupeFetchFailed
+            }
+        )
+
+        vm.mealDescription = "Fallback save"
+        vm.mealType = .dinner
+        vm.glycemicImpact = .low
+
+        try vm.saveMeal()
+
+        let savedMeal = try #require(vm.fetchTodaysMeals().first)
+        #expect(savedMeal.mealDescription == "Fallback save")
+        #expect(savedMeal.mealType == .dinner)
     }
 }

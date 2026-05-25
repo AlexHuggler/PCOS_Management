@@ -9,14 +9,13 @@ struct SymptomGridItem: View {
         VStack(spacing: AppTheme.spacing8) {
             // Icon
             Image(systemName: symptomType.systemImage)
-                .font(.title2)
+                .appFont(.title2)
                 .foregroundStyle(severity > 0 ? severityColor : .secondary)
                 .frame(height: 32)
 
             // Name
             Text(symptomType.displayName)
-                .font(.caption2)
-                .fontWeight(.medium)
+                .appFont(.caption2, weight: .medium)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.8)
@@ -29,12 +28,12 @@ struct SymptomGridItem: View {
         .padding(.horizontal, 6)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(severity > 0 ? severityColor.opacity(0.08) : Color(.tertiarySystemFill))
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .fill(severity > 0 ? severityColor.opacity(AppTheme.opacitySubtle) : Color(.tertiarySystemFill))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(severity > 0 ? severityColor.opacity(0.3) : .clear, lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .strokeBorder(severity > 0 ? severityColor.opacity(AppTheme.opacityStrong) : .clear, lineWidth: 1)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -61,10 +60,21 @@ struct SymptomGridItem: View {
         }
         .scaleEffect(severity > 0 ? 1.0 : 0.98)
         .animation(.easeInOut(duration: 0.2), value: severity)
-        .sensoryFeedback(.impact(flexibility: .soft), trigger: severity)
+        .sensoryFeedback(.selection, trigger: severity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.labels[severity - 1] : "none")")
-        .accessibilityHint("Tap to cycle severity, long press for direct selection. Currently \(severity) of 5.")
+        .accessibilityLabel(
+            String(
+                localized: "\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.label(for: severity) : SeverityPicker.noneLabel)",
+                comment: "Accessibility label for a symptom selection tile."
+            )
+        )
+        .accessibilityHint(
+            String(
+                localized: "Tap to cycle severity, long press for direct selection. Currently \(severity) of 5.",
+                comment: "Accessibility hint explaining how to change symptom severity and announcing the current level."
+            )
+        )
+        .accessibilityIdentifier("symptom_log.tile.\(symptomType.rawValue)")
     }
 
     private var severityColor: Color {

@@ -1,0 +1,2458 @@
+/* PDF report inline cycle length suffix. */
+" (%lld days)" = "(%lld jours)";
+
+/* No comment provided by engineer. */
+"%@ (g)" = "%@ (g)";
+
+/* Subscription price displayed together with the billing period. */
+"%@ / %@" = "%@ / %@";
+
+/* PDF report value for average cycle length in days. */
+"%@ days" = "%@ jours";
+
+/* No comment provided by engineer. */
+"%@ flow" = "Flux %@";
+
+/* Insight title describing a supplement that may correlate with better symptom scores. */
+"%@ may be helping" = "%@ peut être utile";
+
+/* CSV export dosage value in milligrams. */
+"%@ mg" = "%@ mg";
+
+/* Sample symptom note used in demo data. */
+"%@ noted during routine tracking" = "%@ noté lors du suivi de routine";
+
+/* Insight title describing a pair of symptoms that often happen on the same day. */
+"%@ often appear together" = "%@ apparaissent souvent ensemble";
+
+/* Accessibility label for an individual severity level button. */
+"%@ severity" = "%@ gravité";
+
+/* No comment provided by engineer. */
+"%@, %@" = "%@, %@";
+
+/* Accessibility label for a symptom selection tile. */
+"%@, severity %@" = "%@, gravité %@";
+
+/* Accessibility label for a symptom chip, including the symptom name and severity. */
+"%@, severity %lld of 5, %@" = "%@, gravité %lld sur 5, %@";
+
+/* PDF report line showing blood sugar average by reading type. */
+"%@: %@ mg/dL (%lld readings)" = "%@ : %@ mg/dL (%lld lectures)";
+
+/* No comment provided by engineer. */
+"%@: %@, %@" = "%@ : %@, %@";
+
+/* No comment provided by engineer. */
+"%@: %@. %@" = "%@ : %@. %@";
+
+/* PDF report line for average symptom severity. */
+"%@: %@/5" = "%@ : %@/5";
+
+/* PDF report line for symptom frequency and average severity. */
+"%@: %lld occurrences, avg severity %@/5" = "%@ : %lld occurrences, gravité moyenne %@/5";
+
+/* PDF report line showing supplement adherence by supplement. */
+"%@: %lld taken, %lld missed (%lld%% adherence)" = "%@ : %lld pris, %lld manqué (%lld%% adhésion)";
+
+/* Sample cycle note used in demo data when a new period begins. */
+"%@: period started" = "%@ : période commencée";
+
+/* Accessibility label for a tracking hub card, including title and subtitle. */
+"%@. %@" = "%@. %@";
+
+/* No comment provided by engineer. */
+"%@g" = "%@g";
+
+/* No comment provided by engineer. */
+"%lld" = "%lld";
+
+/* PDF report value for cycle length range in days. */
+"%lld - %lld days" = "%lld - %lld jours";
+
+/* No comment provided by engineer. */
+"%lld days" = "%lld jours";
+
+/* No comment provided by engineer. */
+"%lld mg" = "%lld mg";
+
+/* No comment provided by engineer. */
+"%lld mg/dL" = "%lld mg/dL";
+
+/* No comment provided by engineer. */
+"%lld missed" = "%lld prises manquées";
+
+/* Questionnaire progress text showing how many symptom focus areas are selected.
+Text showing how many symptom focus areas are selected during onboarding. */
+"%lld of %lld selected" = "%lld sur %lld sélectionné";
+
+/* Summary showing how many scheduled supplements were marked taken today. */
+"%lld of %lld taken today" = "%lld sur %lld pris aujourd'hui";
+
+/* No comment provided by engineer. */
+"%lld records • schema v%lld" = "%lld enregistrements • schéma v%lld";
+
+/* No comment provided by engineer. */
+"%lld/%lld" = "%lld/%lld";
+
+/* No comment provided by engineer. */
+"%lld%%" = "%lld%%";
+
+/* Supporting text showing the confidence percentage for an insight. */
+"%lld%% confidence" = "%lld%% confiance";
+
+/* Insight content about a high proportion of high glycemic index meals. */
+"%lld%% of your logged meals are high glycemic impact. For PCOS management, aiming for more low-GI meals may help with insulin sensitivity and symptom management." = "%lld%% de vos repas enregistrés ont un impact glycémique élevé. Pour la gestion de PCOS, viser davantage de repas à faible teneur en GI peut aider à améliorer la sensibilité à l'insuline et à gérer les symptômes.";
+
+/* Insight content about a high proportion of low glycemic index meals. */
+"%lld%% of your logged meals are low glycemic impact. This is great for PCOS management and insulin sensitivity. Keep it up!" = "%lld%% de vos repas enregistrés ont un faible impact glycémique. C’est idéal pour la gestion de PCOS et la sensibilité à l’insuline. Continuez comme ça!";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld day](inflect: true)" = "^[%lld jour](inflexion : vrai)";
+
+/* Badge showing the user's current logging streak in days. */
+"^[%lld day](inflect: true) logging streak" = "^[%lld jour](inflexion : vrai) séquence de journalisation";
+
+/* Summary showing how many meals were logged today. */
+"^[%lld meal](inflect: true) logged today" = "^[%lld repas](inflexion : vrai) connecté aujourd'hui";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld month](inflect: true)" = "^[%lld mois](inflexion : vrai)";
+
+/* Summary showing how many blood sugar readings were logged today. */
+"^[%lld reading](inflect: true) today" = "^[%lld lecture](inflexion : vrai) aujourd'hui";
+
+/* Subtitle showing how many symptoms were copied from yesterday. */
+"^[%lld symptom](inflect: true)" = "^[symptôme %lld](inflexion : vrai)";
+
+/* Footer text showing how many symptoms are currently selected. */
+"^[%lld symptom](inflect: true) selected" = "^[symptôme %lld](inflexion : vrai) sélectionné";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld week](inflect: true)" = "^[%lld semaine](inflexion : vrai)";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld year](inflect: true)" = "^[%lld année](inflexion : vrai)";
+
+/* No comment provided by engineer. */
+"0" = "0";
+
+/* Sample blood sugar meal context used in demo data. */
+"2h post meal" = "2h après le repas";
+
+/* No comment provided by engineer. */
+"About" = "À propos";
+
+/* No comment provided by engineer. */
+"Account" = "Compte";
+
+/* Symptom label. */
+"Acne" = "Acné";
+
+/* No comment provided by engineer. */
+"Add any observations..." = "Ajoutez des observations...";
+
+/* No comment provided by engineer. */
+"Add more %@ photos to compare changes over time." = "Ajoutez plus de %@ photos pour comparer les changements au fil du temps.";
+
+/* No comment provided by engineer. */
+"Add one more photo to compare progress." = "Ajoutez une photo supplémentaire pour comparer les progrès.";
+
+/* No comment provided by engineer. */
+"Add Photo" = "Ajouter une photo";
+
+/* No comment provided by engineer. */
+"Add photos for %@ to start comparing changes over time." = "Ajoutez des photos pour %@ pour commencer à comparer les changements au fil du temps.";
+
+/* No comment provided by engineer. */
+"Add Supplement" = "Ajouter un supplément";
+
+/* No comment provided by engineer. */
+"adherence" = "observance";
+
+/* Blood sugar reading type. */
+"After Meal" = "Après le repas";
+
+/* Insight content describing worse symptoms after shorter sleep. */
+"After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after good sleep. Prioritizing sleep may help reduce PCOS symptoms." = "Après des nuits avec moins de %lld heures de sommeil, la gravité de vos symptômes est en moyenne de %@/5, contre %@/5 après un bon sommeil. Donner la priorité au sommeil peut aider à réduire les symptômes de PCOS.";
+
+/* No comment provided by engineer. */
+"All reminders stay on your device." = "Tous les rappels restent sur votre appareil.";
+
+/* No comment provided by engineer. */
+"Allow CycleBalance to read your health data" = "Autoriser CycleBalance à lire vos données de santé";
+
+/* Symptom label. */
+"Anxiety" = "Anxiété";
+
+/* No comment provided by engineer. */
+"Any additional notes" = "Toute note supplémentaire";
+
+/* No comment provided by engineer. */
+"Any additional notes..." = "Toute note supplémentaire...";
+
+/* No comment provided by engineer. */
+"Apple Health" = "Apple Santé";
+
+/* No comment provided by engineer. */
+"Apple Health is not available on this device. HealthKit integration requires a physical iPhone." = "Apple Health n'est pas disponible sur cet appareil. L'intégration de HealthKit nécessite un iPhone physique.";
+
+/* Sample symptom note used in demo data for a menstrual-phase symptom. */
+"Associated symptom during menstrual phase" = "Symptôme associé pendant la phase menstruelle";
+
+/* No comment provided by engineer. */
+"Authorization" = "Autorisation";
+
+/* No comment provided by engineer. */
+"Average" = "Moyenne";
+
+/* PDF report subheading for blood sugar averages by reading type. */
+"Average by Reading Type" = "Moyenne par type de lecture";
+
+/* PDF report summary line showing average cycle length. */
+"Average length: %@" = "Durée moyenne : %@";
+
+/* PDF report subheading for average symptom severity. */
+"Average Severity per Symptom" = "Gravité moyenne par symptôme";
+
+/* Chart annotation showing average cycle length in days. */
+"Avg: %@d" = "Moyenne : %@d";
+
+/* Symptom label. */
+"Back Pain" = "Maux de dos";
+
+/* Backup import error shown when the selected backup file is malformed. */
+"Backup data is invalid: %@" = "Les données de sauvegarde ne sont pas valides : %@";
+
+/* Backup import error shown when imported data references a missing cycle record. */
+"Backup references missing cycle %@." = "Les références de sauvegarde manquent le cycle %@.";
+
+/* Backup import error shown when imported data references a missing cycle entry record. */
+"Backup references missing cycle entry %@." = "Les références de sauvegarde manquent l'entrée de cycle %@.";
+
+/* Supporting text showing how many records were used to generate an insight. */
+"Based on %lld data points" = "Basé sur %lld points de données";
+
+/* Blood sugar reading type. */
+"Before Meal" = "Avant le repas";
+
+/* No comment provided by engineer. */
+"Billing Mode" = "Mode de facturation";
+
+/* Symptom label. */
+"Bloating" = "Ballonnements";
+
+/* CSV export row type value.
+PDF report section title. */
+"Blood Sugar" = "Glycémie";
+
+/* No comment provided by engineer. */
+"Blood Sugar History" = "Histoire de la glycémie";
+
+/* Photo journal body area label. */
+"Body" = "Corps";
+
+/* Symptom label. */
+"Body Hair" = "Poils du corps";
+
+/* No comment provided by engineer. */
+"Brand (optional)" = "Marque (facultatif)";
+
+/* Meal type label. */
+"Breakfast" = "Petit-déjeuner";
+
+/* Symptom label for acne or skin breakouts. */
+"Breakouts" = "Éruptions cutanées";
+
+/* Symptom label. */
+"Breast Tenderness" = "Tendresse des seins";
+
+/* Tab title. */
+"Calendar" = "Calendrier";
+
+/* No comment provided by engineer. */
+"Camera Access Needed" = "Accès à la caméra requis";
+
+/* No comment provided by engineer. */
+"Camera Unavailable" = "Caméra indisponible";
+
+/* No comment provided by engineer. */
+"Cancel" = "Annuler";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Check the Calendar tab to see your cycle at a glance." = "Consultez l'onglet Calendrier pour voir votre cycle en un coup d'œil.";
+
+/* Sample meal description used in demo data. */
+"Chicken wrap with hummus" = "Wrap de poulet au houmous";
+
+/* Photo journal body area label. */
+"Chin" = "Menton";
+
+/* No comment provided by engineer. */
+"Clear" = "Clair";
+
+/* No comment provided by engineer. */
+"Clear all" = "Tout effacer";
+
+/* No comment provided by engineer. */
+"Close" = "Fermer";
+
+/* No comment provided by engineer. */
+"CloudKit Sync" = "CloudKit Synchronisation";
+
+/* No comment provided by engineer. */
+"Common on period days" = "Fréquent les jours de règles";
+
+/* No comment provided by engineer. */
+"Compare Photos" = "Comparez les photos";
+
+/* No comment provided by engineer. */
+"Confidence" = "Confiance";
+
+/* No comment provided by engineer. */
+"Connect to Apple Health" = "Connectez-vous à Apple Health";
+
+/* No comment provided by engineer. */
+"Connected to Apple Health" = "Connecté à Apple Health";
+
+/* Follow-up guidance when symptom severity is worsening. */
+"Consider reviewing recent changes to your routine." = "Pensez à revoir les changements récents apportés à votre routine.";
+
+/* Sample demo insight title. */
+"Consistent inositol use tracks with fewer cravings" = "Utilisation constante d'inositol avec moins de fringales";
+
+/* Sample photo journal note used in demo data. */
+"Consistent lighting and angle" = "Éclairage et angle cohérents";
+
+/* Symptom label. */
+"Constipation" = "Constipation";
+
+/* No comment provided by engineer. */
+"Continue" = "Continuer";
+
+/* Error shown when CSV export generation fails. */
+"Could not create CSV export: %@" = "Impossible de créer l'exportation CSV : %@";
+
+/* Error shown when JSON backup generation fails. */
+"Could not create JSON backup: %@" = "Impossible de créer la sauvegarde JSON : %@";
+
+/* Error shown when report generation throws an error. */
+"Could not generate report: %@" = "Impossible de générer le rapport : %@";
+
+/* Fallback error shown when importing a JSON backup fails. */
+"Could not import backup: %@" = "Impossible d'importer la sauvegarde : %@";
+
+/* Fallback error shown when loading a debug demo scenario fails. */
+"Could not import demo data: %@" = "Impossible d'importer les données de démonstration : %@";
+
+/* Error shown when importing a meal photo fails.
+Error shown when importing a progress photo fails. */
+"Could not import photo: %@" = "Impossible d'importer la photo : %@";
+
+/* Error shown when a period day cannot be saved. */
+"Could not log period: %@" = "Impossible d'enregistrer la période : %@";
+
+/* Error shown when the user selects an unreadable backup file. */
+"Could not open backup: %@" = "Impossible d'ouvrir la sauvegarde : %@";
+
+/* Paywall error shown when restoring purchases fails. */
+"Could not restore purchases. Please try again." = "Impossible de restaurer les achats. Veuillez réessayer.";
+
+/* No comment provided by engineer. */
+"Could not Save" = "Impossible d'enregistrer";
+
+/* Error shown when a meal entry cannot be saved. */
+"Could not save meal: %@" = "Impossible de sauvegarder le repas : %@";
+
+/* Error shown when a progress photo cannot be saved. */
+"Could not save photo: %@" = "Impossible d'enregistrer la photo : %@";
+
+/* Error shown when a blood sugar reading cannot be saved. */
+"Could not save reading: %@" = "Impossible d'enregistrer la lecture : %@";
+
+/* Error shown when a supplement log cannot be saved. */
+"Could not save supplement: %@" = "Impossible d'enregistrer le supplément : %@";
+
+/* Error shown when symptom entries cannot be saved. */
+"Could not save symptoms: %@" = "Impossible d'enregistrer les symptômes : %@";
+
+/* Error shown when skipping a period fails. */
+"Could not skip period: %@" = "Impossible de sauter la période : %@";
+
+/* Fallback error shown when the app cannot generate or load insights. */
+"Couldn't refresh insights right now. Please try again." = "Impossible d'actualiser les insights pour le moment. Veuillez réessayer.";
+
+/* Inline error shown when quick-logging a period day fails. */
+"Couldn't save quick log. Please try again." = "Impossible d'enregistrer le journal rapide. Veuillez réessayer.";
+
+/* No comment provided by engineer. */
+"Count" = "Nombre";
+
+/* Symptom label. */
+"Cramps" = "Crampes";
+
+/* Symptom label. */
+"Cravings" = "Envies";
+
+/* Sample cycle label used in demo data notes. */
+"Current cycle" = "Cycle actuel";
+
+/* No comment provided by engineer. */
+"Custom supplement name" = "Nom du supplément personnalisé";
+
+/* CSV export row type value. */
+"Cycle" = "Faire du vélo";
+
+/* Sample cycle label used in demo data notes. */
+"Cycle %lld" = "Cycle %lld";
+
+/* PDF report subheading for the list of cycle date ranges. */
+"Cycle Dates" = "Dates des cycles";
+
+/* No comment provided by engineer. */
+"Cycle Details" = "Détails du cycle";
+
+/* No comment provided by engineer. */
+"Cycle Length Trend" = "Tendance de la durée du cycle";
+
+/* Insight category label. */
+"Cycle Pattern" = "Modèle de cycle";
+
+/* Insight generation stage name used in an error message. */
+"cycle patterns" = "modèles de cycles";
+
+/* No comment provided by engineer. */
+"Cycle Statistics" = "Statistiques de cycle";
+
+/* PDF report section title. */
+"Cycle Summary" = "Résumé du cycle";
+
+/* No comment provided by engineer. */
+"CycleBalance" = "CycleBalance";
+
+/* PDF report cover title. Keep the CycleBalance brand name in English.
+Share sheet preview title for the generated PDF health report. */
+"CycleBalance Health Report" = "CycleBalance Rapport de santé";
+
+/* No comment provided by engineer. */
+"CycleBalance identifies patterns after you've logged at least 2 complete cycles. Keep tracking — your first insights are on the way!" = "CycleBalance identifie les modèles après avoir enregistré au moins 2 cycles complets. Continuez à suivre : vos premières informations sont en route !";
+
+/* No comment provided by engineer. */
+"CycleBalance reads health data to enrich your daily logs. No data is written to Apple Health." = "CycleBalance lit les données de santé pour enrichir vos journaux quotidiens. Aucune donnée n'est écrite dans Apple Health.";
+
+/* No comment provided by engineer. */
+"Cycles" = "Cycles";
+
+/* Insight generation stage name used in an error message. */
+"cycles for symptom correlation" = "cycles pour la corrélation des symptômes";
+
+/* No comment provided by engineer. */
+"Daily Logging" = "Journalisation quotidienne";
+
+/* Insight generation stage name used in an error message. */
+"daily logs" = "journaux quotidiens";
+
+/* No comment provided by engineer. */
+"Data" = "Données";
+
+/* No comment provided by engineer. */
+"Data Types" = "Types de données";
+
+/* No comment provided by engineer. */
+"Date" = "Date";
+
+/* No comment provided by engineer. */
+"Date & Time" = "Date et heure";
+
+/* No comment provided by engineer. */
+"Date Range" = "Période";
+
+/* Large heading showing the current cycle day number on the Today screen. */
+"Day %lld" = "Jour %lld";
+
+/* No comment provided by engineer. */
+"Day %lld of current cycle" = "Jour %lld du cycle en cours";
+
+/* No comment provided by engineer. */
+"Days" = "Jours";
+
+/* Insight content about high glycemic index meals and symptoms. */
+"Days following high-GI meals show an average symptom severity of %@/5, compared to %@/5 after low-GI meals. Consider swapping some high-GI foods for lower-GI alternatives." = "Les jours qui suivent des repas riches en GI affichent une gravité moyenne des symptômes de %@/5, contre %@/5 après des repas faibles en GI. Pensez à remplacer certains aliments riches en GI par des alternatives à faible teneur en GI.";
+
+/* Sample demo insight body. */
+"Days with low-GI meal logs show fewer energy crashes the following morning." = "Les jours avec des journaux de repas faibles en GI montrent moins de chutes d'énergie le lendemain matin.";
+
+/* No comment provided by engineer. */
+"Debug: Demo Data" = "Débogage : données de démonstration";
+
+/* No comment provided by engineer. */
+"Debug: Premium QA" = "Débogage : contrôle qualité Premium";
+
+/* No comment provided by engineer. */
+"Delete" = "Supprimer";
+
+/* No comment provided by engineer. */
+"Delete All Data" = "Supprimer toutes les données";
+
+/* No comment provided by engineer. */
+"Delete All Data?" = "Supprimer toutes les données ?";
+
+/* No comment provided by engineer. */
+"Delete Everything" = "Supprimer tout";
+
+/* No comment provided by engineer. */
+"Delete Photo" = "Supprimer la photo";
+
+/* Sample meal note used in demo data. */
+"Demo meal entry" = "Entrée au repas de démonstration";
+
+/* No comment provided by engineer. */
+"Description" = "Description";
+
+/* No comment provided by engineer. */
+"Details" = "Détails";
+
+/* Symptom label. */
+"Diarrhea" = "Diarrhée";
+
+/* Insight category label. */
+"Diet Impact" = "Impact sur le régime alimentaire";
+
+/* Symptom focus area title in onboarding. */
+"Digestion & weight" = "Digestion et poids";
+
+/* Symptom category label. */
+"Digestive" = "Digestif";
+
+/* Meal type label. */
+"Dinner" = "Dîner";
+
+/* No comment provided by engineer. */
+"Discard" = "Jeter";
+
+/* No comment provided by engineer. */
+"Discard changes?" = "Supprimer les modifications ?";
+
+/* PDF report line summarizing the meal glycemic impact distribution. */
+"Distribution: %lld%% Low, %lld%% Medium, %lld%% High" = "Distribution : %lld%% faible, %lld%% moyenne, %lld%% élevée";
+
+/* No comment provided by engineer. */
+"Done" = "Fait";
+
+/* No comment provided by engineer. */
+"Dosage" = "Dosage";
+
+/* Accessibility hint for the selected severity button. */
+"Double tap to deselect" = "Appuyez deux fois pour désélectionner";
+
+/* Accessibility hint for an unselected severity button. */
+"Double tap to select" = "Appuyez deux fois pour sélectionner";
+
+/* No comment provided by engineer. */
+"Double tap to select %@ flow intensity" = "Appuyez deux fois pour sélectionner l'intensité du débit %@.";
+
+/* Symptom label. */
+"Dry Skin" = "Peau sèche";
+
+/* No comment provided by engineer. */
+"e.g., After breakfast" = "par exemple, après le petit-déjeuner";
+
+/* No comment provided by engineer. */
+"e.g., clotting, mood changes, spotting duration..." = "par exemple, la coagulation, les changements d'humeur, la durée des spottings...";
+
+/* Sample meal description used in demo data. */
+"Egg scramble, avocado, greens" = "Oeufs brouillés, avocat, légumes verts";
+
+/* No comment provided by engineer. */
+"Elevated" = "Élevé";
+
+/* No comment provided by engineer. */
+"Enable camera access in Settings to capture photos directly." = "Activez l'accès à l'appareil photo dans Paramètres pour capturer des photos directement.";
+
+/* No comment provided by engineer. */
+"Enable Notifications" = "Activer les notifications";
+
+/* No comment provided by engineer. */
+"End Date" = "Date de fin";
+
+/* Symptom label for a sudden drop in energy. */
+"Energy Crash" = "Crash énergétique";
+
+/* No comment provided by engineer. */
+"Enter a glucose value to save" = "Entrez une valeur de glucose à enregistrer";
+
+/* No comment provided by engineer. */
+"Enter value" = "Entrez la valeur";
+
+/* No comment provided by engineer. */
+"Entitlement" = "Droit";
+
+/* No comment provided by engineer. */
+"Error" = "Erreur";
+
+/* Demo data scenario subtitle. */
+"Established routine with symptom and metabolic patterns" = "Routine établie avec symptômes et schémas métaboliques";
+
+/* No comment provided by engineer. */
+"Even if your period isn't today, you can log your most recent one. This starts your cycle tracking." = "Même si vos règles ne surviennent pas aujourd'hui, vous pouvez enregistrer vos règles les plus récentes. Cela démarre votre suivi de cycle.";
+
+/* Insight generation stage name used in an error message. */
+"existing insights" = "informations existantes";
+
+/* No comment provided by engineer. */
+"Export Backup (JSON)" = "Exporter la sauvegarde (JSON)";
+
+/* No comment provided by engineer. */
+"Export Data (CSV)" = "Exporter des données (CSV)";
+
+/* Symptom label. */
+"Facial Hair" = "Poils du visage";
+
+/* Error shown when deleting all app data fails. */
+"Failed to delete data: %@" = "Échec de la suppression des données : %@";
+
+/* Error shown when a PDF report could not be created. */
+"Failed to generate PDF report." = "Échec de la génération du rapport PDF.";
+
+/* Blood sugar reading type. */
+"Fasting" = "Jeûne";
+
+/* Symptom label. */
+"Fatigue" = "Fatigue";
+
+/* Sample demo insight title. */
+"Fatigue often clusters around period start" = "La fatigue se concentre souvent au début des règles";
+
+/* Sample demo insight body. */
+"Fatigue scores were higher in the first two days of menstrual bleeding." = "Les scores de fatigue étaient plus élevés au cours des deux premiers jours de saignements menstruels.";
+
+/* No comment provided by engineer. */
+"Feature" = "Fonctionnalité";
+
+/* Sample demo insight title. */
+"Fertility windows are broad across irregular cycles" = "Les fenêtres de fertilité sont larges sur les cycles irréguliers";
+
+/* Primary onboarding goal description. */
+"Find patterns between your symptoms and your cycle." = "Trouvez des modèles entre vos symptômes et votre cycle.";
+
+/* No comment provided by engineer. */
+"Flow Intensity" = "Intensité du débit";
+
+/* Cycle phase name. */
+"Follicular" = "Folliculaire";
+
+/* No comment provided by engineer. */
+"Free" = "Gratuit";
+
+/* Debug premium status label. */
+"Free tier" = "Niveau gratuit";
+
+/* No comment provided by engineer. */
+"Frequent this cycle" = "Fréquent ce cycle";
+
+/* No comment provided by engineer. */
+"Generate Report" = "Générer un rapport";
+
+/* PDF report cover label showing when the report was created. */
+"Generated on %@" = "Généré le %@";
+
+/* No comment provided by engineer. */
+"Generating insights..." = "Générer des insights...";
+
+/* No comment provided by engineer. */
+"Generating report..." = "Génération du rapport...";
+
+/* No comment provided by engineer. */
+"Get Started" = "Commencer";
+
+/* No comment provided by engineer. */
+"Get the full CycleBalance experience" = "Bénéficiez de l'expérience CycleBalance complète";
+
+/* No comment provided by engineer. */
+"Glucose Value" = "Valeur de glucose";
+
+/* Validation error shown when a blood sugar value is outside the supported range. */
+"Glucose value must be between 40 and 600 mg/dL." = "La valeur de glucose doit être comprise entre 40 et 600 mg/dL.";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "Impact glycémique";
+
+/* No comment provided by engineer. */
+"Got it" = "J'ai compris";
+
+/* Sample meal description used in demo data. */
+"Greek yogurt, berries, chia" = "Yaourt grec, baies, chia";
+
+/* Single-character abbreviation for heavy flow in the calendar. Keep very short. */
+"H" = "H";
+
+/* Symptom category label. */
+"Hair" = "Cheveux";
+
+/* Symptom label. */
+"Hair Shedding" = "Chute de cheveux";
+
+/* Photo journal body area label. */
+"Hairline" = "Naissance des cheveux";
+
+/* Symptom label. */
+"Headache" = "Mal de tête";
+
+/* No comment provided by engineer. */
+"Health" = "Santé";
+
+/* No comment provided by engineer. */
+"Health Report" = "Rapport de santé";
+
+/* No comment provided by engineer. */
+"HealthKit Access" = "HealthKit Accès";
+
+/* No comment provided by engineer. */
+"HealthKit Unavailable" = "HealthKit Indisponible";
+
+/* Cycle flow intensity option for heavy bleeding. */
+"Heavy" = "Abondant";
+
+/* Compact severity label for level 4 symptoms.
+Full severity label for level 4 symptoms. */
+"High" = "Haut";
+
+/* Glycemic impact label. GI means glycemic index. */
+"High GI" = "Élevé GI";
+
+/* PDF report line showing high glycemic index meal count. */
+"High GI: %lld meals" = "GI élevé : %lld repas";
+
+/* Insight title about high glycemic index meals and symptoms. */
+"High-GI meals may worsen symptoms" = "Les repas riches en GI peuvent aggraver les symptômes";
+
+/* Sample demo insight title. */
+"Higher stress days correlate with lower energy" = "Les jours de stress plus élevés sont corrélés à une baisse d’énergie";
+
+/* No comment provided by engineer. */
+"History" = "Histoire";
+
+/* Sample blood sugar note used in demo data. */
+"Home finger-stick meter" = "Appareil de mesure au doigt à domicile";
+
+/* No comment provided by engineer. */
+"How are you feeling today?" = "Comment te sens-tu aujourd’hui ?";
+
+/* No comment provided by engineer. */
+"How long have you been managing PCOS?" = "Depuis combien de temps gérez-vous PCOS ?";
+
+/* Symptom label. */
+"Hunger" = "Faim";
+
+/* No comment provided by engineer. */
+"I skipped a period" = "J'ai sauté une période";
+
+/* PCOS experience option in onboarding. */
+"I think I might have PCOS" = "Je pense que je pourrais avoir PCOS";
+
+/* PCOS experience option in onboarding. */
+"I was recently diagnosed" = "J'ai récemment été diagnostiqué";
+
+/* PCOS experience option in onboarding. */
+"I've been managing for a while" = "Je gère depuis un moment";
+
+/* No comment provided by engineer. */
+"Impact" = "Impact";
+
+/* No comment provided by engineer. */
+"Import Backup" = "Importer une sauvegarde";
+
+/* No comment provided by engineer. */
+"Import Backup (JSON)" = "Importer une sauvegarde (JSON)";
+
+/* No comment provided by engineer. */
+"Importing a backup will replace all existing app data." = "L'importation d'une sauvegarde remplacera toutes les données d'application existantes.";
+
+/* No comment provided by engineer. */
+"Include Sections" = "Inclure des sections";
+
+/* Insight refresh error shown when a required dataset cannot be read. */
+"Insight generation couldn't read %@. Please try again." = "La génération d'informations n'a pas pu lire %@. Veuillez réessayer.";
+
+/* No comment provided by engineer. */
+"Insight refresh error. %@" = "Erreur d'actualisation d'Insight. %@";
+
+/* PDF report section title.
+Tab title. */
+"Insights" = "Analyses";
+
+/* Primary onboarding goal description. */
+"Irregular cycles are unpredictable. Let's change that." = "Les cycles irréguliers sont imprévisibles. Changeons cela.";
+
+/* Symptom label. */
+"Irritability" = "Irritabilité";
+
+/* No comment provided by engineer. */
+"Keep Editing" = "Continuer à modifier";
+
+/* Encouraging follow-up when symptom severity is improving. */
+"Keep up what you're doing!" = "Continuez ce que vous faites !";
+
+/* Single-character abbreviation for light flow in the calendar. Keep very short. */
+"L" = "L";
+
+/* No comment provided by engineer. */
+"Last Import" = "Dernière importation";
+
+/* No comment provided by engineer. */
+"Last Synced" = "Dernière synchronisation";
+
+/* CSV export detail value for cycle length. */
+"Length" = "Longueur";
+
+/* PDF report summary line showing the range of cycle lengths. */
+"Length range: %@" = "Plage de longueur : %@";
+
+/* Sample meal description used in demo data. */
+"Lentil bowl with tahini dressing" = "Bol de lentilles avec vinaigrette au tahini";
+
+/* Insight title describing worse symptoms after shorter sleep. */
+"Less sleep, more symptoms" = "Moins de sommeil, plus de symptômes";
+
+/* No comment provided by engineer. */
+"Let's log your first period day" = "Enregistrons votre premier jour de règles";
+
+/* PCOS experience description in onboarding. */
+"Let's make your tracking more powerful." = "Rendons votre suivi plus puissant.";
+
+/* Cycle flow intensity option for light bleeding. */
+"Light" = "Léger";
+
+/* No comment provided by engineer. */
+"Load %@" = "Charger %@";
+
+/* No comment provided by engineer. */
+"Local Test Mode" = "Mode test local";
+
+/* No comment provided by engineer. */
+"Log a period to start tracking" = "Enregistrez une période pour commencer le suivi";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Blood Sugar" = "Enregistrez la glycémie";
+
+/* Onboarding tooltip encouraging daily symptom logging for digestion and weight. */
+"Log digestive symptoms daily to surface connections with your cycle." = "Enregistrez quotidiennement les symptômes digestifs pour faire ressortir les liens avec votre cycle.";
+
+/* Onboarding completion message for users focused on symptoms. */
+"Log how you feel each day. After 2 cycles, you'll see your first insights." = "Enregistrez ce que vous ressentez chaque jour. Après 2 cycles, vous verrez vos premiers insights.";
+
+/* Onboarding tooltip encouraging daily symptom logging for mood and energy. */
+"Log how you're feeling each day — patterns emerge within a cycle or two." = "Enregistrez ce que vous ressentez chaque jour – des modèles émergent au bout d’un cycle ou deux.";
+
+/* Welcome guidance on the Today screen for users focused on mood and energy. */
+"Log how you're feeling to start finding patterns" = "Enregistrez ce que vous ressentez pour commencer à trouver des modèles";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Meal" = "Repas en bûche";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Period" = "Période de journalisation";
+
+/* No comment provided by engineer. */
+"Log Period Day" = "Jour de la période de journalisation";
+
+/* Welcome guidance on the Today screen for users focused on skin and hair. */
+"Log skin and hair changes to start spotting patterns" = "Enregistrez les changements de peau et de cheveux pour commencer à repérer des modèles";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Supplements" = "Suppléments de journal";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Symptoms" = "Symptômes du journal";
+
+/* Welcome guidance on the Today screen for users focused on symptoms. */
+"Log symptoms to start finding patterns" = "Enregistrez les symptômes pour commencer à trouver des modèles";
+
+/* Welcome guidance on the Today screen for users focused on pain and cramps. */
+"Log symptoms to start tracking pain patterns" = "Enregistrez les symptômes pour commencer à suivre les schémas de douleur";
+
+/* No comment provided by engineer. */
+"Log your first blood sugar reading to start tracking." = "Enregistrez votre première lecture de glycémie pour commencer le suivi.";
+
+/* Welcome guidance on the Today screen for users focused on cycle tracking. */
+"Log your period to start tracking your cycle" = "Enregistrez vos règles pour commencer à suivre votre cycle";
+
+/* Onboarding completion message for users focused on cycle tracking. */
+"Log your period when it arrives and CycleBalance will start predicting your next one." = "Enregistrez vos règles quand elles arrivent et CycleBalance commencera à prédire votre prochaine.";
+
+/* Daily symptom reminder notification title. */
+"Log Your Symptoms" = "Enregistrez vos symptômes";
+
+/* Confirmation banner after the user quick-logs a period day. */
+"Logged %@ flow for today" = "Flux %@ enregistré pour aujourd'hui";
+
+/* Onboarding tooltip encouraging daily symptom logging. */
+"Logging symptoms daily helps surface patterns with your cycle." = "L’enregistrement quotidien des symptômes aide à faire ressortir les modèles de votre cycle.";
+
+/* Demo data scenario subtitle. */
+"Long irregular cycles with early tracking habits" = "Cycles longs et irréguliers avec des habitudes de suivi précoces";
+
+/* Compact severity label for level 2 symptoms.
+Full severity label for level 2 symptoms. */
+"Low" = "Faible";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Low GI" = "IG bas";
+
+/* PDF report line showing low glycemic index meal count. */
+"Low GI: %lld meals" = "IG bas : %lld repas";
+
+/* Symptom label for depressed or low mood. */
+"Low Mood" = "Mauvaise humeur";
+
+/* Sample demo insight title. */
+"Lower-GI meals align with steadier energy" = "Les repas inférieurs à GI correspondent à une énergie plus stable";
+
+/* Meal type label. */
+"Lunch" = "Déjeuner";
+
+/* Cycle phase name. */
+"Luteal" = "Lutéal";
+
+/* Single-character abbreviation for medium flow in the calendar. Keep very short. */
+"M" = "M.";
+
+/* No comment provided by engineer. */
+"Macros (Optional)" = "Macros (facultatif)";
+
+/* Sample supplement name used in demo data. */
+"Magnesium" = "Magnésium";
+
+/* No comment provided by engineer. */
+"Manage individual supplement times from the Supplements tab." = "Gérez les heures de supplément individuelles à partir de l’onglet Suppléments.";
+
+/* Insight title about a high proportion of high glycemic index meals. */
+"Many of your meals are high-GI" = "Beaucoup de vos repas sont élevés-GI";
+
+/* CSV export row type value. */
+"Meal" = "Repas";
+
+/* No comment provided by engineer. */
+"Meal Context" = "Contexte du repas";
+
+/* No comment provided by engineer. */
+"Meal Date" = "Date du repas";
+
+/* PDF report section title. */
+"Meal GI Distribution" = "Repas GI Distribution";
+
+/* No comment provided by engineer. */
+"Meal History" = "Historique des repas";
+
+/* No comment provided by engineer. */
+"Meal Type" = "Type de repas";
+
+/* Insight generation stage name used in an error message. */
+"meals" = "repas";
+
+/* No comment provided by engineer. */
+"Meals" = "Repas";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "Les repas que vous enregistrez apparaîtront ici.";
+
+/* Compact severity label for level 3 symptoms. */
+"Med" = "Médical";
+
+/* Cycle flow intensity option for moderate bleeding. */
+"Medium" = "Modéré";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Medium GI" = "Moyen GI";
+
+/* PDF report line showing medium glycemic index meal count. */
+"Medium GI: %lld meals" = "Moyen GI : %lld repas";
+
+/* Cycle phase name. */
+"Menstrual" = "Menstruel";
+
+/* Symptom category label. */
+"Metabolic" = "Métabolique";
+
+/* No comment provided by engineer. */
+"mg" = "mg";
+
+/* No comment provided by engineer. */
+"mg/dL" = "mg/dL";
+
+/* Compact severity label for level 1 symptoms.
+Full severity label for level 1 symptoms. */
+"Mild" = "Bénin";
+
+/* CSV export supplement status value. */
+"Missed" = "Oublié";
+
+/* Full severity label for level 3 symptoms. */
+"Moderate" = "Modéré";
+
+/* Symptom focus area description in onboarding. */
+"Monitor acne, hair changes, and skin patterns." = "Surveillez l’acné, les changements de cheveux et les modèles de peau.";
+
+/* Symptom category label. */
+"Mood" = "Humeur";
+
+/* Symptom focus area title in onboarding. */
+"Mood & energy" = "Humeur et énergie";
+
+/* Symptom label. */
+"Mood Swings" = "Sautes d'humeur";
+
+/* Sample blood sugar meal context used in demo data. */
+"Morning baseline" = "Base de référence du matin";
+
+/* PDF report placeholder for unavailable values. */
+"N/A" = "N / A";
+
+/* Symptom label. */
+"Nausea" = "Nausée";
+
+/* Demo data scenario name. */
+"Newly Diagnosed" = "Récemment diagnostiqué";
+
+/* No comment provided by engineer. */
+"Next" = "Suivant";
+
+/* No comment provided by engineer. */
+"Next month" = "Mois prochain";
+
+/* No comment provided by engineer. */
+"Next Period Estimate" = "Estimation de la période suivante";
+
+/* CSV export boolean value. */
+"No" = "Non";
+
+/* No comment provided by engineer. */
+"No Active Cycle" = "Aucun cycle actif";
+
+/* PDF report empty state for the blood sugar section. */
+"No blood sugar data recorded in this period." = "Aucune donnée de glycémie enregistrée au cours de cette période.";
+
+/* Insight title describing a supplement that does not show a clear symptom benefit. */
+"No clear benefit from %@" = "Aucun avantage clair de %@";
+
+/* PDF report empty state for the cycle summary section. */
+"No cycle data recorded in this period." = "Aucune donnée de cycle enregistrée pendant cette période.";
+
+/* No comment provided by engineer. */
+"No data is shared with notification servers." = "Aucune donnée n'est partagée avec les serveurs de notification.";
+
+/* Supplement picker helper text when a supplement has no default dosage. */
+"No default dosage" = "Pas de dosage par défaut";
+
+/* PDF report empty state for the insights section. */
+"No insights generated in this period." = "Aucune information générée au cours de cette période.";
+
+/* No comment provided by engineer. */
+"No Insights Yet" = "Aucune information pour l'instant";
+
+/* PDF report empty state for the meal section. */
+"No meal data recorded in this period." = "Aucune donnée de repas enregistrée au cours de cette période.";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "Aucun repas enregistré";
+
+/* No comment provided by engineer. */
+"No Photos" = "Aucune photo";
+
+/* No comment provided by engineer. */
+"No Photos Yet" = "Aucune photo pour l'instant";
+
+/* No comment provided by engineer. */
+"No Readings Yet" = "Aucune lecture pour l'instant";
+
+/* Billing error shown when no subscription products are available. */
+"No subscription products are available right now." = "Aucun produit par abonnement n'est disponible pour le moment.";
+
+/* No comment provided by engineer. */
+"No supplement data" = "Aucune donnée sur les compléments";
+
+/* PDF report empty state for the supplement section. */
+"No supplement data recorded in this period." = "Aucune donnée supplémentaire enregistrée sur cette période.";
+
+/* No comment provided by engineer. */
+"No supplements logged today" = "Aucun supplément enregistré aujourd'hui";
+
+/* PDF report empty state for the symptom summary section. */
+"No symptom data recorded in this period." = "Aucune donnée sur les symptômes enregistrée au cours de cette période.";
+
+/* No comment provided by engineer. */
+"No wrong answers — this helps us set the right pace." = "Pas de mauvaises réponses : cela nous aide à définir le bon rythme.";
+
+/* Accessibility severity label when no symptom severity is selected.
+CSV export value meaning no period flow was logged.
+Cycle flow intensity option meaning no bleeding. */
+"None" = "Aucun";
+
+/* No comment provided by engineer. */
+"Normal" = "Normale";
+
+/* No comment provided by engineer. */
+"Not a medical device. Always consult your healthcare provider." = "Il ne s'agit pas d'un dispositif médical. Consultez toujours votre professionnel de la santé.";
+
+/* No comment provided by engineer. */
+"Not Now" = "Pas maintenant";
+
+/* No comment provided by engineer. */
+"Notes" = "Remarques";
+
+/* No comment provided by engineer. */
+"Notifications" = "Notifications";
+
+/* No comment provided by engineer. */
+"Notifications Enabled" = "Notifications activées";
+
+/* No comment provided by engineer. */
+"Occurrences" = "Occurrences";
+
+/* No comment provided by engineer. */
+"of current cycle" = "du cycle en cours";
+
+/* Symptom label. */
+"Oily Skin" = "Peau grasse";
+
+/* No comment provided by engineer. */
+"OK" = "D'ACCORD";
+
+/* Insight content describing a supplement that may correlate with better symptom scores. */
+"On days you take %@, your average symptom severity is %@/5, compared to %@/5 on days you miss it. This %@-point difference suggests a potential benefit." = "Les jours où vous prenez %@, la gravité moyenne de vos symptômes est de %@/5, contre %@/5 les jours où vous ne le prenez pas. Cette différence de %@ points suggère un avantage potentiel.";
+
+/* PDF report label for an active cycle with no end date. */
+"ongoing" = "en cours";
+
+/* CSV export value for a cycle that has not ended yet. */
+"Ongoing" = "En cours";
+
+/* No comment provided by engineer. */
+"Open Paywall" = "Ouvrir le Paywall";
+
+/* No comment provided by engineer. */
+"Open Settings" = "Ouvrir les paramètres";
+
+/* No comment provided by engineer. */
+"Operation Failed" = "Échec de l'opération";
+
+/* No comment provided by engineer. */
+"Optional" = "Facultatif";
+
+/* PDF report line showing overall supplement adherence. */
+"Overall adherence: %lld%%" = "Adhérence globale : %lld%%";
+
+/* PDF report line showing the average blood sugar reading. */
+"Overall average: %@ mg/dL" = "Moyenne globale : %@ mg/dL";
+
+/* Sample meal description used in demo data. */
+"Overnight oats with flaxseed" = "Gruau de nuit aux graines de lin";
+
+/* Cycle phase name. */
+"Ovulatory" = "Ovulatoire";
+
+/* Symptom category label. */
+"Pain" = "Douleur";
+
+/* Symptom focus area title in onboarding. */
+"Pain & cramps" = "Douleurs et crampes";
+
+/* Welcome onboarding page body. */
+"PCOS makes every cycle unique. CycleBalance tracks your patterns without assuming regularity." = "PCOS rend chaque cycle unique. CycleBalance suit vos modèles sans supposer de régularité.";
+
+/* Symptom label. */
+"Pelvic Pain" = "Douleur pelvienne";
+
+/* PDF report subheading for supplement adherence by supplement. */
+"Per-Supplement Breakdown" = "Répartition par supplément";
+
+/* CSV export row type value. */
+"Period" = "Période";
+
+/* No comment provided by engineer. */
+"Period date" = "Date de la période";
+
+/* Sample symptom note used in demo data for period discomfort. */
+"Period day %lld discomfort" = "Inconfort du jour des règles %lld";
+
+/* No comment provided by engineer. */
+"Period Estimate" = "Estimation de la période";
+
+/* Notification title sent before a predicted period. */
+"Period May Be Coming" = "Les règles pourraient bientôt arriver";
+
+/* No comment provided by engineer. */
+"Period Predictions" = "Prédictions de période";
+
+/* No comment provided by engineer. */
+"Period Reminders" = "Rappels de règles";
+
+/* No comment provided by engineer. */
+"Period today?" = "Règles aujourd'hui ?";
+
+/* No comment provided by engineer. */
+"Photo (Optional)" = "Photo (facultatif)";
+
+/* No comment provided by engineer. */
+"Photo Date" = "Date de la photo";
+
+/* No comment provided by engineer. */
+"Photo Detail" = "Détail de la photo";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Photo Journal" = "Journal photographique";
+
+/* No comment provided by engineer. */
+"Photo Type" = "Type de photo";
+
+/* Symptom category label. */
+"Physical" = "Physique";
+
+/* No comment provided by engineer. */
+"Please wait..." = "S'il vous plaît, attendez...";
+
+/* No comment provided by engineer. */
+"Premium" = "Premium";
+
+/* Debug premium status label. */
+"Premium active" = "Premium actif";
+
+/* No comment provided by engineer. */
+"Premium Feature" = "Fonctionnalité Premium";
+
+/* Sample supplement name used in demo data. */
+"Prenatal" = "Prénatal";
+
+/* No comment provided by engineer. */
+"Previous month" = "Mois précédent";
+
+/* No comment provided by engineer. */
+"Privacy Policy" = "politique de confidentialité";
+
+/* Welcome onboarding page headline. */
+"Private by Design" = "Privé par conception";
+
+/* No comment provided by engineer. */
+"Product IDs" = "ID de produit";
+
+/* Paywall error shown when a subscription purchase fails. */
+"Purchase failed. Please try again." = "L'achat a échoué. Veuillez réessayer.";
+
+/* No comment provided by engineer. */
+"Quick context" = "Contexte rapide";
+
+/* No comment provided by engineer. */
+"Quick notes" = "Notes rapides";
+
+/* Heading above suggested quick period notes for the selected flow intensity. */
+"Quick notes for %@ flow" = "Notes rapides pour le flux %@";
+
+/* Blood sugar reading type. */
+"Random" = "Aléatoire";
+
+/* No comment provided by engineer. */
+"Reading date" = "Date de lecture";
+
+/* No comment provided by engineer. */
+"Reading Type" = "Type de lecture";
+
+/* No comment provided by engineer. */
+"Ready to save" = "Prêt à économiser";
+
+/* Tracking hub label for the most recently used logging shortcut. */
+"Recent" = "Récent";
+
+/* No comment provided by engineer. */
+"Recent brands" = "Marques récentes";
+
+/* Sample demo insight body. */
+"Recent cycle lengths between 45 and 72 days suggest wider ovulation uncertainty windows." = "Des cycles récents d’une durée comprise entre 45 et 72 jours suggèrent des fenêtres d’incertitude sur l’ovulation plus larges.";
+
+/* No comment provided by engineer. */
+"Recent Cycles" = "Cycles récents";
+
+/* Sample demo insight body. */
+"Recent cycles ranged from 37 to 63 days. This is common with PCOS and improves with consistent tracking." = "Les cycles récents allaient de 37 à 63 jours. Ceci est courant avec PCOS et s'améliore avec un suivi cohérent.";
+
+/* No comment provided by engineer. */
+"Recent supplements" = "Suppléments récents";
+
+/* Supplement picker helper text showing the recommended dosage in milligrams. */
+"Recommended dosage: %@ mg" = "Posologie recommandée : %@ mg";
+
+/* Tracking hub card subtitle. */
+"Record flow intensity and notes" = "Enregistrer l’intensité du flux et prendre des notes";
+
+/* Tracking hub card subtitle. */
+"Record glucose readings" = "Enregistrer les mesures de glycémie";
+
+/* Tracking hub card subtitle. */
+"Record meals and glycemic impact" = "Enregistrer les repas et l'impact glycémique";
+
+/* Recovery suggestion shown after an insight refresh error. */
+"Refresh insights again in a moment." = "Actualisez à nouveau les informations dans un instant.";
+
+/* No comment provided by engineer. */
+"Refresh Premium Status" = "Actualiser le statut Premium";
+
+/* No comment provided by engineer. */
+"Regenerate Report" = "Régénérer le rapport";
+
+/* Recovery suggestion for a paywall product loading failure. */
+"Reload the paywall and try again." = "Rechargez le paywall et réessayez.";
+
+/* No comment provided by engineer. */
+"Reminder Time" = "Heure de rappel";
+
+/* No comment provided by engineer. */
+"Remove" = "Retirer";
+
+/* No comment provided by engineer. */
+"Replace Existing Data?" = "Remplacer les données existantes ?";
+
+/* No comment provided by engineer. */
+"Replaces existing data with realistic irregular-cycle demo scenarios." = "Remplace les données existantes par des scénarios de démonstration réalistes à cycle irrégulier.";
+
+/* No comment provided by engineer. */
+"Replay Welcome Tour" = "Rejouer la visite de bienvenue";
+
+/* No comment provided by engineer. */
+"Report Error" = "Signaler une erreur";
+
+/* No comment provided by engineer. */
+"Restore Purchases" = "Restaurer les achats";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat is not configured. Add `REVENUECAT_PUBLIC_SDK_KEY` in Config/LocalSecrets.xcconfig." = "RevenueCat n'est pas configuré. Ajoutez « REVENUECAT_PUBLIC_SDK_KEY » dans Config/LocalSecrets.xcconfig.";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat offering '%@' was not found." = "L'offre RevenueCat '%@' n'a pas été trouvée.";
+
+/* Sample meal description used in demo data. */
+"Rice bowl with teriyaki chicken" = "Bol de riz au poulet teriyaki";
+
+/* Single-character abbreviation for spotting flow in the calendar. Keep very short. */
+"S" = "S";
+
+/* Sample meal description used in demo data. */
+"Salmon, quinoa, roasted vegetables" = "Saumon, quinoa, légumes rôtis";
+
+/* No comment provided by engineer. */
+"Same as yesterday" = "Comme hier";
+
+/* Compact button label for copying the same symptoms as the previous day. */
+"Same as yesterday (%lld)" = "Comme hier (%lld)";
+
+/* No comment provided by engineer. */
+"Save" = "Sauvegarder";
+
+/* Paywall badge showing the percentage saved by choosing the yearly subscription. */
+"Save %lld%%" = "Économisez %lld%%";
+
+/* No comment provided by engineer. */
+"Save Meal" = "Enregistrer le repas";
+
+/* No comment provided by engineer. */
+"Save Photo" = "Enregistrer la photo";
+
+/* No comment provided by engineer. */
+"Saved" = "Enregistré";
+
+/* Photo journal body area label. */
+"Scalp (Part Line)" = "Cuir chevelu (ligne de partie)";
+
+/* Insight category label. */
+"Seasonal Pattern" = "Modèle saisonnier";
+
+/* Symptom focus area description in onboarding. */
+"See how cramps and pain relate to your cycle." = "Voyez comment les crampes et la douleur sont liées à votre cycle.";
+
+/* No comment provided by engineer. */
+"Select..." = "Sélectionner...";
+
+/* Recovery suggestion for a missing RevenueCat API key. */
+"Set your RevenueCat public SDK key and relaunch the app." = "Définissez votre clé SDK publique RevenueCat et relancez l'application.";
+
+/* Tab title. */
+"Settings" = "Paramètres";
+
+/* Compact severity label for level 5 symptoms.
+Full severity label for level 5 symptoms. */
+"Severe" = "Sévère";
+
+/* No comment provided by engineer. */
+"Share CSV Export" = "Partager CSV Exporter";
+
+/* No comment provided by engineer. */
+"Share JSON Backup" = "Partager la sauvegarde JSON";
+
+/* No comment provided by engineer. */
+"Share Report" = "Partager le rapport";
+
+/* Symptom category label. */
+"Skin" = "Peau";
+
+/* Symptom focus area title in onboarding. */
+"Skin & hair" = "Peau et cheveux";
+
+/* No comment provided by engineer. */
+"Skip" = "Sauter";
+
+/* No comment provided by engineer. */
+"Skip Period" = "Période de saut";
+
+/* No comment provided by engineer. */
+"Skip symptom focus selection and continue setup" = "Ignorer la sélection du focus sur les symptômes et continuer la configuration";
+
+/* No comment provided by engineer. */
+"Skip the questionnaire and continue setup" = "Ignorer le questionnaire et poursuivre la configuration";
+
+/* No comment provided by engineer. */
+"Skip the welcome tour and go directly to the app" = "Évitez la visite de bienvenue et accédez directement à l'application";
+
+/* No comment provided by engineer. */
+"Skip this period?" = "Sauter cette période ?";
+
+/* No comment provided by engineer. */
+"Skip this step and go to the dashboard" = "Ignorez cette étape et accédez au tableau de bord";
+
+/* Insight category label. */
+"Sleep & Activity" = "Sommeil et activité";
+
+/* Meal type label. */
+"Snack" = "Collation";
+
+/* Symptom focus area description in onboarding. */
+"Spot trends in bloating, cravings, and weight." = "Repérez les tendances en matière de ballonnements, de fringales et de poids.";
+
+/* Cycle flow intensity option for very light bleeding. */
+"Spotting" = "Légers saignements";
+
+/* Sample photo journal analysis summary used in demo data. */
+"Stable vs prior photo" = "Stable par rapport à la photo précédente";
+
+/* No comment provided by engineer. */
+"Start Date" = "Date de début";
+
+/* No comment provided by engineer. */
+"Start Exploring" = "Commencez à explorer";
+
+/* Onboarding tooltip encouraging daily symptom logging for skin and hair. */
+"Start logging skin or hair changes to track patterns over time." = "Commencez à enregistrer les changements de peau ou de cheveux pour suivre les tendances au fil du temps.";
+
+/* No comment provided by engineer. */
+"Start logging supplements to see your history here." = "Commencez à enregistrer vos compléments pour voir votre historique ici.";
+
+/* Welcome guidance on the Today screen before the user has onboarding preferences. */
+"Start tracking by logging your period" = "Commencez le suivi en enregistrant vos règles";
+
+/* No comment provided by engineer. */
+"Start tracking changes by adding your first photo." = "Commencez à suivre les modifications en ajoutant votre première photo.";
+
+/* Onboarding progress text showing the current step out of four total steps. */
+"Step %lld of 4" = "Étape %lld sur 4";
+
+/* No comment provided by engineer. */
+"Subscription" = "Abonnement";
+
+/* Paywall error shown when premium billing is not configured correctly. */
+"Subscription setup is incomplete." = "La configuration de l'abonnement est incomplète.";
+
+/* No comment provided by engineer. */
+"Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage your subscriptions in your Apple ID settings." = "Les abonnements se renouvellent automatiquement sauf annulation au moins 24 heures avant la fin de la période en cours. Vous pouvez gérer vos abonnements dans les paramètres de votre identifiant Apple.";
+
+/* No comment provided by engineer. */
+"Subscriptions Unavailable" = "Abonnements indisponibles";
+
+/* CSV export row type value. */
+"Supplement" = "Supplément";
+
+/* PDF report section title. */
+"Supplement Adherence" = "Adhésion au supplément";
+
+/* Insight category label. */
+"Supplement Efficacy" = "Efficacité du supplément";
+
+/* No comment provided by engineer. */
+"Supplement History" = "Historique des compléments";
+
+/* No comment provided by engineer. */
+"Supplement name" = "Nom du supplément";
+
+/* Supplement reminder notification title. */
+"Supplement Reminder" = "Rappel de supplément";
+
+/* No comment provided by engineer. */
+"Supplement Reminders" = "Rappels de supplément";
+
+/* Insight generation stage name used in an error message. */
+"supplements" = "suppléments";
+
+/* No comment provided by engineer. */
+"Supplements" = "Suppléments";
+
+/* CSV export row type value. */
+"Symptom" = "Symptôme";
+
+/* Insight category label. */
+"Symptom Correlation" = "Corrélation des symptômes";
+
+/* Insight generation stage name used in an error message. */
+"symptom correlations" = "corrélations entre les symptômes";
+
+/* Demo data scenario name. */
+"Symptom Management" = "Gestion des symptômes";
+
+/* No comment provided by engineer. */
+"Symptom Reminders" = "Rappels de symptômes";
+
+/* Insight title describing symptom severity increasing or decreasing. */
+"Symptom severity is %@" = "La gravité des symptômes est de %@";
+
+/* PDF report section title. */
+"Symptom Summary" = "Résumé des symptômes";
+
+/* No comment provided by engineer. */
+"Symptoms" = "Symptômes";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for diet impact" = "symptômes de l'impact du régime alimentaire";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for sleep and activity analysis" = "symptômes pour l'analyse du sommeil et de l'activité";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for supplement analysis" = "symptômes pour l'analyse des suppléments";
+
+/* Insight title describing the cycle phase with the highest symptom severity. */
+"Symptoms peak during %@ phase" = "Les symptômes culminent pendant la phase %@";
+
+/* No comment provided by engineer. */
+"Sync" = "Synchroniser";
+
+/* No comment provided by engineer. */
+"Sync Now" = "Synchroniser maintenant";
+
+/* No comment provided by engineer. */
+"Syncing..." = "Synchronisation...";
+
+/* Daily symptom reminder notification body. */
+"Take a moment to record how you're feeling today." = "Prenez un moment pour enregistrer ce que vous ressentez aujourd'hui.";
+
+/* CSV export supplement status value. */
+"Taken" = "Pris";
+"7 Days" = "7 jours";
+"30 Days" = "30 jours";
+"90 Days" = "90 jours";
+"By Supplement" = "Par complément";
+"Missed (%lld)" = "Oubliés (%lld)";
+"Taken (%lld)" = "Pris (%lld)";
+"Total" = "Total";
+
+/* No comment provided by engineer. */
+"Tap a symptom to get started" = "Appuyez sur un symptôme pour commencer";
+
+/* No comment provided by engineer. */
+"Tap any symptoms you're experiencing. Even logging once helps start building your pattern." = "Appuyez sur tous les symptômes que vous ressentez. Même une seule journalisation permet de commencer à créer votre modèle.";
+
+/* Onboarding tooltip introducing the quick period logging buttons. */
+"Tap Light, Medium, or Heavy to log today's flow in one tap." = "Appuyez sur Léger, Moyen ou Fort pour enregistrer le flux d'aujourd'hui en un seul clic.";
+
+/* No comment provided by engineer. */
+"Tap the button below to add your first supplement." = "Appuyez sur le bouton ci-dessous pour ajouter votre premier supplément.";
+
+/* Accessibility hint explaining how to change symptom severity and announcing the current level. */
+"Tap to cycle severity, long press for direct selection. Currently %lld of 5." = "Appuyez pour faire défiler la gravité, appuyez longuement pour une sélection directe. Actuellement %lld sur 5.";
+
+/* No comment provided by engineer. */
+"Tap to update permissions in Health app" = "Appuyez pour mettre à jour les autorisations dans l'application Santé";
+
+/* No comment provided by engineer. */
+"Terms of Service" = "Conditions d'utilisation";
+
+/* Billing error shown when a subscription product cannot be loaded. */
+"The selected product '%@' is not available for purchase yet." = "Le produit sélectionné '%@' n'est pas encore disponible à l'achat.";
+
+/* Insight content describing a symptom pair that often occurs together. */
+"These symptoms co-occur on %lld%% of your tracked days (%lld out of %lld days). Understanding symptom clusters can help you and your provider target treatments more effectively." = "Ces symptômes surviennent simultanément %lld%% de vos jours suivis (%lld sur %lld jours). Comprendre les groupes de symptômes peut vous aider, vous et votre prestataire, à cibler les traitements plus efficacement.";
+
+/* Backup import error shown when the selected backup file uses a newer or older schema version. */
+"This backup uses schema v%lld. This app currently supports v%lld." = "Cette sauvegarde utilise le schéma v%lld. Cette application prend actuellement en charge v%lld.";
+
+/* No comment provided by engineer. */
+"This device does not have a camera available right now." = "Cet appareil ne dispose pas d'une caméra disponible pour le moment.";
+
+/* No comment provided by engineer. */
+"This helps us focus on what matters most to you." = "Cela nous aide à nous concentrer sur ce qui compte le plus pour vous.";
+
+/* PDF report medical disclaimer. */
+"This report is for informational purposes only and is not a substitute for professional medical advice." = "Ce rapport est fourni à titre informatif uniquement et ne remplace pas un avis médical professionnel.";
+
+/* No comment provided by engineer. */
+"This will close your current cycle and start a new one from today. This action cannot be undone." = "Cela clôturera votre cycle actuel et en démarrera un nouveau à partir d’aujourd’hui. Cette action ne peut pas être annulée.";
+
+/* No comment provided by engineer. */
+"This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone." = "Cela supprimera définitivement toutes vos données de cycle, vos symptômes et vos informations. Cette action ne peut pas être annulée.";
+
+/* No comment provided by engineer. */
+"Time" = "Temps";
+
+/* No comment provided by engineer. */
+"Time Taken" = "Temps pris";
+
+/* Supplement reminder notification body with the supplement name. */
+"Time to take your %@." = "Il est temps de prendre votre %@.";
+
+/* Tab title. */
+"Today" = "Aujourd'hui";
+
+/* No comment provided by engineer. */
+"Today's Symptoms" = "Les symptômes d'aujourd'hui";
+
+/* Sample meal description used in demo data. */
+"Tofu stir-fry with brown rice" = "Sauté de tofu avec riz brun";
+
+/* PDF report subheading for the most frequently logged symptoms. */
+"Top Symptoms by Frequency" = "Principaux symptômes par fréquence";
+
+/* PDF report summary line showing how many cycles are included. */
+"Total cycles: %lld" = "Nombre total de cycles : %lld";
+
+/* PDF report line showing how many meals are included. */
+"Total meals logged: %lld" = "Total des repas enregistrés : %lld";
+
+/* PDF report line showing the number of blood sugar readings. */
+"Total readings: %lld" = "Lectures totales : %lld";
+
+/* Tab title. */
+"Track" = "Suivi";
+
+/* Tracking hub card subtitle. */
+"Track hair and skin changes" = "Suivez les changements dans les cheveux et la peau";
+
+/* Tracking hub card subtitle. */
+"Track how you're feeling today" = "Suivez comment vous vous sentez aujourd'hui";
+
+/* Symptom focus area description in onboarding. */
+"Track mood swings, anxiety, and energy crashes." = "Suivez les sautes d’humeur, l’anxiété et les pannes d’énergie.";
+
+/* Primary onboarding goal title. */
+"Track my periods" = "Suivre mes règles";
+
+/* Tracking hub card subtitle. */
+"Track your daily supplements" = "Suivez vos suppléments quotidiens";
+
+/* Sample blood sugar note used in demo data. */
+"Tracked after mixed meal" = "Suivi après un repas mixte";
+
+/* Onboarding tooltip encouraging daily symptom logging for pain and cramps. */
+"Tracking pain alongside your cycle helps spot which days hit hardest." = "Le suivi de la douleur tout au long de votre cycle permet de déterminer les jours les plus difficiles.";
+
+/* PCOS experience description in onboarding. */
+"Tracking symptoms can help you and your doctor." = "Le suivi des symptômes peut vous aider, vous et votre médecin.";
+
+/* Demo data scenario subtitle. */
+"Trying-to-conceive tracking with variable cycle lengths" = "Essayer de concevoir un suivi avec des durées de cycle variables";
+
+/* Demo data scenario name. */
+"TTC / Fertility" = "TTC / Fertilité";
+
+/* Sample meal description used in demo data. */
+"Turkey chili with vegetables" = "Chili de dinde aux légumes";
+
+/* No comment provided by engineer. */
+"Type" = "Taper";
+
+/* No comment provided by engineer. */
+"Unable to load subscription options. Please check your connection and try again." = "Impossible de charger les options d'abonnement. Veuillez vérifier votre connexion et réessayer.";
+
+/* Paywall error shown when subscription products cannot be loaded. */
+"Unable to load subscriptions. Please try again." = "Impossible de charger les abonnements. Veuillez réessayer.";
+
+/* Paywall error shown when subscription status cannot be refreshed. */
+"Unable to refresh subscription status." = "Impossible d'actualiser l'état de l'abonnement.";
+
+/* Primary onboarding goal title. */
+"Understand my symptoms" = "Comprendre mes symptômes";
+
+/* No comment provided by engineer. */
+"Undo" = "Défaire";
+
+/* Fallback debug label when the billing mode is unavailable.
+Fallback debug label when the premium entitlement status is unavailable. */
+"Unknown" = "Inconnu";
+
+/* No comment provided by engineer. */
+"Unlock Premium" = "Débloquez Premium";
+
+/* No comment provided by engineer. */
+"Unlock this feature and more with CycleBalance Premium." = "Débloquez cette fonctionnalité et bien plus encore avec CycleBalance Premium.";
+
+/* Photo journal body area label. */
+"Upper Lip" = "Lèvre supérieure";
+
+/* No comment provided by engineer. */
+"Use recommended dose" = "Utiliser la dose recommandée";
+
+/* No comment provided by engineer. */
+"Value must be between 40 and 600 mg/dL" = "La valeur doit être comprise entre 40 et 600 mg/dL";
+
+/* Recovery suggestion for a missing RevenueCat offering. */
+"Verify RevenueCat has an offering with the configured identifier and mapped packages." = "Vérifiez que RevenueCat dispose d'une offre avec l'identifiant configuré et les packages mappés.";
+
+/* Recovery suggestion for a missing product configuration. */
+"Verify your products exist in App Store Connect and RevenueCat." = "Vérifiez que vos produits existent dans App Store Connect et RevenueCat.";
+
+/* No comment provided by engineer. */
+"Version" = "Version";
+
+/* Sample supplement name used in demo data. */
+"Vitamin D3" = "Vitamine D3";
+
+/* PCOS experience description in onboarding. */
+"We'll help you get started step by step." = "Nous vous aiderons à démarrer étape par étape.";
+
+/* No comment provided by engineer. */
+"We'll highlight these on your dashboard. You can always change this later." = "Nous les mettrons en évidence sur votre tableau de bord. Vous pourrez toujours modifier cela plus tard.";
+
+/* Sample demo insight body. */
+"Weeks with higher supplement adherence show lower cravings severity." = "Les semaines avec une plus grande observance des suppléments montrent une moindre sévérité des fringales.";
+
+/* No comment provided by engineer. */
+"Welcome" = "Accueillir";
+
+/* Accessibility label announcing the current welcome onboarding page. */
+"Welcome page %lld of %lld" = "Page d'accueil %lld sur %lld";
+
+/* No comment provided by engineer. */
+"What brings you to CycleBalance?" = "Qu'est-ce qui vous amène à CycleBalance ?";
+
+/* No comment provided by engineer. */
+"What did you eat?" = "Qu'as-tu mangé ?";
+
+/* Sample demo insight body. */
+"When stress level is 4+, energy logs trend lower the next day." = "Lorsque le niveau de stress est de 4+, les journaux d’énergie ont tendance à diminuer le lendemain.";
+
+/* No comment provided by engineer. */
+"Which symptoms matter most to you?" = "Quels symptômes vous importent le plus ?";
+
+/* CSV export boolean value. */
+"Yes" = "Oui";
+
+/* Onboarding tooltip introducing quick period logging for users focused on symptoms. */
+"You can quickly log your period here — even if that's not your main focus." = "Vous pouvez rapidement enregistrer vos règles ici, même si ce n'est pas votre objectif principal.";
+
+/* No comment provided by engineer. */
+"You have unsaved changes that will be lost." = "Vous avez des modifications non enregistrées qui seront perdues.";
+
+/* No comment provided by engineer. */
+"You have unsaved supplement details that will be lost." = "Vous avez des détails de supplément non enregistrés qui seront perdus.";
+
+/* No comment provided by engineer. */
+"You'll be reminded 2 days before your predicted period." = "Vous serez rappelé 2 jours avant la date prévue de vos règles.";
+
+/* No comment provided by engineer. */
+"You're all set!" = "Vous êtes prêt !";
+
+/* Insight content describing the energy trend across the tracking period. */
+"Your average energy level has gone from %@ to %@ (out of 5) over your tracking period. Average energy: %@/5." = "Votre niveau d'énergie moyen est passé de %@ à %@ (sur 5) au cours de votre période de suivi. Énergie moyenne : %@/5.";
+
+/* Insight content describing symptom severity trends over time. */
+"Your average symptom severity has been %@ recently (from %@ to %@ out of 5). %@" = "La gravité moyenne de vos symptômes a été de %@ récemment (de %@ à %@ sur 5). %@";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Your Calendar is in the second tab." = "Votre calendrier est dans le deuxième onglet.";
+
+/* Welcome onboarding page headline. */
+"Your Cycle, Your Way" = "Votre cycle, à votre façon";
+
+/* Generic onboarding completion message. */
+"Your CycleBalance journey starts now." = "Votre voyage CycleBalance commence maintenant.";
+
+/* Insight title for highly variable cycle lengths. */
+"Your cycles are irregular" = "Vos cycles sont irréguliers";
+
+/* Insight title for stable cycle lengths. */
+"Your cycles are regular" = "Vos cycles sont réguliers";
+
+/* Insight title for mildly irregular cycle lengths. */
+"Your cycles are somewhat irregular" = "Vos cycles sont quelque peu irréguliers";
+
+/* Average cycle length summary shown in the calendar and cycle detail screens. */
+"Your cycles average %@ days (range: %@)" = "Vos cycles durent en moyenne %@ jours (plage : %@)";
+
+/* Insight content for mildly irregular cycle lengths. */
+"Your cycles average %@ days but vary by about %@ days. Some variation is common with PCOS. Consistent tracking helps identify what influences your cycle length." = "Vos cycles durent en moyenne %@ jours, mais varient d'environ %@ jours. Certaines variations sont courantes avec PCOS. Un suivi cohérent permet d’identifier ce qui influence la durée de votre cycle.";
+
+/* Insight content for stable cycle lengths. */
+"Your cycles average %@ days with low variation. This consistency is a positive sign for tracking and planning." = "Vos cycles sont en moyenne de %@ jours avec une faible variation. Cette cohérence est un signe positif pour le suivi et la planification.";
+
+/* Insight content for highly variable cycle lengths. */
+"Your cycles average %@ days with significant variation (range: %lld-%lld days). Irregular cycles are common with PCOS. Consider discussing cycle-regulating strategies with your provider." = "Vos cycles sont en moyenne de %@ jours avec une variation significative (plage : %lld-%lld jours). Les cycles irréguliers sont courants avec PCOS. Pensez à discuter des stratégies de régulation du cycle avec votre fournisseur.";
+
+/* Sample demo insight title. */
+"Your cycles vary widely" = "Vos cycles varient considérablement";
+
+/* Insight title about a high proportion of low glycemic index meals. */
+"Your diet is mostly low-GI" = "Votre alimentation est généralement faible-GI";
+
+/* Insight title describing energy levels improving or declining. */
+"Your energy levels are %@" = "Votre niveau d'énergie est de %@";
+
+/* Tooltip shown when the app presents the user's first period prediction. */
+"Your first period estimate is here! It'll get more accurate as you log more cycles." = "Votre estimation de première période est ici ! Cela deviendra plus précis à mesure que vous enregistrerez plus de cycles.";
+
+/* Welcome onboarding page body. */
+"Your health data stays on your device. No accounts, no servers, no exceptions." = "Vos données de santé restent sur votre appareil. Pas de comptes, pas de serveurs, pas d'exceptions.";
+
+/* Insight content describing recent cycle length trends. */
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A %@ trend may be worth mentioning to your healthcare provider if it continues." = "Vos 3 derniers cycles ont duré en moyenne %@ jours, contre une moyenne globale de %@ jours. Une tendance %@ pourrait valoir la peine d’être mentionnée à votre médecin si elle se poursuit.";
+
+/* Insight content describing which cycle phase has the highest symptom severity. */
+"Your most intense symptoms occur during the %@ phase, with an average severity of %@/5. Common symptoms in this phase: %@." = "Vos symptômes les plus intenses surviennent pendant la phase %@, avec une gravité moyenne de %@/5. Symptômes courants dans cette phase : %@.";
+
+/* Notification body for a broader predicted period date range. */
+"Your period is expected between %@ and %@." = "Vos règles sont attendues entre le %@ et le %@.";
+
+/* Notification body for a narrow predicted period window. */
+"Your period is expected in about 2 days." = "Vos règles sont attendues dans environ 2 jours.";
+
+/* Prediction summary shown on the calendar and cycle detail screens. */
+"Your period may arrive between %@–%@" = "Vos règles peuvent arriver entre %@ et %@";
+
+/* Insight title describing recent cycle lengths becoming longer or shorter. */
+"Your recent cycles are getting %@" = "Vos cycles récents obtiennent %@";
+
+/* Insight content describing a supplement that does not show a clear symptom benefit. */
+"Your symptom severity doesn't appear lower on days you take %@ (taken: %@/5 vs missed: %@/5). Consider discussing this with your provider." = "La gravité de vos symptômes ne semble pas plus faible les jours où vous prenez %@ (pris : %@/5 vs manqué : %@/5). Pensez à en discuter avec votre fournisseur.";
+"Your recent cycles are getting longer" = "Vos cycles récents s'allongent";
+"Your recent cycles are getting shorter" = "Vos cycles récents raccourcissent";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A lengthening trend may be worth mentioning to your healthcare provider if it continues." = "Vos 3 derniers cycles ont duré en moyenne %@ jours, contre une moyenne globale de %@ jours. Si cela continue, une tendance à l'allongement mérite peut-être d'être mentionnée à votre professionnel de santé.";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A shortening trend may be worth mentioning to your healthcare provider if it continues." = "Vos 3 derniers cycles ont duré en moyenne %@ jours, contre une moyenne globale de %@ jours. Si cela continue, une tendance au raccourcissement mérite peut-être d'être mentionnée à votre professionnel de santé.";
+"Your energy levels are improving" = "Votre niveau d'énergie s'améliore";
+"Your energy levels are declining" = "Votre niveau d'énergie baisse";
+"Symptom severity is increasing" = "La gravité des symptômes augmente";
+"Symptom severity is decreasing" = "La gravité des symptômes diminue";
+"Your average symptom severity has been worsening recently (from %@ to %@ out of 5). Consider reviewing recent changes to your routine." = "La gravité moyenne de vos symptômes s'est aggravée récemment (de %@ à %@ sur 5). Pensez à revoir les changements récents dans votre routine.";
+"Your average symptom severity has been improving recently (from %@ to %@ out of 5). Keep up what you're doing!" = "La gravité moyenne de vos symptômes s'est améliorée récemment (de %@ à %@ sur 5). Continuez ainsi.";
+"Language changes apply immediately. Some system surfaces update the next time they appear." = "Les changements de langue s'appliquent immédiatement. Certaines surfaces système se mettront à jour la prochaine fois qu'elles s'afficheront.";
+"%lld inserted • %lld updated • %lld skipped" = "%lld insérés • %lld mis à jour • %lld ignorés";
+
+/* UX improvement: Cycle Detail tooltips */
+"tooltip.prediction_settings" = "Ces paramètres aident CycleBalance à prédire vos prochaines règles plus précisément en fonction de vos cycles uniques.";
+"tooltip.manual_override" = "Activez ceci si vous connaissez déjà votre durée de cycle habituelle – par exemple, grâce au suivi avec votre médecin. L'app utilisera cette valeur au lieu de la calculer automatiquement.";
+"tooltip.ovulation_status" = "Inconnu : Par défaut – l'app prédit sans supposer de schéma d'ovulation.\n\nOvulatoire : Choisissez si vous suivez l'ovulation avec des OPK ou la TBC.\n\nAnovulatoire : Choisissez si vos cycles n'incluent généralement pas d'ovulation, ce qui est courant avec le SOPK.";
+"tooltip.cycle_statistics" = "Un aperçu de votre historique de cycles. 'Moyenne' est votre durée de cycle typique, 'Plage' montre le plus court au plus long, et 'Cycles' est le nombre de cycles complets suivis.";
+
+/* UX improvement: Display settings */
+"Display" = "Affichage";
+"Show Scientific Details" = "Afficher les détails scientifiques";
+"Display confidence percentages, sample sizes, and statistical notation on insight cards." = "Afficher les pourcentages de confiance, tailles d'échantillon et notation statistique sur les cartes d'insights.";
+
+/* UX improvement: Friendly confidence labels */
+"Strong confidence" = "Confiance élevée";
+"Moderate confidence" = "Confiance modérée";
+"Growing confidence" = "Confiance croissante";
+
+/* UX improvement: Friendly data basis labels */
+"Based on %lld cycles" = "Basé sur %lld cycles";
+"Based on initial data" = "Basé sur les données initiales";
+"Based on %lld weeks of data" = "Basé sur %lld semaines de données";
+
+/* UX improvement: Rewritten analyzer content strings */
+"Your average symptom severity was %@/5 on days you took %@, compared to %@/5 on days you missed it — symptoms were %@ when you took it." = "Votre sévérité moyenne des symptômes était de %@/5 les jours où vous avez pris %@, contre %@/5 les jours sans – les symptômes étaient %@ quand vous le preniez.";
+"Your cycles were about %@ days %@ in months when you consistently took %@ (%@ vs %@ days on average)." = "Vos cycles étaient d'environ %@ jours %@ les mois où vous avez pris %@ régulièrement (%@ vs %@ jours en moyenne).";
+"The day after high-GI meals, your symptom severity averaged %@/5, compared to %@/5 after low-GI days. Choosing lower-GI options may help reduce next-day symptoms." = "Le lendemain de repas à IG élevé, votre sévérité des symptômes était en moyenne de %@/5, contre %@/5 après des jours à IG bas. Choisir des options à IG bas peut aider à réduire les symptômes le lendemain.";
+"About %@ after high-GI meals, breakout severity averaged %@/5, compared to %@/5 after low-GI days. Diet changes may help with skin symptoms." = "Environ %@ après des repas à IG élevé, la sévérité des éruptions était en moyenne de %@/5, contre %@/5 après des jours à IG bas. Des changements alimentaires peuvent aider avec les symptômes cutanés.";
+"%lld%% of your logged meals were high GI. With PCOS, reducing high-GI meals may help manage blood sugar and symptoms." = "%lld%% de vos repas enregistrés étaient à IG élevé. Avec le SOPK, réduire les repas à IG élevé peut aider à gérer la glycémie et les symptômes.";
+"%lld%% of your logged meals were low GI — this is a great pattern for managing PCOS symptoms." = "%lld%% de vos repas enregistrés étaient à IG bas – c'est un excellent schéma pour gérer les symptômes du SOPK.";
+
+/* Narrative insight content — friendly versions */
+"A good portion of your recent meals have been on the higher-GI side. With PCOS, even small shifts toward balanced meals can make a difference for blood sugar and how you feel." = "Une bonne partie de vos repas récents étaient plutôt à IG élevé. Avec le SOPK, même de petits changements vers des repas équilibrés peuvent faire la différence pour la glycémie et votre bien-être.";
+
+"In months when you were consistent with %@, your cycles ran a bit longer. This isn't necessarily a concern — it's worth discussing with your provider if it continues." = "Les mois où vous avez été régulière avec %@, vos cycles étaient un peu plus longs. Ce n'est pas nécessairement inquiétant — cela vaut la peine d'en discuter avec votre médecin si cela continue.";
+
+"In months when you were consistent with %@, your cycles tended to be shorter and more predictable. Keeping up a regular routine may help your cycle find its rhythm." = "Les mois où vous avez été régulière avec %@, vos cycles étaient généralement plus courts et plus prévisibles. Maintenir une routine régulière peut aider votre cycle à trouver son rythme.";
+
+"Most of your recent meals have been low-GI — that's a really positive pattern for managing PCOS. Keep it up!" = "La plupart de vos repas récents étaient à IG bas — c'est un modèle vraiment positif pour gérer le SOPK. Continuez comme ça !";
+
+"On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. Staying consistent could be worth the effort." = "Les jours où vous avez pris %@, vos symptômes avaient tendance à être %@ plus légers que les jours où vous l'avez oublié. Rester régulière pourrait valoir l'effort.";
+
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "Au cours de la prochaine semaine, vos symptômes pourraient être %@ dans l'ensemble. Les facteurs qui semblent les plus importants en ce moment sont %@ — de petits ajustements dans ces domaines pourraient aider.";
+
+"There seems to be a connection between high-GI meals and skin breakouts a couple of days later. Adjusting what you eat could help your skin feel calmer." = "Il semble y avoir un lien entre les repas à IG élevé et les éruptions cutanées quelques jours plus tard. Ajuster votre alimentation pourrait aider votre peau à se calmer.";
+
+"These two symptoms seem to travel together — they show up on the same days quite often. Mentioning this to your provider could help find treatments that address both." = "Ces deux symptômes semblent aller ensemble — ils apparaissent assez souvent les mêmes jours. En parler à votre médecin pourrait aider à trouver des traitements qui ciblent les deux.";
+
+"Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Even small improvements in sleep can make a real difference with PCOS." = "Votre corps semble réagir au sommeil — après des nuits plus courtes, vos symptômes ont tendance à être %@ pires. Même de petites améliorations du sommeil peuvent faire une vraie différence avec le SOPK.";
+
+"Your cycles have been quite variable — sometimes shorter, sometimes longer. This is one of the most common PCOS patterns, and it's worth discussing with your healthcare provider to explore what might help." = "Vos cycles ont été assez variables — parfois plus courts, parfois plus longs. C'est l'un des schémas les plus courants du SOPK, et il vaut la peine d'en discuter avec votre médecin pour explorer ce qui pourrait aider.";
+
+"Your cycles tend to come about every %@ days, though they can shift by a few days. This kind of variation is really common with PCOS, and tracking helps spot what's behind it." = "Vos cycles arrivent généralement environ tous les %@ jours, même s'ils peuvent varier de quelques jours. Ce type de variation est très courant avec le SOPK, et le suivi aide à repérer ce qui en est la cause.";
+
+"Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted." = "Votre énergie a baissé récemment. Il pourrait être utile d'examiner les changements dans votre sommeil, activité ou routine pour voir ce qui a changé.";
+
+"Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!" = "Votre énergie est en hausse récemment — ce que vous faites semble fonctionner. Continuez comme ça !";
+
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "Votre prochain cycle durera probablement environ %lld jours, à quelques jours près. Nous affinerons cette estimation au fur et à mesure que vous enregistrez plus de cycles.";
+
+"Your symptoms didn't seem to improve on days you took %@. This doesn't necessarily mean it's not helping — it may take longer, or other factors may be at play." = "Vos symptômes ne semblaient pas s'améliorer les jours où vous avez pris %@. Cela ne signifie pas nécessairement que ça n'aide pas — cela peut prendre plus de temps, ou d'autres facteurs peuvent être en jeu.";
+
+"Your symptoms have been easing up recently — whatever you've been doing seems to be working. Keep going!" = "Vos symptômes se sont atténués récemment — ce que vous faites semble fonctionner. Continuez !";
+
+"Your symptoms have been trending a bit harder recently. It might help to think about what's changed — sleep, stress, diet, or activity — and see if something stands out." = "Vos symptômes se sont un peu aggravés récemment. Il pourrait être utile de réfléchir à ce qui a changé — sommeil, stress, alimentation ou activité — et voir si quelque chose ressort.";
+
+"Your symptoms tend to be stronger around %@ and calmer around %@. Planning ahead — adjusting sleep, diet, or supplements before tougher months — could help you feel more prepared." = "Vos symptômes ont tendance à être plus forts autour de %@ et plus calmes autour de %@. Planifier à l'avance — ajuster le sommeil, l'alimentation ou les suppléments avant les mois plus difficiles — pourrait vous aider à vous sentir mieux préparée.";
+
+"Your symptoms tend to be strongest during your %@ phase — especially %@. Knowing this pattern means you can plan gentler days or extra self-care during that time." = "Vos symptômes ont tendance à être les plus forts pendant votre phase %@ — surtout %@. Connaître ce schéma signifie que vous pouvez planifier des journées plus douces ou des soins supplémentaires pendant cette période.";
+
+"Your symptoms tend to feel %@ worse the day after meals that spike blood sugar. Choosing more balanced options when you can might help you feel better the next day." = "Vos symptômes ont tendance à être %@ pires le lendemain de repas qui font monter la glycémie. Choisir des options plus équilibrées quand vous le pouvez pourrait vous aider à vous sentir mieux le lendemain.";
+
+/* Narrative helpers — qualitative words */
+"mild" = "légers";
+"light" = "légers";
+"moderate" = "modérés";
+"noticeable" = "perceptibles";
+"significant" = "importants";
+"slightly" = "légèrement";
+"noticeably" = "sensiblement";
+"meaningfully" = "nettement";
+"significantly" = "significativement";
+
+/* Cycle prediction qualitative labels */
+"Strong estimate" = "Estimation fiable";
+"Moderate estimate" = "Estimation modérée";
+"Rough estimate" = "Estimation approximative";
+"Borderline" = "Limite";
+"flow" = "flux";
+"today" = "aujourd'hui";
+"period" = "règles";
+"predicted period" = "règles prévues";
+"No flow" = "Aucun saignement";
+"Very light, occasional drops" = "Très léger, gouttes occasionnelles";
+"Light flow, minimal pad or tampon use" = "Flux léger, peu de serviettes ou tampons";
+"Moderate, regular pad or tampon use" = "Flux modéré, utilisation régulière de serviettes ou tampons";
+"Heavy flow, frequent pad or tampon changes" = "Flux abondant, changements fréquents de serviettes ou tampons";
+"Language" = "Langue";
+"App Language" = "Langue de l’app";
+"FSA/HSA Tools" = "Outils FSA/HSA";
+"Download CSV Template" = "Télécharger le modèle CSV";
+"Share CSV Template" = "Partager le modèle CSV";
+"Import External Data (CSV)" = "Importer des données externes (CSV)";
+"Generate a Letter of Medical Necessity for FSA/HSA reimbursement of PCOS-related wellness expenses." = "Générez une lettre de nécessité médicale pour le remboursement FSA/HSA des dépenses de bien-être liées au SOPK.";
+"An unknown error occurred." = "Une erreur inconnue s’est produite.";
+"Get in Touch with the Dev Team ⚡!" = "Contacter l’équipe de développement ⚡ !";
+"Jump to month, %@" = "Aller au mois, %@";
+"Double tap to open month and year picker" = "Touchez deux fois pour ouvrir le sélecteur de mois et d’année";
+"7-day symptom severity forecast" = "Prévision de la sévérité des symptômes sur 7 jours";
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "Au cours de la semaine à venir, vos symptômes pourraient sembler %@ dans l’ensemble. Les facteurs qui paraissent compter le plus en ce moment sont %@. De petits ajustements dans ces domaines pourraient aider.";
+"Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Top weighted drivers: %@. Forecast confidence: %lld%%." = "La sévérité prédite des symptômes pour les 7 prochains jours est en moyenne de %@/5 (intervalle %@-%@/5). Principaux facteurs pondérés : %@. Confiance de la prévision : %lld%%.";
+"Cycle length forecast range" = "Plage de prévision de la durée du cycle";
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "Votre prochain cycle durera probablement environ %lld jours, à quelques jours près. Nous continuerons d’affiner cette estimation à mesure que vous enregistrez davantage de cycles.";
+"Predicted next cycle length is %lld days (range %lld-%lld days, %lld%% confidence)." = "La durée prédite de votre prochain cycle est de %lld jours (intervalle %lld-%lld jours, %lld%% de confiance).";
+
+/* No comment provided by engineer. */
+"Prediction Settings" = "Paramètres de prédiction";
+
+/* No comment provided by engineer. */
+"Manual cycle length override" = "Remplacement manuel de la durée du cycle";
+
+/* No comment provided by engineer. */
+"Expected cycle length: %lld days" = "Durée de cycle prévue : %lld jours";
+
+/* No comment provided by engineer. */
+"Ovulation status" = "Statut d'ovulation";
+
+/* No comment provided by engineer. */
+"Apply Settings" = "Appliquer les paramètres";
+
+/* No comment provided by engineer. */
+"Free tier shows cycle history for the last 30 days." = "La version gratuite affiche l'historique du cycle des 30 derniers jours.";
+
+/* No comment provided by engineer. */
+"Range" = "Plage";
+
+/* No comment provided by engineer. */
+"Month" = "Mois";
+
+/* No comment provided by engineer. */
+"Year" = "Année";
+
+/* No comment provided by engineer. */
+"Go to Month" = "Aller au mois";
+
+/* No comment provided by engineer. */
+"Jump to Month" = "Aller au mois";
+
+/* No comment provided by engineer. */
+"Generating insights..." = "Génération des analyses...";
+
+/* No comment provided by engineer. */
+"Upgrade" = "Mettre à niveau";
+
+/* No comment provided by engineer. */
+"Symptom History" = "Historique des symptômes";
+
+/* No comment provided by engineer. */
+"Use recommended" = "Utiliser la recommandation";
+
+/* No comment provided by engineer. */
+"Which symptoms matter most to you?" = "Quels symptômes sont les plus importants pour vous ?";
+
+/* No comment provided by engineer. */
+"We'll highlight these on your dashboard. You can always change this later." = "Nous les mettrons en évidence sur votre tableau de bord. Vous pourrez toujours modifier cela plus tard.";
+
+/* No comment provided by engineer. */
+"Spotting duration" = "Durée du spotting";
+
+/* No comment provided by engineer. */
+"Brown spotting" = "Spotting brun";
+
+/* No comment provided by engineer. */
+"Pink spotting" = "Spotting rose";
+
+/* No comment provided by engineer. */
+"Mild cramps" = "Crampes légères";
+
+/* No comment provided by engineer. */
+"Mood changes" = "Changements d'humeur";
+
+/* No comment provided by engineer. */
+"After exercise" = "Après l'exercice";
+
+/* No comment provided by engineer. */
+"Small clots" = "Petits caillots";
+
+/* No comment provided by engineer. */
+"Low energy" = "Faible énergie";
+
+/* No comment provided by engineer. */
+"Clotting" = "Caillots";
+
+/* No comment provided by engineer. */
+"Moderate cramps" = "Crampes modérées";
+
+/* No comment provided by engineer. */
+"Back pain" = "Mal de dos";
+
+/* No comment provided by engineer. */
+"Heavy clotting" = "Caillots importants";
+
+/* No comment provided by engineer. */
+"Severe cramps" = "Crampes sévères";
+
+/* No comment provided by engineer. */
+"Frequent product change" = "Changement fréquent de protection";
+
+/* No comment provided by engineer. */
+"Dizziness" = "Vertiges";
+
+/* No comment provided by engineer. */
+"Anovulatory" = "Anovulatoire";
+
+/* No comment provided by engineer. */
+"Demo Data Import" = "Import de données de démo";
+
+/* No comment provided by engineer. */
+"External CSV Import" = "Import CSV externe";
+
+/* No comment provided by engineer. */
+"higher" = "plus élevé";
+
+/* No comment provided by engineer. */
+"JSON Backup Import" = "Import de sauvegarde JSON";
+
+/* No comment provided by engineer. */
+"longer" = "plus long";
+
+/* No comment provided by engineer. */
+"lower" = "plus bas";
+
+/* No comment provided by engineer. */
+"Predicted period" = "Règles prévues";
+
+/* No comment provided by engineer. */
+"shorter" = "plus court";
+
+/* No comment provided by engineer. */
+"System Default" = "Paramètre système";
+
+/* Prediction primary text for uncertain state. */
+"Your next period is harder to estimate right now." = "Vos prochaines règles sont plus difficiles à estimer actuellement.";
+
+/* Prediction secondary text for actionable state. */
+"%lld%% confidence • %lld-day window" = "%lld%% de confiance • fenêtre de %lld jours";
+
+/* Prediction explanation for wide window. */
+"Recent cycle variability is creating a broad %lld-day estimate." = "La variabilité récente du cycle crée une estimation large de %lld jours.";
+
+/* Prediction explanation for low confidence. */
+"Forecast confidence is %lld%% right now." = "La confiance de la prévision est de %lld%% actuellement.";
+
+/* Prediction explanation for wide window and low confidence. */
+"Recent cycle variability is creating a broad %lld-day estimate, and forecast confidence is %lld%%." = "La variabilité récente du cycle crée une estimation large de %lld jours et la confiance de la prévision est de %lld%%.";
+
+/* Prediction suffix text. */
+"Keep logging period starts and symptoms to narrow future estimates." = "Continuez à enregistrer vos débuts de règles et symptômes pour affiner les estimations futures.";
+"CSV Import Guide" = "Guide d'import CSV";
+"Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank." = "Utilisez le modèle CSV pour les imports. Chaque ligne doit définir record_type et les colonnes non utilisées peuvent rester vides.";
+"Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here." = "Export Data (CSV) crée un rapport lisible. Import External Data (CSV) attend les colonnes du modèle affichées ici.";
+"Supported Record Types" = "Types d'enregistrements pris en charge";
+"Format Rules" = "Règles de format";
+"Required fields" = "Champs obligatoires";
+"Optional fields" = "Champs facultatifs";
+"Accepted values" = "Valeurs acceptées";
+"date uses YYYY-MM-DD" = "date utilise YYYY-MM-DD";
+"timestamp uses ISO8601" = "timestamp utilise ISO8601";
+"time_taken uses HH:mm" = "time_taken utilise HH:mm";
+"taken uses true or false" = "taken utilise true ou false";
+"severity, stress_level, and energy_level use 1-5" = "severity, stress_level et energy_level utilisent 1-5";
+"daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz." = "daily_log nécessite au moins un de ces champs : weight, sleep_hours, active_minutes, stress_level, energy_level ou water_oz.";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "Impact glycémique";
+
+/* No comment provided by engineer. */
+"Macros" = "Macronutriments";
+
+/* No comment provided by engineer. */
+"Carbs" = "Glucides";
+
+/* No comment provided by engineer. */
+"Protein" = "Protéines";
+
+/* No comment provided by engineer. */
+"Fat" = "Lipides";
+
+/* No comment provided by engineer. */
+"Post-Meal Feedback" = "Retour après le repas";
+
+/* No comment provided by engineer. */
+"Symptom severity" = "Sévérité du symptôme";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "Aucun repas enregistré";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "Les repas enregistrés apparaîtront ici.";
+
+/* No comment provided by engineer. */
+"Post-meal symptom: %lld/5" = "Symptôme après le repas : %lld/5";
+
+/* No comment provided by engineer. */
+"Low" = "Bas";
+
+/* No comment provided by engineer. */
+"Med" = "Moy";
+
+/* No comment provided by engineer. */
+"High" = "Élevé";
+
+/* No comment provided by engineer. */
+"Meal entry deleted" = "Entrée de repas supprimée";
+
+"CycleBalance Premium Monthly" = "CycleBalance Premium Mensuel";
+"CycleBalance Premium Yearly" = "CycleBalance Premium Annuel";
+"Basic cycle tracking" = "Suivi du cycle de base";
+"Symptom logging" = "Suivi des symptômes";
+"Calendar view" = "Vue calendrier";
+"Insights engine" = "Moteur d'insights";
+"PDF reports" = "Rapports PDF";
+"Charts & trends" = "Graphiques et tendances";
+"HealthKit sync" = "Synchronisation HealthKit";
+"Priority support" = "Support prioritaire";
+"Loading Premium Options..." = "Chargement des options Premium...";
+"Try Again" = "Réessayer";
+
+/* Pregnancy and postpartum surfaces. */
+"Cycle Recovery" = "Reprise du cycle";
+"Cycle tracking and predictions are paused while pregnancy mode is active. Your previous cycle data is safe and will be used to improve predictions once you return to normal tracking." = "Le suivi du cycle et les prévisions sont mis en pause tant que le mode grossesse est actif. Vos données de cycle précédentes sont conservées et seront utilisées pour améliorer les prévisions lorsque vous reviendrez au suivi normal.";
+"Cycle tracking will be paused and your current cycle will be closed. You can return to cycle tracking from Settings." = "Le suivi du cycle sera mis en pause et votre cycle actuel sera clôturé. Vous pourrez revenir au suivi du cycle depuis Réglages.";
+"Cycle tracking will resume. Your pregnancy data will be preserved." = "Le suivi du cycle reprendra. Vos données de grossesse seront conservées.";
+"Delivery" = "Accouchement";
+"Due date" = "Date prévue d'accouchement";
+"End Pregnancy Mode" = "Quitter le mode grossesse";
+"End Pregnancy Mode?" = "Quitter le mode grossesse ?";
+"End Reason" = "Motif de fin";
+"Enter Pregnancy Mode" = "Passer en mode grossesse";
+"Enter Pregnancy Mode?" = "Passer en mode grossesse ?";
+"Estimated Due Date" = "Date prévue d'accouchement";
+"I have an estimated due date" = "J'ai une date prévue d'accouchement";
+"Log your first period to resume cycle tracking." = "Enregistrez vos premières règles pour reprendre le suivi du cycle.";
+"Not active" = "Inactif";
+"Other" = "Autre";
+"Postpartum" = "Post-partum";
+"Postpartum — Day %lld" = "Post-partum — Jour %lld";
+"Pregnancy" = "Grossesse";
+"Pregnancy & Postpartum" = "Grossesse et post-partum";
+"Pregnancy Mode" = "Mode grossesse";
+"Pregnancy Start Date" = "Date de début de grossesse";
+"Pregnancy loss" = "Perte de grossesse";
+"Reason" = "Motif";
+"Return to Normal Tracking" = "Revenir au suivi normal";
+"Start date" = "Date de début";
+"This will pause cycle tracking. You can return to cycle tracking anytime from Settings." = "Cela mettra le suivi du cycle en pause. Vous pourrez revenir au suivi du cycle à tout moment depuis Réglages.";
+"Undo Activation" = "Annuler l'activation";
+"Week %lld" = "Semaine %lld";
+"Week %lld • Trimester %lld" = "Semaine %lld • Trimestre %lld";
+"We're learning your new cycle pattern. Keep logging period starts and we'll have an estimate for you soon." = "Nous apprenons votre nouveau rythme de cycle. Continuez à enregistrer le début de vos règles et nous pourrons bientôt vous proposer une estimation.";
+"Your cycles may be irregular as your body recovers. Log your first period when it arrives to resume cycle tracking. CycleBalance will adapt its predictions as your cycles stabilize." = "Vos cycles peuvent être irréguliers pendant que votre corps récupère. Enregistrez vos premières règles lorsqu'elles arrivent pour reprendre le suivi du cycle. CycleBalance adaptera ses prévisions à mesure que vos cycles se stabilisent.";
+"Pregnancy mode pauses cycle tracking and predictions while you're expecting. Your existing cycle data is preserved. When you're ready, postpartum mode helps you ease back into tracking as your cycles return." = "Le mode grossesse met en pause le suivi du cycle et les prévisions pendant votre grossesse. Vos données de cycle existantes sont conservées. Quand vous serez prête, le mode post-partum vous aidera à reprendre progressivement le suivi à mesure que vos cycles reviennent.";
+
+/* App Store onboarding localization remediation. */
+"CycleBalance will help you find your rhythm" = "CycleBalance vous aidera à retrouver votre rythme";
+"CycleBalance will help you decode your symptoms" = "CycleBalance vous aidera à mieux comprendre vos symptômes";
+"CycleBalance is ready to help" = "CycleBalance est prête à vous aider";
+"Starting fresh is the hardest part — we'll guide you step by step." = "Commencer de zéro est le plus difficile. Nous vous guiderons pas à pas.";
+"You already know your body. Let's make your data work harder." = "Vous connaissez déjà votre corps. Faisons travailler vos données encore mieux.";
+"Tracking is a powerful first step toward answers." = "Le suivi est un premier pas puissant vers des réponses.";
+"Your personalized tracking starts now." = "Votre suivi personnalisé commence maintenant.";
+"68% of recently diagnosed users say tracking helped them feel more in control within 30 days." = "68 % des utilisatrices récemment diagnostiquées disent que le suivi les a aidées à se sentir davantage en contrôle en 30 jours.";
+"Women who track consistently report 40% better conversations with their doctors." = "Les femmes qui suivent régulièrement leurs données rapportent des échanges 40 % plus utiles avec leur médecin.";
+"3 in 4 women exploring PCOS say symptom tracking gave them clarity before their next appointment." = "3 femmes sur 4 en train d'explorer le PCOS disent que le suivi des symptômes leur a apporté de la clarté avant leur prochain rendez-vous.";
+"Join 10,000+ women tracking their PCOS journey with CycleBalance." = "Rejoignez plus de 10 000 femmes qui suivent leur parcours PCOS avec CycleBalance.";
+"Perfect for spotting patterns in your mood and energy levels." = "Parfait pour repérer les tendances de votre humeur et de votre énergie.";
+"Ideal for tracking how pain and cramps relate to your cycle." = "Idéal pour suivre comment les douleurs et les crampes évoluent avec votre cycle.";
+"Great for tracking how your skin and hair change across your cycle." = "Parfait pour suivre l'évolution de votre peau et de vos cheveux au fil du cycle.";
+"Perfect for spotting trends in your bloating and cravings." = "Parfait pour repérer les tendances de vos ballonnements et envies.";
+"Smart Cycle Calendar" = "Calendrier intelligent du cycle";
+"See your cycle at a glance. CycleBalance learns your pattern — even when it's irregular." = "Visualisez votre cycle en un coup d'œil. CycleBalance apprend votre rythme, même s'il est irrégulier.";
+"Predictions That Adapt" = "Des prévisions qui s'adaptent";
+"Our predictions improve with every log. No 28-day assumptions." = "Nos prévisions s'améliorent à chaque saisie. Sans hypothèse de cycle de 28 jours.";
+"Daily Symptom Tracking" = "Suivi quotidien des symptômes";
+"Log symptoms in seconds. We'll find the patterns you can't see." = "Enregistrez vos symptômes en quelques secondes. Nous trouverons les schémas qui vous échappent.";
+"Cycle–Symptom Insights" = "Analyses cycle-symptômes";
+"Discover how your symptoms relate to your cycle phase." = "Découvrez comment vos symptômes se relient aux phases de votre cycle.";
+"Your Personal Health Hub" = "Votre espace santé personnel";
+"Track periods, symptoms, and more — all in one private place." = "Suivez vos règles, vos symptômes et plus encore, dans un seul espace privé.";
+"Cycle calendar" = "Calendrier du cycle";
+"See your cycle history at a glance" = "Visualisez l'historique de votre cycle en un coup d'œil";
+"Period predictions" = "Prévisions des règles";
+"Smarter forecasts after each cycle" = "Des prévisions plus intelligentes après chaque cycle";
+"Symptom dashboard" = "Tableau de bord des symptômes";
+"All your symptoms organized in one place" = "Tous vos symptômes organisés au même endroit";
+"Pattern insights" = "Analyses des tendances";
+"Connections you can't spot on your own" = "Des liens difficiles à voir seule";
+"Personalized tracking" = "Suivi personnalisé";
+"A dashboard built around your needs" = "Un tableau de bord construit autour de vos besoins";
+"Highlighted on your dashboard" = "Mis en avant dans votre tableau de bord";
+"Your plan is set — let's get your first data point." = "Votre plan est prêt. Créons votre premier point de données.";
+"Your insights start with today's first log." = "Vos analyses commencent avec la première saisie d'aujourd'hui.";
+"Let's capture your first entry." = "Enregistrons votre première entrée.";
+"We're a small team building this for you — find \"Share Feedback\" in Settings anytime." = "Nous sommes une petite équipe qui construit cela pour vous. Vous trouverez « Partager un avis » dans Réglages à tout moment.";
+"Everything's set. Log when you're ready — CycleBalance adapts to your rhythm, not the other way around." = "Tout est prêt. Enregistrez quand vous voulez : CycleBalance s'adapte à votre rythme, pas l'inverse.";
+"Your tracking journey starts now. You're part of a growing community of women making sense of their symptoms." = "Votre parcours de suivi commence maintenant. Vous faites partie d'une communauté grandissante de femmes qui donnent du sens à leurs symptômes.";
+"You're part of a growing community of women taking control of their PCOS. We're glad you're here." = "Vous faites partie d'une communauté grandissante de femmes qui reprennent la main sur leur PCOS. Nous sommes ravis de vous accueillir.";
+"Help CycleBalance work better" = "Aidez CycleBalance à mieux vous servir";
+"These permissions are optional. You can change them anytime in Settings." = "Ces autorisations sont facultatives. Vous pouvez les modifier à tout moment dans Réglages.";
+"Your data stays on your device. No accounts, no servers, no exceptions." = "Vos données restent sur votre appareil. Aucun compte, aucun serveur, aucune exception.";
+"Camera" = "Appareil photo";
+"Take photos for your hair & skin journal to track changes over time." = "Prenez des photos pour votre journal cheveux & peau afin de suivre les changements dans le temps.";
+"See skin and hair changes side by side over months." = "Comparez côte à côte l'évolution de la peau et des cheveux au fil des mois.";
+"Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights." = "Synchronisez poids, sommeil, pas, glycémie, activité et fréquence cardiaque pour des analyses plus riches.";
+"Get deeper insights when health data is connected." = "Obtenez des analyses plus approfondies en connectant vos données de santé.";
+"Skip for now" = "Passer pour le moment";
+"Support our mission" = "Soutenez notre mission";
+"We're a small team dedicated to giving women with PCOS actionable insights from their data, to manage and improve their lives. A rating on the App Store helps others find us." = "Nous sommes une petite équipe déterminée à offrir aux femmes atteintes de PCOS des analyses concrètes à partir de leurs données, pour mieux gérer et améliorer leur quotidien. Une note sur l'App Store aide d'autres personnes à nous trouver.";
+"Leave a Quick Review" = "Laisser un avis rapide";
+"Maybe later" = "Peut-être plus tard";
+"I finally understand why I feel different on certain days. This app connected the dots." = "Je comprends enfin pourquoi je me sens différente certains jours. Cette app a relié les points.";
+"Recently Diagnosed" = "Diagnostic récent";
+"After 3 months of logging, I brought my data to my doctor and we adjusted my treatment plan together." = "Après 3 mois de suivi, j'ai apporté mes données à mon médecin et nous avons ajusté mon traitement ensemble.";
+"Symptom Tracking" = "Suivi des symptômes";
+"I was skeptical, but seeing my symptom patterns mapped to my cycle was a game-changer." = "J'étais sceptique, mais voir mes schémas de symptômes reliés à mon cycle a tout changé.";
+"Pattern Recognition" = "Repérage des tendances";
+"What women are saying" = "Ce qu'en disent les femmes";
+"Built and tested with 200+ women in our beta community" = "Conçue et testée avec plus de 200 femmes de notre communauté bêta";
+"Built to give women with PCOS the insights they deserve." = "Conçue pour offrir aux femmes atteintes de PCOS les analyses qu'elles méritent.";
+"Purchase is pending. Approve the transaction in the StoreKit session or App Store account and try refreshing premium status again." = "L'achat est en attente. Approuvez la transaction dans la session StoreKit ou dans votre compte App Store, puis réessayez d'actualiser le statut Premium.";
+"%lld day" = "%lld jour";
+"%lld week" = "%lld semaine";
+"%lld weeks" = "%lld semaines";
+"%lld month" = "%lld mois";
+"%lld months" = "%lld mois";
+"%lld year" = "%lld an";
+"%lld years" = "%lld ans";
+"increase" = "augmentation";
+"decrease" = "diminution";
+"Import Failed" = "Échec de l'importation";
+"Import Completed with Issues" = "Importation terminée avec des problèmes";
+"Import Counts" = "Totaux d'importation";
+"Inserted" = "Ajoutés";
+"Updated" = "Mis à jour";
+"Skipped" = "Ignorés";
+"Rejected" = "Rejetés";
+"Example Issues" = "Exemples de problèmes";
+"And %lld more issues..." = "Et %lld autres problèmes...";
+"No records were imported because the backup could not be validated." = "Aucun enregistrement n'a été importé car la sauvegarde n'a pas pu être validée.";
+"No records were imported because the CSV file could not be validated." = "Aucun enregistrement n'a été importé car le fichier CSV n'a pas pu être validé.";
+"No records were imported. %lld records need attention." = "Aucun enregistrement n'a été importé. %lld enregistrements nécessitent une attention particulière.";
+"%lld records were applied. %lld records need attention." = "%lld enregistrements ont été appliqués. %lld enregistrements nécessitent une attention particulière.";
+"%lld inserted • %lld updated • %lld skipped • %lld rejected" = "%lld ajoutés • %lld mis à jour • %lld ignorés • %lld rejetés";
+"%lld imported • %lld rejected • schema v%lld" = "%lld importés • %lld rejetés • schéma v%lld";
+"How this works" = "Comment cela fonctionne";
+"What the confidence means" = "Ce que signifie le niveau de confiance";
+"Research context" = "Contexte scientifique";
+"Sources" = "Références";
+"View Source" = "Voir la source";
+"Evidence strength" = "Niveau de preuve";
+"PCOS-studied" = "Étudié dans le SOPK";
+"Mixed evidence" = "Données mitigées";
+"Emerging evidence" = "Données émergentes";
+"Limited evidence" = "Données limitées";
+"General guidance" = "Recommandation générale";
+"Insights are based on your personal data and on-device analysis. They are not medical advice." = "Les analyses sont basées sur vos données personnelles et une analyse sur l’appareil. Elles ne constituent pas un avis médical.";
+"How to read your insights" = "Comment lire vos analyses";
+"Built from your logs" = "Basé sur vos suivis";
+"Each insight comes from patterns in the cycle, symptom, meal, supplement, sleep, and daily data you track on this device." = "Chaque analyse provient de tendances repérées dans les données de cycle, de symptômes, de repas, de compléments, de sommeil et de suivi quotidien que vous enregistrez sur cet appareil.";
+"Confidence shows pattern strength" = "Le niveau de confiance montre la solidité du schéma";
+"Higher confidence usually means the app has seen the same pattern more than once in your recent history." = "Un niveau de confiance plus élevé signifie généralement que l’app a observé le même schéma plus d’une fois dans votre historique récent.";
+"Research adds context" = "La recherche apporte du contexte";
+"Research helps explain why a pattern may matter, but it does not prove that a study finding caused your specific result." = "La recherche aide à expliquer pourquoi un schéma peut être important, mais elle ne prouve pas qu’un résultat d’étude a causé votre résultat précis.";
+"Why you're seeing this" = "Pourquoi vous voyez cela";
+"Evidence overview" = "Vue d’ensemble des preuves";
+"References" = "Références";
+"Forecast cards compare your recent cycle, symptom, meal, supplement, blood sugar, and daily-log history on this device to estimate a likely range. If the app does not have enough recent or consistent data, it stays cautious or skips the forecast." = "Les cartes de prévision comparent votre historique récent de cycle, de symptômes, de repas, de compléments, de glycémie et de suivi quotidien sur cet appareil afin d’estimer une plage probable. Si l’app ne dispose pas de données assez récentes ou cohérentes, elle reste prudente ou n’affiche pas de prévision.";
+"This forecast is driven mostly by your own logging history rather than a specific external study, so it should be treated as a personalized estimate, not a medical prediction." = "Cette prévision repose surtout sur votre propre historique de suivi plutôt que sur une étude externe précise. Elle doit donc être comprise comme une estimation personnalisée, et non comme une prédiction médicale.";
+"This card compares the length and variability of your completed, non-predicted cycles logged on this device." = "Cette carte compare la durée et la variabilité de vos cycles terminés, non prédits, enregistrés sur cet appareil.";
+"PCOS guidelines and review papers treat cycle regularity as an important signal, but this card is still describing your own logged cycle pattern rather than making a diagnosis." = "Les recommandations et revues sur le SOPK considèrent la régularité du cycle comme un signal important, mais cette carte décrit toujours votre propre schéma de cycle enregistré et ne pose pas de diagnostic.";
+"This card looks for symptom timing, clustering, and trend changes across the symptom days and cycle phases you have logged." = "Cette carte recherche le moment d’apparition des symptômes, leurs regroupements et leurs changements de tendance à travers les jours de symptômes et les phases du cycle que vous avez enregistrés.";
+"PCOS research shows that symptom burden can affect daily life and emotional wellbeing, but this card is still a personal pattern from your own symptom history rather than proof of a cause." = "La recherche sur le SOPK montre que la charge des symptômes peut affecter la vie quotidienne et le bien-être émotionnel, mais cette carte reste un schéma personnel issu de votre propre historique de symptômes et non une preuve de cause.";
+"This card compares the glycemic pattern of your logged meals with later symptoms and breakout timing from meals saved on this device." = "Cette carte compare le profil glycémique de vos repas enregistrés avec les symptômes plus tardifs et le moment des poussées cutanées à partir des repas sauvegardés sur cet appareil.";
+"PCOS lifestyle guidance often focuses on meal quality, blood sugar, and sustainable activity habits. This card uses that context, but the relationship shown here still comes from your own meal and symptom logs." = "Les recommandations de mode de vie pour le SOPK se concentrent souvent sur la qualité des repas, la glycémie et des habitudes d’activité durables. Cette carte s’appuie sur ce contexte, mais la relation affichée ici provient toujours de vos propres suivis de repas et de symptômes.";
+"This card compares your logged sleep, energy, and activity trends with symptom severity from daily logs saved on this device." = "Cette carte compare vos tendances de sommeil, d’énergie et d’activité enregistrées avec l’intensité des symptômes issue des suivis quotidiens sauvegardés sur cet appareil.";
+"Sleep problems are more common in PCOS populations, but this card is still mainly a personal recovery-pattern check from your own logs rather than proof of a cause." = "Les problèmes de sommeil sont plus fréquents chez les personnes atteintes de SOPK, mais cette carte reste surtout une vérification personnelle de votre schéma de récupération à partir de vos propres suivis et non une preuve de cause.";
+"This card compares symptom averages across months using the history you have logged on this device." = "Cette carte compare les moyennes de symptômes d’un mois à l’autre à partir de l’historique que vous avez enregistré sur cet appareil.";
+"Seasonal shifts are not a core benchmark topic in PCOS research, so this card should be read mostly as a personal pattern from your own logs." = "Les variations saisonnières ne sont pas un sujet de référence majeur dans la recherche sur le SOPK. Cette carte doit donc être lue surtout comme un schéma personnel issu de vos propres suivis.";
+"These catalog presets are tracking-friendly starting points for commonly discussed supplements. They are not prescriptions, treatment plans, or personalized medical recommendations." = "Ces préréglages du catalogue sont des points de départ pratiques pour suivre des compléments souvent évoqués. Ils ne constituent ni des prescriptions, ni des plans de traitement, ni des recommandations médicales personnalisées.";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns from supplement entries saved on this device." = "Cette carte compare vos jours enregistrés comme pris ou oubliés, l’intensité des symptômes et les schémas de cycle à partir des entrées de compléments sauvegardées sur cet appareil.";
+"This result is mostly a personal adherence pattern from your own logs. Because the supplement does not match a curated preset, the app avoids attaching a broader study list that could feel misleading." = "Ce résultat correspond surtout à un schéma personnel d’adhérence issu de vos propres suivis. Comme le complément ne correspond pas à un préréglage sélectionné, l’app évite d’ajouter une liste d’études plus large qui pourrait être trompeuse.";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns for the supplement you tracked." = "Cette carte compare vos jours enregistrés comme pris ou oubliés, l’intensité des symptômes et les schémas de cycle pour le complément que vous avez suivi.";
+"Your card still does not prove that the supplement caused the change; it highlights a pattern worth tracking over time." = "Votre carte ne prouve toujours pas que le complément a causé le changement ; elle met en évidence un schéma qui mérite d’être suivi dans le temps.";
+"Benchmark international guideline used for broad PCOS assessment and management context." = "Recommandation internationale de référence utilisée pour le contexte global d’évaluation et de prise en charge du SOPK.";
+"High-level review explaining core PCOS mechanisms and why cycle and metabolic patterns matter." = "Revue d’ensemble expliquant les mécanismes centraux du SOPK et pourquoi les schémas du cycle et du métabolisme sont importants.";
+"Guideline-linked review summarizing diet and activity patterns discussed in PCOS care." = "Revue liée aux recommandations qui résume les habitudes alimentaires et d’activité évoquées dans la prise en charge du SOPK.";
+"Commonly cited evidence showing why exercise and lifestyle patterns are discussed in PCOS management." = "Preuve souvent citée montrant pourquoi l’exercice et les habitudes de vie sont abordés dans la prise en charge du SOPK.";
+"Overview of sleep-related difficulties reported more often in PCOS populations." = "Vue d’ensemble des difficultés liées au sommeil plus souvent rapportées dans les populations atteintes de SOPK.";
+"Shows why symptom burden and emotional wellbeing are often discussed together in PCOS care." = "Montre pourquoi la charge des symptômes et le bien-être émotionnel sont souvent abordés ensemble dans la prise en charge du SOPK.";
+"Direct study or review for this supplement in PCOS." = "Étude ou revue directe sur ce complément dans le SOPK.";
+"Your cycles tend to land around %@ days, though they still shift by a few days. That makes this a pattern worth watching so you can spot what tends to move your cycle around." = "Vos cycles se situent généralement autour de %@ jours, même s’ils se décalent encore de quelques jours. C’est un schéma qui mérite d’être surveillé pour repérer ce qui a tendance à faire bouger votre cycle.";
+"Your cycles average %@ days but vary by about %@ days. Continued tracking can help you compare those shifts with changes in symptoms, stress, meals, or supplements." = "Vos cycles durent en moyenne %@ jours mais varient d’environ %@ jours. Un suivi continu peut vous aider à comparer ces variations avec les changements de symptômes, de stress, de repas ou de compléments.";
+"Your cycle lengths have been spread out — sometimes shorter, sometimes much longer. That is a big enough swing to keep an eye on, especially if the pattern keeps changing." = "La durée de vos cycles a été très étalée — parfois plus courte, parfois nettement plus longue. Cette variation est suffisamment importante pour être surveillée, surtout si le schéma continue de changer.";
+"Your cycles average %@ days with a wide range of %lld-%lld days. If that spread keeps shifting, it may be worth bringing to your provider along with your log history." = "Vos cycles durent en moyenne %@ jours, avec une large plage de %lld à %lld jours. Si cette dispersion continue d’évoluer, il peut être utile d’en parler à votre professionnel de santé avec votre historique de suivi.";
+"Your symptoms tend to feel %@ worse the day after meals that spike blood sugar. That makes steadier meal choices worth experimenting with in your routine." = "Vos symptômes ont tendance à être %@ plus marqués le lendemain des repas qui provoquent des pics de glycémie. Cela vaut la peine d’essayer des repas plus stables dans votre routine.";
+"The day after high-GI meals, your symptom severity averaged %@/5, compared to %@/5 after low-GI days. This gives you a concrete meal pattern to keep testing." = "Le lendemain de repas à IG élevé, l’intensité de vos symptômes était en moyenne de %@/5, contre %@/5 après des jours à IG bas. Cela vous donne un schéma alimentaire concret à continuer de tester.";
+"Your skin looks more reactive a couple of days after higher-GI meals. That gives you a useful food-and-skin pattern to keep an eye on." = "Votre peau semble plus réactive quelques jours après des repas à IG plus élevé. Cela vous donne un schéma utile entre alimentation et peau à surveiller.";
+"About %@ after high-GI meals, breakout severity averaged %@/5, compared to %@/5 after low-GI days. That lag gives you a concrete window to compare against future logs." = "Environ %@ après des repas à IG élevé, l’intensité des poussées était en moyenne de %@/5, contre %@/5 après des jours à IG bas. Ce décalage vous donne une fenêtre concrète à comparer avec vos suivis futurs.";
+"A good portion of your recent meals have been on the higher-GI side. Even a few steadier swaps could be worth trying if you want to see whether symptoms settle down." = "Une bonne partie de vos repas récents était du côté des IG plus élevés. Même quelques substitutions plus stables peuvent valoir la peine si vous voulez voir si les symptômes s’apaisent.";
+"%lld%% of your logged meals were high GI. That gives you a clear baseline to compare against future symptom changes." = "%lld%% de vos repas enregistrés étaient à IG élevé. Cela vous donne une base claire pour comparer les futurs changements de symptômes.";
+"Most of your recent meals have been low-GI. That gives you a steadier baseline, so it is worth keeping up and comparing with future symptom trends." = "La plupart de vos repas récents étaient à IG bas. Cela vous donne une base plus stable, qu’il vaut la peine de maintenir et de comparer aux futures tendances de symptômes.";
+"%lld%% of your logged meals were low GI. That gives you a strong baseline if you want to compare future changes in symptoms or energy." = "%lld%% de vos repas enregistrés étaient à IG bas. Cela vous donne une base solide si vous voulez comparer de futurs changements de symptômes ou d’énergie.";
+"Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Sleep looks like one of the stronger levers in your recent data." = "Votre corps semble réagir au sommeil — après des nuits plus courtes, vos symptômes ont tendance à être %@ plus marqués. Le sommeil semble être l’un des leviers les plus forts dans vos données récentes.";
+"After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after better sleep. That difference is large enough to keep watching." = "Après des nuits avec moins de %lld heures de sommeil, l’intensité moyenne de vos symptômes est de %@/5, contre %@/5 après un meilleur sommeil. Cette différence est assez importante pour continuer à la surveiller.";
+"On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. That makes consistency worth watching over the next few weeks." = "Les jours où vous preniez %@, vos symptômes avaient tendance à être %@ plus légers que les jours où vous l’oubliiez. Cela rend la régularité intéressante à surveiller au cours des prochaines semaines.";
+"In months when you were consistent with %@, your cycles tended to be shorter. That makes adherence worth tracking for a bit longer to see if the pattern holds." = "Pendant les mois où vous étiez régulière avec %@, vos cycles avaient tendance à être plus courts. Cela vaut la peine de suivre encore un peu l’adhérence pour voir si le schéma se confirme.";
+"In months when you were consistent with %@, your cycles ran a bit longer. That is useful to keep watching before drawing any big conclusions." = "Pendant les mois où vous étiez régulière avec %@, vos cycles étaient un peu plus longs. C’est utile à continuer d’observer avant de tirer de grandes conclusions.";
+
+/* Insight explanation localization additions. */
+"Analyzing your data..." = "Analyse de vos données...";
+"BMJ Medicine review (2023)" = "Revue BMJ Medicine (2023)";
+"Build your first cycle insights" = "Créez vos premières analyses de cycle";
+"Build your first insights" = "Créez vos premières analyses";
+"Build your first symptom insights" = "Créez vos premières analyses de symptômes";
+"Cycle pattern summaries become reliable after 3 complete cycles. Keep logging each period start so your pattern can stabilize." = "Les résumés de schéma de cycle deviennent fiables après 3 cycles complets. Continuez à enregistrer chaque début de règles pour que votre schéma se stabilise.";
+"Cycle pattern summaries need 3 complete cycles, and symptom correlations need about 14 tracked days. Keep logging period starts and daily symptoms." = "Les résumés de schéma de cycle nécessitent 3 cycles complets, et les corrélations de symptômes demandent environ 14 jours suivis. Continuez à enregistrer vos débuts de règles et vos symptômes quotidiens.";
+"Insights are still taking shape" = "Vos analyses sont encore en train de se préciser";
+"International PCOS guideline (2023)" = "Recommandation internationale SOPK (2023)";
+"Keep logging consistently. As your data fills in, this tab will highlight stronger cycle and symptom patterns." = "Continuez à enregistrer régulièrement. À mesure que vos données se complètent, cet onglet mettra en évidence des schémas de cycle et de symptômes plus nets.";
+"Keep logging period starts and symptoms so this tab can start surfacing useful patterns." = "Continuez à enregistrer vos débuts de règles et vos symptômes pour que cet onglet commence à faire ressortir des schémas utiles.";
+"Log meals, supplements, sleep, activity, or blood sugar to unlock deeper lifestyle correlations and predictive insights." = "Enregistrez vos repas, compléments, sommeil, activité ou glycémie pour débloquer des corrélations de mode de vie plus poussées et des analyses prédictives.";
+"Meal impact insights" = "Analyses sur l’impact des repas";
+"More cycle data will sharpen your insights" = "Plus de données de cycle affineront vos analyses";
+"More symptom days will unlock correlations" = "Plus de jours de symptômes débloqueront des corrélations";
+"Predictive forecasts" = "Prévisions";
+"Premium Insights" = "Analyses premium";
+"PubMed meta-analysis (2019)" = "Méta-analyse PubMed (2019)";
+"PubMed overview (2024)" = "Vue d’ensemble PubMed (2024)";
+"PubMed review (2019)" = "Revue PubMed (2019)";
+"PubMed systematic review (2019)" = "Revue systématique PubMed (2019)";
+"References expanded" = "Références affichées";
+"Saving insights..." = "Enregistrement des analyses...";
+"Seasonal pattern insights" = "Analyses des schémas saisonniers";
+"Sleep and activity insights" = "Analyses du sommeil et de l’activité";
+"Supplement response insights" = "Analyses de réponse aux compléments";
+"Symptom correlations and trends need about 14 tracked days. Daily symptom check-ins are the fastest way to make this tab more useful." = "Les corrélations et tendances de symptômes nécessitent environ 14 jours suivis. Des bilans quotidiens des symptômes sont le moyen le plus rapide de rendre cet onglet plus utile.";
+"Symptom correlations need about 14 tracked days, and cycle pattern summaries need 3 complete cycles. Start with daily symptoms and period starts." = "Les corrélations de symptômes nécessitent environ 14 jours suivis, et les résumés de schéma de cycle demandent 3 cycles complets. Commencez par les symptômes quotidiens et les débuts de règles.";
+"Unlock adherence and symptom-delta insights for the supplements you track." = "Débloquez des analyses d’adhérence et de variation des symptômes pour les compléments que vous suivez.";
+"Unlock forecast ranges for cycle length and next-week symptom severity when enough data is available." = "Débloquez des plages de prévision pour la durée du cycle et l’intensité des symptômes de la semaine prochaine lorsque suffisamment de données sont disponibles.";
+"Unlock meal and glycemic impact correlations tied to your next-day symptoms." = "Débloquez les corrélations entre l’impact des repas, la glycémie et vos symptômes du lendemain.";
+"Unlock month-to-month symptom pattern changes as you log across seasons." = "Débloquez les changements mensuels des schémas de symptômes à mesure que vous enregistrez vos données au fil des saisons.";
+"Unlock sleep, activity, and recovery patterns linked to symptom severity." = "Débloquez des schémas de sommeil, d’activité et de récupération liés à l’intensité des symptômes.";
+"You have the basics covered" = "Vous avez les bases";
+"blood sugar readings for predictive forecasts" = "lectures de glycémie pour les prévisions";
+"cycles for predictive forecasts" = "cycles pour les prévisions";
+"cycles for supplement analysis" = "cycles pour l’analyse des compléments";
+"daily logs for predictive forecasts" = "suivis quotidiens pour les prévisions";
+"meals for predictive forecasts" = "repas pour les prévisions";
+"seasonal patterns" = "schémas saisonniers";
+"supplements for predictive forecasts" = "compléments pour les prévisions";
+"symptoms for predictive forecasts" = "symptômes pour les prévisions";
+"symptoms for seasonal analysis" = "symptômes pour l’analyse saisonnière";
+
+/* Supplement evidence localization additions. */
+"Inositol has direct PCOS literature support, especially for insulin-related and reproductive outcomes, though benefit size varies across trials." = "L'inositol bénéficie d'un soutien direct dans la littérature sur le SOPK, surtout pour les résultats liés à l'insuline et à la reproduction, même si l'ampleur du bénéfice varie selon les essais.";
+"Vitamin D has direct PCOS trial and meta-analysis support, but results vary and deficiency status may matter." = "La vitamine D bénéficie d'un soutien direct d'essais et de méta-analyses sur le SOPK, mais les résultats varient et le statut de carence peut compter.";
+"Omega-3 has direct PCOS meta-analysis support for selected cardiometabolic markers, though effects are not uniform across outcomes." = "Les oméga-3 bénéficient d'un soutien direct de méta-analyses sur le SOPK pour certains marqueurs cardiométaboliques, même si les effets ne sont pas uniformes selon les résultats.";
+"Berberine has direct PCOS meta-analysis support for metabolic outcomes, but the trial base is smaller than for core guideline-backed therapies." = "La berbérine bénéficie d'un soutien direct de méta-analyses sur le SOPK pour les résultats métaboliques, mais la base d'essais est plus limitée que pour les traitements principaux appuyés par les recommandations.";
+"N-acetylcysteine has direct PCOS meta-analysis support, but findings are still interpreted cautiously alongside standard care." = "La N-acétylcystéine bénéficie d'un soutien direct de méta-analyses sur le SOPK, mais les résultats sont encore interprétés avec prudence aux côtés des soins standards.";
+"Zinc appears in newer mineral-supplement analyses for PCOS, but the overall evidence base is still mixed and not strong enough for a broad treatment claim." = "Le zinc apparaît dans des analyses plus récentes des suppléments minéraux pour le SOPK, mais l'ensemble des preuves reste mitigé et insuffisant pour soutenir une affirmation thérapeutique large.";
+"Magnesium appears in newer mineral-supplement analyses for PCOS, but the evidence base is still emerging and should be framed conservatively." = "Le magnésium apparaît dans des analyses plus récentes des suppléments minéraux pour le SOPK, mais les preuves sont encore émergentes et doivent être présentées avec prudence.";
+"Spearmint tea has small-trial support for androgen-related symptoms, but the evidence base remains limited." = "Le thé à la menthe verte bénéficie de petits essais pour les symptômes liés aux androgènes, mais la base de preuves reste limitée.";
+"Folate is included as broader preconception and reproductive-health guidance rather than as a direct PCOS treatment recommendation." = "Le folate est inclus comme recommandation plus large de préconception et de santé reproductive, plutôt que comme recommandation directe de traitement du SOPK.";
+"Chromium has direct PCOS meta-analysis support for some insulin-resistance markers, but the overall evidence remains mixed." = "Le chrome bénéficie d'un soutien direct de méta-analyses sur le SOPK pour certains marqueurs de résistance à l'insuline, mais les preuves globales restent mitigées.";
+"PubMed umbrella review (2024)" = "Revue umbrella PubMed (2024)";
+"PubMed meta-analysis (2017)" = "Méta-analyse PubMed (2017)";
+"PubMed meta-analysis (2018)" = "Méta-analyse PubMed (2018)";
+"PubMed meta-analysis (2021)" = "Méta-analyse PubMed (2021)";
+"PubMed meta-analysis (2024)" = "Méta-analyse PubMed (2024)";
+"PubMed randomized trial (2010)" = "Essai randomisé PubMed (2010)";
+"USPSTF recommendation" = "Recommandation de l’USPSTF";
+
+/* HealthKit data transparency section. */
+"Active Energy Burned" = "Énergie active dépensée";
+"Blood Glucose" = "Glycémie";
+"Body Mass" = "Masse corporelle";
+"Connected" = "Connecté";
+"CycleBalance reads data only after you grant permission. Data stays on your device and helps enrich logs, trends, and insights." = "CycleBalance lit les données uniquement après votre autorisation. Les données restent sur votre appareil et aident à enrichir les journaux, tendances et analyses.";
+"CycleBalance reads these Apple Health data types only after you grant permission. Data stays on your device and is used to enrich logs, trends, and insights. CycleBalance does not write data to Apple Health." = "CycleBalance lit ces types de données Apple Santé uniquement après votre autorisation. Les données restent sur votre appareil et servent à enrichir vos journaux, tendances et analyses. CycleBalance n’écrit pas de données dans Apple Santé.";
+"Health Data Access" = "Accès aux données de santé";
+"Health data stays private" = "Vos données de santé restent privées";
+"HealthKit type: Active Energy Burned" = "Type HealthKit : énergie active dépensée";
+"HealthKit type: Blood Glucose" = "Type HealthKit : glycémie";
+"HealthKit type: Body Mass" = "Type HealthKit : masse corporelle";
+"HealthKit type: Resting Heart Rate" = "Type HealthKit : fréquence cardiaque au repos";
+"HealthKit type: Sleep Analysis" = "Type HealthKit : analyse du sommeil";
+"HealthKit type: Step Count" = "Type HealthKit : nombre de pas";
+"Manage the optional Apple Health connection for CycleBalance." = "Gérer la connexion Apple Santé facultative pour CycleBalance.";
+"No writes to Apple Health" = "Aucune écriture dans Apple Santé";
+"On device" = "Sur l’appareil";
+"Read-only" = "Lecture seule";
+"Read when connected" = "Lu une fois connecté";
+"Requested for activity context; not saved or used for insights." = "Demandé pour le contexte d’activité; non enregistré ni utilisé pour les analyses.";
+"Requested for activity context. CycleBalance does not currently save step count or use it for insights." = "Demandé pour le contexte d’activité. CycleBalance n’enregistre pas actuellement le nombre de pas et ne l’utilise pas pour les analyses.";
+"Resting Heart Rate" = "Fréquence cardiaque au repos";
+"Sleep Analysis" = "Analyse du sommeil";
+"Step Count" = "Nombre de pas";
+"These data types are read only after you connect Apple Health." = "Ces types de données sont lus uniquement après la connexion à Apple Santé.";
+"Used as activity context for daily logs and activity insights." = "Utilisé comme contexte d’activité pour les journaux quotidiens et les analyses d’activité.";
+"Used for blood sugar history and metabolic insight context." = "Utilisé pour l’historique de glycémie et le contexte des analyses métaboliques.";
+"Used for daily resting BPM and recovery context." = "Utilisé pour la fréquence cardiaque quotidienne au repos et le contexte de récupération.";
+"Used for daily weight and weight trends." = "Utilisé pour le poids quotidien et les tendances de poids.";
+"Used for sleep hours and sleep/recovery insights." = "Utilisé pour les heures de sommeil et les analyses sommeil/récupération.";
+"Learn more" = "En savoir plus";

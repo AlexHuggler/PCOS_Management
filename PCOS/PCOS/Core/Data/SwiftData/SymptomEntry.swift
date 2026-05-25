@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class SymptomEntry {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<SymptomEntry>([\.date])
+    #endif
+
     var id: UUID = UUID()
     var date: Date = Date()
     var category: SymptomCategory = SymptomCategory.physical

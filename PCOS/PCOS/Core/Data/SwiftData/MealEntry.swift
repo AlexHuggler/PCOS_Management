@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class MealEntry {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<MealEntry>([\.timestamp])
+    #endif
+
     var id: UUID = UUID()
     var timestamp: Date = Date()
     var mealType: MealType = MealType.breakfast
@@ -13,6 +18,10 @@ final class MealEntry {
     var proteinGrams: Double?
     var fatGrams: Double?
     var notes: String?
+    var selectedTemplateID: String?
+    var postMealSymptomSeverity: Int?
+    var postMealSymptomNote: String?
+    var postMealFeedbackTimestamp: Date?
 
     init(
         id: UUID = UUID(),
@@ -24,7 +33,11 @@ final class MealEntry {
         carbsGrams: Double? = nil,
         proteinGrams: Double? = nil,
         fatGrams: Double? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        selectedTemplateID: String? = nil,
+        postMealSymptomSeverity: Int? = nil,
+        postMealSymptomNote: String? = nil,
+        postMealFeedbackTimestamp: Date? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -36,5 +49,9 @@ final class MealEntry {
         self.proteinGrams = proteinGrams
         self.fatGrams = fatGrams
         self.notes = notes
+        self.selectedTemplateID = selectedTemplateID
+        self.postMealSymptomSeverity = postMealSymptomSeverity
+        self.postMealSymptomNote = postMealSymptomNote
+        self.postMealFeedbackTimestamp = postMealFeedbackTimestamp
     }
 }

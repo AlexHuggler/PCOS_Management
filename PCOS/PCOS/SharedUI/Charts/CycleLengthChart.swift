@@ -32,8 +32,13 @@ struct CycleLengthChart: View {
                 .foregroundStyle(AppTheme.coralAccent)
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                 .annotation(position: .top, alignment: .trailing) {
-                    Text("Avg: \(String(format: "%.0f", averageDays))d")
-                        .font(.caption2)
+                    Text(
+                        String(
+                            localized: "Avg: \(L10n.decimal(averageDays, fractionDigits: 0))d",
+                            comment: "Chart annotation showing average cycle length in days."
+                        )
+                    )
+                        .appFont(.caption2)
                         .foregroundStyle(AppTheme.coralAccent)
                 }
         }

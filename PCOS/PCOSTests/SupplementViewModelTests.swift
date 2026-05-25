@@ -46,10 +46,21 @@ struct SupplementViewModelTests {
         let vm = SupplementViewModel(modelContext: container.mainContext)
         let inositol = PCOSSupplements.catalog.first { $0.name == "Inositol" }
         let spearmintTea = PCOSSupplements.catalog.first { $0.name == "Spearmint Tea" }
+        let expectedInositolDosage = L10n.decimal(4000, fractionDigits: 0)
 
-        #expect(vm.recommendedDosageLabel(for: inositol) == "Recommended dosage: 4000 mg")
-        #expect(vm.recommendedDosageValue(for: inositol) == "4000")
-        #expect(vm.recommendedDosageLabel(for: spearmintTea) == "No default dosage")
+        #expect(
+            vm.recommendedDosageLabel(for: inositol) == String(
+                localized: "Recommended dosage: \(expectedInositolDosage) mg",
+                comment: "Supplement picker helper text showing the recommended dosage in milligrams."
+            )
+        )
+        #expect(vm.recommendedDosageValue(for: inositol) == expectedInositolDosage)
+        #expect(
+            vm.recommendedDosageLabel(for: spearmintTea) == String(
+                localized: "No default dosage",
+                comment: "Supplement picker helper text when a supplement has no default dosage."
+            )
+        )
         #expect(vm.recommendedDosageValue(for: spearmintTea) == nil)
     }
 
@@ -185,6 +196,8 @@ struct SupplementViewModelTests {
         let defaultsStore = UserEntryDefaultsStore(defaults: defaults)
         defaultsStore.lastSupplementName = "Myo-Inositol"
         defaultsStore.lastSupplementBrand = "Theralogix"
+        let expectedTime = Calendar.current.date(bySettingHour: 21, minute: 15, second: 0, of: Date()) ?? Date()
+        defaultsStore.lastSupplementTime = expectedTime
         let vm = SupplementViewModel(modelContext: container.mainContext, defaultsStore: defaultsStore)
 
         vm.supplementName = "Inositol"
@@ -193,9 +206,14 @@ struct SupplementViewModelTests {
 
         vm.reset()
 
-        #expect(vm.supplementName == "Myo-Inositol")
+        #expect(vm.supplementName.isEmpty)
         #expect(vm.dosageText == "")
-        #expect(vm.brand == "Theralogix")
+        #expect(vm.brand.isEmpty)
+
+        let actualComponents = Calendar.current.dateComponents([.hour, .minute], from: vm.scheduledTime)
+        let expectedComponents = Calendar.current.dateComponents([.hour, .minute], from: expectedTime)
+        #expect(actualComponents.hour == expectedComponents.hour)
+        #expect(actualComponents.minute == expectedComponents.minute)
     }
 
     @Test("Preferred supplement time becomes available after save")
@@ -218,5 +236,145 @@ struct SupplementViewModelTests {
         let actualComponents = Calendar.current.dateComponents([.hour, .minute], from: actual)
         #expect(actualComponents.hour == expectedComponents.hour)
         #expect(actualComponents.minute == expectedComponents.minute)
+    }
+
+    @Test("Repeat yesterday copies prior-day supplements into today")
+    func repeatYesterdayCopiesEntriesToToday() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = SupplementViewModel(modelContext: context)
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+        let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: todayStart) ?? todayStart
+        let morningYesterday = calendar.date(bySettingHour: 8, minute: 30, second: 15, of: yesterdayStart) ?? yesterdayStart
+        let eveningYesterday = calendar.date(bySettingHour: 21, minute: 0, second: 0, of: yesterdayStart) ?? yesterdayStart
+
+        context.insert(
+            SupplementLog(
+                date: yesterdayStart,
+                supplementName: "Magnesium",
+                dosageMg: 400,
+                timeTaken: morningYesterday,
+                taken: false,
+                brand: "Thorne"
+            )
+        )
+        context.insert(
+            SupplementLog(
+                date: yesterdayStart,
+                supplementName: "Omega-3",
+                dosageMg: 1000,
+                timeTaken: eveningYesterday,
+                taken: true,
+                brand: "Nordic Naturals"
+            )
+        )
+        try context.save()
+
+        let insertedCount = try vm.repeatYesterdaySupplements()
+        let todaysLogs = vm.fetchTodaysLogs()
+
+        #expect(insertedCount == 2)
+        #expect(todaysLogs.count == 2)
+
+        let magnesium = todaysLogs.first { $0.supplementName == "Magnesium" }
+        let omega = todaysLogs.first { $0.supplementName == "Omega-3" }
+        #expect(magnesium?.taken == true)
+        #expect(omega?.taken == true)
+        #expect(omega?.brand == "Nordic Naturals")
+
+        let magnesiumTime = calendar.dateComponents([.hour, .minute], from: magnesium?.timeTaken ?? Date.distantPast)
+        let omegaTime = calendar.dateComponents([.hour, .minute], from: omega?.timeTaken ?? Date.distantPast)
+        #expect(magnesiumTime.hour == 8)
+        #expect(magnesiumTime.minute == 30)
+        #expect(omegaTime.hour == 21)
+        #expect(omegaTime.minute == 0)
+        #expect(calendar.isDate(magnesium?.date ?? Date.distantPast, inSameDayAs: Date()))
+        #expect(calendar.isDate(omega?.date ?? Date.distantPast, inSameDayAs: Date()))
+    }
+
+    @Test("Repeat yesterday skips entries that already exist today")
+    func repeatYesterdaySkipsExistingEntries() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = SupplementViewModel(modelContext: context)
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+        let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: todayStart) ?? todayStart
+        let repeatedTime = calendar.date(bySettingHour: 8, minute: 30, second: 0, of: todayStart) ?? todayStart
+        let yesterdayRepeatedTime = calendar.date(bySettingHour: 8, minute: 30, second: 0, of: yesterdayStart) ?? yesterdayStart
+        let yesterdayUniqueTime = calendar.date(bySettingHour: 13, minute: 0, second: 0, of: yesterdayStart) ?? yesterdayStart
+
+        context.insert(
+            SupplementLog(
+                date: yesterdayStart,
+                supplementName: "Magnesium",
+                dosageMg: 400,
+                timeTaken: yesterdayRepeatedTime,
+                taken: true,
+                brand: "Thorne"
+            )
+        )
+        context.insert(
+            SupplementLog(
+                date: yesterdayStart,
+                supplementName: "Zinc",
+                dosageMg: 30,
+                timeTaken: yesterdayUniqueTime,
+                taken: true,
+                brand: nil
+            )
+        )
+        context.insert(
+            SupplementLog(
+                date: todayStart,
+                supplementName: "Magnesium",
+                dosageMg: 400,
+                timeTaken: repeatedTime,
+                taken: true,
+                brand: "Thorne"
+            )
+        )
+        try context.save()
+
+        let insertedCount = try vm.repeatYesterdaySupplements()
+        let todaysLogs = vm.fetchTodaysLogs()
+
+        #expect(insertedCount == 1)
+        #expect(todaysLogs.count == 2)
+        #expect(todaysLogs.filter { $0.supplementName == "Magnesium" }.count == 1)
+        #expect(todaysLogs.contains { $0.supplementName == "Zinc" })
+    }
+
+    @Test("Dosage changes are detected over time for same supplement")
+    func dosageChangeDetection() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let vm = SupplementViewModel(modelContext: context)
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: Date())
+
+        let first = SupplementLog(
+            date: start,
+            supplementName: "Inositol",
+            dosageMg: 2000,
+            timeTaken: start.addingTimeInterval(8 * 3600),
+            taken: true
+        )
+        let second = SupplementLog(
+            date: start.addingTimeInterval(24 * 3600),
+            supplementName: "Inositol",
+            dosageMg: 4000,
+            timeTaken: start.addingTimeInterval(32 * 3600),
+            taken: true
+        )
+        context.insert(first)
+        context.insert(second)
+        try context.save()
+
+        let changes = vm.dosageChanges(days: 30)
+        #expect(changes.count == 1)
+        #expect(changes.first?.previousDosageMg == 2000)
+        #expect(changes.first?.newDosageMg == 4000)
     }
 }

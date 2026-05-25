@@ -4,6 +4,12 @@ Audit snapshot date: 2026-03-11
 Evidence refresh run date: 2026-03-12  
 Scope: current dirty working tree under `PCOS_Management` (modified + untracked files included).
 
+## Current Source Policy
+
+- Active app source root: `PCOS/PCOS`.
+- Active test roots: `PCOS/PCOSTests` and `PCOS/PCOSUITests`.
+- The old `CycleBalance/` and `CycleBalanceTests/` mirror trees are retired; build and validation should use the active roots above.
+
 ## Baseline
 
 | Area | Current State |
@@ -14,7 +20,7 @@ Scope: current dirty working tree under `PCOS_Management` (modified + untracked 
 | Third-party dependencies | RevenueCat via SPM (`purchases-ios-spm`, resolved at 5.61.0 in current builds) |
 | Pattern strategy | MVVM-style feature view models (`@Observable`) + focused service layer |
 | Persistence | SwiftData (`@Model`, `ModelContext`, `ModelContainer`) with CloudKit private DB intent and debug/test fallbacks |
-| Networking/billing stack | No first-party REST client layer; subscription/network flows via RevenueCat + StoreKit abstraction |
+| Networking/billing stack | No first-party REST client layer; subscription/paywall flows are managed through RevenueCat and RevenueCatUI |
 | Concurrency model | Swift 6 strict concurrency (`SWIFT_STRICT_CONCURRENCY = complete`), async/await, task-based listeners |
 | Test stack | Swift Testing + XCTest UI tests |
 
@@ -63,7 +69,7 @@ graph LR
     C2["HealthKitManager (UI coordinator)"]
     C2W["HealthKitSyncWorker (actor)"]
     C3["NotificationManager"]
-    C4["StoreKit/RevenueCat Clients"]
+    C4["RevenueCat Premium State"]
     C5["InsightEngine"]
     C6["Utilities + Extensions"]
   end
@@ -109,7 +115,7 @@ graph LR
   - Startup policy supports in-memory test mode and debug local fallback.
 - Networking and subscription implementation:
   - No app-owned `URLSession` endpoint layer was found.
-  - Billing and entitlement updates are delegated to `RevenueCatBillingClient` and `StoreKitBillingClient`.
+  - Billing, paywall presentation, and entitlement updates are delegated to RevenueCat-backed adapters.
 
 ## App Store Configuration Status
 
@@ -117,14 +123,12 @@ graph LR
 |---|---|---|---|
 | App Info.plist | `PCOS/PCOS/Info.plist` | Present | Contains camera/photo/HealthKit usage strings and launch screen dictionary. |
 | Background mode declaration (`UIBackgroundModes`) | `PCOS/PCOS/Info.plist` | Compliant for current scope | `remote-notification` declaration removed in H-1 remediation; app currently targets local notifications only. |
-| Active app entitlements | `PCOS/PCOS.entitlements` | Present | This is the Xcode build input (`ProcessProductPackaging ... PCOS/PCOS.entitlements`). |
+| Debug app entitlements | `PCOS/PCOS.debug.entitlements` | Present | Debug build input; intentionally excludes HealthKit and CloudKit capabilities for local QA. |
+| Release app entitlements | `PCOS/PCOS.entitlements` | Present | Release build input with HealthKit enabled and CloudKit excluded. |
 | Duplicate entitlements (non-active) | `PCOS/PCOS/PCOS.entitlements` | Present (non-active) | Traceability artifact; not current build input. |
-| Mirror entitlements (non-active tree) | `CycleBalance/CycleBalance.entitlements` | Present (non-active) | Kept for parity workflow only. |
 | App privacy manifest | `PCOS/PCOS/PrivacyInfo.xcprivacy` | Present | Declares `NSPrivacyAccessedAPICategoryUserDefaults` reason `CA92.1`. |
-| Mirror privacy manifest (non-active tree) | `CycleBalance/PrivacyInfo.xcprivacy` | Present (non-active) | Kept for parity workflow. |
 | Active asset catalog | `PCOS/PCOS/Assets.xcassets` | Present | Catalog contains accent + app icon set. |
 | Active app icon set | `PCOS/PCOS/Assets.xcassets/AppIcon.appiconset` | Present and populated | `Contents.json` now maps concrete default/dark/tinted 1024 PNG files. |
-| Mirror app icon set (non-active tree) | `CycleBalance/Resources/Assets.xcassets/AppIcon.appiconset` | Present and populated | Mirrored icon assets and manifest entries are in sync. |
 | Launch screen config | `PCOS/PCOS/Info.plist` (`UILaunchScreen`) | Present | Empty launch-screen dict configured. |
 | Dependency manager config | `project.yml` | Present | XcodeGen source of truth for targets, entitlements, and SPM package wiring. |
 | CocoaPods/Carthage manifests | repo root scan (`Podfile`, `Cartfile`) | Not found | Confirms SPM-only external dependency path in current tree. |
@@ -139,7 +143,7 @@ graph LR
 
 - Insight generation now uses fail-fast fetch behavior (throwing `InsightEngine.generateInsights`) instead of silent SwiftData fetch fallbacks.
 - UI propagation now includes `InsightsViewModel.errorMessage` with rollback on refresh failure plus inline error banner rendering in `InsightsView`.
-- Guardrail and behavior tests passed in active and mirrored trees:
+- Guardrail and behavior tests passed in the active source/test roots:
   - no `try? modelContext.fetch` silent fallback pattern in `InsightEngine.swift`,
   - refresh failure surfaces error and does not persist insights,
   - successful refresh clears stale error and persists insights.
@@ -154,7 +158,7 @@ graph LR
   - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:16`
   - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:47-76`
   - `PCOS/PCOS/Core/HealthKit/HealthKitSyncWorker.swift:80-185`
-- Guardrail and behavior tests passed in active and mirrored trees:
+- Guardrail and behavior tests passed in the active source/test roots:
   - manager no longer contains direct `modelContext.fetch/save` sync-loop patterns,
   - success path updates `lastSyncDate`, clears stale `lastError`, and resets `isSyncing`,
   - failure path sets `lastError` and resets `isSyncing` without corrupting sync state,
@@ -172,7 +176,7 @@ graph LR
   - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:172-174`
 - Entitlement listener now avoids `self.billingClient` strong-loop pattern by consuming captured `billingClient` in the async stream loop:
   - `PCOS/PCOS/Core/StoreKit/SubscriptionManager.swift:188-193`
-- Guardrail and behavior tests passed in active and mirrored trees:
+- Guardrail and behavior tests passed in the active source/test roots:
   - `StoreKit Lifecycle Regressions` source guardrails in both test trees,
   - `PremiumStateBridgeTests` verifies stop prevents post-stop notification refresh,
   - `SubscriptionManagerTests` verifies listener updates stop deterministically after explicit stop.
@@ -190,9 +194,8 @@ graph LR
   - `SupplementEfficacyInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:475`)
   - `DietImpactInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:571`)
   - `SleepActivityInsightAnalyzer` (`PCOS/PCOS/Core/ML/InsightEngine.swift:692`)
-- Architecture guardrails now enforce split boundaries in both test trees:
+- Architecture guardrails now enforce split boundaries in the active test tree:
   - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:96-126`
-  - `CycleBalanceTests/SilentFailureRegressionTests.swift:96-126`
 - Existing insight behavior/error suites continue to pass with the split coordinator structure.
 
 ## M-3 Verification Note (Dynamic Type Resilience)
@@ -208,9 +211,8 @@ graph LR
   - `PCOS/PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift:73`
 - Calendar blank-offset cells now use minimum-height behavior (`minHeight: 44`) instead of fixed height:
   - `PCOS/PCOS/Features/Cycle/Views/CalendarMonthView.swift:137`
-- Guardrail tests now enforce adaptive replacements and block prior fixed-size patterns in both test trees:
+- Guardrail tests now enforce adaptive replacements and block prior fixed-size patterns in the active test tree:
   - `PCOS/PCOSTests/InterfaceResilienceTests.swift:47-77`
-  - `CycleBalanceTests/InterfaceResilienceTests.swift:47-77`
 
 ## M-2 Verification Note (Quick-Log Error Surfacing)
 
@@ -221,7 +223,7 @@ graph LR
   - `PCOS/PCOS/Features/Cycle/Models/CycleLogService.swift:16-35`
   - `PCOS/PCOS/Features/Cycle/ViewModels/CycleViewModel.swift:69-80`
 - Quick-log failures now log diagnostics and surface a concise inline non-modal banner without replacing card layout structure.
-- Guardrail and behavior tests passed in active and mirrored trees:
+- Guardrail and behavior tests passed in the active source/test roots:
   - `SilentFailureRegressionTests` enforces no silent `try? modelContext.fetch(descriptor)` fallback and no silent quick-log catch suppression,
   - `CycleLogServiceTests` validates returned identifier maps to persisted period entries.
 
@@ -232,13 +234,12 @@ graph LR
   - `PCOS/PCOS/Features/PhotoJournal/Views/PhotoCaptureView.swift:128-145`
 - Import failures now route through the existing alert pathway (`activeAlert = .error(...)`) with error haptics and without replacing existing view layouts.
 - Non-selection/cancel paths remain non-error (no alert).
-- Guardrail tests now enforce no silent import fallback patterns in both active and mirrored trees:
+- Guardrail tests now enforce no silent import fallback patterns in the active test tree:
   - `PCOS/PCOSTests/SilentFailureRegressionTests.swift:140-164`
-  - `CycleBalanceTests/SilentFailureRegressionTests.swift:140-164`
 
 ## Verification Baseline (Current Tree)
 
-- Parity gate: `./scripts/check_tree_parity.sh` -> passed.
+- Source policy gate: active roots are `PCOS/PCOS`, `PCOS/PCOSTests`, and `PCOS/PCOSUITests`; the retired mirror parity script has been removed.
 - Focused resource gate (`PCOSTests/PrivacyManifestTests`, `PCOSTests/AppIconAssetTests`, `PCOSTests/AppStoreConfigTests`) -> passed.
 - Focused H-2 gate (`PCOSTests/InsightErrorHandlingRegressionTests`, `PCOSTests/InsightsViewModelErrorPropagationTests`, `PCOSTests/InsightEngineTests`) -> passed.
 - Focused H-3 gate (`PCOSTests/HealthKitSyncConcurrencyRegressionTests`, `PCOSTests/HealthKitManagerTests`, `PCOSTests/HealthKitSyncWorkerTests`) -> passed (`15 tests in 3 suites passed`).
@@ -253,8 +254,5 @@ graph LR
 ## Traceability: Non-Active Duplicate Config Artifacts
 
 - `PCOS/PCOS/PCOS.entitlements`
-- `CycleBalance/CycleBalance.entitlements`
-- `CycleBalance/PrivacyInfo.xcprivacy`
-- `CycleBalance/Resources/Assets.xcassets/**`
 
-These exist for mirror/parity workflow traceability and are not the active build input for the current `PCOS` app target.
+This exists for traceability and is not the active build input for the current `PCOS` app target.

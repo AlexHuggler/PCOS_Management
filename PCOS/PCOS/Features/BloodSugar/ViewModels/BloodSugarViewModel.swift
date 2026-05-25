@@ -8,6 +8,7 @@ final class BloodSugarViewModel {
     private let modelContext: ModelContext
     private let defaultsStore: UserEntryDefaultsStore
     private let suggestionProvider: SuggestionProvider
+    private let irMetricService: InsulinResistanceMetricCalculating
 
     // MARK: - Form State
 
@@ -34,7 +35,18 @@ final class BloodSugarViewModel {
     }
 
     var noteSuggestions: [String] {
-        suggestionProvider.bloodSugarNoteSuggestions(query: noteSuggestionQuery, limit: 8)
+        let baseSuggestions = suggestionProvider.bloodSugarNoteSuggestions(query: "", limit: 20)
+        let query = QuickNoteComposer.suggestionQuery(in: notes, availableSuggestions: baseSuggestions)
+        let filteredSuggestions = suggestionProvider.bloodSugarNoteSuggestions(
+            query: query,
+            limit: query.isEmpty ? baseSuggestions.count : 8
+        )
+
+        return QuickNoteComposer.visibleSuggestions(
+            from: filteredSuggestions,
+            selectedIn: notes,
+            availableSuggestions: baseSuggestions
+        )
     }
 
     // MARK: - Init
@@ -42,13 +54,14 @@ final class BloodSugarViewModel {
     init(
         modelContext: ModelContext,
         defaultsStore: UserEntryDefaultsStore = .shared,
-        suggestionProvider: SuggestionProvider? = nil
+        suggestionProvider: SuggestionProvider? = nil,
+        irMetricService: InsulinResistanceMetricCalculating = InsulinResistanceMetricService()
     ) {
         self.modelContext = modelContext
         self.defaultsStore = defaultsStore
         self.suggestionProvider = suggestionProvider ?? SuggestionProvider(defaultsStore: defaultsStore)
+        self.irMetricService = irMetricService
         self.readingType = defaultsStore.lastBloodSugarReadingType
-        self.mealContext = defaultsStore.lastBloodSugarMealContext ?? ""
     }
 
     // MARK: - Actions
@@ -74,9 +87,9 @@ final class BloodSugarViewModel {
 
         modelContext.insert(reading)
         try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
 
         defaultsStore.lastBloodSugarReadingType = readingType
-        defaultsStore.lastBloodSugarMealContext = trimmedMealContext
         if !trimmedMealContext.isEmpty {
             suggestionProvider.recordBloodSugarMealContext(trimmedMealContext)
         }
@@ -142,6 +155,7 @@ final class BloodSugarViewModel {
         modelContext.delete(reading)
         do {
             try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
         } catch {
             Logger.database.error("Failed to delete blood sugar reading: \(error.localizedDescription)")
         }
@@ -162,11 +176,53 @@ final class BloodSugarViewModel {
         return sum / Double(filtered.count)
     }
 
+    func fetchCycles() -> [Cycle] {
+        let descriptor = FetchDescriptor<Cycle>(
+            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+        )
+
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            Logger.database.error("Failed to fetch cycles for blood sugar analytics: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    func dailyGlucoseAverages(days: Int, now: Date = Date()) -> [(date: Date, average: Double)] {
+        let readings = fetchRecentReadings(days: days)
+        return irMetricService.dailyAverages(readings: readings, days: days, now: now)
+    }
+
+    func sevenDayVsThirtyDayTrend() -> (sevenDayAverage: Double?, thirtyDayAverage: Double?) {
+        (
+            sevenDayAverage: averageGlucose(for: nil, days: 7),
+            thirtyDayAverage: averageGlucose(for: nil, days: 30)
+        )
+    }
+
+    func cyclePhaseComparison(days: Int) -> [CyclePhaseAverage] {
+        let readings = fetchRecentReadings(days: days)
+        let cycles = fetchCycles()
+        return irMetricService.cyclePhaseAverages(readings: readings, cycles: cycles)
+    }
+
+    func postMealSpikePatterns(days: Int) -> [PostMealSpikeSample] {
+        let readings = fetchRecentReadings(days: days)
+        return irMetricService.postMealSpikeSamples(readings: readings)
+    }
+
+    func insulinResistanceMetrics(days: Int) -> InsulinResistanceMetrics {
+        let readings = fetchRecentReadings(days: days)
+        let cycles = fetchCycles()
+        return irMetricService.calculateMetrics(readings: readings, cycles: cycles)
+    }
+
     /// Reset form to defaults.
     func reset() {
         glucoseValueText = ""
         readingType = defaultsStore.lastBloodSugarReadingType
-        mealContext = defaultsStore.lastBloodSugarMealContext ?? ""
+        mealContext = ""
         notes = ""
         readingDate = Date()
     }
@@ -182,25 +238,6 @@ final class BloodSugarViewModel {
     func toggleNoteSuggestion(_ suggestion: String) {
         notes = QuickNoteComposer.toggled(suggestion, in: notes)
     }
-
-    private var noteSuggestionQuery: String {
-        let baseSuggestions = suggestionProvider.bloodSugarNoteSuggestions(query: "", limit: 20)
-
-        let segments = notes.split(separator: ",", omittingEmptySubsequences: false)
-        guard let lastSegment = segments.last else {
-            return notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        let candidate = String(lastSegment).trimmingCharacters(in: .whitespacesAndNewlines)
-        if notes.contains(",") {
-            return candidate
-        }
-
-        if baseSuggestions.contains(where: { $0.caseInsensitiveCompare(candidate) == .orderedSame }) {
-            return ""
-        }
-        return candidate
-    }
 }
 
 // MARK: - Errors
@@ -211,7 +248,7 @@ enum BloodSugarError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidGlucose:
-            return "Glucose value must be between 40 and 600 mg/dL."
+            return String(localized: "Glucose value must be between 40 and 600 mg/dL.", comment: "Validation error shown when a blood sugar value is outside the supported range.")
         }
     }
 }

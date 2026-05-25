@@ -5,8 +5,32 @@ struct SeverityPicker: View {
     let severity: Int
     let onSeverityChange: (Int) -> Void
 
-    static let labels = ["Mild", "Low", "Moderate", "High", "Severe"]
-    private static let shortLabels = ["Mild", "Low", "Med", "High", "Severe"]
+    static let noneLabel = String(localized: "None", comment: "Accessibility severity label when no symptom severity is selected.")
+
+    static var labels: [String] {
+        [
+            String(localized: "Mild", comment: "Full severity label for level 1 symptoms."),
+            String(localized: "Low", comment: "Full severity label for level 2 symptoms."),
+            String(localized: "Moderate", comment: "Full severity label for level 3 symptoms."),
+            String(localized: "High", comment: "Full severity label for level 4 symptoms."),
+            String(localized: "Severe", comment: "Full severity label for level 5 symptoms."),
+        ]
+    }
+
+    private static var shortLabels: [String] {
+        [
+            String(localized: "Mild", comment: "Compact severity label for level 1 symptoms."),
+            String(localized: "Low", comment: "Compact severity label for level 2 symptoms."),
+            String(localized: "Med", comment: "Compact severity label for level 3 symptoms."),
+            String(localized: "High", comment: "Compact severity label for level 4 symptoms."),
+            String(localized: "Severe", comment: "Compact severity label for level 5 symptoms."),
+        ]
+    }
+
+    static func label(for severity: Int) -> String {
+        guard severity >= 1 && severity <= labels.count else { return noneLabel }
+        return labels[severity - 1]
+    }
 
     var body: some View {
         VStack(spacing: 2) {
@@ -24,22 +48,34 @@ struct SeverityPicker: View {
                                 onSeverityChange(level)
                             }
                         }
-                        .accessibilityLabel("\(Self.labels[level - 1]) severity")
+                        .accessibilityLabel(
+                            String(
+                                localized: "\(Self.labels[level - 1]) severity",
+                                comment: "Accessibility label for an individual severity level button."
+                            )
+                        )
+                        .accessibilityValue(
+                            String(
+                                localized: "Level \(level) of 5",
+                                comment: "Accessibility value indicating the numeric severity level."
+                            )
+                        )
                         .accessibilityAddTraits(level == severity ? .isSelected : [])
-                        .accessibilityHint(level == severity ? "Double tap to deselect" : "Double tap to select")
+                        .accessibilityHint(
+                            level == severity
+                                ? String(localized: "Double tap to deselect", comment: "Accessibility hint for the selected severity button.")
+                                : String(localized: "Double tap to select", comment: "Accessibility hint for an unselected severity button.")
+                        )
                 }
             }
-            .sensoryFeedback(.selection, trigger: severity)
-            .animation(.easeInOut(duration: 0.15), value: severity)
 
             if severity > 0 {
                 Text(Self.shortLabels[severity - 1])
-                    .font(.caption2.weight(.medium))
+                    .appFont(.caption2, weight: .medium)
                     .foregroundStyle(colorForLevel(severity))
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: severity)
     }
 
     private func colorForLevel(_ level: Int) -> Color {
@@ -66,7 +102,7 @@ struct SeveritySlider: View {
                                 .frame(width: 28, height: 28)
 
                             Text(SeverityPicker.labels[level - 1])
-                                .font(.caption2)
+                                .appFont(.caption2)
                                 .foregroundStyle(level == severity ? .primary : .secondary)
                         }
                     }

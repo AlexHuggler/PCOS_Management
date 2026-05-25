@@ -4,36 +4,36 @@ import SwiftData
 struct SupplementLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var appState
     @State private var viewModel: SupplementViewModel?
     @State private var saveCoordinator = SaveInteractionCoordinator()
     @State private var activeAlert: ActiveAlert?
     @State private var showAddSheet = false
     @State private var todaysLogs: [SupplementLog] = []
     @State private var initialLogCount = 0
+    @State private var canRepeatYesterday = false
+    @State private var activeDisclosure: InsightDisclosureContent?
 
     @State private var selectedCatalogSupplement: PCOSSupplement?
-    @State private var customName = ""
+    @State private var supplementNameText = ""
     @State private var dosageText = ""
     @State private var brandText = ""
     @State private var scheduledTime = Date()
-    @State private var useCustomName = false
     @State private var addFormDirtyTracker: FormDirtyTracker<AddFormSnapshot>?
     @State private var addFormAlert: AddFormAlert?
     @FocusState private var addSheetFocusedField: AddSheetFocusedField?
 
     private enum AddSheetFocusedField: Hashable {
-        case customName
+        case supplementName
         case dosage
         case brand
     }
 
     private struct AddFormSnapshot: Equatable {
-        var selectedSupplementName: String?
-        var customName: String
+        var supplementNameText: String
         var dosageText: String
         var brandText: String
         var scheduledTime: Date
-        var useCustomName: Bool
     }
 
     private enum AddFormAlert: Identifiable {
@@ -60,21 +60,31 @@ struct SupplementLogView: View {
                 if let viewModel {
                     ScrollView {
                         VStack(spacing: AppTheme.spacing16) {
+                            utilityActionsSection(viewModel: viewModel)
                             todaysSupplementsSection(viewModel: viewModel)
                             addSupplementButton
                         }
                         .padding()
                     }
                 } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ScrollView {
+                        VStack(spacing: AppTheme.spacing16) {
+                            ForEach(0..<4, id: \.self) { _ in
+                                SkeletonListRow()
+                                    .cardStyle()
+                            }
+                            SkeletonRing()
+                                .frame(maxWidth: .infinity)
+                        }
+                        .padding()
+                    }
                 }
             }
-            .navigationTitle("Log Supplements")
+            .navigationTitle(L10n.string("Log Supplements", defaultValue: "Log Supplements"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
                             activeAlert = .cancel
                         } else {
@@ -86,7 +96,7 @@ struct SupplementLogView: View {
                     NavigationLink {
                         SupplementHistoryView()
                     } label: {
-                        Label("History", systemImage: "clock.arrow.circlepath")
+                        Label(L10n.string("History", defaultValue: "History"), systemImage: "clock.arrow.circlepath")
                     }
                 }
             }
@@ -108,19 +118,19 @@ struct SupplementLogView: View {
                     )
                 }
             }
-            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if saveCoordinator.isShowingSavedFeedback {
                     SavedFeedbackOverlay()
                 }
             }
+            .sensoryFeedback(.success, trigger: saveCoordinator.isShowingSavedFeedback)
             .sheet(isPresented: $showAddSheet) {
                 addSupplementSheet
             }
             .onAppear {
                 let vm = SupplementViewModel(modelContext: modelContext)
                 viewModel = vm
-                refreshTodaysLogs()
+                refreshSupplementState()
                 initialLogCount = todaysLogs.count
             }
             .onDisappear {
@@ -131,6 +141,82 @@ struct SupplementLogView: View {
     }
 
     @ViewBuilder
+    private func utilityActionsSection(viewModel: SupplementViewModel) -> some View {
+        HStack(spacing: AppTheme.spacing12) {
+            if canRepeatYesterday {
+                Button {
+                    repeatYesterdaySupplements(using: viewModel)
+                } label: {
+                    utilityActionCard(
+                        title: L10n.string("Repeat Yesterday", defaultValue: "Repeat Yesterday"),
+                        subtitle: L10n.string(
+                            "Quickly reuse yesterday's list",
+                            defaultValue: "Quickly reuse yesterday's list"
+                        ),
+                        systemImage: "arrow.triangle.2.circlepath.circle.fill",
+                        tint: AppTheme.sage
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("supplement_log.repeat_yesterday_button")
+            }
+
+            NavigationLink {
+                SupplementHistoryView()
+            } label: {
+                utilityActionCard(
+                    title: L10n.string("View History", defaultValue: "View History"),
+                    subtitle: L10n.string(
+                        "Review adherence and past entries",
+                        defaultValue: "Review adherence and past entries"
+                    ),
+                    systemImage: "clock.arrow.circlepath",
+                    tint: AppTheme.accentColor,
+                    showsDisclosure: true
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("supplement_log.inline_history_button")
+        }
+    }
+
+    private func utilityActionCard(
+        title: String,
+        subtitle: String,
+        systemImage: String,
+        tint: Color,
+        showsDisclosure: Bool = false
+    ) -> some View {
+        HStack(spacing: AppTheme.spacing12) {
+            Image(systemName: systemImage)
+                .appFont(.title3)
+                .foregroundStyle(tint)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(title)
+                    .appFont(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(subtitle)
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .cardStyle()
+    }
+
+    @ViewBuilder
     private func todaysSupplementsSection(viewModel: SupplementViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
             AppTheme.sectionHeader("Today's Supplements")
@@ -138,13 +224,13 @@ struct SupplementLogView: View {
             if todaysLogs.isEmpty {
                 VStack(spacing: AppTheme.spacing12) {
                     Image(systemName: "pill")
-                        .font(.largeTitle)
+                        .appFont(.largeTitle)
                         .foregroundStyle(.tertiary)
                     Text("No supplements logged today")
-                        .font(.subheadline)
+                        .appFont(.subheadline)
                         .foregroundStyle(.secondary)
                     Text("Tap the button below to add your first supplement.")
-                        .font(.caption)
+                        .appFont(.caption)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                 }
@@ -163,29 +249,28 @@ struct SupplementLogView: View {
         HStack(spacing: AppTheme.spacing12) {
             Button {
                 viewModel.toggleTaken(log)
-                refreshTodaysLogs()
+                refreshSupplementState()
             } label: {
                 Image(systemName: log.taken ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
+                    .appFont(.title2)
                     .foregroundStyle(log.taken ? AppTheme.sage : .secondary)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                 Text(log.supplementName)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .appFont(.subheadline, weight: .medium)
                     .strikethrough(!log.taken, color: .secondary)
 
                 HStack(spacing: AppTheme.spacing8) {
                     if let dosage = log.dosageMg, dosage > 0 {
                         Text("\(Int(dosage)) mg")
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                     if let brand = log.brand, !brand.isEmpty {
                         Text(brand)
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -194,15 +279,16 @@ struct SupplementLogView: View {
             Spacer()
 
             Text(log.timeTaken, style: .time)
-                .font(.caption)
+                .appFont(.caption)
                 .foregroundStyle(.secondary)
 
             Button {
                 viewModel.deleteLog(log)
-                refreshTodaysLogs()
+                refreshSupplementState()
+                initialLogCount = todaysLogs.count
             } label: {
                 Image(systemName: "trash")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
@@ -220,10 +306,9 @@ struct SupplementLogView: View {
         } label: {
             HStack(spacing: AppTheme.spacing8) {
                 Image(systemName: "plus.circle.fill")
-                    .font(.title3)
+                    .appFont(.title3)
                 Text("Add Supplement")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .appFont(.subheadline, weight: .semibold)
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
@@ -231,87 +316,108 @@ struct SupplementLogView: View {
             .background(Capsule().fill(AppTheme.accentColor))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("supplement_log.add_button")
+    }
+
+    /// Catalog + recent supplements filtered by the current search text.
+    private var filteredSupplements: [SupplementSearchResult] {
+        let query = supplementNameText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        var results: [SupplementSearchResult] = []
+
+        // Catalog items
+        let catalogMatches = query.isEmpty
+            ? PCOSSupplements.catalog
+            : PCOSSupplements.catalog.filter { $0.name.lowercased().contains(query) }
+        for item in catalogMatches {
+            results.append(.catalog(item))
+        }
+
+        // Recent custom supplements not already in catalog
+        let catalogNames = Set(PCOSSupplements.catalog.map { $0.name.lowercased() })
+        let recentNames = viewModel?.supplementNameSuggestions ?? []
+        let customMatches = recentNames
+            .filter { !catalogNames.contains($0.lowercased()) }
+            .filter { query.isEmpty || $0.lowercased().contains(query) }
+        for name in customMatches {
+            results.append(.recent(name))
+        }
+
+        return results
     }
 
     private var addSupplementSheet: some View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Custom supplement name", isOn: $useCustomName)
+                    TextField("Search or type a supplement name", text: $supplementNameText)
+                        .accessibilityIdentifier("supplement_log.add_sheet.search_field")
+                        .focused($addSheetFocusedField, equals: .supplementName)
+                        .submitLabel(.next)
+                        .onSubmit { addSheetFocusedField = .dosage }
+                        .autocorrectionDisabled()
 
-                    if useCustomName {
-                        TextField("Supplement name", text: $customName)
-                            .focused($addSheetFocusedField, equals: .customName)
-                            .submitLabel(.next)
-                            .onSubmit {
-                                addSheetFocusedField = .dosage
-                            }
-                    } else {
-                        Picker("Supplement", selection: $selectedCatalogSupplement) {
-                            Text("Select...").tag(nil as PCOSSupplement?)
-                            ForEach(PCOSSupplements.catalog) { supplement in
-                                Text(supplement.name)
-                                    .tag(supplement as PCOSSupplement?)
-                            }
-                        }
-                    }
+                    if !filteredSupplements.isEmpty {
+                        ForEach(filteredSupplements) { result in
+                            Button {
+                                selectSupplement(result)
+                            } label: {
+                                HStack(spacing: AppTheme.spacing12) {
+                                    Image(systemName: result.isCatalog ? "pill.fill" : "clock.arrow.circlepath")
+                                        .appFont(.caption)
+                                        .foregroundStyle(result.isCatalog ? AppTheme.accentColor : .secondary)
+                                        .frame(width: 24)
 
-                    if let viewModel, useCustomName, !viewModel.supplementNameSuggestions.isEmpty {
-                        Text("Recent supplements")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(result.name)
+                                            .appFont(.subheadline)
+                                            .foregroundStyle(.primary)
+                                        if let description = result.catalogDescription {
+                                            Text(description)
+                                                .appFont(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: AppTheme.spacing8) {
-                                ForEach(viewModel.supplementNameSuggestions, id: \.self) { suggestion in
-                                    Button {
-                                        customName = suggestion
-                                    } label: {
-                                        Text(suggestion)
-                                            .font(.caption)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(AppTheme.accentColor.opacity(0.12))
-                                            )
+                                    Spacer()
+
+                                    if let dosage = result.defaultDosage, dosage > 0 {
+                                        Text("\(Int(dosage)) mg")
+                                            .appFont(.caption)
+                                            .foregroundStyle(.tertiary)
+                                    }
+
+                                    if result.name.lowercased() == supplementNameText.lowercased() {
+                                        Image(systemName: "checkmark")
+                                            .appFont(.caption)
                                             .foregroundStyle(AppTheme.accentColor)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
-                            .padding(.vertical, 2)
+                            .buttonStyle(.plain)
                         }
                     }
                 } header: {
                     Text("Supplement")
                 } footer: {
-                    if let selected = selectedCatalogSupplement, !useCustomName {
-                        Text(selected.description)
+                    if let selected = selectedCatalogSupplement {
+                        supplementSelectionFooter(for: selected)
                     }
                 }
 
-                Section("Details") {
-                    if let viewModel, !useCustomName {
-                        Text(viewModel.recommendedDosageLabel(for: selectedCatalogSupplement))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        if let recommendedValue = viewModel.recommendedDosageValue(for: selectedCatalogSupplement) {
-                            Button {
-                                dosageText = recommendedValue
-                            } label: {
-                                Text("Use recommended dose")
-                                    .font(.caption)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        Capsule()
-                                            .fill(AppTheme.accentColor.opacity(0.12))
-                                    )
-                                    .foregroundStyle(AppTheme.accentColor)
+                Section {
+                    if let selected = selectedCatalogSupplement, selected.defaultDosageMg > 0 {
+                        HStack {
+                            Text(viewModel?.recommendedDosageLabel(for: selected) ?? "")
+                                .appFont(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if dosageText != viewModel?.recommendedDosageValue(for: selected) {
+                                Button(L10n.string("Use recommended", defaultValue: "Use recommended")) {
+                                    dosageText = viewModel?.recommendedDosageValue(for: selected) ?? ""
+                                }
+                                .appFont(.caption)
+                                .foregroundStyle(AppTheme.accentColor)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
 
@@ -320,27 +426,16 @@ struct SupplementLogView: View {
                             .keyboardType(.decimalPad)
                             .focused($addSheetFocusedField, equals: .dosage)
                         Text("mg")
-                            .font(.subheadline)
+                            .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                     }
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: AppTheme.spacing8) {
                             ForEach(["30", "200", "400", "500", "600", "1000", "2000", "4000"], id: \.self) { amount in
-                                Button {
+                                ChipButton(title: "\(amount) mg", color: AppTheme.sage) {
                                     dosageText = amount
-                                } label: {
-                                    Text("\(amount) mg")
-                                        .font(.caption)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(
-                                            Capsule()
-                                                .fill(AppTheme.sage.opacity(0.18))
-                                        )
-                                        .foregroundStyle(AppTheme.sage)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.vertical, 2)
@@ -352,31 +447,22 @@ struct SupplementLogView: View {
 
                     if let viewModel, !viewModel.supplementBrandSuggestions.isEmpty {
                         Text("Recent brands")
-                            .font(.caption)
+                            .appFont(.caption)
                             .foregroundStyle(.secondary)
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: AppTheme.spacing8) {
                                 ForEach(viewModel.supplementBrandSuggestions, id: \.self) { suggestion in
-                                    Button {
+                                    ChipButton(title: suggestion, color: AppTheme.sage) {
                                         brandText = suggestion
-                                    } label: {
-                                        Text(suggestion)
-                                            .font(.caption)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(AppTheme.sage.opacity(0.18))
-                                            )
-                                            .foregroundStyle(AppTheme.sage)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
                             .padding(.vertical, 2)
                         }
                     }
+                } header: {
+                    Text("Details")
                 }
 
                 Section("Time Taken") {
@@ -387,39 +473,40 @@ struct SupplementLogView: View {
                             scheduledTime = viewModel.preferredSupplementTime
                         } label: {
                             Label("Same as yesterday", systemImage: "clock.arrow.circlepath")
-                                .font(.caption)
+                                .appFont(.caption)
                                 .foregroundStyle(AppTheme.accentColor)
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
-            .navigationTitle("Add Supplement")
+            .navigationTitle(L10n.string("Add Supplement", defaultValue: "Add Supplement"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedAddFormChanges {
                             addFormAlert = .discard
                         } else {
                             showAddSheet = false
                         }
                     }
+                    .accessibilityIdentifier("supplement_log.add_sheet.cancel_button")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(L10n.string("Save", defaultValue: "Save")) {
                         saveSupplement()
                     }
                     .disabled(!canSave)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
-                    if addSheetFocusedField == .customName {
-                        Button("Next") { addSheetFocusedField = .dosage }
+                    if addSheetFocusedField == .supplementName {
+                        Button(L10n.string("Next", defaultValue: "Next")) { addSheetFocusedField = .dosage }
                     } else if addSheetFocusedField == .dosage {
-                        Button("Next") { addSheetFocusedField = .brand }
+                        Button(L10n.string("Next", defaultValue: "Next")) { addSheetFocusedField = .brand }
                     }
                     Spacer()
-                    Button("Done") { addSheetFocusedField = nil }
+                    Button(L10n.string("Done", defaultValue: "Done")) { addSheetFocusedField = nil }
                 }
             }
             .interactiveDismissDisabled(hasUnsavedAddFormChanges)
@@ -433,18 +520,68 @@ struct SupplementLogView: View {
                     secondaryButton: .cancel(Text("Keep Editing"))
                 )
             }
-            .onChange(of: selectedCatalogSupplement) { _, newValue in
-                guard !useCustomName else { return }
-                dosageText = viewModel?.recommendedDosageValue(for: newValue) ?? ""
+            .sensoryFeedback(.selection, trigger: selectedCatalogSupplement)
+            .sheet(item: $activeDisclosure) { disclosure in
+                EvidenceDisclosureSheet(content: disclosure, language: appState.selectedAppLanguage)
             }
         }
     }
 
-    private var resolvedName: String {
-        if useCustomName {
-            return customName.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func supplementSelectionFooter(for supplement: PCOSSupplement) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(supplement.description)
+
+            HStack(spacing: AppTheme.spacing8) {
+                Text(
+                    L10n.string(
+                        "Evidence strength",
+                        defaultValue: "Evidence strength",
+                        language: appState.selectedAppLanguage
+                    )
+                )
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text(supplement.evidenceStrength.displayName)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.accentColor)
+            }
+
+            Button(
+                L10n.string(
+                    "Sources",
+                    defaultValue: "Sources",
+                    language: appState.selectedAppLanguage
+                )
+            ) {
+                activeDisclosure = InsightEvidenceCatalog.disclosure(
+                    for: supplement,
+                    language: appState.selectedAppLanguage
+                )
+            }
+            .buttonStyle(.plain)
+            .appFont(.caption, weight: .semibold)
+            .foregroundStyle(AppTheme.accentColor)
+            .accessibilityIdentifier("supplement_log.catalog.\(supplement.key).sources_button")
         }
-        return selectedCatalogSupplement?.name ?? ""
+        .padding(.top, AppTheme.spacing4)
+    }
+
+    private func selectSupplement(_ result: SupplementSearchResult) {
+        supplementNameText = result.name
+        if case .catalog(let supplement) = result {
+            selectedCatalogSupplement = supplement
+            if supplement.defaultDosageMg > 0 {
+                dosageText = viewModel?.recommendedDosageValue(for: supplement) ?? ""
+            }
+        } else {
+            selectedCatalogSupplement = nil
+        }
+        addSheetFocusedField = .dosage
+    }
+
+    private var resolvedName: String {
+        supplementNameText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var canSave: Bool {
@@ -462,54 +599,55 @@ struct SupplementLogView: View {
 
     private var addFormSnapshot: AddFormSnapshot {
         AddFormSnapshot(
-            selectedSupplementName: selectedCatalogSupplement?.name,
-            customName: customName,
+            supplementNameText: supplementNameText,
             dosageText: dosageText,
             brandText: brandText,
-            scheduledTime: scheduledTime,
-            useCustomName: useCustomName
+            scheduledTime: scheduledTime
         )
     }
 
     private func resetAddForm() {
         guard let viewModel else {
             selectedCatalogSupplement = nil
-            customName = ""
+            supplementNameText = ""
             dosageText = ""
             brandText = ""
             scheduledTime = Date()
-            useCustomName = false
             addFormDirtyTracker = FormDirtyTracker(initial: addFormSnapshot)
             return
         }
 
-        let preferredName = viewModel.preferredSupplementName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let catalogMatch = PCOSSupplements.catalog.first(where: {
-            $0.name.caseInsensitiveCompare(preferredName) == .orderedSame
-        }) {
-            selectedCatalogSupplement = catalogMatch
-            useCustomName = false
-            customName = ""
-            dosageText = catalogMatch.defaultDosageMg > 0 ? "\(Int(catalogMatch.defaultDosageMg))" : ""
-        } else if !preferredName.isEmpty {
-            selectedCatalogSupplement = nil
-            customName = preferredName
-            useCustomName = true
-            dosageText = ""
-        } else {
-            selectedCatalogSupplement = nil
-            customName = ""
-            dosageText = ""
-            useCustomName = false
-        }
-
-        brandText = viewModel.preferredSupplementBrand
-        scheduledTime = viewModel.preferredSupplementTime
+        viewModel.reset()
+        selectedCatalogSupplement = nil
+        supplementNameText = viewModel.supplementName
+        dosageText = viewModel.dosageText
+        brandText = viewModel.brand
+        scheduledTime = viewModel.scheduledTime
         addFormDirtyTracker = FormDirtyTracker(initial: addFormSnapshot)
     }
 
-    private func refreshTodaysLogs() {
+    private func refreshSupplementState() {
         todaysLogs = viewModel?.fetchTodaysLogs() ?? []
+        canRepeatYesterday = viewModel?.hasYesterdayLogs() ?? false
+    }
+
+    private func repeatYesterdaySupplements(using viewModel: SupplementViewModel) {
+        do {
+            let insertedCount = try viewModel.repeatYesterdaySupplements()
+            refreshSupplementState()
+            initialLogCount = todaysLogs.count
+            if insertedCount > 0 {
+                saveCoordinator.showSuccessTransient()
+            }
+        } catch {
+            saveCoordinator.showErrorFeedback()
+            activeAlert = .error(
+                String(
+                    localized: "Could not repeat supplements: \(error.localizedDescription)",
+                    comment: "Error shown when yesterday's supplements could not be repeated."
+                )
+            )
+        }
     }
 
     private func saveSupplement() {
@@ -527,26 +665,66 @@ struct SupplementLogView: View {
                 time: scheduledTime
             )
             showAddSheet = false
-            refreshTodaysLogs()
+            refreshSupplementState()
             initialLogCount = todaysLogs.count
             saveCoordinator.showSuccessTransient()
         } catch {
-            saveCoordinator.showErrorHaptic()
-            activeAlert = .error("Could not save supplement: \(error.localizedDescription)")
+            saveCoordinator.showErrorFeedback()
+            activeAlert = .error(
+                String(
+                    localized: "Could not save supplement: \(error.localizedDescription)",
+                    comment: "Error shown when a supplement log cannot be saved."
+                )
+            )
         }
+    }
+}
+
+// MARK: - Supplement Search Result
+
+private enum SupplementSearchResult: Identifiable {
+    case catalog(PCOSSupplement)
+    case recent(String)
+
+    var id: String {
+        switch self {
+        case .catalog(let s): "catalog.\(s.name)"
+        case .recent(let n): "recent.\(n)"
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .catalog(let s): s.name
+        case .recent(let n): n
+        }
+    }
+
+    var isCatalog: Bool {
+        if case .catalog = self { return true }
+        return false
+    }
+
+    var catalogDescription: String? {
+        if case .catalog(let s) = self { return s.description }
+        return nil
+    }
+
+    var defaultDosage: Double? {
+        if case .catalog(let s) = self { return s.defaultDosageMg }
+        return nil
     }
 }
 
 extension PCOSSupplement: Equatable {
     static func == (lhs: PCOSSupplement, rhs: PCOSSupplement) -> Bool {
-        lhs.name == rhs.name && lhs.defaultDosageMg == rhs.defaultDosageMg
+        lhs.key == rhs.key
     }
 }
 
 extension PCOSSupplement: Hashable {
     func hash(into hasher: inout Hasher) {
-        hasher.combine(name)
-        hasher.combine(defaultDosageMg)
+        hasher.combine(key)
     }
 }
 

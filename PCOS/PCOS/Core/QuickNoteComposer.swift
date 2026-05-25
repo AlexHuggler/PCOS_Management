@@ -42,7 +42,48 @@ enum QuickNoteComposer {
         return output
     }
 
+    static func suggestionQuery(in notes: String, availableSuggestions: [String]) -> String {
+        let segments = notes.split(separator: ",", omittingEmptySubsequences: false)
+        guard let lastSegment = segments.last else {
+            return notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let candidate = String(lastSegment).trimmingCharacters(in: .whitespacesAndNewlines)
+        return containsExactMatch(candidate, in: availableSuggestions) ? "" : candidate
+    }
+
+    static func visibleSuggestions(
+        from filteredSuggestions: [String],
+        selectedIn notes: String,
+        availableSuggestions: [String]
+    ) -> [String] {
+        var output: [String] = []
+
+        for token in tokens(from: notes) {
+            if let matched = exactMatch(for: token, in: availableSuggestions)
+                ?? exactMatch(for: token, in: filteredSuggestions) {
+                output.append(matched)
+            } else {
+                output.append(token.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        output.append(contentsOf: filteredSuggestions)
+        return deduplicated(output)
+    }
+
     private static func normalizeToken(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private static func containsExactMatch(_ value: String, in suggestions: [String]) -> Bool {
+        exactMatch(for: value, in: suggestions) != nil
+    }
+
+    private static func exactMatch(for value: String, in suggestions: [String]) -> String? {
+        let normalizedValue = normalizeToken(value)
+        guard !normalizedValue.isEmpty else { return nil }
+
+        return suggestions.first { normalizeToken($0) == normalizedValue }
     }
 }

@@ -33,7 +33,7 @@ struct BloodSugarTrendChart: View {
                 .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
                 .annotation(position: .leading, alignment: .leading) {
                     Text("Normal")
-                        .font(.caption2)
+                        .appFont(.caption2)
                         .foregroundStyle(.green)
                 }
 
@@ -42,7 +42,7 @@ struct BloodSugarTrendChart: View {
                 .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
                 .annotation(position: .leading, alignment: .leading) {
                     Text("Elevated")
-                        .font(.caption2)
+                        .appFont(.caption2)
                         .foregroundStyle(.orange)
                 }
         }

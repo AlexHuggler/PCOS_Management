@@ -4,6 +4,9 @@ import SwiftData
 struct MealHistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: MealViewModel?
+    @State private var pendingDeleteMeal: MealEntry?
+    @State private var showUndoToast = false
+    @State private var selectedMeal: MealEntry?
 
     /// Meals grouped by day, sorted most recent first.
     private var groupedMeals: [(date: Date, meals: [MealEntry])] {
@@ -24,20 +27,26 @@ struct MealHistoryView: View {
                 if let viewModel {
                     let groups = groupedMeals
                     if groups.isEmpty {
-                        ContentUnavailableView(
-                            "No Meals Logged",
-                            systemImage: "fork.knife",
-                            description: Text("Meals you log will appear here.")
+                        AppEmptyStateView(
+                            title: L10n.string("No Meals Logged", defaultValue: "No Meals Logged"),
+                            message: L10n.string("Meals you log will appear here.", defaultValue: "Meals you log will appear here."),
+                            systemImage: "fork.knife"
                         )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List {
                             ForEach(groups, id: \.date) { group in
                                 Section {
                                     ForEach(group.meals) { meal in
                                         MealRow(meal: meal)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture { selectedMeal = meal }
                                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                                 Button(role: .destructive) {
-                                                    viewModel.deleteMeal(meal)
+                                                    pendingDeleteMeal = meal
+                                                    withAnimation {
+                                                        showUndoToast = true
+                                                    }
                                                 } label: {
                                                     Label("Delete", systemImage: "trash")
                                                 }
@@ -48,17 +57,47 @@ struct MealHistoryView: View {
                                 }
                             }
                         }
+                        .overlay(alignment: .bottom) {
+                            if showUndoToast, pendingDeleteMeal != nil {
+                                UndoToast(
+                                    message: L10n.string("Meal entry deleted", defaultValue: "Meal entry deleted"),
+                                    onUndo: {
+                                        withAnimation {
+                                            pendingDeleteMeal = nil
+                                            showUndoToast = false
+                                        }
+                                    },
+                                    onExpire: {
+                                        if let meal = pendingDeleteMeal {
+                                            viewModel.deleteMeal(meal)
+                                        }
+                                        withAnimation {
+                                            pendingDeleteMeal = nil
+                                            showUndoToast = false
+                                        }
+                                    }
+                                )
+                                .padding()
+                            }
+                        }
                     }
                 } else {
-                    ProgressView()
+                    List {
+                        ForEach(0..<5, id: \.self) { _ in
+                            SkeletonListRow()
+                        }
+                    }
                 }
             }
-            .navigationTitle("Meal History")
+            .navigationTitle(L10n.string("Meal History", defaultValue: "Meal History"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if viewModel == nil {
                     viewModel = MealViewModel(modelContext: modelContext)
                 }
+            }
+            .sheet(item: $selectedMeal) { meal in
+                MealDetailView(meal: meal)
             }
         }
     }
@@ -73,19 +112,18 @@ private struct MealRow: View {
         HStack(spacing: AppTheme.spacing12) {
             // Meal type icon
             Image(systemName: meal.mealType.systemImage)
-                .font(.title3)
+                .appFont(.title3)
                 .foregroundStyle(AppTheme.sage)
                 .frame(width: 32, height: 32)
 
             // Description and time
             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                 Text(meal.mealDescription)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .appFont(.subheadline, weight: .medium)
                     .lineLimit(2)
 
                 Text(meal.timestamp, format: .dateTime.hour().minute())
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -93,8 +131,7 @@ private struct MealRow: View {
 
             // GI colored capsule
             Text(giLabel(for: meal.glycemicImpact))
-                .font(.caption2)
-                .fontWeight(.semibold)
+                .appFont(.caption2, weight: .semibold)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(
@@ -126,9 +163,9 @@ private struct MealRow: View {
 
     private func giLabel(for impact: GlycemicImpact) -> String {
         switch impact {
-        case .low: "Low"
-        case .medium: "Med"
-        case .high: "High"
+        case .low: L10n.string("Low", defaultValue: "Low")
+        case .medium: L10n.string("Med", defaultValue: "Med")
+        case .high: L10n.string("High", defaultValue: "High")
         }
     }
 }

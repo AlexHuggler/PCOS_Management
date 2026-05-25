@@ -4,6 +4,13 @@ import Foundation
 
 @Suite("OnboardingProfile")
 struct OnboardingProfileTests {
+    @MainActor
+    private func makeProfile(testName: String = #function) -> OnboardingProfile {
+        let suiteName = "PCOS.OnboardingProfileTests.\(testName)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return OnboardingProfile(defaults: defaults)
+    }
 
     // MARK: - SymptomFocusArea Enum
 
@@ -51,7 +58,7 @@ struct OnboardingProfileTests {
     @Test("symptomFocusAreas persists and retrieves correctly")
     @MainActor
     func focusAreasPersistence() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
 
         // Clear any previous state
         profile.resetOnboarding()
@@ -73,7 +80,7 @@ struct OnboardingProfileTests {
     @Test("preferredSymptomCategories is empty when no focus areas selected")
     @MainActor
     func noFocusAreasYieldsEmptyCategories() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         #expect(profile.preferredSymptomCategories.isEmpty)
     }
@@ -81,7 +88,7 @@ struct OnboardingProfileTests {
     @Test("preferredSymptomCategories maps focus areas to categories")
     @MainActor
     func focusAreasMapToCategories() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         profile.symptomFocusAreas = [.moodEnergy]
         let categories = profile.preferredSymptomCategories
@@ -92,7 +99,7 @@ struct OnboardingProfileTests {
     @Test("painCramps focus includes digestive category for nausea visibility")
     @MainActor
     func painFocusIncludesDigestive() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         profile.symptomFocusAreas = [.painCramps]
 
@@ -104,7 +111,7 @@ struct OnboardingProfileTests {
     @Test("suggestedFirstAction defaults to logPeriod")
     @MainActor
     func defaultFirstAction() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         #expect(profile.suggestedFirstAction == .logPeriod)
     }
@@ -112,7 +119,7 @@ struct OnboardingProfileTests {
     @Test("suggestedFirstAction returns logSymptoms for understandSymptoms goal")
     @MainActor
     func symptomGoalFirstAction() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         profile.primaryGoal = .understandSymptoms
         #expect(profile.suggestedFirstAction == .logSymptoms)
@@ -122,7 +129,7 @@ struct OnboardingProfileTests {
     @Test("hintVerbosity is educational by default")
     @MainActor
     func defaultHintVerbosity() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         #expect(profile.hintVerbosity == .educational)
     }
@@ -130,7 +137,7 @@ struct OnboardingProfileTests {
     @Test("hintVerbosity is brief for experienced users")
     @MainActor
     func experiencedHintVerbosity() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
         profile.pcosExperience = .experienced
         #expect(profile.hintVerbosity == .brief)
@@ -142,7 +149,7 @@ struct OnboardingProfileTests {
     @Test("hints are shown by default and can be dismissed")
     @MainActor
     func hintDismissal() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
 
         #expect(profile.shouldShowHint(OnboardingProfile.hintQuickLogIntro))
@@ -155,7 +162,7 @@ struct OnboardingProfileTests {
     @Test("dismissing a hint twice is a no-op")
     @MainActor
     func doubleDismissIsIdempotent() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
 
         profile.dismissHint(OnboardingProfile.hintCalendarTab)
@@ -170,14 +177,24 @@ struct OnboardingProfileTests {
     @Test("quickLogHintMessage varies by primary goal")
     @MainActor
     func quickLogHintCopy() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
 
         profile.primaryGoal = .trackCycles
-        #expect(profile.quickLogHintMessage.contains("Light, Medium, or Heavy"))
+        #expect(
+            profile.quickLogHintMessage == String(
+                localized: "Tap Light, Medium, or Heavy to log today's flow in one tap.",
+                comment: "Onboarding tooltip introducing the quick period logging buttons."
+            )
+        )
 
         profile.primaryGoal = .understandSymptoms
-        #expect(profile.quickLogHintMessage.contains("even if"))
+        #expect(
+            profile.quickLogHintMessage == String(
+                localized: "You can quickly log your period here — even if that's not your main focus.",
+                comment: "Onboarding tooltip introducing quick period logging for users focused on symptoms."
+            )
+        )
 
         profile.resetOnboarding()
     }
@@ -185,14 +202,24 @@ struct OnboardingProfileTests {
     @Test("calendarHintMessage is brief for experienced users")
     @MainActor
     func calendarHintCopyExperienced() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
 
         profile.pcosExperience = .experienced
-        #expect(profile.calendarHintMessage.contains("second tab"))
+        #expect(
+            profile.calendarHintMessage == String(
+                localized: "Your Calendar is in the second tab.",
+                comment: "Onboarding tooltip pointing users to the Calendar tab."
+            )
+        )
 
         profile.pcosExperience = .newlyDiagnosed
-        #expect(profile.calendarHintMessage.contains("at a glance"))
+        #expect(
+            profile.calendarHintMessage == String(
+                localized: "Check the Calendar tab to see your cycle at a glance.",
+                comment: "Onboarding tooltip pointing users to the Calendar tab."
+            )
+        )
 
         profile.resetOnboarding()
     }
@@ -200,19 +227,67 @@ struct OnboardingProfileTests {
     @Test("symptomHintMessage uses focus area context")
     @MainActor
     func symptomHintUsesContext() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
         profile.resetOnboarding()
 
         profile.symptomFocusAreas = [.painCramps]
-        #expect(profile.symptomHintMessage.contains("pain"))
+        #expect(
+            profile.symptomHintMessage == String(
+                localized: "Tracking pain alongside your cycle helps spot which days hit hardest.",
+                comment: "Onboarding tooltip encouraging daily symptom logging for pain and cramps."
+            )
+        )
 
         profile.symptomFocusAreas = [.moodEnergy]
-        #expect(profile.symptomHintMessage.contains("feeling"))
+        #expect(
+            profile.symptomHintMessage == String(
+                localized: "Log how you're feeling each day — patterns emerge within a cycle or two.",
+                comment: "Onboarding tooltip encouraging daily symptom logging for mood and energy."
+            )
+        )
 
         profile.symptomFocusAreas = []
-        #expect(profile.symptomHintMessage.contains("daily"))
+        #expect(
+            profile.symptomHintMessage == String(
+                localized: "Logging symptoms daily helps surface patterns with your cycle.",
+                comment: "Onboarding tooltip encouraging daily symptom logging."
+            )
+        )
 
         profile.resetOnboarding()
+    }
+
+    // MARK: - Guided Action Completion
+
+    @Test("dismissed log sheet without a new record stays incomplete")
+    func cancelledGuidedActionDismissalDoesNotComplete() {
+        #expect(!GuidedActionCompletionPolicy.didCreateRecord(initialCount: 3, currentCount: 3))
+    }
+
+    @Test("saved first log completes guided action")
+    func savedGuidedActionRecordCompletes() {
+        #expect(GuidedActionCompletionPolicy.didCreateRecord(initialCount: 3, currentCount: 4))
+    }
+
+    @Test("missing initial guided action baseline stays incomplete")
+    func missingGuidedActionBaselineStaysIncomplete() {
+        #expect(!GuidedActionCompletionPolicy.didCreateRecord(initialCount: nil, currentCount: 1))
+    }
+
+    @Test("guided action skip copy accurately describes continuing setup")
+    func guidedActionSkipCopy() {
+        #expect(
+            SuggestedFirstAction.logPeriod.guidedActionSkipTitle == String(
+                localized: "Continue without first log",
+                comment: "Secondary guided action button label."
+            )
+        )
+        #expect(
+            SuggestedFirstAction.logSymptoms.guidedActionSkipHint == String(
+                localized: "Continue setup without logging your first entry right now.",
+                comment: "Accessibility hint for the guided action skip button."
+            )
+        )
     }
 
     // MARK: - Reset
@@ -220,7 +295,7 @@ struct OnboardingProfileTests {
     @Test("resetOnboarding clears all onboarding state")
     @MainActor
     func resetClearsAllState() {
-        let profile = OnboardingProfile()
+        let profile = makeProfile()
 
         // Set everything
         profile.hasCompletedWelcome = true

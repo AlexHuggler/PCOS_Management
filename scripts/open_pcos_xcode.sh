@@ -4,14 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROOT_PROJECT="$ROOT_DIR/PCOS.xcodeproj"
 STALE_NESTED_PROJECT="$ROOT_DIR/PCOS/PCOS.xcodeproj"
-PARITY_SCRIPT="$ROOT_DIR/scripts/check_tree_parity.sh"
 
 usage() {
   cat <<'USAGE'
 Usage: ./scripts/open_pcos_xcode.sh [--no-open]
 
 Regenerates the canonical root project, removes stale nested project drift,
-verifies source-tree parity, and opens the root Xcode project.
+and opens the root Xcode project.
 
 Options:
   --no-open   Skip opening Xcode (useful for CI/scripting checks)
@@ -43,9 +42,6 @@ if [[ -d "$STALE_NESTED_PROJECT" ]]; then
   rm -r "$STALE_NESTED_PROJECT"
 fi
 
-echo "Running tree parity check..."
-"$PARITY_SCRIPT"
-
 if [[ "${1:-}" == "--no-open" ]]; then
   echo "Setup complete. Skipped opening Xcode."
   exit 0
@@ -53,4 +49,3 @@ fi
 
 echo "Opening root project: $ROOT_PROJECT"
 open "$ROOT_PROJECT"
-

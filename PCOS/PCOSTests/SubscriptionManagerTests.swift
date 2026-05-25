@@ -1,20 +1,23 @@
-import Testing
 import Foundation
+import Testing
 @testable import PCOS
 
 @Suite("SubscriptionManager")
 @MainActor
 struct SubscriptionManagerTests {
     final class MockBillingClient: PremiumBillingClient {
-        let mode: BillingBackendMode
-        var productsToReturn: [BillingProduct] = []
+        var backendMode: BillingBackendMode = .revenueCat
+        var lastStatusMessage: String?
         var entitlements: Set<String> = []
         var shouldThrowOnConfigure = false
+        var checkSubscriptionStatusCallCount = 0
+        var loadProductsCallCount = 0
+        var purchaseCallCount = 0
+        var restoreCallCount = 0
+        var loadedProducts: [BillingProduct] = []
+        var purchaseOutcome: BillingPurchaseOutcome = .success
+        var lastPurchasedProductID: String?
         var entitlementContinuation: AsyncStream<Set<String>>.Continuation?
-
-        init(mode: BillingBackendMode) {
-            self.mode = mode
-        }
 
         func configureIfNeeded() throws {
             if shouldThrowOnConfigure {
@@ -22,21 +25,24 @@ struct SubscriptionManagerTests {
             }
         }
 
-        func loadProducts() async throws -> [BillingProduct] {
-            productsToReturn
-        }
-
-        func purchase(_ product: BillingProduct) async throws -> BillingPurchaseResult {
-            entitlements.insert(product.id)
-            return .purchased(productID: product.id)
-        }
-
-        func restorePurchases() async throws -> Set<String> {
-            entitlements
-        }
-
         func currentEntitlements() async throws -> Set<String> {
-            entitlements
+            checkSubscriptionStatusCallCount += 1
+            return entitlements
+        }
+
+        func loadProducts() async throws -> [BillingProduct] {
+            loadProductsCallCount += 1
+            return loadedProducts
+        }
+
+        func purchase(productID: String) async throws -> BillingPurchaseOutcome {
+            purchaseCallCount += 1
+            lastPurchasedProductID = productID
+            return purchaseOutcome
+        }
+
+        func restorePurchases() async throws {
+            restoreCallCount += 1
         }
 
         func makeEntitlementUpdatesStream() -> AsyncStream<Set<String>> {
@@ -56,23 +62,24 @@ struct SubscriptionManagerTests {
         }
     }
 
-    private func makeManager(
-        mode: BillingBackendMode = .localStoreKit,
-        client: MockBillingClient? = nil
-    ) -> SubscriptionManager {
-        let mockClient = client ?? MockBillingClient(mode: mode)
+    private func makeConfiguration() -> BillingConfiguration {
+        BillingConfiguration(
+            backendMode: .revenueCat,
+            revenueCatPublicSDKKey: "appl_test_key",
+            revenueCatEntitlementID: "CycleBalance Unlimited",
+            revenueCatOfferingID: "default",
+            productIDs: [
+                SubscriptionManager.monthlyProductID,
+                SubscriptionManager.yearlyProductID,
+            ]
+        )
+    }
+
+    private func makeManager(client: MockBillingClient? = nil) -> SubscriptionManager {
+        let mockClient = client ?? MockBillingClient()
         return SubscriptionManager(
-            mode: mode,
-            configuration: BillingConfiguration(
-                revenueCatPublicSDKKey: nil,
-                revenueCatEntitlementID: "premium",
-                revenueCatOfferingID: "default",
-                productIDs: [
-                    SubscriptionManager.monthlyProductID,
-                    SubscriptionManager.yearlyProductID,
-                ]
-            ),
-            clientFactory: { _, _ in mockClient }
+            configuration: makeConfiguration(),
+            clientFactory: { _ in mockClient }
         )
     }
 
@@ -84,12 +91,6 @@ struct SubscriptionManagerTests {
             await Task.yield()
             try? await Task.sleep(for: .milliseconds(10))
         }
-    }
-
-    @Test("Products array starts empty")
-    func productsStartEmpty() {
-        let manager = makeManager()
-        #expect(manager.products.isEmpty)
     }
 
     @Test("isPremium is false when no purchases exist")
@@ -106,66 +107,113 @@ struct SubscriptionManagerTests {
 
     @Test("Monthly product ID is correct")
     func monthlyProductID() {
-        #expect(SubscriptionManager.monthlyProductID == "com.cyclebalance.premium.monthly")
+        #expect(SubscriptionManager.monthlyProductID == "cyclebalance.premium.monthly")
     }
 
     @Test("Yearly product ID is correct")
     func yearlyProductID() {
-        #expect(SubscriptionManager.yearlyProductID == "com.cyclebalance.premium.yearly")
+        #expect(SubscriptionManager.yearlyProductID == "cyclebalance.premium.annual")
     }
 
-    @Test("monthlyProduct is nil when products are empty")
-    func monthlyProductNilWhenEmpty() {
-        let manager = makeManager()
-        #expect(manager.monthlyProduct == nil)
-    }
+    @Test("Client factory receives RevenueCat configuration values")
+    func clientFactoryReceivesRevenueCatConfigurationValues() {
+        var capturedConfiguration: BillingConfiguration?
 
-    @Test("yearlyProduct is nil when products are empty")
-    func yearlyProductNilWhenEmpty() {
-        let manager = makeManager()
-        #expect(manager.yearlyProduct == nil)
-    }
-
-    @Test("isLoading starts as false")
-    func isLoadingStartsFalse() {
-        let manager = makeManager()
-        #expect(!manager.isLoading)
-    }
-
-    @Test("errorMessage starts as nil")
-    func errorMessageStartsNil() {
-        let manager = makeManager()
-        #expect(manager.errorMessage == nil)
-    }
-
-    @Test("Backend selection uses requested mode")
-    func backendSelectionUsesRequestedMode() {
-        var capturedMode: BillingBackendMode?
-        let manager = SubscriptionManager(
-            mode: .revenuecat,
-            configuration: BillingConfiguration(
-                revenueCatPublicSDKKey: "test_key",
-                revenueCatEntitlementID: "premium",
-                revenueCatOfferingID: "default",
-                productIDs: [
-                    SubscriptionManager.monthlyProductID,
-                    SubscriptionManager.yearlyProductID,
-                ]
-            ),
-            clientFactory: { mode, _ in
-                capturedMode = mode
-                return MockBillingClient(mode: mode)
+        _ = SubscriptionManager(
+            configuration: makeConfiguration(),
+            clientFactory: { configuration in
+                capturedConfiguration = configuration
+                return MockBillingClient()
             }
         )
 
-        #expect(capturedMode == .revenuecat)
-        #expect(manager.billingMode == .revenuecat)
-        #expect(!manager.isLocalTestMode)
+        #expect(capturedConfiguration?.revenueCatPublicSDKKey == "appl_test_key")
+        #expect(capturedConfiguration?.backendMode == .revenueCat)
+        #expect(capturedConfiguration?.revenueCatEntitlementID == "CycleBalance Unlimited")
+        #expect(capturedConfiguration?.revenueCatOfferingID == "default")
+        #expect(
+            capturedConfiguration?.productIDs == [
+                SubscriptionManager.monthlyProductID,
+                SubscriptionManager.yearlyProductID,
+            ]
+        )
+    }
+
+    @Test("Billing configuration sanitizes quoted xcconfig values")
+    func billingConfigurationSanitizesQuotedValues() {
+        #expect(BillingConfiguration.sanitized("\"CycleBalance Unlimited\"") == "CycleBalance Unlimited")
+        #expect(BillingConfiguration.sanitized("\"default\"") == "default")
+        #expect(BillingConfiguration.sanitized(" appl_test_key ") == "appl_test_key")
+        #expect(BillingConfiguration.sanitized("$(REVENUECAT_ENTITLEMENT_ID)") == nil)
+    }
+
+    @Test("checkSubscriptionStatus refreshes current entitlements")
+    func checkSubscriptionStatusRefreshesEntitlements() async throws {
+        let client = MockBillingClient()
+        client.entitlements = [SubscriptionManager.monthlyProductID]
+        client.lastStatusMessage = "diagnostic"
+        let manager = makeManager(client: client)
+
+        await manager.checkSubscriptionStatus()
+
+        #expect(client.checkSubscriptionStatusCallCount == 1)
+        #expect(manager.purchasedProductIDs == [SubscriptionManager.monthlyProductID])
+        #expect(manager.isPremium)
+        #expect(manager.statusMessage == "diagnostic")
+    }
+
+    @Test("loadProducts delegates through the shared billing client")
+    func loadProductsDelegatesToBillingClient() async throws {
+        let client = MockBillingClient()
+        client.loadedProducts = [
+            BillingProduct(
+                id: SubscriptionManager.monthlyProductID,
+                displayName: "CycleBalance Premium Monthly",
+                displayPrice: "$6.99",
+                price: 6.99,
+                subscriptionPeriod: BillingPeriod(unit: .month, value: 1)
+            ),
+        ]
+        client.lastStatusMessage = "products ready"
+
+        let manager = makeManager(client: client)
+        let products = try await manager.loadProducts()
+
+        #expect(client.loadProductsCallCount == 1)
+        #expect(products == client.loadedProducts)
+        #expect(manager.statusMessage == "products ready")
+    }
+
+    @Test("purchase delegates to the active billing client")
+    func purchaseDelegatesToBillingClient() async throws {
+        let client = MockBillingClient()
+        client.purchaseOutcome = .pending
+        client.lastStatusMessage = "purchase pending"
+
+        let manager = makeManager(client: client)
+        let outcome = try await manager.purchase(productID: SubscriptionManager.yearlyProductID)
+
+        #expect(client.purchaseCallCount == 1)
+        #expect(client.lastPurchasedProductID == SubscriptionManager.yearlyProductID)
+        #expect(outcome == .pending)
+        #expect(manager.statusMessage == "purchase pending")
+    }
+
+    @Test("restorePurchases delegates to the active billing client")
+    func restorePurchasesDelegatesToBillingClient() async throws {
+        let client = MockBillingClient()
+        client.lastStatusMessage = "restored"
+
+        let manager = makeManager(client: client)
+        try await manager.restorePurchases()
+
+        #expect(client.restoreCallCount == 1)
+        #expect(manager.statusMessage == "restored")
     }
 
     @Test("stopEntitlementListener stops entitlement updates after stop")
     func stopEntitlementListenerStopsUpdates() async throws {
-        let client = MockBillingClient(mode: .localStoreKit)
+        let client = MockBillingClient()
         let manager = makeManager(client: client)
 
         await waitForEntitlementStreamReady(client: client)

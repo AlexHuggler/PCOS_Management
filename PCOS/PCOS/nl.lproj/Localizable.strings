@@ -1,0 +1,2438 @@
+/* PDF report inline cycle length suffix. */
+" (%lld days)" = "(%lld dagen)";
+
+/* No comment provided by engineer. */
+"%@ (g)" = "%@ (g)";
+
+/* Subscription price displayed together with the billing period. */
+"%@ / %@" = "%@ / %@";
+
+/* PDF report value for average cycle length in days. */
+"%@ days" = "%@ dagen";
+
+/* No comment provided by engineer. */
+"%@ flow" = "%@ stroom";
+
+/* Insight title describing a supplement that may correlate with better symptom scores. */
+"%@ may be helping" = "%@ kan helpen";
+
+/* CSV export dosage value in milligrams. */
+"%@ mg" = "%@ mg";
+
+/* Sample symptom note used in demo data. */
+"%@ noted during routine tracking" = "%@ genoteerd tijdens routinematige tracking";
+
+/* Insight title describing a pair of symptoms that often happen on the same day. */
+"%@ often appear together" = "%@ verschijnen vaak samen";
+
+/* Accessibility label for an individual severity level button. */
+"%@ severity" = "%@ ernst";
+
+/* No comment provided by engineer. */
+"%@, %@" = "%@, %@";
+
+/* Accessibility label for a symptom selection tile. */
+"%@, severity %@" = "%@, ernst %@";
+
+/* Accessibility label for a symptom chip, including the symptom name and severity. */
+"%@, severity %lld of 5, %@" = "%@, ernst %lld van 5, %@";
+
+/* PDF report line showing blood sugar average by reading type. */
+"%@: %@ mg/dL (%lld readings)" = "%@: %@ mg/dL (%lld metingen)";
+
+/* No comment provided by engineer. */
+"%@: %@, %@" = "%@: %@, %@";
+
+/* No comment provided by engineer. */
+"%@: %@. %@" = "%@: %@. %@";
+
+/* PDF report line for average symptom severity. */
+"%@: %@/5" = "%@: %@/5";
+
+/* PDF report line for symptom frequency and average severity. */
+"%@: %lld occurrences, avg severity %@/5" = "%@: %lld voorvallen, gemiddelde ernst %@/5";
+
+/* PDF report line showing supplement adherence by supplement. */
+"%@: %lld taken, %lld missed (%lld%% adherence)" = "%@: %lld genomen, %lld gemist (%lld%% naleving)";
+
+/* Sample cycle note used in demo data when a new period begins. */
+"%@: period started" = "%@: periode gestart";
+
+/* Accessibility label for a tracking hub card, including title and subtitle. */
+"%@. %@" = "%@. %@";
+
+/* No comment provided by engineer. */
+"%@g" = "%@g";
+
+/* No comment provided by engineer. */
+"%lld" = "%lld";
+
+/* PDF report value for cycle length range in days. */
+"%lld - %lld days" = "%lld - %lld dagen";
+
+/* No comment provided by engineer. */
+"%lld days" = "%lld dagen";
+
+/* No comment provided by engineer. */
+"%lld mg" = "%lld mg";
+
+/* No comment provided by engineer. */
+"%lld mg/dL" = "%lld mg/dL";
+
+/* No comment provided by engineer. */
+"%lld missed" = "%lld overgeslagen";
+
+/* Questionnaire progress text showing how many symptom focus areas are selected.
+Text showing how many symptom focus areas are selected during onboarding. */
+"%lld of %lld selected" = "%lld van %lld geselecteerd";
+
+/* Summary showing how many scheduled supplements were marked taken today. */
+"%lld of %lld taken today" = "%lld van %lld vandaag genomen";
+
+/* No comment provided by engineer. */
+"%lld records • schema v%lld" = "%lld records • schema v%lld";
+
+/* No comment provided by engineer. */
+"%lld/%lld" = "%lld/%lld";
+
+/* No comment provided by engineer. */
+"%lld%%" = "%lld%%";
+
+/* Supporting text showing the confidence percentage for an insight. */
+"%lld%% confidence" = "%lld%% vertrouwen";
+
+/* Insight content about a high proportion of high glycemic index meals. */
+"%lld%% of your logged meals are high glycemic impact. For PCOS management, aiming for more low-GI meals may help with insulin sensitivity and symptom management." = "%lld%% van uw geregistreerde maaltijden heeft een hoge glycemische impact. Voor het beheer van PCOS kan het streven naar meer maaltijden met een lage GI waarde helpen bij de insulinegevoeligheid en symptoombeheersing.";
+
+/* Insight content about a high proportion of low glycemic index meals. */
+"%lld%% of your logged meals are low glycemic impact. This is great for PCOS management and insulin sensitivity. Keep it up!" = "%lld%% van uw geregistreerde maaltijden heeft een lage glycemische impact. Dit is geweldig voor het beheer van PCOS en de insulinegevoeligheid. Ga zo door!";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld day](inflect: true)" = "^[%lld dag](verbuigen: waar)";
+
+/* Badge showing the user's current logging streak in days. */
+"^[%lld day](inflect: true) logging streak" = "^[%lld dag](verbuigen: waar) logboekreeks";
+
+/* Summary showing how many meals were logged today. */
+"^[%lld meal](inflect: true) logged today" = "^[%lld maaltijd](verbuigen: waar) vandaag gelogd";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld month](inflect: true)" = "^[%lld maand](verbuigen: waar)";
+
+/* Summary showing how many blood sugar readings were logged today. */
+"^[%lld reading](inflect: true) today" = "^[%lld lezen](verbuigen: waar) vandaag";
+
+/* Subtitle showing how many symptoms were copied from yesterday. */
+"^[%lld symptom](inflect: true)" = "^[%lld symptoom](verbuigen: waar)";
+
+/* Footer text showing how many symptoms are currently selected. */
+"^[%lld symptom](inflect: true) selected" = "^[%lld symptoom](verbuigen: waar) geselecteerd";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld week](inflect: true)" = "^[%lld week](verbuigen: waar)";
+
+/* Subscription period unit shown in the paywall. */
+"^[%lld year](inflect: true)" = "^[%lld jaar](verbuigen: waar)";
+
+/* No comment provided by engineer. */
+"0" = "0";
+
+/* Sample blood sugar meal context used in demo data. */
+"2h post meal" = "2 uur na de maaltijd";
+
+/* No comment provided by engineer. */
+"About" = "Over";
+
+/* No comment provided by engineer. */
+"Account" = "Rekening";
+
+/* Symptom label. */
+"Acne" = "Acne";
+
+/* No comment provided by engineer. */
+"Add any observations..." = "Voeg eventuele opmerkingen toe...";
+
+/* No comment provided by engineer. */
+"Add more %@ photos to compare changes over time." = "Voeg meer %@ foto's toe om de veranderingen in de loop van de tijd te vergelijken.";
+
+/* No comment provided by engineer. */
+"Add one more photo to compare progress." = "Voeg nog een foto toe om de voortgang te vergelijken.";
+
+/* No comment provided by engineer. */
+"Add Photo" = "Foto toevoegen";
+
+/* No comment provided by engineer. */
+"Add photos for %@ to start comparing changes over time." = "Voeg foto's toe voor %@ om de veranderingen in de loop van de tijd te vergelijken.";
+
+/* No comment provided by engineer. */
+"Add Supplement" = "Supplement toevoegen";
+
+/* No comment provided by engineer. */
+"adherence" = "naleving";
+
+/* Blood sugar reading type. */
+"After Meal" = "Na de maaltijd";
+
+/* Insight content describing worse symptoms after shorter sleep. */
+"After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after good sleep. Prioritizing sleep may help reduce PCOS symptoms." = "Na nachten met minder dan %lld uur slaap is de ernst van uw symptomen gemiddeld %@/5, vergeleken met %@/5 na een goede nachtrust. Prioriteit geven aan slaap kan de PCOS symptomen helpen verminderen.";
+
+/* No comment provided by engineer. */
+"All reminders stay on your device." = "Alle herinneringen blijven op uw apparaat staan.";
+
+/* No comment provided by engineer. */
+"Allow CycleBalance to read your health data" = "Geef CycleBalance toestemming om uw gezondheidsgegevens te lezen";
+
+/* Symptom label. */
+"Anxiety" = "Spanning";
+
+/* No comment provided by engineer. */
+"Any additional notes" = "Eventuele aanvullende opmerkingen";
+
+/* No comment provided by engineer. */
+"Any additional notes..." = "Eventuele aanvullende opmerkingen...";
+
+/* No comment provided by engineer. */
+"Apple Health" = "Apple Gezondheid";
+
+/* No comment provided by engineer. */
+"Apple Health is not available on this device. HealthKit integration requires a physical iPhone." = "Apple Health is niet beschikbaar op dit apparaat. Voor HealthKit-integratie is een fysieke iPhone vereist.";
+
+/* Sample symptom note used in demo data for a menstrual-phase symptom. */
+"Associated symptom during menstrual phase" = "Bijbehorend symptoom tijdens de menstruatiefase";
+
+/* No comment provided by engineer. */
+"Authorization" = "Autorisatie";
+
+/* No comment provided by engineer. */
+"Average" = "Gemiddeld";
+
+/* PDF report subheading for blood sugar averages by reading type. */
+"Average by Reading Type" = "Gemiddeld per leestype";
+
+/* PDF report summary line showing average cycle length. */
+"Average length: %@" = "Gemiddelde lengte: %@";
+
+/* PDF report subheading for average symptom severity. */
+"Average Severity per Symptom" = "Gemiddelde ernst per symptoom";
+
+/* Chart annotation showing average cycle length in days. */
+"Avg: %@d" = "Gemiddeld: %@d";
+
+/* Symptom label. */
+"Back Pain" = "Rugpijn";
+
+/* Backup import error shown when the selected backup file is malformed. */
+"Backup data is invalid: %@" = "Back-upgegevens zijn ongeldig: %@";
+
+/* Backup import error shown when imported data references a missing cycle record. */
+"Backup references missing cycle %@." = "Back-upreferenties ontbreken cyclus %@.";
+
+/* Backup import error shown when imported data references a missing cycle entry record. */
+"Backup references missing cycle entry %@." = "Back-upreferenties ontbreken cyclusinvoer %@.";
+
+/* Supporting text showing how many records were used to generate an insight. */
+"Based on %lld data points" = "Gebaseerd op %lld gegevenspunten";
+
+/* Blood sugar reading type. */
+"Before Meal" = "Vóór de maaltijd";
+
+/* No comment provided by engineer. */
+"Billing Mode" = "Factureringsmodus";
+
+/* Symptom label. */
+"Bloating" = "Opgeblazen gevoel";
+
+/* CSV export row type value.
+PDF report section title. */
+"Blood Sugar" = "Bloedsuiker";
+
+/* No comment provided by engineer. */
+"Blood Sugar History" = "Bloedsuikergeschiedenis";
+
+/* Photo journal body area label. */
+"Body" = "Lichaam";
+
+/* Symptom label. */
+"Body Hair" = "Lichaamshaar";
+
+/* No comment provided by engineer. */
+"Brand (optional)" = "Merk (optioneel)";
+
+/* Meal type label. */
+"Breakfast" = "Ontbijt";
+
+/* Symptom label for acne or skin breakouts. */
+"Breakouts" = "Uitbraken";
+
+/* Symptom label. */
+"Breast Tenderness" = "Gevoelige borsten";
+
+/* Tab title. */
+"Calendar" = "Kalender";
+
+/* No comment provided by engineer. */
+"Camera Access Needed" = "Cameratoegang vereist";
+
+/* No comment provided by engineer. */
+"Camera Unavailable" = "Camera niet beschikbaar";
+
+/* No comment provided by engineer. */
+"Cancel" = "Annuleren";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Check the Calendar tab to see your cycle at a glance." = "Kijk op het tabblad Kalender om uw cyclus in één oogopslag te zien.";
+
+/* Sample meal description used in demo data. */
+"Chicken wrap with hummus" = "Kipwrap met hummus";
+
+/* Photo journal body area label. */
+"Chin" = "Kin";
+
+/* No comment provided by engineer. */
+"Clear" = "Duidelijk";
+
+/* No comment provided by engineer. */
+"Clear all" = "Alles wissen";
+
+/* No comment provided by engineer. */
+"Close" = "Sluiten";
+
+/* No comment provided by engineer. */
+"CloudKit Sync" = "CloudKit Synchroniseren";
+
+/* No comment provided by engineer. */
+"Common on period days" = "Vaak op menstruatiedagen";
+
+/* No comment provided by engineer. */
+"Compare Photos" = "Vergelijk foto's";
+
+/* No comment provided by engineer. */
+"Confidence" = "Vertrouwen";
+
+/* No comment provided by engineer. */
+"Connect to Apple Health" = "Maak verbinding met Apple Health";
+
+/* No comment provided by engineer. */
+"Connected to Apple Health" = "Verbonden met Apple Health";
+
+/* Follow-up guidance when symptom severity is worsening. */
+"Consider reviewing recent changes to your routine." = "Overweeg om recente wijzigingen in uw routine te bekijken.";
+
+/* Sample demo insight title. */
+"Consistent inositol use tracks with fewer cravings" = "Consistent gebruik van inositol-tracks met minder trek";
+
+/* Sample photo journal note used in demo data. */
+"Consistent lighting and angle" = "Consistente verlichting en hoek";
+
+/* Symptom label. */
+"Constipation" = "Constipatie";
+
+/* No comment provided by engineer. */
+"Continue" = "Doorgaan";
+
+/* Error shown when CSV export generation fails. */
+"Could not create CSV export: %@" = "Kan CSV-export niet maken: %@";
+
+/* Error shown when JSON backup generation fails. */
+"Could not create JSON backup: %@" = "Kan JSON back-up niet maken: %@";
+
+/* Error shown when report generation throws an error. */
+"Could not generate report: %@" = "Kan rapport niet genereren: %@";
+
+/* Fallback error shown when importing a JSON backup fails. */
+"Could not import backup: %@" = "Kan back-up niet importeren: %@";
+
+/* Fallback error shown when loading a debug demo scenario fails. */
+"Could not import demo data: %@" = "Kan demogegevens niet importeren: %@";
+
+/* Error shown when importing a meal photo fails.
+Error shown when importing a progress photo fails. */
+"Could not import photo: %@" = "Kan foto niet importeren: %@";
+
+/* Error shown when a period day cannot be saved. */
+"Could not log period: %@" = "Kan periode niet loggen: %@";
+
+/* Error shown when the user selects an unreadable backup file. */
+"Could not open backup: %@" = "Kan back-up niet openen: %@";
+
+/* Paywall error shown when restoring purchases fails. */
+"Could not restore purchases. Please try again." = "Kon aankopen niet herstellen. Probeer het opnieuw.";
+
+/* No comment provided by engineer. */
+"Could not Save" = "Kan niet opslaan";
+
+/* Error shown when a meal entry cannot be saved. */
+"Could not save meal: %@" = "Kan maaltijd niet opslaan: %@";
+
+/* Error shown when a progress photo cannot be saved. */
+"Could not save photo: %@" = "Kan foto niet opslaan: %@";
+
+/* Error shown when a blood sugar reading cannot be saved. */
+"Could not save reading: %@" = "Kan lezing niet opslaan: %@";
+
+/* Error shown when a supplement log cannot be saved. */
+"Could not save supplement: %@" = "Kan aanvulling niet opslaan: %@";
+
+/* Error shown when symptom entries cannot be saved. */
+"Could not save symptoms: %@" = "Kon symptomen niet opslaan: %@";
+
+/* Error shown when skipping a period fails. */
+"Could not skip period: %@" = "Kan periode niet overslaan: %@";
+
+/* Fallback error shown when the app cannot generate or load insights. */
+"Couldn't refresh insights right now. Please try again." = "Kan inzichten momenteel niet vernieuwen. Probeer het opnieuw.";
+
+/* Inline error shown when quick-logging a period day fails. */
+"Couldn't save quick log. Please try again." = "Kan snellogboek niet opslaan. Probeer het opnieuw.";
+
+/* No comment provided by engineer. */
+"Count" = "Aantal";
+
+/* Symptom label. */
+"Cramps" = "Krampen";
+
+/* Symptom label. */
+"Cravings" = "Verlangen";
+
+/* Sample cycle label used in demo data notes. */
+"Current cycle" = "Huidige cyclus";
+
+/* No comment provided by engineer. */
+"Custom supplement name" = "Aangepaste supplementnaam";
+
+/* CSV export row type value. */
+"Cycle" = "Cyclus";
+
+/* Sample cycle label used in demo data notes. */
+"Cycle %lld" = "Cyclus %lld";
+
+/* PDF report subheading for the list of cycle date ranges. */
+"Cycle Dates" = "Cyclusdata";
+
+/* No comment provided by engineer. */
+"Cycle Details" = "Cyclusdetails";
+
+/* No comment provided by engineer. */
+"Cycle Length Trend" = "Trend cycluslengte";
+
+/* Insight category label. */
+"Cycle Pattern" = "Cycluspatroon";
+
+/* Insight generation stage name used in an error message. */
+"cycle patterns" = "cyclus patronen";
+
+/* No comment provided by engineer. */
+"Cycle Statistics" = "Cyclusstatistieken";
+
+/* PDF report section title. */
+"Cycle Summary" = "Cyclus Samenvatting";
+
+/* No comment provided by engineer. */
+"CycleBalance" = "CycleBalance";
+
+/* PDF report cover title. Keep the CycleBalance brand name in English.
+Share sheet preview title for the generated PDF health report. */
+"CycleBalance Health Report" = "CycleBalance Gezondheidsrapport";
+
+/* No comment provided by engineer. */
+"CycleBalance identifies patterns after you've logged at least 2 complete cycles. Keep tracking — your first insights are on the way!" = "CycleBalance identificeert patronen nadat je minimaal 2 volledige cycli hebt geregistreerd. Blijf volgen: uw eerste inzichten zijn onderweg!";
+
+/* No comment provided by engineer. */
+"CycleBalance reads health data to enrich your daily logs. No data is written to Apple Health." = "CycleBalance leest gezondheidsgegevens om uw dagelijkse logboeken te verrijken. Er worden geen gegevens naar Apple Health geschreven.";
+
+/* No comment provided by engineer. */
+"Cycles" = "Cycli";
+
+/* Insight generation stage name used in an error message. */
+"cycles for symptom correlation" = "cycli voor symptoomcorrelatie";
+
+/* No comment provided by engineer. */
+"Daily Logging" = "Dagelijks loggen";
+
+/* Insight generation stage name used in an error message. */
+"daily logs" = "dagelijkse logboeken";
+
+/* No comment provided by engineer. */
+"Data" = "Gegevens";
+
+/* No comment provided by engineer. */
+"Data Types" = "Gegevenstypen";
+
+/* No comment provided by engineer. */
+"Date" = "Datum";
+
+/* No comment provided by engineer. */
+"Date & Time" = "Datum en tijd";
+
+/* No comment provided by engineer. */
+"Date Range" = "Periode";
+
+/* Large heading showing the current cycle day number on the Today screen. */
+"Day %lld" = "Dag %lld";
+
+/* No comment provided by engineer. */
+"Day %lld of current cycle" = "Dag %lld van de huidige cyclus";
+
+/* No comment provided by engineer. */
+"Days" = "Dagen";
+
+/* Insight content about high glycemic index meals and symptoms. */
+"Days following high-GI meals show an average symptom severity of %@/5, compared to %@/5 after low-GI meals. Consider swapping some high-GI foods for lower-GI alternatives." = "Dagen na maaltijden met een hoog GI niveau vertonen een gemiddelde symptoomernst van %@/5, vergeleken met %@/5 na maaltijden met een laag GI. Overweeg om voedingsmiddelen met een hoog GI-gehalte te ruilen voor alternatieven met een lager GI-gehalte.";
+
+/* Sample demo insight body. */
+"Days with low-GI meal logs show fewer energy crashes the following morning." = "Dagen met maaltijdlogboeken met een laag GI laten de volgende ochtend minder energiecrashes zien.";
+
+/* No comment provided by engineer. */
+"Debug: Demo Data" = "Foutopsporing: demogegevens";
+
+/* No comment provided by engineer. */
+"Debug: Premium QA" = "Foutopsporing: Premium QA";
+
+/* No comment provided by engineer. */
+"Delete" = "Verwijderen";
+
+/* No comment provided by engineer. */
+"Delete All Data" = "Verwijder alle gegevens";
+
+/* No comment provided by engineer. */
+"Delete All Data?" = "Alle gegevens verwijderen?";
+
+/* No comment provided by engineer. */
+"Delete Everything" = "Verwijder alles";
+
+/* No comment provided by engineer. */
+"Delete Photo" = "Foto verwijderen";
+
+/* Sample meal note used in demo data. */
+"Demo meal entry" = "Demo maaltijdinvoer";
+
+/* No comment provided by engineer. */
+"Description" = "Beschrijving";
+
+/* No comment provided by engineer. */
+"Details" = "Details";
+
+/* Symptom label. */
+"Diarrhea" = "Diarree";
+
+/* Insight category label. */
+"Diet Impact" = "Dieetimpact";
+
+/* Symptom focus area title in onboarding. */
+"Digestion & weight" = "Spijsvertering & gewicht";
+
+/* Symptom category label. */
+"Digestive" = "Spijsvertering";
+
+/* Meal type label. */
+"Dinner" = "Diner";
+
+/* No comment provided by engineer. */
+"Discard" = "Weggooien";
+
+/* No comment provided by engineer. */
+"Discard changes?" = "Wijzigingen weggooien?";
+
+/* PDF report line summarizing the meal glycemic impact distribution. */
+"Distribution: %lld%% Low, %lld%% Medium, %lld%% High" = "Distributie: %lld%% Laag, %lld%% Gemiddeld, %lld%% Hoog";
+
+/* No comment provided by engineer. */
+"Done" = "Klaar";
+
+/* No comment provided by engineer. */
+"Dosage" = "Dosering";
+
+/* Accessibility hint for the selected severity button. */
+"Double tap to deselect" = "Dubbeltik om de selectie op te heffen";
+
+/* Accessibility hint for an unselected severity button. */
+"Double tap to select" = "Dubbeltik om te selecteren";
+
+/* No comment provided by engineer. */
+"Double tap to select %@ flow intensity" = "Dubbeltik om de stroomintensiteit van %@ te selecteren";
+
+/* Symptom label. */
+"Dry Skin" = "Droge huid";
+
+/* No comment provided by engineer. */
+"e.g., After breakfast" = "bijvoorbeeld na het ontbijt";
+
+/* No comment provided by engineer. */
+"e.g., clotting, mood changes, spotting duration..." = "bijvoorbeeld stolling, stemmingswisselingen, duur van de spotting...";
+
+/* Sample meal description used in demo data. */
+"Egg scramble, avocado, greens" = "Scramble van eieren, avocado, groen";
+
+/* No comment provided by engineer. */
+"Elevated" = "Verhoogd";
+
+/* No comment provided by engineer. */
+"Enable camera access in Settings to capture photos directly." = "Schakel cameratoegang in Instellingen in om rechtstreeks foto's te maken.";
+
+/* No comment provided by engineer. */
+"Enable Notifications" = "Meldingen inschakelen";
+
+/* No comment provided by engineer. */
+"End Date" = "Einddatum";
+
+/* Symptom label for a sudden drop in energy. */
+"Energy Crash" = "Energiecrash";
+
+/* No comment provided by engineer. */
+"Enter a glucose value to save" = "Voer een glucosewaarde in om op te slaan";
+
+/* No comment provided by engineer. */
+"Enter value" = "Voer waarde in";
+
+/* No comment provided by engineer. */
+"Entitlement" = "Recht";
+
+/* No comment provided by engineer. */
+"Error" = "Fout";
+
+/* Demo data scenario subtitle. */
+"Established routine with symptom and metabolic patterns" = "Vastgestelde routine met symptoom- en metabolische patronen";
+
+/* No comment provided by engineer. */
+"Even if your period isn't today, you can log your most recent one. This starts your cycle tracking." = "Zelfs als uw menstruatie niet vandaag is, kunt u uw meest recente menstruatie registreren. Hiermee wordt uw cyclusregistratie gestart.";
+
+/* Insight generation stage name used in an error message. */
+"existing insights" = "bestaande inzichten";
+
+/* No comment provided by engineer. */
+"Export Backup (JSON)" = "Back-up exporteren (JSON)";
+
+/* No comment provided by engineer. */
+"Export Data (CSV)" = "Gegevens exporteren (CSV)";
+
+/* Symptom label. */
+"Facial Hair" = "Gezichtshaar";
+
+/* Error shown when deleting all app data fails. */
+"Failed to delete data: %@" = "Kan gegevens niet verwijderen: %@";
+
+/* Error shown when a PDF report could not be created. */
+"Failed to generate PDF report." = "Kan rapport PDF niet genereren.";
+
+/* Blood sugar reading type. */
+"Fasting" = "Vasten";
+
+/* Symptom label. */
+"Fatigue" = "Vermoeidheid";
+
+/* Sample demo insight title. */
+"Fatigue often clusters around period start" = "Vermoeidheid clustert vaak rond het begin van de menstruatie";
+
+/* Sample demo insight body. */
+"Fatigue scores were higher in the first two days of menstrual bleeding." = "De vermoeidheidsscores waren hoger tijdens de eerste twee dagen van de menstruatiebloeding.";
+
+/* No comment provided by engineer. */
+"Feature" = "Functie";
+
+/* Sample demo insight title. */
+"Fertility windows are broad across irregular cycles" = "Vruchtbaarheidsvensters zijn breed over onregelmatige cycli";
+
+/* Primary onboarding goal description. */
+"Find patterns between your symptoms and your cycle." = "Vind patronen tussen uw symptomen en uw cyclus.";
+
+/* No comment provided by engineer. */
+"Flow Intensity" = "Stroomintensiteit";
+
+/* Cycle phase name. */
+"Follicular" = "Folliculair";
+
+/* No comment provided by engineer. */
+"Free" = "Gratis";
+
+/* Debug premium status label. */
+"Free tier" = "Gratis niveau";
+
+/* No comment provided by engineer. */
+"Frequent this cycle" = "Frequent deze cyclus";
+
+/* No comment provided by engineer. */
+"Generate Report" = "Rapport genereren";
+
+/* PDF report cover label showing when the report was created. */
+"Generated on %@" = "Gegenereerd op %@";
+
+/* No comment provided by engineer. */
+"Generating insights..." = "Inzichten genereren...";
+
+/* No comment provided by engineer. */
+"Generating report..." = "Rapport genereren...";
+
+/* No comment provided by engineer. */
+"Get Started" = "Aan de slag";
+
+/* No comment provided by engineer. */
+"Get the full CycleBalance experience" = "Krijg de volledige CycleBalance-ervaring";
+
+/* No comment provided by engineer. */
+"Glucose Value" = "Glucosewaarde";
+
+/* Validation error shown when a blood sugar value is outside the supported range. */
+"Glucose value must be between 40 and 600 mg/dL." = "De glucosewaarde moet tussen 40 en 600 mg/dL liggen.";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "Glycemische impact";
+
+/* No comment provided by engineer. */
+"Got it" = "Ik heb het";
+
+/* Sample meal description used in demo data. */
+"Greek yogurt, berries, chia" = "Griekse yoghurt, bessen, chia";
+
+/* Single-character abbreviation for heavy flow in the calendar. Keep very short. */
+"H" = "H";
+
+/* Symptom category label. */
+"Hair" = "Haar";
+
+/* Symptom label. */
+"Hair Shedding" = "Haaruitval";
+
+/* Photo journal body area label. */
+"Hairline" = "Haarlijn";
+
+/* Symptom label. */
+"Headache" = "Hoofdpijn";
+
+/* No comment provided by engineer. */
+"Health" = "Gezondheid";
+
+/* No comment provided by engineer. */
+"Health Report" = "Gezondheidsrapport";
+
+/* No comment provided by engineer. */
+"HealthKit Access" = "HealthKit Toegang";
+
+/* No comment provided by engineer. */
+"HealthKit Unavailable" = "HealthKit Niet beschikbaar";
+
+/* Cycle flow intensity option for heavy bleeding. */
+"Heavy" = "Hevig";
+
+/* Compact severity label for level 4 symptoms.
+Full severity label for level 4 symptoms. */
+"High" = "Hoog";
+
+/* Glycemic impact label. GI means glycemic index. */
+"High GI" = "Hoog GI";
+
+/* PDF report line showing high glycemic index meal count. */
+"High GI: %lld meals" = "Hoge GI: %lld maaltijden";
+
+/* Insight title about high glycemic index meals and symptoms. */
+"High-GI meals may worsen symptoms" = "Maaltijden met een hoog GI kunnen de symptomen verergeren";
+
+/* Sample demo insight title. */
+"Higher stress days correlate with lower energy" = "Hogere stressdagen correleren met lagere energie";
+
+/* No comment provided by engineer. */
+"History" = "Geschiedenis";
+
+/* Sample blood sugar note used in demo data. */
+"Home finger-stick meter" = "Vingerprikmeter voor thuis";
+
+/* No comment provided by engineer. */
+"How are you feeling today?" = "Hoe voel je je vandaag?";
+
+/* No comment provided by engineer. */
+"How long have you been managing PCOS?" = "Hoe lang beheer je PCOS al?";
+
+/* Symptom label. */
+"Hunger" = "Honger";
+
+/* No comment provided by engineer. */
+"I skipped a period" = "Ik heb een periode overgeslagen";
+
+/* PCOS experience option in onboarding. */
+"I think I might have PCOS" = "Ik denk dat ik misschien PCOS heb";
+
+/* PCOS experience option in onboarding. */
+"I was recently diagnosed" = "Ik kreeg onlangs de diagnose";
+
+/* PCOS experience option in onboarding. */
+"I've been managing for a while" = "Ik ben al een tijdje aan het managen";
+
+/* No comment provided by engineer. */
+"Impact" = "Invloed";
+
+/* No comment provided by engineer. */
+"Import Backup" = "Back-up importeren";
+
+/* No comment provided by engineer. */
+"Import Backup (JSON)" = "Back-up importeren (JSON)";
+
+/* No comment provided by engineer. */
+"Importing a backup will replace all existing app data." = "Als u een back-up importeert, worden alle bestaande app-gegevens vervangen.";
+
+/* No comment provided by engineer. */
+"Include Sections" = "Voeg secties toe";
+
+/* Insight refresh error shown when a required dataset cannot be read. */
+"Insight generation couldn't read %@. Please try again." = "Het genereren van inzichten kan %@ niet lezen. Probeer het opnieuw.";
+
+/* No comment provided by engineer. */
+"Insight refresh error. %@" = "Fout bij vernieuwen van inzicht. %@";
+
+/* PDF report section title.
+Tab title. */
+"Insights" = "Inzichten";
+
+/* Primary onboarding goal description. */
+"Irregular cycles are unpredictable. Let's change that." = "Onregelmatige cycli zijn onvoorspelbaar. Laten we dat veranderen.";
+
+/* Symptom label. */
+"Irritability" = "Prikkelbaarheid";
+
+/* No comment provided by engineer. */
+"Keep Editing" = "Blijf bewerken";
+
+/* Encouraging follow-up when symptom severity is improving. */
+"Keep up what you're doing!" = "Ga door met wat je doet!";
+
+/* Single-character abbreviation for light flow in the calendar. Keep very short. */
+"L" = "L";
+
+/* No comment provided by engineer. */
+"Last Import" = "Laatste import";
+
+/* No comment provided by engineer. */
+"Last Synced" = "Laatst gesynchroniseerd";
+
+/* CSV export detail value for cycle length. */
+"Length" = "Lengte";
+
+/* PDF report summary line showing the range of cycle lengths. */
+"Length range: %@" = "Lengtebereik: %@";
+
+/* Sample meal description used in demo data. */
+"Lentil bowl with tahini dressing" = "Linzenkom met tahinidressing";
+
+/* Insight title describing worse symptoms after shorter sleep. */
+"Less sleep, more symptoms" = "Minder slaap, meer symptomen";
+
+/* No comment provided by engineer. */
+"Let's log your first period day" = "Laten we uw eerste menstruatiedag registreren";
+
+/* PCOS experience description in onboarding. */
+"Let's make your tracking more powerful." = "Laten we uw tracking krachtiger maken.";
+
+/* Cycle flow intensity option for light bleeding. */
+"Light" = "Licht";
+
+/* No comment provided by engineer. */
+"Load %@" = "Laad %@";
+
+/* No comment provided by engineer. */
+"Local Test Mode" = "Lokale testmodus";
+
+/* No comment provided by engineer. */
+"Log a period to start tracking" = "Registreer een periode om te beginnen met volgen";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Blood Sugar" = "Bloedsuiker registreren";
+
+/* Onboarding tooltip encouraging daily symptom logging for digestion and weight. */
+"Log digestive symptoms daily to surface connections with your cycle." = "Registreer dagelijks spijsverteringssymptomen om verbindingen met uw cyclus aan het licht te brengen.";
+
+/* Onboarding completion message for users focused on symptoms. */
+"Log how you feel each day. After 2 cycles, you'll see your first insights." = "Registreer elke dag hoe u zich voelt. Na 2 cycli zie je je eerste inzichten.";
+
+/* Onboarding tooltip encouraging daily symptom logging for mood and energy. */
+"Log how you're feeling each day — patterns emerge within a cycle or two." = "Registreer elke dag hoe u zich voelt. Binnen een cyclus of twee ontstaan ​​er patronen.";
+
+/* Welcome guidance on the Today screen for users focused on mood and energy. */
+"Log how you're feeling to start finding patterns" = "Registreer hoe u zich voelt om patronen te ontdekken";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Meal" = "Log maaltijd";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Period" = "Logperiode";
+
+/* No comment provided by engineer. */
+"Log Period Day" = "Dag van logperiode";
+
+/* Welcome guidance on the Today screen for users focused on skin and hair. */
+"Log skin and hair changes to start spotting patterns" = "Registreer huid- en haarveranderingen om patronen te ontdekken";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Supplements" = "Supplementen loggen";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Log Symptoms" = "Symptomen registreren";
+
+/* Welcome guidance on the Today screen for users focused on symptoms. */
+"Log symptoms to start finding patterns" = "Registreer symptomen om patronen te ontdekken";
+
+/* Welcome guidance on the Today screen for users focused on pain and cramps. */
+"Log symptoms to start tracking pain patterns" = "Registreer symptomen om pijnpatronen te kunnen volgen";
+
+/* No comment provided by engineer. */
+"Log your first blood sugar reading to start tracking." = "Registreer uw eerste bloedsuikerwaarde om te beginnen met volgen.";
+
+/* Welcome guidance on the Today screen for users focused on cycle tracking. */
+"Log your period to start tracking your cycle" = "Registreer uw menstruatie om uw cyclus bij te houden";
+
+/* Onboarding completion message for users focused on cycle tracking. */
+"Log your period when it arrives and CycleBalance will start predicting your next one." = "Registreer uw menstruatie wanneer deze arriveert en CycleBalance begint uw volgende te voorspellen.";
+
+/* Daily symptom reminder notification title. */
+"Log Your Symptoms" = "Registreer uw symptomen";
+
+/* Confirmation banner after the user quick-logs a period day. */
+"Logged %@ flow for today" = "%@ stroom geregistreerd voor vandaag";
+
+/* Onboarding tooltip encouraging daily symptom logging. */
+"Logging symptoms daily helps surface patterns with your cycle." = "Het dagelijks registreren van symptomen helpt patronen in uw cyclus aan het licht te brengen.";
+
+/* Demo data scenario subtitle. */
+"Long irregular cycles with early tracking habits" = "Lange, onregelmatige cycli met vroege volggewoonten";
+
+/* Compact severity label for level 2 symptoms.
+Full severity label for level 2 symptoms. */
+"Low" = "Laag";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Low GI" = "Lage GI";
+
+/* PDF report line showing low glycemic index meal count. */
+"Low GI: %lld meals" = "Lage GI: %lld maaltijden";
+
+/* Symptom label for depressed or low mood. */
+"Low Mood" = "Slecht humeur";
+
+/* Sample demo insight title. */
+"Lower-GI meals align with steadier energy" = "Maaltijden met een lagere GI komen overeen met een stabielere energie";
+
+/* Meal type label. */
+"Lunch" = "Lunch";
+
+/* Cycle phase name. */
+"Luteal" = "Luteaal";
+
+/* Single-character abbreviation for medium flow in the calendar. Keep very short. */
+"M" = "M";
+
+/* No comment provided by engineer. */
+"Macros (Optional)" = "Macro's (optioneel)";
+
+/* Sample supplement name used in demo data. */
+"Magnesium" = "Magnesium";
+
+/* No comment provided by engineer. */
+"Manage individual supplement times from the Supplements tab." = "Beheer individuele toeslagtijden via het tabblad Supplementen.";
+
+/* Insight title about a high proportion of high glycemic index meals. */
+"Many of your meals are high-GI" = "Veel van uw maaltijden zijn hoog-GI";
+
+/* CSV export row type value. */
+"Meal" = "Maaltijd";
+
+/* No comment provided by engineer. */
+"Meal Context" = "Maaltijdcontext";
+
+/* No comment provided by engineer. */
+"Meal Date" = "Maaltijd Datum";
+
+/* PDF report section title. */
+"Meal GI Distribution" = "Maaltijd GI Uitdeling";
+
+/* No comment provided by engineer. */
+"Meal History" = "Maaltijd Geschiedenis";
+
+/* No comment provided by engineer. */
+"Meal Type" = "Maaltijdtype";
+
+/* Insight generation stage name used in an error message. */
+"meals" = "maaltijden";
+
+/* No comment provided by engineer. */
+"Meals" = "Maaltijden";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "De maaltijden die u registreert, verschijnen hier.";
+
+/* Compact severity label for level 3 symptoms. */
+"Med" = "Med";
+
+/* Cycle flow intensity option for moderate bleeding. */
+"Medium" = "Matig";
+
+/* Glycemic impact label. GI means glycemic index. */
+"Medium GI" = "Gemiddeld GI";
+
+/* PDF report line showing medium glycemic index meal count. */
+"Medium GI: %lld meals" = "Gemiddeld GI: %lld maaltijden";
+
+/* Cycle phase name. */
+"Menstrual" = "Menstruatie";
+
+/* Symptom category label. */
+"Metabolic" = "Metabolisch";
+
+/* No comment provided by engineer. */
+"mg" = "mg";
+
+/* No comment provided by engineer. */
+"mg/dL" = "mg/dL";
+
+/* Compact severity label for level 1 symptoms.
+Full severity label for level 1 symptoms. */
+"Mild" = "Mild";
+
+/* CSV export supplement status value. */
+"Missed" = "Overgeslagen";
+
+/* Full severity label for level 3 symptoms. */
+"Moderate" = "Gematigd";
+
+/* Symptom focus area description in onboarding. */
+"Monitor acne, hair changes, and skin patterns." = "Houd toezicht op acne, haarveranderingen en huidpatronen.";
+
+/* Symptom category label. */
+"Mood" = "Stemming";
+
+/* Symptom focus area title in onboarding. */
+"Mood & energy" = "Stemming & energie";
+
+/* Symptom label. */
+"Mood Swings" = "Stemmingswisselingen";
+
+/* Sample blood sugar meal context used in demo data. */
+"Morning baseline" = "Basislijn van de ochtend";
+
+/* PDF report placeholder for unavailable values. */
+"N/A" = "N.v.t";
+
+/* Symptom label. */
+"Nausea" = "Misselijkheid";
+
+/* Demo data scenario name. */
+"Newly Diagnosed" = "Nieuw gediagnosticeerd";
+
+/* No comment provided by engineer. */
+"Next" = "Volgende";
+
+/* No comment provided by engineer. */
+"Next month" = "Volgende maand";
+
+/* No comment provided by engineer. */
+"Next Period Estimate" = "Schatting volgende periode";
+
+/* CSV export boolean value. */
+"No" = "Nee";
+
+/* No comment provided by engineer. */
+"No Active Cycle" = "Geen actieve cyclus";
+
+/* PDF report empty state for the blood sugar section. */
+"No blood sugar data recorded in this period." = "Er zijn in deze periode geen bloedsuikergegevens geregistreerd.";
+
+/* Insight title describing a supplement that does not show a clear symptom benefit. */
+"No clear benefit from %@" = "Geen duidelijk voordeel van %@";
+
+/* PDF report empty state for the cycle summary section. */
+"No cycle data recorded in this period." = "Er zijn geen cyclusgegevens geregistreerd in deze periode.";
+
+/* No comment provided by engineer. */
+"No data is shared with notification servers." = "Er worden geen gegevens gedeeld met meldingsservers.";
+
+/* Supplement picker helper text when a supplement has no default dosage. */
+"No default dosage" = "Geen standaarddosering";
+
+/* PDF report empty state for the insights section. */
+"No insights generated in this period." = "Er zijn geen inzichten gegenereerd in deze periode.";
+
+/* No comment provided by engineer. */
+"No Insights Yet" = "Nog geen inzichten";
+
+/* PDF report empty state for the meal section. */
+"No meal data recorded in this period." = "In deze periode zijn geen maaltijdgegevens geregistreerd.";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "Geen maaltijden geregistreerd";
+
+/* No comment provided by engineer. */
+"No Photos" = "Geen foto's";
+
+/* No comment provided by engineer. */
+"No Photos Yet" = "Nog geen foto's";
+
+/* No comment provided by engineer. */
+"No Readings Yet" = "Nog geen lezingen";
+
+/* Billing error shown when no subscription products are available. */
+"No subscription products are available right now." = "Er zijn momenteel geen abonnementsproducten beschikbaar.";
+
+/* No comment provided by engineer. */
+"No supplement data" = "Geen supplementgegevens";
+
+/* PDF report empty state for the supplement section. */
+"No supplement data recorded in this period." = "In deze periode zijn geen aanvullende gegevens geregistreerd.";
+
+/* No comment provided by engineer. */
+"No supplements logged today" = "Geen supplementen ingelogd vandaag";
+
+/* PDF report empty state for the symptom summary section. */
+"No symptom data recorded in this period." = "Er zijn geen symptoomgegevens geregistreerd in deze periode.";
+
+/* No comment provided by engineer. */
+"No wrong answers — this helps us set the right pace." = "Geen foute antwoorden: dit helpt ons het juiste tempo te bepalen.";
+
+/* Accessibility severity label when no symptom severity is selected.
+CSV export value meaning no period flow was logged.
+Cycle flow intensity option meaning no bleeding. */
+"None" = "Geen";
+
+/* No comment provided by engineer. */
+"Normal" = "Normaal";
+
+/* No comment provided by engineer. */
+"Not a medical device. Always consult your healthcare provider." = "Geen medisch hulpmiddel. Raadpleeg altijd uw zorgverlener.";
+
+/* No comment provided by engineer. */
+"Not Now" = "Niet nu";
+
+/* No comment provided by engineer. */
+"Notes" = "Opmerkingen";
+
+/* No comment provided by engineer. */
+"Notifications" = "Meldingen";
+
+/* No comment provided by engineer. */
+"Notifications Enabled" = "Meldingen ingeschakeld";
+
+/* No comment provided by engineer. */
+"Occurrences" = "Voorvallen";
+
+/* No comment provided by engineer. */
+"of current cycle" = "van de huidige cyclus";
+
+/* Symptom label. */
+"Oily Skin" = "Vette huid";
+
+/* No comment provided by engineer. */
+"OK" = "Prima";
+
+/* Insight content describing a supplement that may correlate with better symptom scores. */
+"On days you take %@, your average symptom severity is %@/5, compared to %@/5 on days you miss it. This %@-point difference suggests a potential benefit." = "Op dagen dat u %@ inneemt, is de gemiddelde ernst van uw symptomen %@/5, vergeleken met %@/5 op dagen dat u dit overslaat. Dit verschil van %@ punten duidt op een potentieel voordeel.";
+
+/* PDF report label for an active cycle with no end date. */
+"ongoing" = "aan de gang";
+
+/* CSV export value for a cycle that has not ended yet. */
+"Ongoing" = "Lopend";
+
+/* No comment provided by engineer. */
+"Open Paywall" = "Betaalmuur openen";
+
+/* No comment provided by engineer. */
+"Open Settings" = "Instellingen openen";
+
+/* No comment provided by engineer. */
+"Operation Failed" = "Operatie mislukt";
+
+/* No comment provided by engineer. */
+"Optional" = "Optioneel";
+
+/* PDF report line showing overall supplement adherence. */
+"Overall adherence: %lld%%" = "Algemene naleving: %lld%%";
+
+/* PDF report line showing the average blood sugar reading. */
+"Overall average: %@ mg/dL" = "Algemeen gemiddelde: %@ mg/dL";
+
+/* Sample meal description used in demo data. */
+"Overnight oats with flaxseed" = "Overnight oats met lijnzaad";
+
+/* Cycle phase name. */
+"Ovulatory" = "Ovulatoir";
+
+/* Symptom category label. */
+"Pain" = "Pijn";
+
+/* Symptom focus area title in onboarding. */
+"Pain & cramps" = "Pijn en krampen";
+
+/* Welcome onboarding page body. */
+"PCOS makes every cycle unique. CycleBalance tracks your patterns without assuming regularity." = "PCOS maakt elke cyclus uniek. CycleBalance volgt uw patronen zonder regelmaat aan te nemen.";
+
+/* Symptom label. */
+"Pelvic Pain" = "Bekkenpijn";
+
+/* PDF report subheading for supplement adherence by supplement. */
+"Per-Supplement Breakdown" = "Uitsplitsing per supplement";
+
+/* CSV export row type value. */
+"Period" = "Periode";
+
+/* No comment provided by engineer. */
+"Period date" = "Periodedatum";
+
+/* Sample symptom note used in demo data for period discomfort. */
+"Period day %lld discomfort" = "Periodedag %lld ongemak";
+
+/* No comment provided by engineer. */
+"Period Estimate" = "Periode schatting";
+
+/* Notification title sent before a predicted period. */
+"Period May Be Coming" = "Je menstruatie kan binnenkort beginnen";
+
+/* No comment provided by engineer. */
+"Period Predictions" = "Periode voorspellingen";
+
+/* No comment provided by engineer. */
+"Period Reminders" = "Periodeherinneringen";
+
+/* No comment provided by engineer. */
+"Period today?" = "Periode vandaag?";
+
+/* No comment provided by engineer. */
+"Photo (Optional)" = "Foto (optioneel)";
+
+/* No comment provided by engineer. */
+"Photo Date" = "Foto Datum";
+
+/* No comment provided by engineer. */
+"Photo Detail" = "Fotodetail";
+
+/* Recent logger shortcut title.
+Tracking hub card title. */
+"Photo Journal" = "Fotojournaal";
+
+/* No comment provided by engineer. */
+"Photo Type" = "Fototype";
+
+/* Symptom category label. */
+"Physical" = "Fysiek";
+
+/* No comment provided by engineer. */
+"Please wait..." = "Even geduld a.u.b....";
+
+/* No comment provided by engineer. */
+"Premium" = "Premium";
+
+/* Debug premium status label. */
+"Premium active" = "Premium actief";
+
+/* No comment provided by engineer. */
+"Premium Feature" = "Premium-functie";
+
+/* Sample supplement name used in demo data. */
+"Prenatal" = "Prenataal";
+
+/* No comment provided by engineer. */
+"Previous month" = "Vorige maand";
+
+/* No comment provided by engineer. */
+"Privacy Policy" = "Privacybeleid";
+
+/* Welcome onboarding page headline. */
+"Private by Design" = "Privé door ontwerp";
+
+/* No comment provided by engineer. */
+"Product IDs" = "Product-ID's";
+
+/* Paywall error shown when a subscription purchase fails. */
+"Purchase failed. Please try again." = "Aankoop mislukt. Probeer het opnieuw.";
+
+/* No comment provided by engineer. */
+"Quick context" = "Snelle context";
+
+/* No comment provided by engineer. */
+"Quick notes" = "Snelle notities";
+
+/* Heading above suggested quick period notes for the selected flow intensity. */
+"Quick notes for %@ flow" = "Snelle opmerkingen voor de %@-stroom";
+
+/* Blood sugar reading type. */
+"Random" = "Willekeurig";
+
+/* No comment provided by engineer. */
+"Reading date" = "Datum lezen";
+
+/* No comment provided by engineer. */
+"Reading Type" = "Leestype";
+
+/* No comment provided by engineer. */
+"Ready to save" = "Klaar om op te slaan";
+
+/* Tracking hub label for the most recently used logging shortcut. */
+"Recent" = "Recent";
+
+/* No comment provided by engineer. */
+"Recent brands" = "Recente merken";
+
+/* Sample demo insight body. */
+"Recent cycle lengths between 45 and 72 days suggest wider ovulation uncertainty windows." = "Recente cycluslengtes tussen 45 en 72 dagen suggereren bredere ovulatie-onzekerheidsvensters.";
+
+/* No comment provided by engineer. */
+"Recent Cycles" = "Recente cycli";
+
+/* Sample demo insight body. */
+"Recent cycles ranged from 37 to 63 days. This is common with PCOS and improves with consistent tracking." = "Recente cycli varieerden van 37 tot 63 dagen. Dit is gebruikelijk bij PCOS en wordt verbeterd bij consistente tracking.";
+
+/* No comment provided by engineer. */
+"Recent supplements" = "Recente supplementen";
+
+/* Supplement picker helper text showing the recommended dosage in milligrams. */
+"Recommended dosage: %@ mg" = "Aanbevolen dosering: %@ mg";
+
+/* Tracking hub card subtitle. */
+"Record flow intensity and notes" = "Registreer de stroomintensiteit en notities";
+
+/* Tracking hub card subtitle. */
+"Record glucose readings" = "Registreer glucosemetingen";
+
+/* Tracking hub card subtitle. */
+"Record meals and glycemic impact" = "Registreer maaltijden en glycemische impact";
+
+/* Recovery suggestion shown after an insight refresh error. */
+"Refresh insights again in a moment." = "Vernieuw inzichten zo meteen opnieuw.";
+
+/* No comment provided by engineer. */
+"Refresh Premium Status" = "Premiumstatus vernieuwen";
+
+/* No comment provided by engineer. */
+"Regenerate Report" = "Rapport opnieuw genereren";
+
+/* Recovery suggestion for a paywall product loading failure. */
+"Reload the paywall and try again." = "Laad de betaalmuur opnieuw en probeer het opnieuw.";
+
+/* No comment provided by engineer. */
+"Reminder Time" = "Herinneringstijd";
+
+/* No comment provided by engineer. */
+"Remove" = "Verwijderen";
+
+/* No comment provided by engineer. */
+"Replace Existing Data?" = "Bestaande gegevens vervangen?";
+
+/* No comment provided by engineer. */
+"Replaces existing data with realistic irregular-cycle demo scenarios." = "Vervangt bestaande gegevens door realistische demoscenario's met een onregelmatige cyclus.";
+
+/* No comment provided by engineer. */
+"Replay Welcome Tour" = "Welkomsttour opnieuw afspelen";
+
+/* No comment provided by engineer. */
+"Report Error" = "Rapporteer fout";
+
+/* No comment provided by engineer. */
+"Restore Purchases" = "Aankopen herstellen";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat is not configured. Add `REVENUECAT_PUBLIC_SDK_KEY` in Config/LocalSecrets.xcconfig." = "RevenueCat is niet geconfigureerd. Voeg `REVENUECAT_PUBLIC_SDK_KEY` toe in Config/LocalSecrets.xcconfig.";
+
+/* Billing configuration error shown in the paywall. */
+"RevenueCat offering '%@' was not found." = "RevenueCat aanbieding '%@' is niet gevonden.";
+
+/* Sample meal description used in demo data. */
+"Rice bowl with teriyaki chicken" = "Rijstkom met kip teriyaki";
+
+/* Single-character abbreviation for spotting flow in the calendar. Keep very short. */
+"S" = "S";
+
+/* Sample meal description used in demo data. */
+"Salmon, quinoa, roasted vegetables" = "Zalm, quinoa, geroosterde groenten";
+
+/* No comment provided by engineer. */
+"Same as yesterday" = "Hetzelfde als gisteren";
+
+/* Compact button label for copying the same symptoms as the previous day. */
+"Same as yesterday (%lld)" = "Hetzelfde als gisteren (%lld)";
+
+/* No comment provided by engineer. */
+"Save" = "Redden";
+
+/* Paywall badge showing the percentage saved by choosing the yearly subscription. */
+"Save %lld%%" = "Bespaar %lld%%";
+
+/* No comment provided by engineer. */
+"Save Meal" = "Maaltijd opslaan";
+
+/* No comment provided by engineer. */
+"Save Photo" = "Foto opslaan";
+
+/* No comment provided by engineer. */
+"Saved" = "Opgeslagen";
+
+/* Photo journal body area label. */
+"Scalp (Part Line)" = "Hoofdhuid (deellijn)";
+
+/* Insight category label. */
+"Seasonal Pattern" = "Seizoensgebonden patroon";
+
+/* Symptom focus area description in onboarding. */
+"See how cramps and pain relate to your cycle." = "Ontdek hoe krampen en pijn verband houden met uw cyclus.";
+
+/* No comment provided by engineer. */
+"Select..." = "Selecteer...";
+
+/* Recovery suggestion for a missing RevenueCat API key. */
+"Set your RevenueCat public SDK key and relaunch the app." = "Stel uw openbare SDK-sleutel RevenueCat in en start de app opnieuw.";
+
+/* Tab title. */
+"Settings" = "Instellingen";
+
+/* Compact severity label for level 5 symptoms.
+Full severity label for level 5 symptoms. */
+"Severe" = "Ernstig";
+
+/* No comment provided by engineer. */
+"Share CSV Export" = "Deel CSV Exporteren";
+
+/* No comment provided by engineer. */
+"Share JSON Backup" = "Deel JSON Back-up";
+
+/* No comment provided by engineer. */
+"Share Report" = "Rapport delen";
+
+/* Symptom category label. */
+"Skin" = "Huid";
+
+/* Symptom focus area title in onboarding. */
+"Skin & hair" = "Huid & haar";
+
+/* No comment provided by engineer. */
+"Skip" = "Overslaan";
+
+/* No comment provided by engineer. */
+"Skip Period" = "Periode overslaan";
+
+/* No comment provided by engineer. */
+"Skip symptom focus selection and continue setup" = "Sla de symptoomfocusselectie over en ga door met instellen";
+
+/* No comment provided by engineer. */
+"Skip the questionnaire and continue setup" = "Sla de vragenlijst over en ga door met instellen";
+
+/* No comment provided by engineer. */
+"Skip the welcome tour and go directly to the app" = "Sla de welkomsttour over en ga direct naar de app";
+
+/* No comment provided by engineer. */
+"Skip this period?" = "Deze periode overslaan?";
+
+/* No comment provided by engineer. */
+"Skip this step and go to the dashboard" = "Sla deze stap over en ga naar het dashboard";
+
+/* Insight category label. */
+"Sleep & Activity" = "Slaap en activiteit";
+
+/* Meal type label. */
+"Snack" = "Tussendoortje";
+
+/* Symptom focus area description in onboarding. */
+"Spot trends in bloating, cravings, and weight." = "Ontdek trends in een opgeblazen gevoel, onbedwingbare trek en gewicht.";
+
+/* Cycle flow intensity option for very light bleeding. */
+"Spotting" = "Licht bloedverlies";
+
+/* Sample photo journal analysis summary used in demo data. */
+"Stable vs prior photo" = "Stabiel versus eerdere foto";
+
+/* No comment provided by engineer. */
+"Start Date" = "Startdatum";
+
+/* No comment provided by engineer. */
+"Start Exploring" = "Begin met verkennen";
+
+/* Onboarding tooltip encouraging daily symptom logging for skin and hair. */
+"Start logging skin or hair changes to track patterns over time." = "Begin met het registreren van huid- of haarveranderingen om patronen in de loop van de tijd te volgen.";
+
+/* No comment provided by engineer. */
+"Start logging supplements to see your history here." = "Begin met het registreren van supplementen om hier je geschiedenis te zien.";
+
+/* Welcome guidance on the Today screen before the user has onboarding preferences. */
+"Start tracking by logging your period" = "Begin met het bijhouden door uw menstruatie te registreren";
+
+/* No comment provided by engineer. */
+"Start tracking changes by adding your first photo." = "Begin met het bijhouden van wijzigingen door uw eerste foto toe te voegen.";
+
+/* Onboarding progress text showing the current step out of four total steps. */
+"Step %lld of 4" = "Stap %lld van 4";
+
+/* No comment provided by engineer. */
+"Subscription" = "Abonnement";
+
+/* Paywall error shown when premium billing is not configured correctly. */
+"Subscription setup is incomplete." = "Het instellen van het abonnement is onvolledig.";
+
+/* No comment provided by engineer. */
+"Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage your subscriptions in your Apple ID settings." = "Abonnementen worden automatisch verlengd, tenzij ze ten minste 24 uur voor het einde van de huidige periode worden opgezegd. U kunt uw abonnementen beheren in uw Apple ID-instellingen.";
+
+/* No comment provided by engineer. */
+"Subscriptions Unavailable" = "Abonnementen niet beschikbaar";
+
+/* CSV export row type value. */
+"Supplement" = "Supplement";
+
+/* PDF report section title. */
+"Supplement Adherence" = "Aanvulling therapietrouw";
+
+/* Insight category label. */
+"Supplement Efficacy" = "Aanvullende werkzaamheid";
+
+/* No comment provided by engineer. */
+"Supplement History" = "Supplementgeschiedenis";
+
+/* No comment provided by engineer. */
+"Supplement name" = "Aanvulling naam";
+
+/* Supplement reminder notification title. */
+"Supplement Reminder" = "Aanvullingsherinnering";
+
+/* No comment provided by engineer. */
+"Supplement Reminders" = "Herinneringen aanvullen";
+
+/* Insight generation stage name used in an error message. */
+"supplements" = "supplementen";
+
+/* No comment provided by engineer. */
+"Supplements" = "Supplementen";
+
+/* CSV export row type value. */
+"Symptom" = "Symptoom";
+
+/* Insight category label. */
+"Symptom Correlation" = "Symptoomcorrelatie";
+
+/* Insight generation stage name used in an error message. */
+"symptom correlations" = "symptoomcorrelaties";
+
+/* Demo data scenario name. */
+"Symptom Management" = "Symptoombeheer";
+
+/* No comment provided by engineer. */
+"Symptom Reminders" = "Symptoomherinneringen";
+
+/* Insight title describing symptom severity increasing or decreasing. */
+"Symptom severity is %@" = "De ernst van de symptomen is %@";
+
+/* PDF report section title. */
+"Symptom Summary" = "Symptoomsamenvatting";
+
+/* No comment provided by engineer. */
+"Symptoms" = "Symptomen";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for diet impact" = "symptomen voor de impact van het dieet";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for sleep and activity analysis" = "symptomen voor slaap- en activiteitsanalyse";
+
+/* Insight generation stage name used in an error message. */
+"symptoms for supplement analysis" = "symptomen voor supplementanalyse";
+
+/* Insight title describing the cycle phase with the highest symptom severity. */
+"Symptoms peak during %@ phase" = "De symptomen pieken tijdens de %@ fase";
+
+/* No comment provided by engineer. */
+"Sync" = "Synchroniseren";
+
+/* No comment provided by engineer. */
+"Sync Now" = "Synchroniseer nu";
+
+/* No comment provided by engineer. */
+"Syncing..." = "Synchroniseren...";
+
+/* Daily symptom reminder notification body. */
+"Take a moment to record how you're feeling today." = "Neem even de tijd om vast te leggen hoe u zich vandaag voelt.";
+
+/* CSV export supplement status value. */
+"Taken" = "Ingenomen";
+"7 Days" = "7 dagen";
+"30 Days" = "30 dagen";
+"90 Days" = "90 dagen";
+"By Supplement" = "Per supplement";
+"Missed (%lld)" = "Overgeslagen (%lld)";
+"Taken (%lld)" = "Ingenomen (%lld)";
+"Total" = "Totaal";
+
+/* No comment provided by engineer. */
+"Tap a symptom to get started" = "Tik op een symptoom om aan de slag te gaan";
+
+/* No comment provided by engineer. */
+"Tap any symptoms you're experiencing. Even logging once helps start building your pattern." = "Tik op de symptomen die u ervaart. Zelfs één keer loggen helpt bij het opbouwen van uw patroon.";
+
+/* Onboarding tooltip introducing the quick period logging buttons. */
+"Tap Light, Medium, or Heavy to log today's flow in one tap." = "Tik op Licht, Gemiddeld of Zwaar om de stroom van vandaag met één tik vast te leggen.";
+
+/* No comment provided by engineer. */
+"Tap the button below to add your first supplement." = "Tik op de onderstaande knop om uw eerste supplement toe te voegen.";
+
+/* Accessibility hint explaining how to change symptom severity and announcing the current level. */
+"Tap to cycle severity, long press for direct selection. Currently %lld of 5." = "Tik om de ernst te wijzigen, houd lang ingedrukt voor directe selectie. Momenteel %lld van 5.";
+
+/* No comment provided by engineer. */
+"Tap to update permissions in Health app" = "Tik om de rechten in de Gezondheid-app bij te werken";
+
+/* No comment provided by engineer. */
+"Terms of Service" = "Servicevoorwaarden";
+
+/* Billing error shown when a subscription product cannot be loaded. */
+"The selected product '%@' is not available for purchase yet." = "Het geselecteerde product '%@' is nog niet beschikbaar voor aankoop.";
+
+/* Insight content describing a symptom pair that often occurs together. */
+"These symptoms co-occur on %lld%% of your tracked days (%lld out of %lld days). Understanding symptom clusters can help you and your provider target treatments more effectively." = "Deze symptomen komen samen voor op %lld%% van uw gevolgde dagen (%lld van de %lld dagen). Als u symptoomclusters begrijpt, kunnen u en uw zorgverlener de behandelingen effectiever richten.";
+
+/* Backup import error shown when the selected backup file uses a newer or older schema version. */
+"This backup uses schema v%lld. This app currently supports v%lld." = "Deze back-up maakt gebruik van schema v%lld. Deze app ondersteunt momenteel v%lld.";
+
+/* No comment provided by engineer. */
+"This device does not have a camera available right now." = "Op dit apparaat is momenteel geen camera beschikbaar.";
+
+/* No comment provided by engineer. */
+"This helps us focus on what matters most to you." = "Hierdoor kunnen wij ons concentreren op wat voor u het belangrijkst is.";
+
+/* PDF report medical disclaimer. */
+"This report is for informational purposes only and is not a substitute for professional medical advice." = "Dit rapport is uitsluitend bedoeld ter informatie en is geen vervanging voor professioneel medisch advies.";
+
+/* No comment provided by engineer. */
+"This will close your current cycle and start a new one from today. This action cannot be undone." = "Hiermee wordt uw huidige cyclus afgesloten en vanaf vandaag een nieuwe gestart. Deze actie kan niet ongedaan worden gemaakt.";
+
+/* No comment provided by engineer. */
+"This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone." = "Hiermee worden al uw cyclusgegevens, symptomen en inzichten permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.";
+
+/* No comment provided by engineer. */
+"Time" = "Tijd";
+
+/* No comment provided by engineer. */
+"Time Taken" = "Tijd genomen";
+
+/* Supplement reminder notification body with the supplement name. */
+"Time to take your %@." = "Tijd om uw %@ te nemen.";
+
+/* Tab title. */
+"Today" = "Vandaag";
+
+/* No comment provided by engineer. */
+"Today's Symptoms" = "De symptomen van vandaag";
+
+/* Sample meal description used in demo data. */
+"Tofu stir-fry with brown rice" = "Tofu roerbak met bruine rijst";
+
+/* PDF report subheading for the most frequently logged symptoms. */
+"Top Symptoms by Frequency" = "Topsymptomen per frequentie";
+
+/* PDF report summary line showing how many cycles are included. */
+"Total cycles: %lld" = "Totaal aantal cycli: %lld";
+
+/* PDF report line showing how many meals are included. */
+"Total meals logged: %lld" = "Totaal aantal geregistreerde maaltijden: %lld";
+
+/* PDF report line showing the number of blood sugar readings. */
+"Total readings: %lld" = "Totaal aantal metingen: %lld";
+
+/* Tab title. */
+"Track" = "Bijhouden";
+
+/* Tracking hub card subtitle. */
+"Track hair and skin changes" = "Volg haar- en huidveranderingen";
+
+/* Tracking hub card subtitle. */
+"Track how you're feeling today" = "Houd bij hoe u zich vandaag voelt";
+
+/* Symptom focus area description in onboarding. */
+"Track mood swings, anxiety, and energy crashes." = "Houd stemmingswisselingen, angstgevoelens en energiecrashes bij.";
+
+/* Primary onboarding goal title. */
+"Track my periods" = "Volg mijn menstruatie";
+
+/* Tracking hub card subtitle. */
+"Track your daily supplements" = "Volg uw dagelijkse supplementen";
+
+/* Sample blood sugar note used in demo data. */
+"Tracked after mixed meal" = "Bijgehouden na gemengde maaltijd";
+
+/* Onboarding tooltip encouraging daily symptom logging for pain and cramps. */
+"Tracking pain alongside your cycle helps spot which days hit hardest." = "Door de pijn naast uw cyclus te volgen, kunt u bepalen welke dagen het zwaarst getroffen worden.";
+
+/* PCOS experience description in onboarding. */
+"Tracking symptoms can help you and your doctor." = "Het volgen van de symptomen kan u en uw arts helpen.";
+
+/* Demo data scenario subtitle. */
+"Trying-to-conceive tracking with variable cycle lengths" = "Proberen tracking met variabele cycluslengtes te bedenken";
+
+/* Demo data scenario name. */
+"TTC / Fertility" = "TTC / Vruchtbaarheid";
+
+/* Sample meal description used in demo data. */
+"Turkey chili with vegetables" = "Turkije chili met groenten";
+
+/* No comment provided by engineer. */
+"Type" = "Type";
+
+/* No comment provided by engineer. */
+"Unable to load subscription options. Please check your connection and try again." = "Kan abonnementsopties niet laden. Controleer uw verbinding en probeer het opnieuw.";
+
+/* Paywall error shown when subscription products cannot be loaded. */
+"Unable to load subscriptions. Please try again." = "Kan abonnementen niet laden. Probeer het opnieuw.";
+
+/* Paywall error shown when subscription status cannot be refreshed. */
+"Unable to refresh subscription status." = "Kan de abonnementsstatus niet vernieuwen.";
+
+/* Primary onboarding goal title. */
+"Understand my symptoms" = "Begrijp mijn symptomen";
+
+/* No comment provided by engineer. */
+"Undo" = "Ongedaan maken";
+
+/* Fallback debug label when the billing mode is unavailable.
+Fallback debug label when the premium entitlement status is unavailable. */
+"Unknown" = "Onbekend";
+
+/* No comment provided by engineer. */
+"Unlock Premium" = "Ontgrendel Premium";
+
+/* No comment provided by engineer. */
+"Unlock this feature and more with CycleBalance Premium." = "Ontgrendel deze functie en meer met CycleBalance Premium.";
+
+/* Photo journal body area label. */
+"Upper Lip" = "Bovenlip";
+
+/* No comment provided by engineer. */
+"Use recommended dose" = "Gebruik de aanbevolen dosis";
+
+/* No comment provided by engineer. */
+"Value must be between 40 and 600 mg/dL" = "Waarde moet tussen 40 en 600 liggen mg/dL";
+
+/* Recovery suggestion for a missing RevenueCat offering. */
+"Verify RevenueCat has an offering with the configured identifier and mapped packages." = "Controleer of RevenueCat een aanbieding heeft met de geconfigureerde ID en toegewezen pakketten.";
+
+/* Recovery suggestion for a missing product configuration. */
+"Verify your products exist in App Store Connect and RevenueCat." = "Controleer of uw producten bestaan ​​in App Store Connect en RevenueCat.";
+
+/* No comment provided by engineer. */
+"Version" = "Versie";
+
+/* Sample supplement name used in demo data. */
+"Vitamin D3" = "Vitamine D3";
+
+/* PCOS experience description in onboarding. */
+"We'll help you get started step by step." = "Wij helpen u stap voor stap op weg.";
+
+/* No comment provided by engineer. */
+"We'll highlight these on your dashboard. You can always change this later." = "Wij lichten deze uit op uw dashboard. Je kunt dit later altijd nog wijzigen.";
+
+/* Sample demo insight body. */
+"Weeks with higher supplement adherence show lower cravings severity." = "Weken met een hogere therapietrouw laten een lagere ernst van hunkeren zien.";
+
+/* No comment provided by engineer. */
+"Welcome" = "Welkom";
+
+/* Accessibility label announcing the current welcome onboarding page. */
+"Welcome page %lld of %lld" = "Welkomstpagina %lld van %lld";
+
+/* No comment provided by engineer. */
+"What brings you to CycleBalance?" = "Wat brengt jou bij CycleBalance?";
+
+/* No comment provided by engineer. */
+"What did you eat?" = "Wat heb je gegeten?";
+
+/* Sample demo insight body. */
+"When stress level is 4+, energy logs trend lower the next day." = "Wanneer het stressniveau 4+ is, dalen de energielogboeken de volgende dag lager.";
+
+/* No comment provided by engineer. */
+"Which symptoms matter most to you?" = "Welke symptomen zijn voor u het belangrijkst?";
+
+/* CSV export boolean value. */
+"Yes" = "Ja";
+
+/* Onboarding tooltip introducing quick period logging for users focused on symptoms. */
+"You can quickly log your period here — even if that's not your main focus." = "Je kunt hier snel je menstruatie registreren, zelfs als dat niet je voornaamste focus is.";
+
+/* No comment provided by engineer. */
+"You have unsaved changes that will be lost." = "Er zijn niet-opgeslagen wijzigingen die verloren gaan.";
+
+/* No comment provided by engineer. */
+"You have unsaved supplement details that will be lost." = "U heeft niet-opgeslagen supplementgegevens die verloren gaan.";
+
+/* No comment provided by engineer. */
+"You'll be reminded 2 days before your predicted period." = "Je ontvangt een herinnering 2 dagen vóór je voorspelde menstruatie.";
+
+/* No comment provided by engineer. */
+"You're all set!" = "Je bent helemaal klaar!";
+
+/* Insight content describing the energy trend across the tracking period. */
+"Your average energy level has gone from %@ to %@ (out of 5) over your tracking period. Average energy: %@/5." = "Uw gemiddelde energieniveau is tijdens uw volgperiode gestegen van %@ naar %@ (van de 5). Gemiddelde energie: %@/5.";
+
+/* Insight content describing symptom severity trends over time. */
+"Your average symptom severity has been %@ recently (from %@ to %@ out of 5). %@" = "De gemiddelde ernst van uw symptomen was onlangs %@ (van %@ tot %@ van de 5). %@";
+
+/* Onboarding tooltip pointing users to the Calendar tab. */
+"Your Calendar is in the second tab." = "Je agenda staat op het tweede tabblad.";
+
+/* Welcome onboarding page headline. */
+"Your Cycle, Your Way" = "Jouw cyclus, jouw manier";
+
+/* Generic onboarding completion message. */
+"Your CycleBalance journey starts now." = "Je CycleBalance reis begint nu.";
+
+/* Insight title for highly variable cycle lengths. */
+"Your cycles are irregular" = "Je cycli zijn onregelmatig";
+
+/* Insight title for stable cycle lengths. */
+"Your cycles are regular" = "Je cyclus is regelmatig";
+
+/* Insight title for mildly irregular cycle lengths. */
+"Your cycles are somewhat irregular" = "Je cyclus is enigszins onregelmatig";
+
+/* Average cycle length summary shown in the calendar and cycle detail screens. */
+"Your cycles average %@ days (range: %@)" = "Je cycli duren gemiddeld %@ dagen (bereik: %@)";
+
+/* Insight content for mildly irregular cycle lengths. */
+"Your cycles average %@ days but vary by about %@ days. Some variation is common with PCOS. Consistent tracking helps identify what influences your cycle length." = "Je cycli duren gemiddeld %@ dagen, maar variëren ongeveer %@ dagen. Er is enige variatie gebruikelijk bij PCOS. Consistente tracking helpt bij het identificeren van wat uw cycluslengte beïnvloedt.";
+
+/* Insight content for stable cycle lengths. */
+"Your cycles average %@ days with low variation. This consistency is a positive sign for tracking and planning." = "Je cycli duren gemiddeld %@ dagen met weinig variatie. Deze consistentie is een positief teken voor tracking en planning.";
+
+/* Insight content for highly variable cycle lengths. */
+"Your cycles average %@ days with significant variation (range: %lld-%lld days). Irregular cycles are common with PCOS. Consider discussing cycle-regulating strategies with your provider." = "Je cycli duren gemiddeld %@ dagen met aanzienlijke variatie (bereik: %lld-%lld dagen). Onregelmatige cycli komen vaak voor bij PCOS. Overweeg om cyclusregulerende strategieën met uw leverancier te bespreken.";
+
+/* Sample demo insight title. */
+"Your cycles vary widely" = "Je cycli variëren sterk";
+
+/* Insight title about a high proportion of low glycemic index meals. */
+"Your diet is mostly low-GI" = "Je dieet is meestal laag-GI";
+
+/* Insight title describing energy levels improving or declining. */
+"Your energy levels are %@" = "Je energieniveau is %@";
+
+/* Tooltip shown when the app presents the user's first period prediction. */
+"Your first period estimate is here! It'll get more accurate as you log more cycles." = "Je eerste periodeschatting is hier! Het wordt nauwkeuriger naarmate u meer cycli registreert.";
+
+/* Welcome onboarding page body. */
+"Your health data stays on your device. No accounts, no servers, no exceptions." = "Uw gezondheidsgegevens blijven op uw apparaat. Geen accounts, geen servers, geen uitzonderingen.";
+
+/* Insight content describing recent cycle length trends. */
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A %@ trend may be worth mentioning to your healthcare provider if it continues." = "Je laatste drie cycli duurden gemiddeld %@ dagen, vergeleken met je totale gemiddelde van %@ dagen. Als een trend van %@ zich voortzet, kan het de moeite waard zijn om dit aan uw zorgverlener te melden.";
+
+/* Insight content describing which cycle phase has the highest symptom severity. */
+"Your most intense symptoms occur during the %@ phase, with an average severity of %@/5. Common symptoms in this phase: %@." = "Uw meest intense symptomen treden op tijdens de %@ fase, met een gemiddelde ernst van %@/5. Veel voorkomende symptomen in deze fase: %@.";
+
+/* Notification body for a broader predicted period date range. */
+"Your period is expected between %@ and %@." = "Je menstruatie wordt verwacht tussen %@ en %@.";
+
+/* Notification body for a narrow predicted period window. */
+"Your period is expected in about 2 days." = "Je menstruatie wordt over ongeveer 2 dagen verwacht.";
+
+/* Prediction summary shown on the calendar and cycle detail screens. */
+"Your period may arrive between %@–%@" = "Je menstruatie kan aankomen tussen %@–%@";
+
+/* Insight title describing recent cycle lengths becoming longer or shorter. */
+"Your recent cycles are getting %@" = "Je recente cycli krijgen %@";
+
+/* Insight content describing a supplement that does not show a clear symptom benefit. */
+"Your symptom severity doesn't appear lower on days you take %@ (taken: %@/5 vs missed: %@/5). Consider discussing this with your provider." = "De ernst van uw symptomen lijkt niet lager op dagen dat u %@ inneemt (ingenomen: %@/5 versus gemist: %@/5). Overweeg om dit met uw provider te bespreken.";
+"Your recent cycles are getting longer" = "Je recente cycli worden langer";
+"Your recent cycles are getting shorter" = "Je recente cycli worden korter";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A lengthening trend may be worth mentioning to your healthcare provider if it continues." = "Je laatste 3 cycli duurden gemiddeld %@ dagen, vergeleken met je totale gemiddelde van %@ dagen. Als dit aanhoudt, is het misschien goed om een trend naar langere cycli met je zorgverlener te bespreken.";
+"Your last 3 cycles averaged %@ days, compared to your overall average of %@ days. A shortening trend may be worth mentioning to your healthcare provider if it continues." = "Je laatste 3 cycli duurden gemiddeld %@ dagen, vergeleken met je totale gemiddelde van %@ dagen. Als dit aanhoudt, is het misschien goed om een trend naar kortere cycli met je zorgverlener te bespreken.";
+"Your energy levels are improving" = "Je energieniveau verbetert";
+"Your energy levels are declining" = "Je energieniveau neemt af";
+"Symptom severity is increasing" = "De ernst van je symptomen neemt toe";
+"Symptom severity is decreasing" = "De ernst van je symptomen neemt af";
+"Your average symptom severity has been worsening recently (from %@ to %@ out of 5). Consider reviewing recent changes to your routine." = "De gemiddelde ernst van je symptomen is recent verslechterd (van %@ naar %@ van 5). Kijk of er recent veranderingen in je routine zijn geweest.";
+"Your average symptom severity has been improving recently (from %@ to %@ out of 5). Keep up what you're doing!" = "De gemiddelde ernst van je symptomen is recent verbeterd (van %@ naar %@ van 5). Ga zo door.";
+"Language changes apply immediately. Some system surfaces update the next time they appear." = "Taalwijzigingen worden meteen toegepast. Sommige systeemonderdelen worden bijgewerkt wanneer ze de volgende keer worden weergegeven.";
+"%lld inserted • %lld updated • %lld skipped" = "%lld ingevoegd • %lld bijgewerkt • %lld overgeslagen";
+
+/* UX improvement: Cycle Detail tooltips */
+"tooltip.prediction_settings" = "Deze instellingen helpen CycleBalance om je volgende menstruatie nauwkeuriger te voorspellen op basis van je unieke cycluspatronen.";
+"tooltip.manual_override" = "Zet dit aan als je je gebruikelijke cycluslengte al kent — bijvoorbeeld van het bijhouden met je arts. De app gebruikt dan deze waarde in plaats van automatisch te berekenen.";
+"tooltip.ovulation_status" = "Onbekend: Standaard — de app voorspelt zonder ovulatiepatronen aan te nemen.\n\nOvulatoir: Kies als je ovulatie volgt met OPK's of BBT.\n\nAnovulatoir: Kies als je cycli doorgaans geen ovulatie bevatten, wat vaak voorkomt bij PCOS.";
+"tooltip.cycle_statistics" = "Een overzicht van je cyclusgeschiedenis. 'Gemiddeld' is je typische cycluslengte, 'Bereik' toont van kortste tot langste, en 'Cycli' is het aantal complete cycli dat je hebt bijgehouden.";
+
+/* UX improvement: Display settings */
+"Display" = "Weergave";
+"Show Scientific Details" = "Wetenschappelijke details tonen";
+"Display confidence percentages, sample sizes, and statistical notation on insight cards." = "Toon betrouwbaarheidspercentages, steekproefgroottes en statistische notatie op inzichtkaarten.";
+
+/* UX improvement: Friendly confidence labels */
+"Strong confidence" = "Hoog vertrouwen";
+"Moderate confidence" = "Gemiddeld vertrouwen";
+"Growing confidence" = "Groeiend vertrouwen";
+
+/* UX improvement: Friendly data basis labels */
+"Based on %lld cycles" = "Gebaseerd op %lld cycli";
+"Based on initial data" = "Gebaseerd op eerste gegevens";
+"Based on %lld weeks of data" = "Gebaseerd op %lld weken gegevens";
+
+/* UX improvement: Rewritten analyzer content strings */
+"Your average symptom severity was %@/5 on days you took %@, compared to %@/5 on days you missed it — symptoms were %@ when you took it." = "Je gemiddelde symptoomernst was %@/5 op dagen dat je %@ nam, vergeleken met %@/5 op dagen dat je het miste — symptomen waren %@ wanneer je het nam.";
+"Your cycles were about %@ days %@ in months when you consistently took %@ (%@ vs %@ days on average)." = "Je cycli waren ongeveer %@ dagen %@ in maanden waarin je %@ consequent nam (%@ vs %@ dagen gemiddeld).";
+"The day after high-GI meals, your symptom severity averaged %@/5, compared to %@/5 after low-GI days. Choosing lower-GI options may help reduce next-day symptoms." = "De dag na maaltijden met hoge GI was je symptoomernst gemiddeld %@/5, vergeleken met %@/5 na dagen met lage GI. Kiezen voor lagere GI-opties kan helpen om symptomen de volgende dag te verminderen.";
+"About %@ after high-GI meals, breakout severity averaged %@/5, compared to %@/5 after low-GI days. Diet changes may help with skin symptoms." = "Ongeveer %@ na maaltijden met hoge GI was de ernst van uitbraken gemiddeld %@/5, vergeleken met %@/5 na dagen met lage GI. Dieetveranderingen kunnen helpen bij huidsymptomen.";
+"%lld%% of your logged meals were high GI. With PCOS, reducing high-GI meals may help manage blood sugar and symptoms." = "%lld%% van je geregistreerde maaltijden had een hoge GI. Bij PCOS kan het verminderen van maaltijden met hoge GI helpen bij het beheren van bloedsuiker en symptomen.";
+"%lld%% of your logged meals were low GI — this is a great pattern for managing PCOS symptoms." = "%lld%% van je geregistreerde maaltijden had een lage GI — dit is een geweldig patroon voor het beheersen van PCOS-symptomen.";
+
+/* Narrative insight content — friendly versions */
+"A good portion of your recent meals have been on the higher-GI side. With PCOS, even small shifts toward balanced meals can make a difference for blood sugar and how you feel." = "Een groot deel van je recente maaltijden was aan de hogere GI-kant. Met PCOS kunnen zelfs kleine verschuivingen naar gebalanceerde maaltijden een verschil maken voor je bloedsuiker en hoe je je voelt.";
+
+"In months when you were consistent with %@, your cycles ran a bit longer. This isn't necessarily a concern — it's worth discussing with your provider if it continues." = "In maanden waarin je consequent was met %@, waren je cycli iets langer. Dit is niet per se zorgwekkend — het is de moeite waard om met je arts te bespreken als het aanhoudt.";
+
+"In months when you were consistent with %@, your cycles tended to be shorter and more predictable. Keeping up a regular routine may help your cycle find its rhythm." = "In maanden waarin je consequent was met %@, waren je cycli doorgaans korter en voorspelbaarder. Een regelmatige routine aanhouden kan je cyclus helpen zijn ritme te vinden.";
+
+"Most of your recent meals have been low-GI — that's a really positive pattern for managing PCOS. Keep it up!" = "De meeste van je recente maaltijden waren laag-GI — dat is een echt positief patroon voor het beheersen van PCOS. Ga zo door!";
+
+"On days you took %@, your symptoms tended to feel %@ milder than on days you skipped it. Staying consistent could be worth the effort." = "Op dagen dat je %@ nam, voelden je symptomen %@ milder aan dan op dagen dat je het oversloeg. Consequent blijven kan de moeite waard zijn.";
+
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "De komende week kunnen je symptomen over het algemeen %@ aanvoelen. De factoren die op dit moment het belangrijkst lijken zijn %@ — kleine aanpassingen op die gebieden kunnen helpen.";
+
+"There seems to be a connection between high-GI meals and skin breakouts a couple of days later. Adjusting what you eat could help your skin feel calmer." = "Er lijkt een verband te zijn tussen maaltijden met een hoge GI en huiduitbraken een paar dagen later. Aanpassen wat je eet kan je huid helpen rustiger te worden.";
+
+"These two symptoms seem to travel together — they show up on the same days quite often. Mentioning this to your provider could help find treatments that address both." = "Deze twee symptomen lijken samen op te treden — ze verschijnen vrij vaak op dezelfde dagen. Dit melden aan je arts kan helpen bij het vinden van behandelingen die beide aanpakken.";
+
+"Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Even small improvements in sleep can make a real difference with PCOS." = "Je lichaam lijkt te reageren op slaap — na kortere nachten voelen je symptomen %@ erger aan. Zelfs kleine verbeteringen in slaap kunnen een echt verschil maken bij PCOS.";
+
+"Your cycles have been quite variable — sometimes shorter, sometimes longer. This is one of the most common PCOS patterns, and it's worth discussing with your healthcare provider to explore what might help." = "Je cycli zijn behoorlijk variabel geweest — soms korter, soms langer. Dit is een van de meest voorkomende PCOS-patronen, en het is de moeite waard om met je arts te bespreken wat kan helpen.";
+
+"Your cycles tend to come about every %@ days, though they can shift by a few days. This kind of variation is really common with PCOS, and tracking helps spot what's behind it." = "Je cycli komen doorgaans ongeveer elke %@ dagen, hoewel ze een paar dagen kunnen verschuiven. Dit soort variatie is heel normaal bij PCOS, en bijhouden helpt om te zien wat erachter zit.";
+
+"Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted." = "Je energie is recentelijk gedaald. Het kan de moeite waard zijn om veranderingen in je slaap, activiteit of routine te bekijken om te zien wat er is veranderd.";
+
+"Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!" = "Je energie vertoont recentelijk een stijgende trend — wat je ook doet, het lijkt te werken. Ga zo door!";
+
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "Je volgende cyclus zal waarschijnlijk ongeveer %lld dagen duren, plus of min een paar. We blijven deze schatting verfijnen naarmate je meer cycli registreert.";
+
+"Your symptoms didn't seem to improve on days you took %@. This doesn't necessarily mean it's not helping — it may take longer, or other factors may be at play." = "Je symptomen leken niet te verbeteren op dagen dat je %@ nam. Dit betekent niet per se dat het niet helpt — het kan langer duren, of andere factoren kunnen een rol spelen.";
+
+"Your symptoms have been easing up recently — whatever you've been doing seems to be working. Keep going!" = "Je symptomen zijn recentelijk afgenomen — wat je ook doet, het lijkt te werken. Ga zo door!";
+
+"Your symptoms have been trending a bit harder recently. It might help to think about what's changed — sleep, stress, diet, or activity — and see if something stands out." = "Je symptomen zijn recentelijk iets erger geworden. Het kan helpen om na te denken over wat er is veranderd — slaap, stress, voeding of activiteit — en te kijken of iets opvalt.";
+
+"Your symptoms tend to be stronger around %@ and calmer around %@. Planning ahead — adjusting sleep, diet, or supplements before tougher months — could help you feel more prepared." = "Je symptomen zijn doorgaans sterker rond %@ en rustiger rond %@. Vooruit plannen — slaap, voeding of supplementen aanpassen voor moeilijkere maanden — kan je helpen je beter voorbereid te voelen.";
+
+"Your symptoms tend to be strongest during your %@ phase — especially %@. Knowing this pattern means you can plan gentler days or extra self-care during that time." = "Je symptomen zijn doorgaans het sterkst tijdens je %@-fase — vooral %@. Dit patroon kennen betekent dat je zachtere dagen of extra zelfzorg kunt plannen in die periode.";
+
+"Your symptoms tend to feel %@ worse the day after meals that spike blood sugar. Choosing more balanced options when you can might help you feel better the next day." = "Je symptomen voelen %@ erger aan de dag na maaltijden die je bloedsuiker doen stijgen. Kiezen voor meer gebalanceerde opties wanneer je kunt, kan je helpen je de volgende dag beter te voelen.";
+
+/* Narrative helpers — qualitative words */
+"mild" = "mild";
+"light" = "licht";
+"moderate" = "matig";
+"noticeable" = "merkbaar";
+"significant" = "aanzienlijk";
+"slightly" = "licht";
+"noticeably" = "merkbaar";
+"meaningfully" = "aanzienlijk";
+"significantly" = "significant";
+
+/* Cycle prediction qualitative labels */
+"Strong estimate" = "Sterke schatting";
+"Moderate estimate" = "Matige schatting";
+"Rough estimate" = "Ruwe schatting";
+"Borderline" = "Grenswaarde";
+"flow" = "stroom";
+"today" = "vandaag";
+"period" = "menstruatie";
+"predicted period" = "verwachte menstruatie";
+"No flow" = "Geen bloeding";
+"Very light, occasional drops" = "Zeer licht, af en toe druppels";
+"Light flow, minimal pad or tampon use" = "Lichte bloeding, minimaal gebruik van maandverband of tampons";
+"Moderate, regular pad or tampon use" = "Matige bloeding, regelmatig gebruik van maandverband of tampons";
+"Heavy flow, frequent pad or tampon changes" = "Zware bloeding, vaak vervangen van maandverband of tampons";
+"Language" = "Taal";
+"App Language" = "Apptaal";
+"FSA/HSA Tools" = "FSA/HSA-hulpmiddelen";
+"Download CSV Template" = "CSV-sjabloon downloaden";
+"Share CSV Template" = "CSV-sjabloon delen";
+"Import External Data (CSV)" = "Externe gegevens importeren (CSV)";
+"Generate a Letter of Medical Necessity for FSA/HSA reimbursement of PCOS-related wellness expenses." = "Genereer een medische-noodzaakbrief voor FSA/HSA-vergoeding van aan PCOS gerelateerde welzijnskosten.";
+"An unknown error occurred." = "Er is een onbekende fout opgetreden.";
+"Get in Touch with the Dev Team ⚡!" = "Neem contact op met het ontwikkelteam ⚡!";
+"Jump to month, %@" = "Ga naar maand, %@";
+"Double tap to open month and year picker" = "Dubbeltik om de maand- en jaarkiezer te openen";
+"7-day symptom severity forecast" = "7-daagse voorspelling van symptoomernst";
+"Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help." = "In de komende week kunnen je symptomen in het algemeen %@ aanvoelen. De factoren die nu het belangrijkst lijken te zijn, zijn %@. Kleine veranderingen op die gebieden kunnen helpen.";
+"Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Top weighted drivers: %@. Forecast confidence: %lld%%." = "De voorspelde symptoomernst voor de komende 7 dagen is gemiddeld %@/5 (bereik %@-%@/5). Belangrijkste gewogen factoren: %@. Voorspellingsvertrouwen: %lld%%.";
+"Cycle length forecast range" = "Voorspeld bereik van cycluslengte";
+"Your next cycle will likely last around %lld days, give or take a few. We'll keep refining this estimate as you log more cycles." = "Je volgende cyclus zal waarschijnlijk ongeveer %lld dagen duren, met een marge van een paar dagen. We blijven deze schatting verfijnen naarmate je meer cycli logt.";
+"Predicted next cycle length is %lld days (range %lld-%lld days, %lld%% confidence)." = "De voorspelde lengte van je volgende cyclus is %lld dagen (bereik %lld-%lld dagen, %lld%% vertrouwen).";
+
+/* No comment provided by engineer. */
+"Prediction Settings" = "Voorspellingsinstellingen";
+
+/* No comment provided by engineer. */
+"Manual cycle length override" = "Handmatige cycluslengte-overschrijving";
+
+/* No comment provided by engineer. */
+"Expected cycle length: %lld days" = "Verwachte cycluslengte: %lld dagen";
+
+/* No comment provided by engineer. */
+"Ovulation status" = "Ovulatiestatus";
+
+/* No comment provided by engineer. */
+"Apply Settings" = "Instellingen toepassen";
+
+/* No comment provided by engineer. */
+"Free tier shows cycle history for the last 30 days." = "Het gratis abonnement toont de cyclusgeschiedenis van de laatste 30 dagen.";
+
+/* No comment provided by engineer. */
+"Range" = "Bereik";
+
+/* No comment provided by engineer. */
+"Month" = "Maand";
+
+/* No comment provided by engineer. */
+"Year" = "Jaar";
+
+/* No comment provided by engineer. */
+"Go to Month" = "Ga naar maand";
+
+/* No comment provided by engineer. */
+"Jump to Month" = "Ga naar maand";
+
+/* No comment provided by engineer. */
+"Upgrade" = "Upgraden";
+
+/* No comment provided by engineer. */
+"Symptom History" = "Symptoomgeschiedenis";
+
+/* No comment provided by engineer. */
+"Use recommended" = "Aanbevolen gebruiken";
+
+/* No comment provided by engineer. */
+"We'll highlight these on your dashboard. You can always change this later." = "We markeren deze op uw dashboard. U kunt dit altijd later wijzigen.";
+
+/* No comment provided by engineer. */
+"Spotting duration" = "Duur van spotting";
+
+/* No comment provided by engineer. */
+"Brown spotting" = "Bruine spotting";
+
+/* No comment provided by engineer. */
+"Pink spotting" = "Roze spotting";
+
+/* No comment provided by engineer. */
+"Mild cramps" = "Lichte krampen";
+
+/* No comment provided by engineer. */
+"Mood changes" = "Stemmingswisselingen";
+
+/* No comment provided by engineer. */
+"After exercise" = "Na het sporten";
+
+/* No comment provided by engineer. */
+"Small clots" = "Kleine stolsels";
+
+/* No comment provided by engineer. */
+"Low energy" = "Weinig energie";
+
+/* No comment provided by engineer. */
+"Clotting" = "Stolsels";
+
+/* No comment provided by engineer. */
+"Moderate cramps" = "Matige krampen";
+
+/* No comment provided by engineer. */
+"Back pain" = "Rugpijn";
+
+/* No comment provided by engineer. */
+"Heavy clotting" = "Grote stolsels";
+
+/* No comment provided by engineer. */
+"Severe cramps" = "Hevige krampen";
+
+/* No comment provided by engineer. */
+"Frequent product change" = "Frequent verband wisselen";
+
+/* No comment provided by engineer. */
+"Dizziness" = "Duizeligheid";
+
+/* No comment provided by engineer. */
+"Anovulatory" = "Anovulatoir";
+
+/* No comment provided by engineer. */
+"Demo Data Import" = "Demogegevens importeren";
+
+/* No comment provided by engineer. */
+"External CSV Import" = "Externe CSV-import";
+
+/* No comment provided by engineer. */
+"higher" = "hoger";
+
+/* No comment provided by engineer. */
+"JSON Backup Import" = "JSON-back-up importeren";
+
+/* No comment provided by engineer. */
+"longer" = "langer";
+
+/* No comment provided by engineer. */
+"lower" = "lager";
+
+/* No comment provided by engineer. */
+"Predicted period" = "Voorspelde menstruatie";
+
+/* No comment provided by engineer. */
+"shorter" = "korter";
+
+/* No comment provided by engineer. */
+"System Default" = "Systeemstandaard";
+
+/* Prediction primary text for uncertain state. */
+"Your next period is harder to estimate right now." = "Uw volgende menstruatie is momenteel moeilijker in te schatten.";
+
+/* Prediction secondary text for actionable state. */
+"%lld%% confidence • %lld-day window" = "%lld%% betrouwbaarheid • %lld-dagenvenster";
+
+/* Prediction explanation for wide window. */
+"Recent cycle variability is creating a broad %lld-day estimate." = "Recente cyclusvariabiliteit leidt tot een brede schatting van %lld dagen.";
+
+/* Prediction explanation for low confidence. */
+"Forecast confidence is %lld%% right now." = "De voorspellingsbetrouwbaarheid is momenteel %lld%%.";
+
+/* Prediction explanation for wide window and low confidence. */
+"Recent cycle variability is creating a broad %lld-day estimate, and forecast confidence is %lld%%." = "Recente cyclusvariabiliteit leidt tot een brede schatting van %lld dagen en de voorspellingsbetrouwbaarheid is %lld%%.";
+
+/* Prediction suffix text. */
+"Keep logging period starts and symptoms to narrow future estimates." = "Blijf menstruatiestarts en symptomen registreren om toekomstige schattingen te verfijnen.";
+
+/* Short confidence label. */
+"%lld%% confidence" = "%lld%% betrouwbaarheid";
+"CSV Import Guide" = "CSV-importgids";
+"Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank." = "Gebruik het CSV-sjabloon voor imports. Elke rij moet record_type invullen en ongebruikte kolommen mogen leeg blijven.";
+"Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here." = "Export Data (CSV) maakt een leesbaar rapport. Import External Data (CSV) verwacht de sjabloonkolommen die hier worden getoond.";
+"Supported Record Types" = "Ondersteunde recordtypen";
+"Format Rules" = "Opmaakregels";
+"Required fields" = "Verplichte velden";
+"Optional fields" = "Optionele velden";
+"Accepted values" = "Toegestane waarden";
+"date uses YYYY-MM-DD" = "date gebruikt YYYY-MM-DD";
+"timestamp uses ISO8601" = "timestamp gebruikt ISO8601";
+"time_taken uses HH:mm" = "time_taken gebruikt HH:mm";
+"taken uses true or false" = "taken gebruikt true of false";
+"severity, stress_level, and energy_level use 1-5" = "severity, stress_level en energy_level gebruiken 1-5";
+"daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz." = "daily_log vereist ten minste een van weight, sleep_hours, active_minutes, stress_level, energy_level of water_oz.";
+
+/* No comment provided by engineer. */
+"Glycemic Impact" = "Glycemische impact";
+
+/* No comment provided by engineer. */
+"Macros" = "Macronutriënten";
+
+/* No comment provided by engineer. */
+"Carbs" = "Koolhydraten";
+
+/* No comment provided by engineer. */
+"Protein" = "Eiwitten";
+
+/* No comment provided by engineer. */
+"Fat" = "Vet";
+
+/* No comment provided by engineer. */
+"Post-Meal Feedback" = "Feedback na de maaltijd";
+
+/* No comment provided by engineer. */
+"Symptom severity" = "Ernst van symptoom";
+
+/* No comment provided by engineer. */
+"No Meals Logged" = "Geen maaltijden geregistreerd";
+
+/* No comment provided by engineer. */
+"Meals you log will appear here." = "Geregistreerde maaltijden verschijnen hier.";
+
+/* No comment provided by engineer. */
+"Post-meal symptom: %lld/5" = "Symptoom na maaltijd: %lld/5";
+
+/* No comment provided by engineer. */
+"Low" = "Laag";
+
+/* No comment provided by engineer. */
+"Med" = "Gem";
+
+/* No comment provided by engineer. */
+"High" = "Hoog";
+
+/* No comment provided by engineer. */
+"Meal entry deleted" = "Maaltijdvermelding verwijderd";
+
+"CycleBalance Premium Monthly" = "CycleBalance Premium Maandelijks";
+"CycleBalance Premium Yearly" = "CycleBalance Premium Jaarlijks";
+"Basic cycle tracking" = "Basis cyclusregistratie";
+"Symptom logging" = "Symptoomregistratie";
+"Calendar view" = "Kalenderweergave";
+"Insights engine" = "Inzichten-engine";
+"PDF reports" = "PDF-rapporten";
+"Charts & trends" = "Grafieken en trends";
+"HealthKit sync" = "HealthKit-synchronisatie";
+"Priority support" = "Prioritaire ondersteuning";
+"Loading Premium Options..." = "Premium-opties laden...";
+"Try Again" = "Opnieuw proberen";
+
+/* Pregnancy and postpartum surfaces. */
+"Cycle Recovery" = "Cyclusherstel";
+"Cycle tracking and predictions are paused while pregnancy mode is active. Your previous cycle data is safe and will be used to improve predictions once you return to normal tracking." = "Cyclusregistratie en voorspellingen worden gepauzeerd zolang de zwangerschapsmodus actief is. Je eerdere cyclusgegevens blijven veilig bewaard en worden gebruikt om voorspellingen te verbeteren zodra je terugkeert naar normaal registreren.";
+"Cycle tracking will be paused and your current cycle will be closed. You can return to cycle tracking from Settings." = "Cyclusregistratie wordt gepauzeerd en je huidige cyclus wordt afgesloten. Je kunt vanuit Instellingen op elk moment terugkeren naar cyclusregistratie.";
+"Cycle tracking will resume. Your pregnancy data will be preserved." = "Cyclusregistratie wordt hervat. Je zwangerschapsgegevens blijven bewaard.";
+"Delivery" = "Bevalling";
+"Due date" = "Uitgerekende datum";
+"End Pregnancy Mode" = "Zwangerschapsmodus beëindigen";
+"End Pregnancy Mode?" = "Zwangerschapsmodus beëindigen?";
+"End Reason" = "Reden van beëindiging";
+"Enter Pregnancy Mode" = "Zwangerschapsmodus starten";
+"Enter Pregnancy Mode?" = "Zwangerschapsmodus starten?";
+"Estimated Due Date" = "Uitgerekende datum";
+"I have an estimated due date" = "Ik heb een uitgerekende datum";
+"Log your first period to resume cycle tracking." = "Log je eerste menstruatie om de cyclusregistratie te hervatten.";
+"Not active" = "Niet actief";
+"Other" = "Anders";
+"Postpartum" = "Na de bevalling";
+"Postpartum — Day %lld" = "Postpartum — Dag %lld";
+"Pregnancy" = "Zwangerschap";
+"Pregnancy & Postpartum" = "Zwangerschap en postpartum";
+"Pregnancy Mode" = "Zwangerschapsmodus";
+"Pregnancy Start Date" = "Startdatum zwangerschap";
+"Pregnancy loss" = "Zwangerschapsverlies";
+"Reason" = "Reden";
+"Return to Normal Tracking" = "Terug naar normale registratie";
+"Start date" = "Startdatum";
+"This will pause cycle tracking. You can return to cycle tracking anytime from Settings." = "Hierdoor wordt de cyclusregistratie gepauzeerd. Je kunt op elk moment vanuit Instellingen terugkeren naar cyclusregistratie.";
+"Undo Activation" = "Activatie ongedaan maken";
+"Week %lld" = "Zwangerschapsweek %lld";
+"Week %lld • Trimester %lld" = "Zwangerschapsweek %lld • trimester %lld";
+"We're learning your new cycle pattern. Keep logging period starts and we'll have an estimate for you soon." = "We leren je nieuwe cycluspatroon kennen. Blijf menstruatiestarts loggen, dan hebben we binnenkort een schatting voor je.";
+"Your cycles may be irregular as your body recovers. Log your first period when it arrives to resume cycle tracking. CycleBalance will adapt its predictions as your cycles stabilize." = "Je cycli kunnen onregelmatig zijn terwijl je lichaam herstelt. Log je eerste menstruatie zodra die komt om de cyclusregistratie te hervatten. CycleBalance past zijn voorspellingen aan terwijl je cycli stabiliseren.";
+"Pregnancy mode pauses cycle tracking and predictions while you're expecting. Your existing cycle data is preserved. When you're ready, postpartum mode helps you ease back into tracking as your cycles return." = "Zwangerschapsmodus pauzeert cyclusregistratie en voorspellingen tijdens je zwangerschap. Je bestaande cyclusgegevens blijven bewaard. Wanneer je eraan toe bent, helpt de postpartum-modus je geleidelijk terug te keren naar registratie terwijl je cycli terugkeren.";
+
+/* App Store onboarding localization remediation. */
+"CycleBalance will help you find your rhythm" = "CycleBalance helpt je om jouw ritme te vinden";
+"CycleBalance will help you decode your symptoms" = "CycleBalance helpt je om je symptomen beter te begrijpen";
+"CycleBalance is ready to help" = "CycleBalance staat klaar om je te helpen";
+"Starting fresh is the hardest part — we'll guide you step by step." = "Opnieuw beginnen is het moeilijkst. We begeleiden je stap voor stap.";
+"You already know your body. Let's make your data work harder." = "Je kent je lichaam al. Laten we je gegevens harder voor je laten werken.";
+"Tracking is a powerful first step toward answers." = "Bijhouden is een krachtige eerste stap richting antwoorden.";
+"Your personalized tracking starts now." = "Je persoonlijke tracking begint nu.";
+"68% of recently diagnosed users say tracking helped them feel more in control within 30 days." = "68% van de recent gediagnosticeerde gebruikers zegt dat bijhouden hen binnen 30 dagen meer controle gaf.";
+"Women who track consistently report 40% better conversations with their doctors." = "Vrouwen die consequent bijhouden melden 40% betere gesprekken met hun arts.";
+"3 in 4 women exploring PCOS say symptom tracking gave them clarity before their next appointment." = "3 op de 4 vrouwen die PCOS onderzoeken zeggen dat symptoomtracking hun meer duidelijkheid gaf vóór hun volgende afspraak.";
+"Join 10,000+ women tracking their PCOS journey with CycleBalance." = "Sluit je aan bij meer dan 10.000 vrouwen die hun PCOS-traject bijhouden met CycleBalance.";
+"Perfect for spotting patterns in your mood and energy levels." = "Perfect om patronen in je stemming en energieniveau te ontdekken.";
+"Ideal for tracking how pain and cramps relate to your cycle." = "Ideaal om bij te houden hoe pijn en krampen samenhangen met je cyclus.";
+"Great for tracking how your skin and hair change across your cycle." = "Geweldig om te volgen hoe je huid en haar door je cyclus heen veranderen.";
+"Perfect for spotting trends in your bloating and cravings." = "Perfect om trends in een opgeblazen gevoel en trek te ontdekken.";
+"Smart Cycle Calendar" = "Slimme cycluskalender";
+"See your cycle at a glance. CycleBalance learns your pattern — even when it's irregular." = "Bekijk je cyclus in één oogopslag. CycleBalance leert je patroon, ook als het onregelmatig is.";
+"Predictions That Adapt" = "Voorspellingen die meebewegen";
+"Our predictions improve with every log. No 28-day assumptions." = "Onze voorspellingen worden beter met elke log. Geen aannames van 28 dagen.";
+"Daily Symptom Tracking" = "Dagelijkse symptoomtracking";
+"Log symptoms in seconds. We'll find the patterns you can't see." = "Log je symptomen in seconden. Wij vinden patronen die jij nog niet ziet.";
+"Cycle–Symptom Insights" = "Cyclus-symptoominzichten";
+"Discover how your symptoms relate to your cycle phase." = "Ontdek hoe je symptomen samenhangen met de fase van je cyclus.";
+"Your Personal Health Hub" = "Jouw persoonlijke gezondheidshub";
+"Track periods, symptoms, and more — all in one private place." = "Houd menstruaties, symptomen en meer bij op één privéplek.";
+"Cycle calendar" = "Cycluskalender";
+"See your cycle history at a glance" = "Bekijk je cyclusgeschiedenis in één oogopslag";
+"Period predictions" = "Menstruatievoorspellingen";
+"Smarter forecasts after each cycle" = "Slimmere voorspellingen na elke cyclus";
+"Symptom dashboard" = "Symptoomdashboard";
+"All your symptoms organized in one place" = "Al je symptomen overzichtelijk op één plek";
+"Pattern insights" = "Patrooninzichten";
+"Connections you can't spot on your own" = "Verbanden die je zelf niet snel ziet";
+"Personalized tracking" = "Persoonlijke tracking";
+"A dashboard built around your needs" = "Een dashboard gebouwd rond jouw behoeften";
+"Highlighted on your dashboard" = "Uitgelicht op je dashboard";
+"Your plan is set — let's get your first data point." = "Je plan staat klaar. Laten we je eerste datapunt vastleggen.";
+"Your insights start with today's first log." = "Je inzichten beginnen met je eerste log van vandaag.";
+"Let's capture your first entry." = "Laten we je eerste invoer vastleggen.";
+"We're a small team building this for you — find \"Share Feedback\" in Settings anytime." = "We zijn een klein team dat dit voor jou bouwt. Je vindt \"Deel feedback\" altijd in Instellingen.";
+"Everything's set. Log when you're ready — CycleBalance adapts to your rhythm, not the other way around." = "Alles staat klaar. Log wanneer jij er klaar voor bent. CycleBalance past zich aan jouw ritme aan, niet andersom.";
+"Your tracking journey starts now. You're part of a growing community of women making sense of their symptoms." = "Je trackingreis begint nu. Je maakt deel uit van een groeiende community van vrouwen die hun symptomen beter leren begrijpen.";
+"You're part of a growing community of women taking control of their PCOS. We're glad you're here." = "Je maakt deel uit van een groeiende community van vrouwen die grip krijgen op hun PCOS. Fijn dat je er bent.";
+"Help CycleBalance work better" = "Help CycleBalance beter te werken";
+"These permissions are optional. You can change them anytime in Settings." = "Deze toestemmingen zijn optioneel. Je kunt ze op elk moment wijzigen in Instellingen.";
+"Your data stays on your device. No accounts, no servers, no exceptions." = "Je gegevens blijven op je apparaat. Geen accounts, geen servers, geen uitzonderingen.";
+"Camera" = "Fotocamera";
+"Take photos for your hair & skin journal to track changes over time." = "Maak foto's voor je haar- en huiddagboek om veranderingen in de loop van de tijd te volgen.";
+"See skin and hair changes side by side over months." = "Vergelijk veranderingen in huid en haar naast elkaar over meerdere maanden.";
+"Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights." = "Synchroniseer gewicht, slaap, stappen, bloedglucose, activiteit en hartslag voor rijkere inzichten.";
+"Get deeper insights when health data is connected." = "Krijg diepere inzichten wanneer gezondheidsgegevens zijn gekoppeld.";
+"Skip for now" = "Nu overslaan";
+"Support our mission" = "Steun onze missie";
+"We're a small team dedicated to giving women with PCOS actionable insights from their data, to manage and improve their lives. A rating on the App Store helps others find us." = "We zijn een klein team dat vrouwen met PCOS wil helpen om bruikbare inzichten uit hun gegevens te halen, zodat ze hun leven beter kunnen sturen en verbeteren. Een beoordeling in de App Store helpt anderen om ons te vinden.";
+"Leave a Quick Review" = "Laat een korte review achter";
+"Maybe later" = "Misschien later";
+"I finally understand why I feel different on certain days. This app connected the dots." = "Ik begrijp eindelijk waarom ik me op bepaalde dagen anders voel. Deze app bracht alles samen.";
+"Recently Diagnosed" = "Recent gediagnosticeerd";
+"After 3 months of logging, I brought my data to my doctor and we adjusted my treatment plan together." = "Na 3 maanden loggen nam ik mijn gegevens mee naar mijn arts en hebben we samen mijn behandelplan aangepast.";
+"Symptom Tracking" = "Symptoomtracking";
+"I was skeptical, but seeing my symptom patterns mapped to my cycle was a game-changer." = "Ik was sceptisch, maar mijn symptoompatronen gekoppeld zien aan mijn cyclus veranderde alles.";
+"Pattern Recognition" = "Patroonherkenning";
+"What women are saying" = "Wat vrouwen zeggen";
+"Built and tested with 200+ women in our beta community" = "Gebouwd en getest met meer dan 200 vrouwen uit onze bètacommunity";
+"Built to give women with PCOS the insights they deserve." = "Gebouwd om vrouwen met PCOS de inzichten te geven die ze verdienen.";
+"Purchase is pending. Approve the transaction in the StoreKit session or App Store account and try refreshing premium status again." = "De aankoop is in behandeling. Keur de transactie goed in de StoreKit-sessie of in je App Store-account en probeer daarna de Premium-status opnieuw te verversen.";
+"%lld day" = "%lld dag";
+"%lld week" = "%lld week";
+"%lld weeks" = "%lld weken";
+"%lld month" = "%lld maand";
+"%lld months" = "%lld maanden";
+"%lld year" = "%lld jaar";
+"%lld years" = "%lld jaren";
+"increase" = "toename";
+"decrease" = "afname";
+"Import Failed" = "Import mislukt";
+"Import Completed with Issues" = "Import voltooid met problemen";
+"Import Counts" = "Importaantallen";
+"Inserted" = "Toegevoegd";
+"Updated" = "Bijgewerkt";
+"Skipped" = "Overgeslagen";
+"Rejected" = "Afgewezen";
+"Example Issues" = "Voorbeeldproblemen";
+"And %lld more issues..." = "En nog %lld problemen...";
+"No records were imported because the backup could not be validated." = "Er zijn geen records geïmporteerd omdat de back-up niet kon worden gevalideerd.";
+"No records were imported because the CSV file could not be validated." = "Er zijn geen records geïmporteerd omdat het CSV-bestand niet kon worden gevalideerd.";
+"No records were imported. %lld records need attention." = "Er zijn geen records geïmporteerd. %lld records hebben aandacht nodig.";
+"%lld records were applied. %lld records need attention." = "%lld records zijn toegepast. %lld records hebben aandacht nodig.";
+"%lld inserted • %lld updated • %lld skipped • %lld rejected" = "%lld toegevoegd • %lld bijgewerkt • %lld overgeslagen • %lld afgewezen";
+"%lld imported • %lld rejected • schema v%lld" = "%lld geïmporteerd • %lld afgewezen • schema v%lld";
+"How this works" = "Hoe dit werkt";
+"What the confidence means" = "Wat de betrouwbaarheid betekent";
+"Research context" = "Onderzoekscontext";
+"Sources" = "Bronnen";
+"View Source" = "Bron bekijken";
+"Evidence strength" = "Bewijssterkte";
+"PCOS-studied" = "Onderzocht bij PCOS";
+"Mixed evidence" = "Gemengd bewijs";
+"Emerging evidence" = "Opkomend bewijs";
+"Limited evidence" = "Beperkt bewijs";
+"General guidance" = "Algemene richtlijn";
+"Insights are based on your personal data and on-device analysis. They are not medical advice." = "Inzichten zijn gebaseerd op je persoonlijke gegevens en analyse op het apparaat. Ze zijn geen medisch advies.";
+"How to read your insights" = "Zo lees je je inzichten";
+"Built from your logs" = "Op basis van je logs";
+"Each insight comes from patterns in the cycle, symptom, meal, supplement, sleep, and daily data you track on this device." = "Elk inzicht komt voort uit patronen in de cyclus-, symptoom-, maaltijd-, supplement-, slaap- en dagelijkse gegevens die je op dit apparaat bijhoudt.";
+"Confidence shows pattern strength" = "Betrouwbaarheid laat de sterkte van het patroon zien";
+"Higher confidence usually means the app has seen the same pattern more than once in your recent history." = "Een hogere betrouwbaarheid betekent meestal dat de app hetzelfde patroon meer dan één keer in je recente geschiedenis heeft gezien.";
+"Research adds context" = "Onderzoek geeft context";
+"Research helps explain why a pattern may matter, but it does not prove that a study finding caused your specific result." = "Onderzoek helpt uitleggen waarom een patroon belangrijk kan zijn, maar bewijst niet dat een onderzoeksbevinding jouw specifieke resultaat heeft veroorzaakt.";
+"Why you're seeing this" = "Waarom je dit ziet";
+"Evidence overview" = "Overzicht van het bewijs";
+"References" = "Referenties";
+"Forecast cards compare your recent cycle, symptom, meal, supplement, blood sugar, and daily-log history on this device to estimate a likely range. If the app does not have enough recent or consistent data, it stays cautious or skips the forecast." = "Voorspellingskaarten vergelijken je recente cyclus-, symptoom-, maaltijd-, supplement-, bloedsuiker- en dagloggeschiedenis op dit apparaat om een waarschijnlijke bandbreedte te schatten. Als de app niet genoeg recente of consistente gegevens heeft, blijft ze voorzichtig of slaat ze de voorspelling over.";
+"This forecast is driven mostly by your own logging history rather than a specific external study, so it should be treated as a personalized estimate, not a medical prediction." = "Deze voorspelling wordt vooral gestuurd door je eigen loggeschiedenis in plaats van door één specifieke externe studie. Zie het daarom als een persoonlijke schatting en niet als een medische voorspelling.";
+"This card compares the length and variability of your completed, non-predicted cycles logged on this device." = "Deze kaart vergelijkt de lengte en variatie van je voltooide, niet-voorspelde cycli die op dit apparaat zijn geregistreerd.";
+"PCOS guidelines and review papers treat cycle regularity as an important signal, but this card is still describing your own logged cycle pattern rather than making a diagnosis." = "PCOS-richtlijnen en overzichtsartikelen zien regelmaat van de cyclus als een belangrijk signaal, maar deze kaart beschrijft nog steeds je eigen geregistreerde patroon en stelt geen diagnose.";
+"This card looks for symptom timing, clustering, and trend changes across the symptom days and cycle phases you have logged." = "Deze kaart zoekt naar timing van symptomen, clustering en trendveranderingen over de symptoomdagen en cyclusfasen die je hebt vastgelegd.";
+"PCOS research shows that symptom burden can affect daily life and emotional wellbeing, but this card is still a personal pattern from your own symptom history rather than proof of a cause." = "Onderzoek naar PCOS laat zien dat de last van symptomen invloed kan hebben op het dagelijks leven en emotioneel welzijn, maar deze kaart blijft een persoonlijk patroon uit je eigen symptoomgeschiedenis en is geen bewijs van een oorzaak.";
+"This card compares the glycemic pattern of your logged meals with later symptoms and breakout timing from meals saved on this device." = "Deze kaart vergelijkt het glycemische patroon van je geregistreerde maaltijden met latere symptomen en het moment waarop huiduitbraken optreden.";
+"PCOS lifestyle guidance often focuses on meal quality, blood sugar, and sustainable activity habits. This card uses that context, but the relationship shown here still comes from your own meal and symptom logs." = "Leefstijladvies bij PCOS legt vaak de nadruk op kwaliteit van maaltijden, bloedsuiker en vol te houden bewegingsgewoonten. Deze kaart gebruikt die context, maar de relatie hier komt nog steeds uit je eigen maaltijd- en symptoomlogs.";
+"This card compares your logged sleep, energy, and activity trends with symptom severity from daily logs saved on this device." = "Deze kaart vergelijkt je geregistreerde slaap-, energie- en activiteitstrends met de ernst van symptomen uit daglogs die op dit apparaat zijn opgeslagen.";
+"Sleep problems are more common in PCOS populations, but this card is still mainly a personal recovery-pattern check from your own logs rather than proof of a cause." = "Slaapproblemen komen vaker voor bij mensen met PCOS, maar deze kaart is nog steeds vooral een controle van jouw persoonlijke herstelpatroon op basis van je eigen logs en geen bewijs van een oorzaak.";
+"This card compares symptom averages across months using the history you have logged on this device." = "Deze kaart vergelijkt maandgemiddelden van symptomen op basis van de geschiedenis die je op dit apparaat hebt vastgelegd.";
+"Seasonal shifts are not a core benchmark topic in PCOS research, so this card should be read mostly as a personal pattern from your own logs." = "Seizoensveranderingen zijn geen centraal referentieonderwerp in PCOS-onderzoek, dus deze kaart moet vooral worden gelezen als een persoonlijk patroon uit je eigen logs.";
+"These catalog presets are tracking-friendly starting points for commonly discussed supplements. They are not prescriptions, treatment plans, or personalized medical recommendations." = "Deze catalogusinstellingen zijn handige uitgangspunten om veelbesproken supplementen bij te houden. Het zijn geen voorschriften, behandelplannen of persoonlijke medische aanbevelingen.";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns from supplement entries saved on this device." = "Deze kaart vergelijkt de dagen waarop je een supplement nam of miste, de ernst van symptomen en cycluspatronen uit supplementregistraties die op dit apparaat zijn opgeslagen.";
+"This result is mostly a personal adherence pattern from your own logs. Because the supplement does not match a curated preset, the app avoids attaching a broader study list that could feel misleading." = "Dit resultaat is vooral een persoonlijk volhoudpatroon uit je eigen logs. Omdat het supplement niet past bij een samengestelde preset, koppelt de app geen bredere lijst met studies die misleidend kan zijn.";
+"This card compares your logged taken versus missed days, symptom severity, and cycle patterns for the supplement you tracked." = "Deze kaart vergelijkt voor het supplement dat je bijhield de dagen waarop je het nam of miste, de ernst van symptomen en cycluspatronen.";
+"Your card still does not prove that the supplement caused the change; it highlights a pattern worth tracking over time." = "Je kaart bewijst nog steeds niet dat het supplement de verandering heeft veroorzaakt; ze laat vooral een patroon zien dat de moeite waard is om in de tijd te volgen.";
+"Benchmark international guideline used for broad PCOS assessment and management context." = "Internationale richtlijn van referentieniveau voor de brede context van beoordeling en behandeling van PCOS.";
+"High-level review explaining core PCOS mechanisms and why cycle and metabolic patterns matter." = "Overzichtsartikel op hoofdlijnen dat de kernmechanismen van PCOS uitlegt en waarom cyclus- en stofwisselingspatronen belangrijk zijn.";
+"Guideline-linked review summarizing diet and activity patterns discussed in PCOS care." = "Overzicht gekoppeld aan richtlijnen dat voedings- en bewegingspatronen samenvat die bij PCOS-zorg worden besproken.";
+"Commonly cited evidence showing why exercise and lifestyle patterns are discussed in PCOS management." = "Vaak aangehaalde evidentie die laat zien waarom bewegen en leefstijlpatronen in het PCOS-beleid worden besproken.";
+"Overview of sleep-related difficulties reported more often in PCOS populations." = "Overzicht van slaapgerelateerde klachten die vaker worden gemeld bij mensen met PCOS.";
+"Shows why symptom burden and emotional wellbeing are often discussed together in PCOS care." = "Laat zien waarom symptoomlast en emotioneel welzijn in PCOS-zorg vaak samen worden besproken.";
+"Direct study or review for this supplement in PCOS." = "Directe studie of review over dit supplement bij PCOS.";
+
+/* Insight explanation localization additions. */
+"Analyzing your data..." = "Je gegevens worden geanalyseerd...";
+"BMJ Medicine review (2023)" = "BMJ Medicine-review (2023)";
+"Build your first cycle insights" = "Bouw je eerste cyclusinzichten op";
+"Build your first insights" = "Bouw je eerste inzichten op";
+"Build your first symptom insights" = "Bouw je eerste symptoominzichten op";
+"Cycle pattern summaries become reliable after 3 complete cycles. Keep logging each period start so your pattern can stabilize." = "Samenvattingen van je cycluspatroon worden betrouwbaar na 3 volledige cycli. Blijf elke menstruatiestart loggen zodat je patroon kan stabiliseren.";
+"Cycle pattern summaries need 3 complete cycles, and symptom correlations need about 14 tracked days. Keep logging period starts and daily symptoms." = "Samenvattingen van het cycluspatroon hebben 3 volledige cycli nodig en symptoomcorrelaties ongeveer 14 gelogde dagen. Blijf menstruatiestarts en dagelijkse symptomen loggen.";
+"Insights are still taking shape" = "Je inzichten krijgen nog vorm";
+"International PCOS guideline (2023)" = "Internationale PCOS-richtlijn (2023)";
+"Keep logging consistently. As your data fills in, this tab will highlight stronger cycle and symptom patterns." = "Blijf consequent loggen. Naarmate je gegevens voller worden, zal dit tabblad sterkere cyclus- en symptoompatronen tonen.";
+"Keep logging period starts and symptoms so this tab can start surfacing useful patterns." = "Blijf menstruatiestarts en symptomen loggen zodat dit tabblad nuttige patronen kan gaan tonen.";
+"Log meals, supplements, sleep, activity, or blood sugar to unlock deeper lifestyle correlations and predictive insights." = "Log maaltijden, supplementen, slaap, activiteit of bloedsuiker om diepere leefstijlcorrelaties en voorspellende inzichten te ontgrendelen.";
+"Meal impact insights" = "Inzichten over maaltijdimpact";
+"More cycle data will sharpen your insights" = "Meer cyclusgegevens scherpen je inzichten aan";
+"More symptom days will unlock correlations" = "Meer symptoomdagen ontgrendelen correlaties";
+"Predictive forecasts" = "Voorspellingen";
+"Premium Insights" = "Premium-inzichten";
+"PubMed meta-analysis (2019)" = "PubMed-meta-analyse (2019)";
+"PubMed overview (2024)" = "PubMed-overzicht (2024)";
+"PubMed review (2019)" = "PubMed-review (2019)";
+"PubMed systematic review (2019)" = "PubMed-systematische review (2019)";
+"References expanded" = "Bronnen uitgevouwen";
+"Saving insights..." = "Inzichten worden opgeslagen...";
+"Seasonal pattern insights" = "Inzichten over seizoenspatronen";
+"Sleep and activity insights" = "Inzichten over slaap en activiteit";
+"Supplement response insights" = "Inzichten over supplementrespons";
+"Symptom correlations and trends need about 14 tracked days. Daily symptom check-ins are the fastest way to make this tab more useful." = "Symptoomcorrelaties en trends hebben ongeveer 14 gelogde dagen nodig. Dagelijkse symptoomcheck-ins zijn de snelste manier om dit tabblad nuttiger te maken.";
+"Symptom correlations need about 14 tracked days, and cycle pattern summaries need 3 complete cycles. Start with daily symptoms and period starts." = "Symptoomcorrelaties hebben ongeveer 14 gelogde dagen nodig en samenvattingen van het cycluspatroon 3 volledige cycli. Begin met dagelijkse symptomen en menstruatiestarts.";
+"Unlock adherence and symptom-delta insights for the supplements you track." = "Ontgrendel inzichten over therapietrouw en symptoomverschillen voor de supplementen die je bijhoudt.";
+"Unlock forecast ranges for cycle length and next-week symptom severity when enough data is available." = "Ontgrendel voorspellingsbereiken voor cycluslengte en symptoomernst van volgende week zodra er genoeg gegevens zijn.";
+"Unlock meal and glycemic impact correlations tied to your next-day symptoms." = "Ontgrendel correlaties tussen maaltijd- en glycemische impact en je symptomen van de volgende dag.";
+"Unlock month-to-month symptom pattern changes as you log across seasons." = "Ontgrendel maand-tot-maandveranderingen in symptoompatronen terwijl je over seizoenen heen blijft loggen.";
+"Unlock sleep, activity, and recovery patterns linked to symptom severity." = "Ontgrendel slaap-, activiteit- en herstelpatronen die samenhangen met symptoomernst.";
+"You have the basics covered" = "Je hebt de basis op orde";
+"blood sugar readings for predictive forecasts" = "bloedsuikermetingen voor voorspellingen";
+"cycles for predictive forecasts" = "cycli voor voorspellingen";
+"cycles for supplement analysis" = "cycli voor supplementanalyse";
+"daily logs for predictive forecasts" = "daglogs voor voorspellingen";
+"meals for predictive forecasts" = "maaltijden voor voorspellingen";
+"seasonal patterns" = "seizoenspatronen";
+"supplements for predictive forecasts" = "supplementen voor voorspellingen";
+"symptoms for predictive forecasts" = "symptomen voor voorspellingen";
+"symptoms for seasonal analysis" = "symptomen voor seizoensanalyse";
+
+/* Supplement evidence localization additions. */
+"Inositol has direct PCOS literature support, especially for insulin-related and reproductive outcomes, though benefit size varies across trials." = "Inositol heeft directe literatuurondersteuning bij PCOS, vooral voor insulinegerelateerde en reproductieve uitkomsten, al verschilt de grootte van het effect per onderzoek.";
+"Vitamin D has direct PCOS trial and meta-analysis support, but results vary and deficiency status may matter." = "Vitamine D heeft directe ondersteuning uit PCOS-onderzoeken en meta-analyses, maar de resultaten verschillen en een tekortstatus kan belangrijk zijn.";
+"Omega-3 has direct PCOS meta-analysis support for selected cardiometabolic markers, though effects are not uniform across outcomes." = "Omega-3 heeft directe ondersteuning uit PCOS-meta-analyses voor bepaalde cardiometabole markers, al zijn de effecten niet voor alle uitkomsten gelijk.";
+"Berberine has direct PCOS meta-analysis support for metabolic outcomes, but the trial base is smaller than for core guideline-backed therapies." = "Berberine heeft directe ondersteuning uit PCOS-meta-analyses voor metabole uitkomsten, maar de onderzoeksbasis is kleiner dan voor de belangrijkste richtlijnondersteunde therapieën.";
+"N-acetylcysteine has direct PCOS meta-analysis support, but findings are still interpreted cautiously alongside standard care." = "N-acetylcysteïne heeft directe ondersteuning uit PCOS-meta-analyses, maar de bevindingen worden nog steeds voorzichtig geïnterpreteerd naast de standaardzorg.";
+"Zinc appears in newer mineral-supplement analyses for PCOS, but the overall evidence base is still mixed and not strong enough for a broad treatment claim." = "Zink komt voor in nieuwere analyses van mineralensupplementen bij PCOS, maar de totale bewijslast is nog gemengd en niet sterk genoeg voor een brede behandelclaim.";
+"Magnesium appears in newer mineral-supplement analyses for PCOS, but the evidence base is still emerging and should be framed conservatively." = "Magnesium komt voor in nieuwere analyses van mineralensupplementen bij PCOS, maar de bewijslast is nog in ontwikkeling en moet terughoudend worden gepresenteerd.";
+"Spearmint tea has small-trial support for androgen-related symptoms, but the evidence base remains limited." = "Groene muntthee heeft ondersteuning uit kleine onderzoeken voor androgeengerelateerde symptomen, maar de bewijslast blijft beperkt.";
+"Folate is included as broader preconception and reproductive-health guidance rather than as a direct PCOS treatment recommendation." = "Folaat is opgenomen als bredere richtlijn voor preconceptie en reproductieve gezondheid, niet als directe behandeladviezen voor PCOS.";
+"Chromium has direct PCOS meta-analysis support for some insulin-resistance markers, but the overall evidence remains mixed." = "Chroom heeft directe ondersteuning uit PCOS-meta-analyses voor sommige markers van insulineresistentie, maar de totale bewijslast blijft gemengd.";
+"PubMed umbrella review (2024)" = "PubMed-umbrella-review (2024)";
+"PubMed meta-analysis (2017)" = "PubMed-meta-analyse (2017)";
+"PubMed meta-analysis (2018)" = "PubMed-meta-analyse (2018)";
+"PubMed meta-analysis (2021)" = "PubMed-meta-analyse (2021)";
+"PubMed meta-analysis (2024)" = "PubMed-meta-analyse (2024)";
+"PubMed randomized trial (2010)" = "PubMed-gerandomiseerde studie (2010)";
+"USPSTF recommendation" = "USPSTF-aanbeveling";
+
+/* HealthKit data transparency section. */
+"Active Energy Burned" = "Verbrande actieve energie";
+"Blood Glucose" = "Bloedglucose";
+"Body Mass" = "Lichaamsmassa";
+"Connected" = "Verbonden";
+"CycleBalance reads data only after you grant permission. Data stays on your device and helps enrich logs, trends, and insights." = "CycleBalance leest gegevens alleen nadat u toestemming geeft. Gegevens blijven op uw apparaat en helpen logs, trends en inzichten te verrijken.";
+"CycleBalance reads these Apple Health data types only after you grant permission. Data stays on your device and is used to enrich logs, trends, and insights. CycleBalance does not write data to Apple Health." = "CycleBalance leest deze Apple Gezondheid-gegevenstypen alleen nadat u toestemming geeft. Gegevens blijven op uw apparaat en worden gebruikt om logs, trends en inzichten te verrijken. CycleBalance schrijft geen gegevens naar Apple Gezondheid.";
+"Health Data Access" = "Toegang tot gezondheidsgegevens";
+"Health data stays private" = "Gezondheidsgegevens blijven privé";
+"HealthKit type: Active Energy Burned" = "HealthKit-type: verbrande actieve energie";
+"HealthKit type: Blood Glucose" = "HealthKit-type: bloedglucose";
+"HealthKit type: Body Mass" = "HealthKit-type: lichaamsmassa";
+"HealthKit type: Resting Heart Rate" = "HealthKit-type: hartslag in rust";
+"HealthKit type: Sleep Analysis" = "HealthKit-type: slaapanalyse";
+"HealthKit type: Step Count" = "HealthKit-type: stappentelling";
+"Manage the optional Apple Health connection for CycleBalance." = "Beheer de optionele Apple Gezondheid-verbinding voor CycleBalance.";
+"No writes to Apple Health" = "Geen schrijfacties naar Apple Gezondheid";
+"On device" = "Op apparaat";
+"Read-only" = "Alleen lezen";
+"Read when connected" = "Lezen wanneer verbonden";
+"Requested for activity context; not saved or used for insights." = "Aangevraagd voor activiteitscontext; niet opgeslagen of gebruikt voor inzichten.";
+"Requested for activity context. CycleBalance does not currently save step count or use it for insights." = "Aangevraagd voor activiteitscontext. CycleBalance slaat stappentelling momenteel niet op en gebruikt deze niet voor inzichten.";
+"Resting Heart Rate" = "Hartslag in rust";
+"Sleep Analysis" = "Slaapanalyse";
+"Step Count" = "Stappentelling";
+"These data types are read only after you connect Apple Health." = "Deze gegevenstypen worden pas gelezen nadat u Apple Gezondheid hebt verbonden.";
+"Used as activity context for daily logs and activity insights." = "Gebruikt als activiteitscontext voor dagelijkse logs en activiteitsinzichten.";
+"Used for blood sugar history and metabolic insight context." = "Gebruikt voor bloedglucosegeschiedenis en context voor metabole inzichten.";
+"Used for daily resting BPM and recovery context." = "Gebruikt voor dagelijkse BPM in rust en herstelcontext.";
+"Used for daily weight and weight trends." = "Gebruikt voor dagelijks gewicht en gewichtstrends.";
+"Used for sleep hours and sleep/recovery insights." = "Gebruikt voor slaapuren en inzichten in slaap/herstel.";
+"Learn more" = "Meer informatie";

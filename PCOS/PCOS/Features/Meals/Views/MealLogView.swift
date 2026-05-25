@@ -1,10 +1,18 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+import os
+
+enum MealLogEntryPoint: String, Sendable {
+    case trackingHub = "tracking_hub"
+    case today = "today"
+    case direct = "direct"
+}
 
 struct MealLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    let entryPoint: MealLogEntryPoint
     @State private var viewModel: MealViewModel?
     @State private var saveCoordinator = SaveInteractionCoordinator()
     @State private var activeAlert: ActiveAlert?
@@ -18,6 +26,7 @@ struct MealLogView: View {
         case protein
         case fat
         case notes
+        case postMealNote
     }
 
     private struct FormSnapshot: Equatable {
@@ -29,6 +38,9 @@ struct MealLogView: View {
         var fatText: String
         var photoData: Data?
         var notes: String
+        var selectedTemplateID: String?
+        var postMealSymptomSeverity: Int
+        var postMealSymptomNote: String
         var mealDate: Date
     }
 
@@ -48,56 +60,10 @@ struct MealLogView: View {
         NavigationStack {
             Form {
                 if let viewModel {
-                    Section {
-                        Picker("Meal Type", selection: Binding(
-                            get: { viewModel.mealType },
-                            set: { viewModel.mealType = $0 }
-                        )) {
-                            ForEach(MealType.allCases) { type in
-                                Label(type.displayName, systemImage: type.systemImage)
-                                    .tag(type)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    }
-
-                    Section {
-                        TextField("What did you eat?", text: Binding(
-                            get: { viewModel.mealDescription },
-                            set: { viewModel.mealDescription = $0 }
-                        ))
-                        .focused($focusedField, equals: .description)
-                        .submitLabel(.next)
-                        .onSubmit {
-                            focusedField = .carbs
-                        }
-
-                        if !viewModel.mealDescriptionSuggestions.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: AppTheme.spacing8) {
-                                    ForEach(viewModel.mealDescriptionSuggestions, id: \.self) { suggestion in
-                                        Button {
-                                            viewModel.applyMealDescriptionSuggestion(suggestion)
-                                        } label: {
-                                            Text(suggestion)
-                                                .font(.caption)
-                                                .padding(.horizontal, 10)
-                                                .padding(.vertical, 6)
-                                                .background(
-                                                    Capsule()
-                                                        .fill(AppTheme.sage.opacity(0.18))
-                                                )
-                                                .foregroundStyle(AppTheme.sage)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.vertical, 2)
-                            }
-                        }
-                    } header: {
-                        Text("Description")
-                    }
+                    mealTypeSection(viewModel: viewModel)
+                    mealTemplateSection(viewModel: viewModel)
+                    descriptionSection(viewModel: viewModel)
+                    swapSuggestionsSection(viewModel: viewModel)
 
                     Section {
                         HStack(spacing: AppTheme.spacing8) {
@@ -194,7 +160,7 @@ struct MealLogView: View {
 
                                     Spacer()
 
-                                    Button("Remove") {
+                                    Button(L10n.string("Remove", defaultValue: "Remove")) {
                                         viewModel.photoData = nil
                                         selectedPhotoItem = nil
                                     }
@@ -214,8 +180,13 @@ struct MealLogView: View {
                                     }
                                     viewModel.photoData = data
                                 } catch {
-                                    saveCoordinator.showErrorHaptic()
-                                    activeAlert = .error("Could not import photo: \(error.localizedDescription)")
+                                    saveCoordinator.showErrorFeedback()
+                                    activeAlert = .error(
+                                        String(
+                                            localized: "Could not import photo: \(error.localizedDescription)",
+                                            comment: "Error shown when importing a meal photo fails."
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -223,47 +194,8 @@ struct MealLogView: View {
                         Text("Photo (Optional)")
                     }
 
-                    Section {
-                        TextField("Any additional notes...", text: Binding(
-                            get: { viewModel.notes },
-                            set: { viewModel.notes = $0 }
-                        ), axis: .vertical)
-                        .lineLimit(3...6)
-                        .focused($focusedField, equals: .notes)
-
-                        if !viewModel.mealNoteSuggestions.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: AppTheme.spacing8) {
-                                    ForEach(viewModel.mealNoteSuggestions, id: \.self) { suggestion in
-                                        let isSelected = viewModel.isMealNoteSelected(suggestion)
-                                        Button {
-                                            viewModel.toggleMealNoteSuggestion(suggestion)
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                if isSelected {
-                                                    Image(systemName: "checkmark")
-                                                        .font(.caption2)
-                                                }
-                                                Text(suggestion)
-                                                    .font(.caption)
-                                            }
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(isSelected ? AppTheme.accentColor.opacity(0.22) : AppTheme.accentColor.opacity(0.12))
-                                            )
-                                            .foregroundStyle(AppTheme.accentColor)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.vertical, 2)
-                            }
-                        }
-                    } header: {
-                        Text("Notes")
-                    }
+                    notesSection(viewModel: viewModel)
+                    postMealFeedbackSection(viewModel: viewModel)
 
                     Section {
                         DatePicker(
@@ -282,7 +214,7 @@ struct MealLogView: View {
                             saveMeal()
                         } label: {
                             Text("Save Meal")
-                                .font(.headline)
+                                .appFont(.headline)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
                                 .background(
@@ -294,16 +226,19 @@ struct MealLogView: View {
                                 .foregroundStyle(.white)
                         }
                         .disabled(!viewModel.isValid)
+                        .accessibilityIdentifier("meal_log.save_button")
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                     }
                 }
             }
-            .navigationTitle("Log Meal")
+            .accessibilityIdentifier("screen.meal_log")
+            .background(mealLogLayoutDebugProbe)
+            .navigationTitle(L10n.string("Log Meal", defaultValue: "Log Meal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
                             activeAlert = .cancel
                         } else {
@@ -317,19 +252,22 @@ struct MealLogView: View {
                     } label: {
                         Label("History", systemImage: "clock.arrow.circlepath")
                     }
+                    .accessibilityIdentifier("meal_log.history_button")
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     if focusedField == .description {
-                        Button("Next") { focusedField = .carbs }
+                        Button(L10n.string("Next", defaultValue: "Next")) { focusedField = .carbs }
                     } else if focusedField == .carbs {
-                        Button("Next") { focusedField = .protein }
+                        Button(L10n.string("Next", defaultValue: "Next")) { focusedField = .protein }
                     } else if focusedField == .protein {
-                        Button("Next") { focusedField = .fat }
+                        Button(L10n.string("Next", defaultValue: "Next")) { focusedField = .fat }
                     } else if focusedField == .fat {
-                        Button("Next") { focusedField = .notes }
+                        Button(L10n.string("Next", defaultValue: "Next")) { focusedField = .notes }
+                    } else if focusedField == .notes {
+                        Button(L10n.string("Next", defaultValue: "Next")) { focusedField = .postMealNote }
                     }
                     Spacer()
-                    Button("Done") { focusedField = nil }
+                    Button(L10n.string("Done", defaultValue: "Done")) { focusedField = nil }
                 }
             }
             .interactiveDismissDisabled(hasUnsavedChanges)
@@ -350,27 +288,330 @@ struct MealLogView: View {
                     )
                 }
             }
-            .sensoryFeedback(.warning, trigger: activeAlert?.id)
             .overlay {
                 if saveCoordinator.isShowingSavedFeedback {
                     SavedFeedbackOverlay()
                 }
             }
+            .sensoryFeedback(.success, trigger: saveCoordinator.isShowingSavedFeedback)
             .onAppear {
-                let vm = MealViewModel(modelContext: modelContext)
-                viewModel = vm
-                dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
+                Logger.meals.info("MealLogView appeared from \(entryPoint.rawValue, privacy: .public)")
+
+                if viewModel == nil {
+                    Logger.meals.info("MealLogView initializing view model from \(entryPoint.rawValue, privacy: .public)")
+                    let vm = MealViewModel(modelContext: modelContext)
+                    viewModel = vm
+                    dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
+                }
             }
             .onDisappear {
+                Logger.meals.info("MealLogView disappeared from \(entryPoint.rawValue, privacy: .public)")
                 saveCoordinator.cancelPending()
             }
         }
+        .accessibilityIdentifier("screen.meal_log")
         .premiumGated()
     }
 
     private var hasUnsavedChanges: Bool {
         guard let viewModel, let dirtyTracker else { return false }
         return dirtyTracker.isDirty(current: snapshot(for: viewModel))
+    }
+
+    private func mealTypeSection(viewModel: MealViewModel) -> some View {
+        Section {
+            Picker("Meal Type", selection: Binding(
+                get: { viewModel.mealType },
+                set: {
+                    viewModel.mealType = $0
+                    viewModel.selectedTemplateID = nil
+                }
+            )) {
+                ForEach(MealType.allCases) { type in
+                    Label(type.displayName, systemImage: type.systemImage)
+                        .tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .sensoryFeedback(.selection, trigger: viewModel.mealType)
+    }
+
+    @ViewBuilder
+    private func mealTemplateSection(viewModel: MealViewModel) -> some View {
+        let templates = viewModel.mealTemplates
+        if !templates.isEmpty {
+            Section {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text("PCOS-friendly templates")
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+
+                    FlowLayout(spacing: AppTheme.spacing8) {
+                        ForEach(templates) { template in
+                            let isSelected = template.id == viewModel.selectedTemplateID
+                            Button {
+                                viewModel.applyMealTemplate(template)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(template.title)
+                                        .appFont(.caption, weight: .semibold)
+                                    Text(template.glycemicImpact.displayName)
+                                        .appFont(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
+                                        .fill(isSelected ? AppTheme.sage.opacity(AppTheme.opacityMedium) : AppTheme.sage.opacity(AppTheme.opacityLight))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
+                                        .stroke(isSelected ? AppTheme.sage : .clear, lineWidth: 1.5)
+                                )
+                                .foregroundStyle(AppTheme.sage)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            } header: {
+                Text("Meal Templates")
+            }
+        }
+    }
+
+    private func descriptionSection(viewModel: MealViewModel) -> some View {
+        Section {
+            TextField("What did you eat?", text: Binding(
+                get: { viewModel.mealDescription },
+                set: {
+                    viewModel.mealDescription = $0
+                    if viewModel.selectedTemplateID != nil {
+                        viewModel.selectedTemplateID = nil
+                    }
+                }
+            ))
+            .focused($focusedField, equals: .description)
+            .submitLabel(.next)
+            .accessibilityIdentifier("meal_log.description")
+            .onSubmit {
+                focusedField = .carbs
+            }
+
+            mealDescriptionSuggestionsView(viewModel: viewModel)
+        } header: {
+            Text("Description")
+        }
+    }
+
+    @ViewBuilder
+    private func swapSuggestionsSection(viewModel: MealViewModel) -> some View {
+        let swaps = viewModel.swapSuggestions
+        if !swaps.isEmpty {
+            Section {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text("Recommended swaps")
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+
+                    ForEach(swaps, id: \.self) { swap in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "arrow.triangle.swap")
+                                .appFont(.caption)
+                                .foregroundStyle(AppTheme.accentColor)
+                                .padding(.top, 2)
+                            Text(swap)
+                                .appFont(.subheadline)
+                                .foregroundStyle(.primary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            } header: {
+                Text("Swap Suggestions")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func mealDescriptionSuggestionsView(viewModel: MealViewModel) -> some View {
+        let suggestions = viewModel.mealDescriptionSuggestions
+        if !suggestions.isEmpty {
+            if viewModel.hasMealDescriptionQuery {
+                autocompleteSuggestionsView(suggestions: suggestions) { suggestion in
+                    viewModel.applyMealDescriptionSuggestion(suggestion)
+                }
+            } else {
+                quickDescriptionSuggestionsView(suggestions: suggestions) { suggestion in
+                    viewModel.applyMealDescriptionSuggestion(suggestion)
+                }
+            }
+        }
+    }
+
+    private func autocompleteSuggestionsView(
+        suggestions: [String],
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text("Autocomplete")
+                .appFont(.caption)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 0) {
+                ForEach(Array(suggestions.enumerated()), id: \.element) { index, suggestion in
+                    Button {
+                        onSelect(suggestion)
+                    } label: {
+                        HStack {
+                            Text(suggestion)
+                                .appFont(.subheadline)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "arrow.up.left")
+                                .appFont(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, AppTheme.spacing12)
+                        .padding(.vertical, AppTheme.spacing8)
+                    }
+                    .buttonStyle(.plain)
+
+                    if index < suggestions.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                    .fill(AppTheme.cardBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                    .stroke(Color.secondary.opacity(AppTheme.opacityLight), lineWidth: 1)
+            )
+        }
+    }
+
+    private func quickDescriptionSuggestionsView(
+        suggestions: [String],
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text("Quick options")
+                .appFont(.caption)
+                .foregroundStyle(.secondary)
+
+            FlowLayout(spacing: AppTheme.spacing8) {
+                ForEach(suggestions, id: \.self) { suggestion in
+                    ChipButton(title: suggestion, color: AppTheme.sage) {
+                        onSelect(suggestion)
+                    }
+                }
+            }
+        }
+    }
+
+    private func notesSection(viewModel: MealViewModel) -> some View {
+        Section {
+            TextField("Any additional notes...", text: Binding(
+                get: { viewModel.notes },
+                set: { viewModel.notes = $0 }
+            ), axis: .vertical)
+            .lineLimit(3...6)
+            .focused($focusedField, equals: .notes)
+
+            if !viewModel.mealNoteSuggestions.isEmpty {
+                Text("Quick notes")
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+
+                FlowLayout(spacing: AppTheme.spacing8) {
+                    ForEach(viewModel.mealNoteSuggestions, id: \.self) { suggestion in
+                        ChipButton(title: suggestion, isSelected: viewModel.isMealNoteSelected(suggestion), color: AppTheme.accentColor) {
+                            viewModel.toggleMealNoteSuggestion(suggestion)
+                        }
+                    }
+                }
+            }
+        } header: {
+            Text(L10n.string("Notes", defaultValue: "Notes"))
+        }
+    }
+
+    private func postMealFeedbackSection(viewModel: MealViewModel) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text(
+                    L10n.string(
+                        "Use this after eating to connect meals with energy, cravings, bloating, or skin changes.",
+                        defaultValue: "Use this after eating to connect meals with energy, cravings, bloating, or skin changes."
+                    )
+                )
+                    .appFont(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                FlowLayout(spacing: AppTheme.spacing8) {
+                    ForEach(1...5, id: \.self) { severity in
+                        Button {
+                            viewModel.postMealSymptomSeverity = severity
+                        } label: {
+                            Text("\(severity)")
+                                .appFont(.caption, weight: .semibold)
+                                .frame(width: 34, height: 34)
+                                .background(
+                                    Circle()
+                                        .fill(
+                                            viewModel.postMealSymptomSeverity == severity
+                                                ? AppTheme.coralAccent.opacity(0.22)
+                                                : Color(.tertiarySystemFill)
+                                        )
+                                )
+                                .foregroundStyle(
+                                    viewModel.postMealSymptomSeverity == severity
+                                        ? AppTheme.coralAccent
+                                        : .secondary
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Button {
+                        viewModel.postMealSymptomSeverity = 0
+                    } label: {
+                        Text(L10n.string("Clear", defaultValue: "Clear"))
+                            .appFont(.caption, weight: .semibold)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, AppTheme.spacing8)
+                            .background(
+                                Capsule()
+                                    .fill(Color(.tertiarySystemFill))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                TextField(
+                    L10n.string(
+                        "e.g., steady energy, hungry soon, bloated later",
+                        defaultValue: "e.g., steady energy, hungry soon, bloated later"
+                    ),
+                    text: Binding(
+                        get: { viewModel.postMealSymptomNote },
+                        set: { viewModel.postMealSymptomNote = $0 }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(2...4)
+                .focused($focusedField, equals: .postMealNote)
+            }
+        } header: {
+            Text(L10n.string("After-meal check-in", defaultValue: "After-meal check-in"))
+        }
     }
 
     private func macroInputRow(
@@ -382,8 +623,7 @@ struct MealLogView: View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             HStack {
                 Text("\(title) (g)")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .appFont(.subheadline, weight: .medium)
 
                 Spacer()
 
@@ -397,20 +637,9 @@ struct MealLogView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.spacing8) {
                     ForEach(options, id: \.self) { option in
-                        Button {
+                        ChipButton(title: "\(option)g", color: AppTheme.sage) {
                             value.wrappedValue = option
-                        } label: {
-                            Text("\(option)g")
-                                .font(.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(AppTheme.sage.opacity(0.16))
-                                )
-                                .foregroundStyle(AppTheme.sage)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.vertical, 2)
@@ -425,8 +654,13 @@ struct MealLogView: View {
                 dismiss()
             }
         } catch {
-            saveCoordinator.showErrorHaptic()
-            activeAlert = .error("Could not save meal: \(error.localizedDescription)")
+            saveCoordinator.showErrorFeedback()
+            activeAlert = .error(
+                String(
+                    localized: "Could not save meal: \(error.localizedDescription)",
+                    comment: "Error shown when a meal entry cannot be saved."
+                )
+            )
         }
     }
 
@@ -440,9 +674,38 @@ struct MealLogView: View {
             fatText: viewModel.fatText,
             photoData: viewModel.photoData,
             notes: viewModel.notes,
+            selectedTemplateID: viewModel.selectedTemplateID,
+            postMealSymptomSeverity: viewModel.postMealSymptomSeverity,
+            postMealSymptomNote: viewModel.postMealSymptomNote,
             mealDate: viewModel.mealDate
         )
     }
+
+    @ViewBuilder
+    private var mealLogLayoutDebugProbe: some View {
+#if DEBUG
+        GeometryReader { geometry in
+            Color.clear
+                .onAppear {
+                    logInvalidMealLogLayoutIfNeeded(geometry.size, reason: "appear")
+                }
+                .onChange(of: geometry.size) { _, newSize in
+                    logInvalidMealLogLayoutIfNeeded(newSize, reason: "resize")
+                }
+        }
+#else
+        EmptyView()
+#endif
+    }
+
+#if DEBUG
+    private func logInvalidMealLogLayoutIfNeeded(_ size: CGSize, reason: String) {
+        guard !size.width.isFinite || !size.height.isFinite || size.width < 0 || size.height < 0 else { return }
+        Logger.ui.debug(
+            "MealLogView observed invalid root layout size. reason=\(reason, privacy: .public) width=\(size.width, privacy: .public) height=\(size.height, privacy: .public)"
+        )
+    }
+#endif
 }
 
 private struct GIButton: View {
@@ -457,11 +720,10 @@ private struct GIButton: View {
         Button(action: action) {
             VStack(spacing: AppTheme.spacing4) {
                 Text(label)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .appFont(.subheadline, weight: .semibold)
 
                 Text(examples)
-                    .font(.caption2)
+                    .appFont(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -470,11 +732,11 @@ private struct GIButton: View {
             .padding(.vertical, AppTheme.spacing8)
             .padding(.horizontal, AppTheme.spacing4)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
                     .fill(isSelected ? color.opacity(0.2) : Color(.tertiarySystemFill))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
                     .strokeBorder(isSelected ? color : .clear, lineWidth: 2)
             )
             .foregroundStyle(isSelected ? color : .primary)
@@ -486,6 +748,6 @@ private struct GIButton: View {
 }
 
 #Preview {
-    MealLogView()
+    MealLogView(entryPoint: .direct)
         .modelContainer(for: MealEntry.self, inMemory: true)
 }

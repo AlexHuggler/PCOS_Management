@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class SupplementLog {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<SupplementLog>([\.timeTaken])
+    #endif
+
     var id: UUID = UUID()
     var date: Date = Date()
     var supplementName: String = ""

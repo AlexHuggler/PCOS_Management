@@ -58,13 +58,25 @@ struct SleepActivityInsightAnalyzer {
             if diff > 0.5 {
                 let totalPoints = lowSleepSeverities.count + goodSleepSeverities.count
                 let confidence = min(0.35 + Double(totalPoints) * 0.02, 0.75)
+                let diffWord = InsightNarrativeHelpers.differenceWord(diff)
                 let insight = Insight(
                     insightType: .sleepActivity,
-                    title: "Less sleep, more symptoms",
-                    content: "After nights with less than \(Int(sleepThreshold)) hours of sleep, your "
-                        + "symptom severity averages \(String(format: "%.1f", lowSleepAvg))/5, compared to "
-                        + "\(String(format: "%.1f", goodSleepAvg))/5 after good sleep. Prioritizing sleep "
-                        + "may help reduce PCOS symptoms.",
+                    title: L10n.string(
+                        "Less sleep, more symptoms",
+                        defaultValue: "Less sleep, more symptoms"
+                    ),
+                    content: L10n.format(
+                        "Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Sleep looks like one of the stronger levers in your recent data.",
+                        defaultValue: "Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Sleep looks like one of the stronger levers in your recent data.",
+                        diffWord
+                    ),
+                    scientificContent: L10n.format(
+                        "After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after better sleep. That difference is large enough to keep watching.",
+                        defaultValue: "After nights with less than %lld hours of sleep, your symptom severity averages %@/5, compared to %@/5 after better sleep. That difference is large enough to keep watching.",
+                        Int(sleepThreshold),
+                        L10n.decimal(lowSleepAvg),
+                        L10n.decimal(goodSleepAvg)
+                    ),
                     confidence: confidence,
                     dataPointsUsed: totalPoints,
                     actionable: true
@@ -90,14 +102,34 @@ struct SleepActivityInsightAnalyzer {
                 let diff = secondAvg - firstAvg
 
                 if abs(diff) >= 0.5 {
-                    let direction = diff > 0 ? "improving" : "declining"
                     let confidence = min(0.3 + Double(logsWithEnergy.count) * 0.02, 0.65)
+                    let friendlyContent = diff > 0
+                        ? L10n.string(
+                            "Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!",
+                            defaultValue: "Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!"
+                        )
+                        : L10n.string(
+                            "Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted.",
+                            defaultValue: "Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted."
+                        )
                     let insight = Insight(
                         insightType: .sleepActivity,
-                        title: "Your energy levels are \(direction)",
-                        content: "Your average energy level has gone from \(String(format: "%.1f", firstAvg)) "
-                            + "to \(String(format: "%.1f", secondAvg)) (out of 5) over your tracking period. "
-                            + "Average energy: \(String(format: "%.1f", avgEnergy))/5.",
+                        title: L10n.string(
+                            diff > 0
+                                ? "Your energy levels are improving"
+                                : "Your energy levels are declining",
+                            defaultValue: diff > 0
+                                ? "Your energy levels are improving"
+                                : "Your energy levels are declining"
+                        ),
+                        content: friendlyContent,
+                        scientificContent: L10n.format(
+                            "Your average energy level has gone from %@ to %@ (out of 5) over your tracking period. Average energy: %@/5.",
+                            defaultValue: "Your average energy level has gone from %@ to %@ (out of 5) over your tracking period. Average energy: %@/5.",
+                            L10n.decimal(firstAvg),
+                            L10n.decimal(secondAvg),
+                            L10n.decimal(avgEnergy)
+                        ),
                         confidence: confidence,
                         dataPointsUsed: logsWithEnergy.count,
                         actionable: diff < 0

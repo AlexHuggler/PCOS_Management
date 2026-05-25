@@ -1,5 +1,6 @@
 import Testing
 import CloudKit
+import Foundation
 @testable import PCOS
 
 @Suite("CloudKit Startup Policy")
@@ -38,5 +39,101 @@ struct CloudKitStartupPolicyTests {
     func simulatorPolicyAlwaysFallsBack() {
         let reason = CloudKitStartupPolicy.simulatorFallbackReason()
         #expect(reason == .simulator)
+    }
+
+    @Test("Debug device defaults to local fallback unless CloudKit is explicitly enabled")
+    func debugDeviceDefaultsToLocalFallback() {
+        let shouldUseLocalStore = CloudKitStartupPolicy.shouldUseLocalStoreInDebug(
+            processArguments: [],
+            environment: [:],
+            isSimulator: false
+        )
+        #expect(shouldUseLocalStore == true)
+        #expect(CloudKitStartupPolicy.debugFallbackReason(isSimulator: false) == .debugLocalOnly)
+    }
+
+    @Test("Debug CloudKit opt-in argument disables local-only fallback")
+    func debugCloudKitOptInArgumentDisablesLocalFallback() {
+        let shouldUseLocalStore = CloudKitStartupPolicy.shouldUseLocalStoreInDebug(
+            processArguments: [CloudKitStartupPolicy.debugCloudKitOptInArgument],
+            environment: [:],
+            isSimulator: false
+        )
+        #expect(shouldUseLocalStore == false)
+    }
+
+    @Test("Debug CloudKit opt-in environment variable disables local-only fallback")
+    func debugCloudKitOptInEnvironmentDisablesLocalFallback() {
+        let shouldUseLocalStore = CloudKitStartupPolicy.shouldUseLocalStoreInDebug(
+            processArguments: [],
+            environment: [CloudKitStartupPolicy.debugCloudKitOptInEnvironmentKey: "true"],
+            isSimulator: false
+        )
+        #expect(shouldUseLocalStore == false)
+    }
+
+    @Test("Project config splits debug and release entitlements")
+    @MainActor
+    func projectConfigSplitsDebugAndReleaseEntitlements() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let projectYAML = try String(contentsOf: projectRoot.appendingPathComponent("project.yml"))
+
+        #expect(projectYAML.contains("CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.debug.entitlements"))
+        #expect(projectYAML.contains("CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements"))
+    }
+
+    @Test("Debug entitlements file excludes CloudKit and HealthKit capabilities")
+    @MainActor
+    func debugEntitlementsExcludeCloudKitAndHealthKit() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let debugEntitlementsURL = projectRoot.appendingPathComponent("PCOS/PCOS.debug.entitlements")
+        let data = try Data(contentsOf: debugEntitlementsURL)
+        let object = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+        let entitlements = try #require(object as? [String: Any])
+
+        #expect(entitlements["com.apple.developer.healthkit"] == nil)
+        #expect(entitlements["com.apple.developer.icloud-services"] == nil)
+        #expect(entitlements["com.apple.developer.icloud-container-identifiers"] == nil)
+    }
+
+    @Test("Release config uses optional local secrets include")
+    @MainActor
+    func releaseConfigUsesOptionalSecretsInclude() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let releaseConfigURL = projectRoot.appendingPathComponent("Config/Release.xcconfig")
+        let releaseConfig = try String(contentsOf: releaseConfigURL)
+
+        #expect(releaseConfig.contains("#include? \"LocalSecrets.xcconfig\""))
+        #expect(!releaseConfig.contains("#include \"LocalSecrets.xcconfig\""))
+    }
+
+    @Test("Release entitlements exclude CloudKit")
+    @MainActor
+    func releaseEntitlementsExcludeCloudKit() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let releaseEntitlementsURL = projectRoot.appendingPathComponent("PCOS/PCOS.entitlements")
+        let data = try Data(contentsOf: releaseEntitlementsURL)
+        let object = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+        let entitlements = try #require(object as? [String: Any])
+
+        #expect((entitlements["com.apple.developer.healthkit"] as? Bool) == true)
+        #expect(entitlements["com.apple.developer.icloud-services"] == nil)
+        #expect(entitlements["com.apple.developer.icloud-container-identifiers"] == nil)
+    }
+
+    @Test("Release Info.plist declares read-only HealthKit access")
+    @MainActor
+    func releaseInfoPlistIsReadOnlyForHealthKit() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let infoPlistURL = projectRoot.appendingPathComponent("PCOS/PCOS/Info.plist")
+        let plistData = try Data(contentsOf: infoPlistURL)
+        let plistObject = try PropertyListSerialization.propertyList(from: plistData, options: [], format: nil)
+        let info = try #require(plistObject as? [String: Any])
+
+        let healthShareDescription = try #require(info["NSHealthShareUsageDescription"] as? String)
+        let healthUpdateDescription = try #require(info["NSHealthUpdateUsageDescription"] as? String)
+        #expect(healthShareDescription.contains("reads your Apple Health data"))
+        #expect(healthUpdateDescription.contains("does not write to Apple Health"))
+        #expect(info["UIBackgroundModes"] == nil)
     }
 }

@@ -9,15 +9,14 @@ struct TooltipOverlay: View {
     var body: some View {
         VStack(spacing: AppTheme.spacing8) {
             Text(message)
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             Button("Got it") {
                 onDismiss()
             }
-            .font(.subheadline)
-            .fontWeight(.semibold)
+            .appFont(.subheadline, weight: .semibold)
             .foregroundStyle(AppTheme.accentColor)
         }
         .padding(AppTheme.spacing16)

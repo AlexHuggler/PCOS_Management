@@ -1,0 +1,2904 @@
+{
+  "appVersion" : "demo-symptomManagement",
+  "exportedAt" : "2026-03-15T12:00:00.000Z",
+  "records" : {
+    "bloodSugarReadings" : [
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 90,
+        "id" : "7C45E02D-CDFF-5DD2-88A6-33C1BD4D3E2E",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-15T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 97,
+        "id" : "7ABD4F89-E2C5-5298-AA81-50363A7CDE41",
+        "mealContext" : "lunch bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-15T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 113,
+        "id" : "7DE0C931-1A63-5B1A-8930-B7FD3ED369D0",
+        "mealContext" : "lunch bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-15T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 93,
+        "id" : "EFAC46EC-D4B6-545B-8C85-931198A361F4",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-13T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "A1067D49-5FC7-5754-9CFB-65174FC2308F",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-13T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 121,
+        "id" : "37EB53A3-21BB-500A-8DFE-FE9490EB3952",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-13T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 96,
+        "id" : "7C170724-1037-5330-AD29-FEE4F4479F9F",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-11T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 101,
+        "id" : "6726F26B-F9E6-51C7-AB44-3B538E8FF1C9",
+        "mealContext" : "rice bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-11T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 129,
+        "id" : "28413048-3290-5E86-ACB8-2CB06FAA98C3",
+        "mealContext" : "rice bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-11T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "2DFCEE84-D54A-57F3-AC9D-4DF6BFADAB79",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-09T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 103,
+        "id" : "09160D03-AAF9-5B78-B34A-44B98807EF6E",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-09T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 137,
+        "id" : "2CADB2D8-CC47-532C-9034-567D097BBB07",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-09T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 102,
+        "id" : "BB12938B-B4B6-5C3B-A244-C451AE1AB52D",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-07T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 97,
+        "id" : "9D1F7519-D596-5D95-8745-CE3734A17C76",
+        "mealContext" : "lunch bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-07T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 137,
+        "id" : "D3AD16F4-172C-5AB8-8C57-78EF1F14CBE4",
+        "mealContext" : "lunch bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-07T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 90,
+        "id" : "BC86769A-22AF-5DC0-B183-FFDF2F972E7C",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-05T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "ACB1ED51-FAC2-50E2-B2A9-DB46E821EECF",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-05T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 145,
+        "id" : "C4545B3F-7551-5AA9-95BB-7470EB0CB339",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-05T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 93,
+        "id" : "0010985C-628B-5284-8C4B-8B9A8566C829",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-03T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 101,
+        "id" : "F53074AB-E835-5C6F-96E8-A5B76B6647B4",
+        "mealContext" : "rice bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-03T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 117,
+        "id" : "603C5D7E-8961-5F35-A61F-834C178AD949",
+        "mealContext" : "rice bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-03T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 96,
+        "id" : "20403B82-ED1B-5C31-8E2C-D6F8C7D2FF73",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-03-01T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 103,
+        "id" : "A5DAA6BC-40A0-587E-8137-8CC6036723FD",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-03-01T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 125,
+        "id" : "C498A39B-146F-5275-BC41-356C7EFE5FDF",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-03-01T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "38B9F9A9-ECC0-5829-ADC5-7849AF551931",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-27T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 97,
+        "id" : "897E5936-18AB-5DCC-9DB4-4F10509DDBFD",
+        "mealContext" : "lunch bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-27T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 125,
+        "id" : "BEC23728-BA04-5BAA-B191-24554A53A1D9",
+        "mealContext" : "lunch bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-27T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 102,
+        "id" : "9950DEFB-4B2A-5767-A245-0DBEE0BB4DDA",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-25T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "8062FB9D-788D-5EDC-AE2E-1704BA0D51A1",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-25T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 133,
+        "id" : "23920723-336F-57EE-9E24-B0E895742420",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-25T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 90,
+        "id" : "BEB22F19-A66B-5CDA-8D33-942A15C5041A",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-23T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 101,
+        "id" : "C6585266-E822-55AE-872E-C8650CDC7072",
+        "mealContext" : "rice bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-23T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 141,
+        "id" : "6BFAADE7-4B34-504F-A953-1ED2D156E185",
+        "mealContext" : "rice bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-23T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 93,
+        "id" : "0BA0FC16-7F96-56E9-B95A-D00C0B22479C",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-21T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 103,
+        "id" : "67F5C830-BF95-59C2-92CC-FF7865DF1B71",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-21T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 149,
+        "id" : "287435B3-0398-57BE-8CF1-049713AF31AD",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-21T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 96,
+        "id" : "979777D5-0336-5565-99E1-615166EBAC52",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-19T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 97,
+        "id" : "B4CDD335-7630-5717-8703-38D602DF4B72",
+        "mealContext" : "lunch bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-19T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 113,
+        "id" : "E669A2B8-274C-58C9-9ABF-903800E1A832",
+        "mealContext" : "lunch bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-19T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "78929698-750C-5230-8B47-BA3139C80ECA",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-17T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "C699C98C-845A-5169-B762-E9B324A4855E",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-17T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 121,
+        "id" : "64B7F954-6854-5A57-B980-1E461A04EC5F",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-17T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 102,
+        "id" : "0A233511-6C87-5578-B5A8-112D56912736",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-15T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 101,
+        "id" : "DD8E90DC-EA49-5BD2-8FAA-8982CFBE9C92",
+        "mealContext" : "rice bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-15T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 129,
+        "id" : "B476237D-45AD-5763-8406-946DAE6BF965",
+        "mealContext" : "rice bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-15T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 90,
+        "id" : "8F338F5D-91D4-5BE5-9404-0F6C6DEE89E1",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-13T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 103,
+        "id" : "1D414070-3987-5446-8E5C-E3847AD41DD1",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-13T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 137,
+        "id" : "FE085029-1551-57DF-A5CE-DD201365697D",
+        "mealContext" : "high-fiber breakfast",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-13T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 93,
+        "id" : "4710B5B8-A461-5D76-B38C-D5028A26300F",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-11T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 97,
+        "id" : "1B00D4AC-3F5F-5DF6-9007-24A042F2EFFF",
+        "mealContext" : "lunch bowl",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-11T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 137,
+        "id" : "93D4D99F-822D-56D2-83B8-B8212C6E6861",
+        "mealContext" : "lunch bowl",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-11T14:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 96,
+        "id" : "F89B0403-AE59-5A98-9789-3CA601B39200",
+        "mealContext" : "Morning baseline",
+        "notes" : "Home finger-stick meter",
+        "readingType" : "fasting",
+        "timestamp" : "2026-02-09T07:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 99,
+        "id" : "C24DD9F0-209B-5658-8DDC-E86063A9C0BE",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "Pre-meal check",
+        "readingType" : "before_meal",
+        "timestamp" : "2026-02-09T12:00:00.000Z"
+      },
+      {
+        "fromHealthKit" : false,
+        "glucoseValue" : 145,
+        "id" : "F7E98E22-D62C-5A34-B8E0-C4BFCAAF81BB",
+        "mealContext" : "dinner stir-fry",
+        "notes" : "2h post meal",
+        "readingType" : "after_meal",
+        "timestamp" : "2026-02-09T14:00:00.000Z"
+      }
+    ],
+    "cycleEntries" : [
+      {
+        "createdAt" : "2025-08-26T12:00:00.000Z",
+        "cycleID" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-08-26T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "FD81C309-338E-553A-923B-B1C0E3AA05F5",
+        "isPeriodDay" : true,
+        "notes" : "Cycle 1: period started"
+      },
+      {
+        "createdAt" : "2025-08-27T12:00:00.000Z",
+        "cycleID" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-08-27T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "0DD19FDF-73E3-5C4F-B418-389F07F25976",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-08-28T12:00:00.000Z",
+        "cycleID" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-08-28T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "6EFD2806-629A-54C0-8B09-02ACAB36428C",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-08-29T12:00:00.000Z",
+        "cycleID" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-08-29T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "2A7CF11F-4BFB-5FCA-94CF-842E3D49CBE4",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-08-30T12:00:00.000Z",
+        "cycleID" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-08-30T12:00:00.000Z",
+        "flowIntensity" : "spotting",
+        "id" : "A8CED75D-D1F5-55FD-9FFD-32487CB815ED",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-09-29T12:00:00.000Z",
+        "cycleID" : "2E202884-10EE-5C1E-8B17-AE0167C21914",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-09-29T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "A9555DA1-F853-57E0-9729-0128D53C48D8",
+        "isPeriodDay" : true,
+        "notes" : "Cycle 2: period started"
+      },
+      {
+        "createdAt" : "2025-09-30T12:00:00.000Z",
+        "cycleID" : "2E202884-10EE-5C1E-8B17-AE0167C21914",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-09-30T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "3CD0624B-5F67-5CBA-B857-76491F644CAF",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-10-01T12:00:00.000Z",
+        "cycleID" : "2E202884-10EE-5C1E-8B17-AE0167C21914",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-10-01T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "5BE9E671-ECFD-523D-916E-6BDE742F517A",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-10-02T12:00:00.000Z",
+        "cycleID" : "2E202884-10EE-5C1E-8B17-AE0167C21914",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-10-02T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "2361D65D-6A41-5244-BBF3-B70AB1AEC2A9",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-10-30T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-10-30T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "984DCC93-E46E-5633-A9A9-1910B7822290",
+        "isPeriodDay" : true,
+        "notes" : "Cycle 3: period started"
+      },
+      {
+        "createdAt" : "2025-10-31T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-10-31T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "B9296B92-77C9-5159-A176-D6F33EA76C61",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-11-01T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-11-01T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "5651FAD4-6F01-5F24-88D9-56735EAA9BA1",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-11-02T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-11-02T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "61F6746B-9D9C-5A8C-AB63-573E667CAA7B",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-11-03T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-11-03T12:00:00.000Z",
+        "flowIntensity" : "spotting",
+        "id" : "CFFC994A-C527-5DD7-BF6B-0FAE2D39F771",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-11-04T12:00:00.000Z",
+        "cycleID" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-11-04T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "B6817E44-5573-553B-870E-1CB22FF13D4F",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-12-15T12:00:00.000Z",
+        "cycleID" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-12-15T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "9F54E9AF-5FE1-5DAC-B8D7-776CA3E6BD03",
+        "isPeriodDay" : true,
+        "notes" : "Cycle 4: period started"
+      },
+      {
+        "createdAt" : "2025-12-16T12:00:00.000Z",
+        "cycleID" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-12-16T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "C12D4A2F-10D0-5AEE-A171-258E0A71D5F1",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-12-17T12:00:00.000Z",
+        "cycleID" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-12-17T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "F2B9FABF-09AA-524B-AF1A-97C2F2B260F6",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-12-18T12:00:00.000Z",
+        "cycleID" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-12-18T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "F495C9FC-5F41-5130-A0B4-3C6F30780A42",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2025-12-19T12:00:00.000Z",
+        "cycleID" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "cyclePhase" : "menstrual",
+        "date" : "2025-12-19T12:00:00.000Z",
+        "flowIntensity" : "spotting",
+        "id" : "5B32C06F-3E14-5738-B813-84E959D7769B",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-01-20T12:00:00.000Z",
+        "cycleID" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-01-20T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "D341C7A7-1445-55C8-B424-3304670606AA",
+        "isPeriodDay" : true,
+        "notes" : "Cycle 5: period started"
+      },
+      {
+        "createdAt" : "2026-01-21T12:00:00.000Z",
+        "cycleID" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-01-21T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "304E14FC-2B85-5A2E-A2F3-E46F4E4F760C",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-01-22T12:00:00.000Z",
+        "cycleID" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-01-22T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "3AE53E63-3A87-52F8-A3A0-F74480CE3B08",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-01-23T12:00:00.000Z",
+        "cycleID" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-01-23T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "9C7C840C-72B7-5480-9C51-FA9BB942F5E2",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-01-24T12:00:00.000Z",
+        "cycleID" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-01-24T12:00:00.000Z",
+        "flowIntensity" : "spotting",
+        "id" : "A28B3CD6-0580-516C-9747-B66E4397A8BB",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-03-01T12:00:00.000Z",
+        "cycleID" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "flowIntensity" : "heavy",
+        "id" : "6E42861E-1EDC-5600-981F-B66762389166",
+        "isPeriodDay" : true,
+        "notes" : "Current cycle: period started"
+      },
+      {
+        "createdAt" : "2026-03-02T12:00:00.000Z",
+        "cycleID" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-03-02T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "B244FD1A-4603-5CEB-ACE8-8C9745CB6FC5",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-03-03T12:00:00.000Z",
+        "cycleID" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-03-03T12:00:00.000Z",
+        "flowIntensity" : "medium",
+        "id" : "EA37D89F-5FFB-5A6F-91F9-26BBB3095995",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-03-04T12:00:00.000Z",
+        "cycleID" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-03-04T12:00:00.000Z",
+        "flowIntensity" : "light",
+        "id" : "396AE2C8-F48C-5734-81B6-F75738D6AC4F",
+        "isPeriodDay" : true
+      },
+      {
+        "createdAt" : "2026-03-05T12:00:00.000Z",
+        "cycleID" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "cyclePhase" : "menstrual",
+        "date" : "2026-03-05T12:00:00.000Z",
+        "flowIntensity" : "spotting",
+        "id" : "C278E15B-199A-50CF-A40B-1B1E96073690",
+        "isPeriodDay" : true
+      }
+    ],
+    "cycles" : [
+      {
+        "endDate" : "2025-09-28T12:00:00.000Z",
+        "id" : "B840AEDE-8661-545D-94F1-A4DE790657EA",
+        "isPredicted" : false,
+        "lengthDays" : 34,
+        "ovulationStatus" : "ovulatory",
+        "startDate" : "2025-08-26T12:00:00.000Z"
+      },
+      {
+        "endDate" : "2025-10-29T12:00:00.000Z",
+        "id" : "2E202884-10EE-5C1E-8B17-AE0167C21914",
+        "isPredicted" : false,
+        "lengthDays" : 31,
+        "ovulationStatus" : "anovulatory",
+        "startDate" : "2025-09-29T12:00:00.000Z"
+      },
+      {
+        "endDate" : "2025-12-14T12:00:00.000Z",
+        "id" : "825917A9-817A-5F7B-8FE2-D24BE597B622",
+        "isPredicted" : false,
+        "lengthDays" : 46,
+        "ovulationStatus" : "ovulatory",
+        "startDate" : "2025-10-30T12:00:00.000Z"
+      },
+      {
+        "endDate" : "2026-01-19T12:00:00.000Z",
+        "id" : "EB2A2724-7D60-5875-8E16-C61BC2E347D3",
+        "isPredicted" : false,
+        "lengthDays" : 36,
+        "ovulationStatus" : "unknown",
+        "startDate" : "2025-12-15T12:00:00.000Z"
+      },
+      {
+        "endDate" : "2026-02-28T12:00:00.000Z",
+        "id" : "E1D9D626-90AF-5B23-A65D-EEBC1191A18C",
+        "isPredicted" : false,
+        "lengthDays" : 40,
+        "ovulationStatus" : "ovulatory",
+        "startDate" : "2026-01-20T12:00:00.000Z"
+      },
+      {
+        "id" : "553BF24F-88F8-5E00-802B-FDFDEB704391",
+        "isPredicted" : false,
+        "manualCycleLengthOverrideDays" : 35,
+        "ovulationStatus" : "unknown",
+        "startDate" : "2026-03-01T12:00:00.000Z"
+      }
+    ],
+    "dailyLogs" : [
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-03-15T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "5557BE96-CF71-5E5A-BF8D-2484E58C9051",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 6.3,
+        "stressLevel" : 2,
+        "waterOz" : 56,
+        "weight" : 156
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-03-14T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "C561FAB0-E370-51FE-8ECA-3D7B44D0C6A7",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 3,
+        "waterOz" : 62,
+        "weight" : 155.94
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-03-13T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "8576C597-34AC-5B5E-A166-37A93982345E",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 7,
+        "stressLevel" : 4,
+        "waterOz" : 68,
+        "weight" : 155.88
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-03-12T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "B39CA1C6-FEE2-5529-9F8B-A9FE6A39C509",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 7.35,
+        "stressLevel" : 5,
+        "waterOz" : 74,
+        "weight" : 155.82
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-03-11T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "2E782EB3-EBFF-5F1F-913C-1837054991C2",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 2,
+        "waterOz" : 80,
+        "weight" : 155.76
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-03-10T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "774F0189-4AB0-5E6D-8EC2-7C274C9CFAED",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 6.3,
+        "stressLevel" : 3,
+        "waterOz" : 56,
+        "weight" : 155.7
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-03-09T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "DA222E50-3D88-5E7A-9490-1752C6C9AFA7",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 4,
+        "waterOz" : 62,
+        "weight" : 155.64
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-03-08T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "B31776AC-9841-5641-ABB8-77EDA0F4EAE6",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 7,
+        "stressLevel" : 5,
+        "waterOz" : 68,
+        "weight" : 155.58
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-03-07T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "B8B6743A-DCDB-584D-A3B3-5D66D7BCBE94",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 7.35,
+        "stressLevel" : 2,
+        "waterOz" : 74,
+        "weight" : 155.52
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-03-06T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "373BF976-1468-534D-BD6F-FC16466E5A9F",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 3,
+        "waterOz" : 80,
+        "weight" : 155.46
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-03-05T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "917D0A3B-8F7A-5E53-9966-6ECF46FE1421",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 6.3,
+        "stressLevel" : 4,
+        "waterOz" : 56,
+        "weight" : 155.4
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-03-04T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "DCC05183-823C-5D13-B2B0-8F1057A0A9A7",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 5,
+        "waterOz" : 62,
+        "weight" : 155.34
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-03-03T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "B2007489-DF05-53D1-A1AC-CED71AB0002B",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 7,
+        "stressLevel" : 2,
+        "waterOz" : 68,
+        "weight" : 155.28
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-03-02T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "723AA262-87E6-53B1-85FB-97DB0248FCC9",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 7.35,
+        "stressLevel" : 3,
+        "waterOz" : 74,
+        "weight" : 155.22
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-03-01T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "26B8248B-2AD4-5BD3-8966-16DAF577119E",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 4,
+        "waterOz" : 80,
+        "weight" : 155.16
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-02-28T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "DE0101A7-39F1-5692-BE3B-4D5B6BA58BB9",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 6.3,
+        "stressLevel" : 5,
+        "waterOz" : 56,
+        "weight" : 155.1
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-02-27T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "75554B81-B21A-5866-8AAE-42D4579936B6",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 2,
+        "waterOz" : 62,
+        "weight" : 155.04
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-02-26T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "ABDC621E-B156-5FDB-AC3E-A8FD72AED484",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 7,
+        "stressLevel" : 3,
+        "waterOz" : 68,
+        "weight" : 154.98
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-02-25T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "06FA9260-4B71-58D3-B8BE-498A37C3A682",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 7.35,
+        "stressLevel" : 4,
+        "waterOz" : 74,
+        "weight" : 154.92
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-02-24T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "B504BEC4-E0D7-50CD-AD28-FF29A227CE31",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 5,
+        "waterOz" : 80,
+        "weight" : 154.86
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-02-23T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "440FF6C2-8365-5C51-AE50-1FFF91AAEB24",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 6.3,
+        "stressLevel" : 2,
+        "waterOz" : 56,
+        "weight" : 154.8
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-02-22T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "CC7D89FE-FE63-5856-B510-D8DFC1C5F312",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 3,
+        "waterOz" : 62,
+        "weight" : 154.74
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-02-21T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "EAA1D8EE-7BF3-55F1-B0FC-F13A14FCE00B",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 7,
+        "stressLevel" : 4,
+        "waterOz" : 68,
+        "weight" : 154.68
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-02-20T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "985AB009-556A-53E1-95E4-09FF3E0B7554",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 7.35,
+        "stressLevel" : 5,
+        "waterOz" : 74,
+        "weight" : 154.62
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-02-19T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "C7FB6711-2FB5-5A71-8306-14AB5C4BBA65",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 2,
+        "waterOz" : 80,
+        "weight" : 154.56
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-02-18T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "5D12E49F-92E1-580D-BFA8-3A7ECEFBE7BF",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 6.3,
+        "stressLevel" : 3,
+        "waterOz" : 56,
+        "weight" : 154.5
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-02-17T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "2D85A1AA-E80F-5DE6-9A78-D68D81E04EC7",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 4,
+        "waterOz" : 62,
+        "weight" : 154.44
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-02-16T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "92A530A7-752E-534D-9192-F89421220021",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 7,
+        "stressLevel" : 5,
+        "waterOz" : 68,
+        "weight" : 154.38
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-02-15T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "9FE3E1C8-F823-535E-9EFD-16AB7E89DD43",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 7.35,
+        "stressLevel" : 2,
+        "waterOz" : 74,
+        "weight" : 154.32
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-02-14T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "476580BA-7B48-5D46-A450-1951E062B4DB",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 3,
+        "waterOz" : 80,
+        "weight" : 154.26
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-02-13T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "D984CF6B-1895-550C-B775-5EBC3E83DCA8",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 6.3,
+        "stressLevel" : 4,
+        "waterOz" : 56,
+        "weight" : 154.2
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-02-12T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "AB3D09EB-C52E-5E59-8D68-09741520DDE1",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 5,
+        "waterOz" : 62,
+        "weight" : 154.14
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-02-11T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "FAD248C4-880D-5106-A9B2-E50CD968BCC0",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 7,
+        "stressLevel" : 2,
+        "waterOz" : 68,
+        "weight" : 154.08
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-02-10T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "DF365DDB-6BF2-586E-AF37-842AE1E25609",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 7.35,
+        "stressLevel" : 3,
+        "waterOz" : 74,
+        "weight" : 154.02
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-02-09T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "F27B96B7-8125-5B55-A143-5E6E27FA4598",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 4,
+        "waterOz" : 80,
+        "weight" : 153.96
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-02-08T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "37F650C7-4C31-5064-B468-C02CD6CABE75",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 6.3,
+        "stressLevel" : 5,
+        "waterOz" : 56,
+        "weight" : 153.9
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-02-07T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "C7212568-5ED8-544C-A4C0-12BA1DCF7CC5",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 2,
+        "waterOz" : 62,
+        "weight" : 153.84
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-02-06T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "AC94B78B-27AE-5DB0-BA71-3AD3D7FA7D7B",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 7,
+        "stressLevel" : 3,
+        "waterOz" : 68,
+        "weight" : 153.78
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-02-05T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "02B49A95-6D8A-5449-B7C1-38AA0DA9012C",
+        "restingHeartRateBPM" : 63,
+        "sleepHours" : 7.35,
+        "stressLevel" : 4,
+        "waterOz" : 74,
+        "weight" : 153.72
+      },
+      {
+        "activeMinutes" : 43,
+        "date" : "2026-02-04T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "1E51F352-5EBA-55AD-82C5-0AB254294030",
+        "restingHeartRateBPM" : 64,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 5,
+        "waterOz" : 80,
+        "weight" : 153.66
+      },
+      {
+        "activeMinutes" : 50,
+        "date" : "2026-02-03T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "78E29B41-9841-50AD-AA3A-BCC0E88CA4E7",
+        "restingHeartRateBPM" : 65,
+        "sleepHours" : 6.3,
+        "stressLevel" : 2,
+        "waterOz" : 56,
+        "weight" : 153.6
+      },
+      {
+        "activeMinutes" : 57,
+        "date" : "2026-02-02T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "FD681387-1479-5257-B265-1BD2BA3743A7",
+        "restingHeartRateBPM" : 66,
+        "sleepHours" : 6.6499999999999995,
+        "stressLevel" : 3,
+        "waterOz" : 62,
+        "weight" : 153.54
+      },
+      {
+        "activeMinutes" : 22,
+        "date" : "2026-02-01T12:00:00.000Z",
+        "energyLevel" : 4,
+        "id" : "3337A443-8BA7-5D0C-942E-97EADAED64F2",
+        "restingHeartRateBPM" : 60,
+        "sleepHours" : 7,
+        "stressLevel" : 4,
+        "waterOz" : 68,
+        "weight" : 153.48
+      },
+      {
+        "activeMinutes" : 29,
+        "date" : "2026-01-31T12:00:00.000Z",
+        "energyLevel" : 3,
+        "id" : "1641F413-998A-50A3-9703-CFC762E468DC",
+        "restingHeartRateBPM" : 61,
+        "sleepHours" : 7.35,
+        "stressLevel" : 5,
+        "waterOz" : 74,
+        "weight" : 153.42
+      },
+      {
+        "activeMinutes" : 36,
+        "date" : "2026-01-30T12:00:00.000Z",
+        "energyLevel" : 2,
+        "id" : "3B05F546-E267-5469-8215-D8FFA52FFFA8",
+        "restingHeartRateBPM" : 62,
+        "sleepHours" : 7.699999999999999,
+        "stressLevel" : 2,
+        "waterOz" : 80,
+        "weight" : 153.36
+      }
+    ],
+    "hairPhotos" : [
+      {
+        "analysisResult" : "Estimated density score: 62\/100 (Scalp Part, heuristic).",
+        "date" : "2025-12-21T12:00:00.000Z",
+        "id" : "17A83F6C-A2F0-556B-8DB4-C7B70F6CE7D1",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "scalp_part"
+      },
+      {
+        "analysisResult" : "Estimated density score: 59\/100 (Hairline, Core ML).",
+        "date" : "2026-01-18T12:00:00.000Z",
+        "id" : "B628524E-51A3-5142-BD12-39861A5FF5E2",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "hairline"
+      },
+      {
+        "analysisResult" : "Estimated density score: 57\/100 (Chin, heuristic).",
+        "date" : "2026-02-01T12:00:00.000Z",
+        "id" : "2C552AD1-9195-511C-A4C9-05989838C2D3",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "face_chin"
+      },
+      {
+        "analysisResult" : "Estimated density score: 68\/100 (Scalp Part, Core ML).",
+        "date" : "2026-02-15T12:00:00.000Z",
+        "id" : "B4237431-FD5B-5AAF-B57A-265C27FAA3ED",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "scalp_part"
+      },
+      {
+        "analysisResult" : "Estimated density score: 61\/100 (Chin, Core ML).",
+        "date" : "2026-02-22T12:00:00.000Z",
+        "id" : "F1F2DB63-B8FB-5D1E-A8F2-8C2935CE8238",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "face_chin"
+      },
+      {
+        "analysisResult" : "Estimated density score: 66\/100 (Hairline, heuristic).",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "id" : "7B128DFF-6A13-5915-B3A6-B2E01C86C633",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "hairline"
+      },
+      {
+        "analysisResult" : "Estimated density score: 71\/100 (Scalp Part, Core ML).",
+        "date" : "2026-03-08T12:00:00.000Z",
+        "id" : "9897984F-E61D-5FBF-9EE2-0B9F8D2B2907",
+        "notes" : "Consistent lighting and angle",
+        "photoData" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8\/x8AAwMCAO7+qXQAAAAASUVORK5CYII=",
+        "photoType" : "scalp_part"
+      }
+    ],
+    "insights" : [
+      {
+        "actionable" : true,
+        "confidence" : 0.74,
+        "content" : "Breakout severity 2 days after high-GI days averaged 3.8\/5 versus 2.6\/5 after low-GI days (Δ 1.2\/5, n=12, 74% confidence).",
+        "dataPointsUsed" : 12,
+        "generatedDate" : "2026-03-10T12:00:00.000Z",
+        "id" : "4186BE96-B5DF-5D37-AECA-F3DA276F1034",
+        "insightType" : "diet_impact",
+        "recommendedActions" : [
+
+        ],
+        "relatedSymptoms" : [
+          "acne",
+          "breakouts"
+        ],
+        "title" : "Acne breakouts correlate with high-GI meals 2-3 days prior"
+      },
+      {
+        "actionable" : true,
+        "confidence" : 0.78,
+        "content" : "Your cycles were 8.0 days shorter in months with >80% Inositol adherence (34.0 vs 42.0 days; n=3+2; 78% confidence).",
+        "dataPointsUsed" : 5,
+        "generatedDate" : "2026-03-11T12:00:00.000Z",
+        "id" : "168BF71B-7DFC-5397-974A-0F1D9A983EEE",
+        "insightType" : "supplement_efficacy",
+        "recommendedActions" : [
+
+        ],
+        "relatedSymptoms" : [
+          "cravings"
+        ],
+        "title" : "Cycle length shift with Inositol adherence"
+      },
+      {
+        "actionable" : true,
+        "confidence" : 0.67,
+        "content" : "Your average symptom severity was highest in January (3.6\/5) and lowest in June (2.4\/5), a 1.2-point difference.",
+        "dataPointsUsed" : 54,
+        "generatedDate" : "2026-03-12T12:00:00.000Z",
+        "id" : "AA1ACE80-0E7D-57DF-A7E4-47FC5C7C0665",
+        "insightType" : "seasonal_pattern",
+        "recommendedActions" : [
+
+        ],
+        "relatedSymptoms" : [
+          "energy_crash",
+          "breakouts"
+        ],
+        "title" : "Symptoms vary by season"
+      },
+      {
+        "actionable" : true,
+        "confidence" : 0.71,
+        "content" : "Predicted symptom severity for the next 7 days averages 2.7\/5 (range 2.2-3.3\/5). Top weighted drivers: Sleep 28%, Stress 24%, Meal GI 20%. Forecast confidence: 71%.",
+        "dataPointsUsed" : 126,
+        "generatedDate" : "2026-03-13T12:00:00.000Z",
+        "id" : "410E975E-31A9-50AC-8D64-382815F45AF6",
+        "insightType" : "symptom_correlation",
+        "recommendedActions" : [
+
+        ],
+        "relatedSymptoms" : [
+          "energy_crash",
+          "cravings",
+          "breakouts"
+        ],
+        "title" : "7-day symptom severity forecast"
+      },
+      {
+        "actionable" : true,
+        "confidence" : 0.69,
+        "content" : "Predicted next cycle length is 35 days (range 31-40 days, 69% confidence).",
+        "dataPointsUsed" : 37,
+        "generatedDate" : "2026-03-14T12:00:00.000Z",
+        "id" : "EB557D0F-9CC7-5044-973E-E3B46B26444A",
+        "insightType" : "cycle_pattern",
+        "recommendedActions" : [
+
+        ],
+        "relatedSymptoms" : [
+          "cravings"
+        ],
+        "title" : "Cycle length forecast range"
+      }
+    ],
+    "meals" : [
+      {
+        "carbsGrams" : 24,
+        "fatGrams" : 10,
+        "glycemicImpact" : "low",
+        "id" : "F73ACDF5-6EE7-55A7-BD3F-8367A4E5CC89",
+        "mealDescription" : "Egg scramble, avocado, greens",
+        "mealType" : "breakfast",
+        "notes" : "Demo meal entry",
+        "proteinGrams" : 18,
+        "selectedTemplateID" : "breakfast.greek-yogurt-berries",
+        "timestamp" : "2026-03-15T12:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 32,
+        "fatGrams" : 15,
+        "glycemicImpact" : "medium",
+        "id" : "380C4E5F-1C14-5384-B683-AB46E877CF1E",
+        "mealDescription" : "Lentil bowl with tahini dressing",
+        "mealType" : "lunch",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-14T22:00:00.000Z",
+        "postMealSymptomNote" : "Cravings increased later in the evening.",
+        "postMealSymptomSeverity" : 3,
+        "proteinGrams" : 24,
+        "selectedTemplateID" : "lunch.salmon-salad",
+        "timestamp" : "2026-03-14T20:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 40,
+        "fatGrams" : 10,
+        "glycemicImpact" : "low",
+        "id" : "9E4BE681-9DAE-5CFB-BEBE-04D1ADE54059",
+        "mealDescription" : "Turkey chili with vegetables",
+        "mealType" : "dinner",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-14T06:00:00.000Z",
+        "postMealSymptomNote" : "Light bloating but no crash.",
+        "postMealSymptomSeverity" : 4,
+        "proteinGrams" : 30,
+        "selectedTemplateID" : "dinner.tofu-stirfry",
+        "timestamp" : "2026-03-14T04:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 48,
+        "fatGrams" : 15,
+        "glycemicImpact" : "low",
+        "id" : "46F08A92-7FC1-5B82-9F51-BE435C3B0200",
+        "mealDescription" : "Egg scramble, avocado, greens",
+        "mealType" : "breakfast",
+        "notes" : "Demo meal entry",
+        "proteinGrams" : 18,
+        "selectedTemplateID" : "breakfast.greek-yogurt-berries",
+        "timestamp" : "2026-03-13T12:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 24,
+        "fatGrams" : 10,
+        "glycemicImpact" : "medium",
+        "id" : "CC9A8AD0-C133-5C2C-A718-FC7DA8B8D455",
+        "mealDescription" : "Lentil bowl with tahini dressing",
+        "mealType" : "lunch",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-12T22:00:00.000Z",
+        "postMealSymptomNote" : "Steady energy for 3 hours.",
+        "postMealSymptomSeverity" : 2,
+        "proteinGrams" : 24,
+        "selectedTemplateID" : "lunch.salmon-salad",
+        "timestamp" : "2026-03-12T20:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 32,
+        "fatGrams" : 15,
+        "glycemicImpact" : "low",
+        "id" : "73B60815-F1C8-55BC-81A2-2FB0008B38DB",
+        "mealDescription" : "Turkey chili with vegetables",
+        "mealType" : "dinner",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-12T06:00:00.000Z",
+        "postMealSymptomNote" : "Cravings increased later in the evening.",
+        "postMealSymptomSeverity" : 3,
+        "proteinGrams" : 30,
+        "selectedTemplateID" : "dinner.tofu-stirfry",
+        "timestamp" : "2026-03-12T04:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 40,
+        "fatGrams" : 10,
+        "glycemicImpact" : "low",
+        "id" : "BAC45CA4-A9E8-5A90-B9F5-47094437C0B9",
+        "mealDescription" : "Egg scramble, avocado, greens",
+        "mealType" : "breakfast",
+        "notes" : "Demo meal entry",
+        "proteinGrams" : 18,
+        "selectedTemplateID" : "breakfast.greek-yogurt-berries",
+        "timestamp" : "2026-03-11T12:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 48,
+        "fatGrams" : 15,
+        "glycemicImpact" : "medium",
+        "id" : "C58FCB0B-B86F-5F0F-AAA6-21F803052662",
+        "mealDescription" : "Lentil bowl with tahini dressing",
+        "mealType" : "lunch",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-10T22:00:00.000Z",
+        "postMealSymptomNote" : "Felt good after swapping refined carbs.",
+        "postMealSymptomSeverity" : 5,
+        "proteinGrams" : 24,
+        "selectedTemplateID" : "lunch.salmon-salad",
+        "timestamp" : "2026-03-10T20:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 24,
+        "fatGrams" : 10,
+        "glycemicImpact" : "low",
+        "id" : "4BC0AF44-F0D8-5DEE-B036-8F3F5A6D1E48",
+        "mealDescription" : "Turkey chili with vegetables",
+        "mealType" : "dinner",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-10T06:00:00.000Z",
+        "postMealSymptomNote" : "Steady energy for 3 hours.",
+        "postMealSymptomSeverity" : 2,
+        "proteinGrams" : 30,
+        "selectedTemplateID" : "dinner.tofu-stirfry",
+        "timestamp" : "2026-03-10T04:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 32,
+        "fatGrams" : 15,
+        "glycemicImpact" : "low",
+        "id" : "B7ABAAF8-7D59-5D41-AD22-D1781DB1EAC1",
+        "mealDescription" : "Egg scramble, avocado, greens",
+        "mealType" : "breakfast",
+        "notes" : "Demo meal entry",
+        "proteinGrams" : 18,
+        "selectedTemplateID" : "breakfast.greek-yogurt-berries",
+        "timestamp" : "2026-03-09T12:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 40,
+        "fatGrams" : 10,
+        "glycemicImpact" : "medium",
+        "id" : "59F53784-4147-5596-9421-90C4A6C00DBF",
+        "mealDescription" : "Lentil bowl with tahini dressing",
+        "mealType" : "lunch",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-08T22:00:00.000Z",
+        "postMealSymptomNote" : "Light bloating but no crash.",
+        "postMealSymptomSeverity" : 4,
+        "proteinGrams" : 24,
+        "selectedTemplateID" : "lunch.salmon-salad",
+        "timestamp" : "2026-03-08T20:00:00.000Z"
+      },
+      {
+        "carbsGrams" : 48,
+        "fatGrams" : 15,
+        "glycemicImpact" : "low",
+        "id" : "63E6A0FD-D6A7-56D2-824B-21D6C9C5EB00",
+        "mealDescription" : "Turkey chili with vegetables",
+        "mealType" : "dinner",
+        "notes" : "Demo meal entry",
+        "postMealFeedbackTimestamp" : "2026-03-08T06:00:00.000Z",
+        "postMealSymptomNote" : "Felt good after swapping refined carbs.",
+        "postMealSymptomSeverity" : 5,
+        "proteinGrams" : 30,
+        "selectedTemplateID" : "dinner.tofu-stirfry",
+        "timestamp" : "2026-03-08T04:00:00.000Z"
+      }
+    ],
+    "pregnancyRecords" : [
+
+    ],
+    "supplements" : [
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-03-15T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "154BFE4F-1760-5171-8CA6-8C886A7EF793",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-03-15T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-03-14T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "A8A8C234-BBBC-50DF-93E5-F63C563C8474",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-03-14T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-03-13T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "40B8B330-5AA3-50B3-A95D-BBC40E3B5BB3",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-03-13T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-03-12T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "37E46E2F-49E4-50AF-97E7-560E012FE730",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-03-12T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-03-11T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "4BC6E75E-625F-5EB7-AD9B-2B80149BDC20",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-03-11T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-03-10T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "5CFE8CBD-973F-56C7-9950-F739B3D3F575",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-03-10T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-03-09T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "A5235305-51EE-5550-A5F7-E74C9A591667",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-03-09T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-03-08T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "B7777A83-3CC5-5139-A4B0-FD04C2C31C77",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-03-08T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-03-07T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "3717DCC4-B563-5E53-A782-0461951B1BB3",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-03-07T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-03-06T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "615C2DF5-A3A5-53C5-86FF-513C12D2A6BC",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-03-06T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-03-05T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "6FB89695-ABD8-50A8-A169-756EA67DE85A",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-03-05T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-03-04T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "C35F0BCD-E19E-572B-9D12-779C52C1BAC9",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-03-04T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-03-03T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "FA3C7D17-F81F-5C29-8B5E-8FB5F6BFDFAB",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-03-03T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-03-02T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "917F7D5B-5A46-551A-A887-B9DE351E1901",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-03-02T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "69EA05E5-C25B-532E-A940-78DD9C80DA6C",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-03-01T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-28T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "CFD0DA2D-0B6B-5C47-BE13-55F0835707F8",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-02-28T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-27T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "311DAFCF-E8BB-5649-BD36-D5D0FC097B1B",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-27T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-26T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "2124344E-8C7B-5012-AA75-94813EF364F9",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-26T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-25T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "14FA28C7-8F98-5AD8-947F-AC183BF0BEBC",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-02-25T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-24T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "94FDA16D-6CAC-54FB-985C-88909E1FB0D0",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-24T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-23T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "B7695B2B-84BD-5B0E-A78F-4E97EE940E26",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-23T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-22T12:00:00.000Z",
+        "dosageMg" : 5000,
+        "id" : "DFF89625-1262-5F5A-9A3E-49CF9A337A5A",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-02-22T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-21T12:00:00.000Z",
+        "dosageMg" : 400,
+        "id" : "DA22B1BC-0020-56DA-9481-8C42FF5509F4",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-21T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-20T12:00:00.000Z",
+        "dosageMg" : 1400,
+        "id" : "6B9950AD-A2F2-5C90-9AF5-A764A96A3E7C",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-20T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-19T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "10017690-A966-5CF7-9920-747F3B3B95F6",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-02-19T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-18T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "E702652F-4A79-5B16-B6AE-CDF0B65FCF96",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-18T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-17T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "CDE76925-8AEB-5B97-91B6-9624408E6B29",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-17T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-16T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "BA35ABE8-9AB4-5D94-A6DC-F28A21454CE8",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-02-16T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-15T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "BF9D9A21-55DB-5C67-AF8F-0C966C49E7B7",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-15T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-14T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "AC93B16D-3096-5F1A-9DD8-474480B4A898",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-14T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-13T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "423AED99-05C3-5370-BEC1-28BB063DD2FB",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-02-13T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-12T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "253B96A1-14D8-5D67-8B2D-B40B295DDE7E",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-12T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-11T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "AA93848B-765E-51BC-94FC-C1385A4A15DA",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-11T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-10T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "AFED0E4C-D183-5C75-AC65-475E61FAD7DE",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-02-10T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-09T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "06A4ACE0-55EE-5D02-82F2-6E18D27DEFC8",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-09T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-08T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "A1D05088-B252-588A-B074-1E62B1DFB68F",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-08T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-07T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "8CF3593F-F8DE-5404-93BC-3863360113DB",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-02-07T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-06T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "F2D0290F-A644-56C3-83EF-2DFB818541C3",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-06T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-05T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "C7DDD202-A1D6-596A-913A-B6C22E594AF1",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-05T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-04T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "6F2E6856-B88D-5B7F-B189-771C82209DC5",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-02-04T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-02-03T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "BECEA878-8674-54A9-822C-43DA4036E307",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-02-03T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-02-02T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "77DA6739-41E0-5ADA-9E67-7C2C19414361",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-02-02T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-02-01T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "EF5D33F7-5814-5261-94B5-294B550E8615",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-02-01T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-31T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "78E0BD53-BDAF-56D3-9ABE-E77A686DA269",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-31T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-30T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "71BB9F41-ABC7-5D09-BF19-FB3B701A0D26",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-30T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-29T12:00:00.000Z",
+        "dosageMg" : 4500,
+        "id" : "B1AC90A1-DDEA-529A-AD02-BA799C21A5ED",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-01-29T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-28T12:00:00.000Z",
+        "dosageMg" : 350,
+        "id" : "51F23C61-5115-5D1A-8755-5FA5B69E0898",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-28T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-27T12:00:00.000Z",
+        "dosageMg" : 1200,
+        "id" : "6BCB19FE-0B21-5FB7-AE10-62B80CF7BD7B",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-27T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-26T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "E94B956E-F2B2-5862-8971-0F8A7F54E1F0",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-01-26T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-25T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "90643F8D-2435-5186-8093-8DFD8E149BC9",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-25T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-24T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "6320F85C-B4D5-557E-8332-D6A15406AE62",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-24T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-23T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "FAFCBB2A-1B45-582F-B2C6-87682A432729",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-01-23T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-22T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "70B090F6-F94B-55AC-8003-7D585C212896",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-22T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-21T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "16B321F5-369C-5FBC-AA6B-AC2D1358101C",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-21T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-20T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "B2A139E4-7D40-51AC-99AE-2A070A316471",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-01-20T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-19T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "365B655F-4C6B-55D7-A5C9-F831BD5CC7FC",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-19T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-18T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "FCA54A58-12D6-5F51-A79B-2D9999D6F349",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-18T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-17T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "FA20B7DB-0764-5E02-8070-7A160DF7CBCB",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-01-17T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-16T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "B01A682D-B95D-5D7A-A29B-BFDE5DDF36B4",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-16T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-15T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "BA4C7D3C-2C46-5AEC-AA71-1E3CAD6DB553",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-15T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-14T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "25DF9345-85D7-5D11-9939-FE35CFE4E2D3",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-01-14T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-13T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "F2ADECD1-D2FB-56C4-BEE8-C28BCA22F86F",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-13T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-12T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "2FBB4C2A-841E-5EF5-BBC2-3C3EC14C68DF",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-12T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-11T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "CCDE0099-7F90-54F2-947C-A69C6714083A",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-01-11T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-10T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "74EECB51-C904-52DD-877D-ADCF4663C3BF",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-10T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-09T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "80EF3013-14EA-5D64-A313-7BD80EDA6BEB",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-09T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-08T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "917DB854-1040-5E2D-B28B-10FCB0E19D51",
+        "supplementName" : "Inositol",
+        "taken" : false,
+        "timeTaken" : "2026-01-08T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-07T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "1E5B740D-BD12-5F80-BBB5-E1861DDA0B25",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-07T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-06T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "6CFA033A-2F90-5059-98F4-825DD8F91CBB",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-06T10:00:00.000Z"
+      },
+      {
+        "brand" : "Ovasitol",
+        "date" : "2026-01-05T12:00:00.000Z",
+        "dosageMg" : 4000,
+        "id" : "12243F54-A9BD-5271-BDED-C0B2682CB2C3",
+        "supplementName" : "Inositol",
+        "taken" : true,
+        "timeTaken" : "2026-01-05T12:00:00.000Z"
+      },
+      {
+        "brand" : "Pure Encapsulations",
+        "date" : "2026-01-04T12:00:00.000Z",
+        "dosageMg" : 300,
+        "id" : "790F6637-34D4-5300-AECF-73535AEDA68D",
+        "supplementName" : "Magnesium",
+        "taken" : true,
+        "timeTaken" : "2026-01-04T11:00:00.000Z"
+      },
+      {
+        "brand" : "Nordic Naturals",
+        "date" : "2026-01-03T12:00:00.000Z",
+        "dosageMg" : 1000,
+        "id" : "BA269930-4F54-5ADA-81FF-13F76CB4A82D",
+        "supplementName" : "Omega-3",
+        "taken" : true,
+        "timeTaken" : "2026-01-03T10:00:00.000Z"
+      }
+    ],
+    "symptoms" : [
+      {
+        "category" : "pain",
+        "cycleEntryID" : "FD81C309-338E-553A-923B-B1C0E3AA05F5",
+        "date" : "2025-08-26T12:00:00.000Z",
+        "id" : "E7150C3D-80F3-5034-AB3D-8FA1CA75BADC",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "FD81C309-338E-553A-923B-B1C0E3AA05F5",
+        "date" : "2025-08-26T12:00:00.000Z",
+        "id" : "F1DA8F93-E832-59A3-93D8-B34534375FFF",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "0DD19FDF-73E3-5C4F-B418-389F07F25976",
+        "date" : "2025-08-27T12:00:00.000Z",
+        "id" : "FAC5F0A0-1F61-5ED6-9B64-4F0A3ED34843",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "0DD19FDF-73E3-5C4F-B418-389F07F25976",
+        "date" : "2025-08-27T12:00:00.000Z",
+        "id" : "76EA3CAD-55AB-5A58-B400-DF823F4268AE",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "6EFD2806-629A-54C0-8B09-02ACAB36428C",
+        "date" : "2025-08-28T12:00:00.000Z",
+        "id" : "B7889D2A-2B5A-5E95-AAD9-2595FB2AB37A",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "6EFD2806-629A-54C0-8B09-02ACAB36428C",
+        "date" : "2025-08-28T12:00:00.000Z",
+        "id" : "3CD759CB-409B-5A8E-9E73-53381C32F6CF",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "2A7CF11F-4BFB-5FCA-94CF-842E3D49CBE4",
+        "date" : "2025-08-29T12:00:00.000Z",
+        "id" : "B945F34F-6EEA-5D2C-B992-061059AB4ECC",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "2A7CF11F-4BFB-5FCA-94CF-842E3D49CBE4",
+        "date" : "2025-08-29T12:00:00.000Z",
+        "id" : "4FB7E627-C8CC-5E48-A34E-6AC288B6FD21",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "A8CED75D-D1F5-55FD-9FFD-32487CB815ED",
+        "date" : "2025-08-30T12:00:00.000Z",
+        "id" : "7DA31EB9-6CF9-5007-A16B-56971E0CCE0F",
+        "notes" : "Period day 5 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "A8CED75D-D1F5-55FD-9FFD-32487CB815ED",
+        "date" : "2025-08-30T12:00:00.000Z",
+        "id" : "D2394921-ED4F-5720-9ED2-522ADDC9D6C2",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "A9555DA1-F853-57E0-9729-0128D53C48D8",
+        "date" : "2025-09-29T12:00:00.000Z",
+        "id" : "51FBAB06-27D4-5C43-8DA3-F658E3A22B57",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "A9555DA1-F853-57E0-9729-0128D53C48D8",
+        "date" : "2025-09-29T12:00:00.000Z",
+        "id" : "D3406537-3483-5069-8438-2F4D0C87A662",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "3CD0624B-5F67-5CBA-B857-76491F644CAF",
+        "date" : "2025-09-30T12:00:00.000Z",
+        "id" : "BE804135-781E-56D0-BDD7-A98800D5CE4F",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "3CD0624B-5F67-5CBA-B857-76491F644CAF",
+        "date" : "2025-09-30T12:00:00.000Z",
+        "id" : "BC0F92EC-1FF0-512E-9594-FE19726E8CB7",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "5BE9E671-ECFD-523D-916E-6BDE742F517A",
+        "date" : "2025-10-01T12:00:00.000Z",
+        "id" : "48523AF2-5B0C-56D2-AA9B-AC1AD9F7C771",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "5BE9E671-ECFD-523D-916E-6BDE742F517A",
+        "date" : "2025-10-01T12:00:00.000Z",
+        "id" : "D4DD85FE-8A95-5C53-9B07-F154639CAB4B",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "2361D65D-6A41-5244-BBF3-B70AB1AEC2A9",
+        "date" : "2025-10-02T12:00:00.000Z",
+        "id" : "B753C288-5293-5888-9B2F-82490395F0B9",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "2361D65D-6A41-5244-BBF3-B70AB1AEC2A9",
+        "date" : "2025-10-02T12:00:00.000Z",
+        "id" : "5D24B2BB-1BE1-51BE-8000-C0B35D7B6D7A",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "984DCC93-E46E-5633-A9A9-1910B7822290",
+        "date" : "2025-10-30T12:00:00.000Z",
+        "id" : "F0A9ECCE-E56B-5929-852F-67AC597A18E0",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "984DCC93-E46E-5633-A9A9-1910B7822290",
+        "date" : "2025-10-30T12:00:00.000Z",
+        "id" : "C7B8B61B-0E74-5357-BC7A-5B78B1F71C18",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "B9296B92-77C9-5159-A176-D6F33EA76C61",
+        "date" : "2025-10-31T12:00:00.000Z",
+        "id" : "946A4A62-1226-5D69-B61A-1B8EFFC6EB3A",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "B9296B92-77C9-5159-A176-D6F33EA76C61",
+        "date" : "2025-10-31T12:00:00.000Z",
+        "id" : "E0AA0312-B873-59AA-B6FE-1C4DCCA4952E",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "5651FAD4-6F01-5F24-88D9-56735EAA9BA1",
+        "date" : "2025-11-01T12:00:00.000Z",
+        "id" : "67FFD11C-3E33-5309-BC2E-CA1406B6C4C4",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "5651FAD4-6F01-5F24-88D9-56735EAA9BA1",
+        "date" : "2025-11-01T12:00:00.000Z",
+        "id" : "93CF30D9-F1FF-5C86-8C7D-306E7C263AB4",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "61F6746B-9D9C-5A8C-AB63-573E667CAA7B",
+        "date" : "2025-11-02T12:00:00.000Z",
+        "id" : "01715EA6-91F7-57FB-9EA9-0E44FA3D4BE1",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "61F6746B-9D9C-5A8C-AB63-573E667CAA7B",
+        "date" : "2025-11-02T12:00:00.000Z",
+        "id" : "053AEC69-D8AD-5C19-A5CC-6C5F64611657",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "CFFC994A-C527-5DD7-BF6B-0FAE2D39F771",
+        "date" : "2025-11-03T12:00:00.000Z",
+        "id" : "6F3F263B-2B07-543F-8D28-1250F7036500",
+        "notes" : "Period day 5 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "CFFC994A-C527-5DD7-BF6B-0FAE2D39F771",
+        "date" : "2025-11-03T12:00:00.000Z",
+        "id" : "1A33CB04-696B-5D73-B8EA-4CF89FA1667F",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "B6817E44-5573-553B-870E-1CB22FF13D4F",
+        "date" : "2025-11-04T12:00:00.000Z",
+        "id" : "74FF9504-A32A-58F4-A6A2-194E4BDBC03B",
+        "notes" : "Period day 6 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "B6817E44-5573-553B-870E-1CB22FF13D4F",
+        "date" : "2025-11-04T12:00:00.000Z",
+        "id" : "85C2BF0E-5DC7-57A2-9CBD-236A66AE7B46",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "9F54E9AF-5FE1-5DAC-B8D7-776CA3E6BD03",
+        "date" : "2025-12-15T12:00:00.000Z",
+        "id" : "7028441C-0BDB-5718-9367-C7BF00BC59B2",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "9F54E9AF-5FE1-5DAC-B8D7-776CA3E6BD03",
+        "date" : "2025-12-15T12:00:00.000Z",
+        "id" : "0543257B-E05C-5267-BB07-D22DB0134F26",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "C12D4A2F-10D0-5AEE-A171-258E0A71D5F1",
+        "date" : "2025-12-16T12:00:00.000Z",
+        "id" : "46AF7D60-1CF3-5EB1-A52D-2A34AB1ED9F0",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "C12D4A2F-10D0-5AEE-A171-258E0A71D5F1",
+        "date" : "2025-12-16T12:00:00.000Z",
+        "id" : "1DB15B0F-C379-506C-AE5B-553C9CE79F8B",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "F2B9FABF-09AA-524B-AF1A-97C2F2B260F6",
+        "date" : "2025-12-17T12:00:00.000Z",
+        "id" : "795A9C47-247D-5BAC-8F9B-E2AA1C899798",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "F2B9FABF-09AA-524B-AF1A-97C2F2B260F6",
+        "date" : "2025-12-17T12:00:00.000Z",
+        "id" : "B13CDE76-7438-5D38-A0BA-ABCBA97D3140",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "F495C9FC-5F41-5130-A0B4-3C6F30780A42",
+        "date" : "2025-12-18T12:00:00.000Z",
+        "id" : "23525803-E9CA-5BE0-A7FB-36A67E428BE5",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "F495C9FC-5F41-5130-A0B4-3C6F30780A42",
+        "date" : "2025-12-18T12:00:00.000Z",
+        "id" : "09BBD9D7-C2A8-5B23-8740-67D9B2E395A6",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "5B32C06F-3E14-5738-B813-84E959D7769B",
+        "date" : "2025-12-19T12:00:00.000Z",
+        "id" : "A9C9462C-3551-5522-A3FD-7C0BA1B8534B",
+        "notes" : "Period day 5 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "5B32C06F-3E14-5738-B813-84E959D7769B",
+        "date" : "2025-12-19T12:00:00.000Z",
+        "id" : "ABB61825-21C1-5733-B227-BA75A10C25B9",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "D341C7A7-1445-55C8-B424-3304670606AA",
+        "date" : "2026-01-20T12:00:00.000Z",
+        "id" : "CA599FF3-0DCB-5EC9-932D-DDA892D6B758",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "D341C7A7-1445-55C8-B424-3304670606AA",
+        "date" : "2026-01-20T12:00:00.000Z",
+        "id" : "56971F1D-530D-5C5B-A8E4-ED33907A86FF",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "304E14FC-2B85-5A2E-A2F3-E46F4E4F760C",
+        "date" : "2026-01-21T12:00:00.000Z",
+        "id" : "D801200C-CF38-5241-BC74-BB258790A9A0",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "304E14FC-2B85-5A2E-A2F3-E46F4E4F760C",
+        "date" : "2026-01-21T12:00:00.000Z",
+        "id" : "A2A3B732-5541-58B7-B719-4B01E1BE2E9F",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "3AE53E63-3A87-52F8-A3A0-F74480CE3B08",
+        "date" : "2026-01-22T12:00:00.000Z",
+        "id" : "EB1AE501-8294-50E1-A80B-E2CE9C5B038C",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "3AE53E63-3A87-52F8-A3A0-F74480CE3B08",
+        "date" : "2026-01-22T12:00:00.000Z",
+        "id" : "C1971561-D38B-5D6B-9904-909CFC3E331B",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "9C7C840C-72B7-5480-9C51-FA9BB942F5E2",
+        "date" : "2026-01-23T12:00:00.000Z",
+        "id" : "9227E19F-D3CE-58D0-AFFD-10786C5CC196",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "9C7C840C-72B7-5480-9C51-FA9BB942F5E2",
+        "date" : "2026-01-23T12:00:00.000Z",
+        "id" : "59BF912E-D586-56D4-9A3B-E73CE7565642",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "A28B3CD6-0580-516C-9747-B66E4397A8BB",
+        "date" : "2026-01-24T12:00:00.000Z",
+        "id" : "37C36B23-03C6-5D2C-B75E-BB889E5BE204",
+        "notes" : "Period day 5 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "A28B3CD6-0580-516C-9747-B66E4397A8BB",
+        "date" : "2026-01-24T12:00:00.000Z",
+        "id" : "4E6A9624-9ED1-53CE-B3CE-F8582537BD85",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "6E42861E-1EDC-5600-981F-B66762389166",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "id" : "2F1B90AA-2702-566E-A193-BF6A45964386",
+        "notes" : "Period day 1 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "6E42861E-1EDC-5600-981F-B66762389166",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "id" : "D2A1812C-C85C-5D35-BA5E-B2B858271845",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "B244FD1A-4603-5CEB-ACE8-8C9745CB6FC5",
+        "date" : "2026-03-02T12:00:00.000Z",
+        "id" : "60A7739A-BF7B-5EDD-ADD4-0D3CF27521A6",
+        "notes" : "Period day 2 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "B244FD1A-4603-5CEB-ACE8-8C9745CB6FC5",
+        "date" : "2026-03-02T12:00:00.000Z",
+        "id" : "8918D4EB-9217-530A-AC34-1BABA6730594",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 3,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "EA37D89F-5FFB-5A6F-91F9-26BBB3095995",
+        "date" : "2026-03-03T12:00:00.000Z",
+        "id" : "5670F029-28D7-5965-89AE-8EE8FC5556D4",
+        "notes" : "Period day 3 discomfort",
+        "severity" : 5,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "EA37D89F-5FFB-5A6F-91F9-26BBB3095995",
+        "date" : "2026-03-03T12:00:00.000Z",
+        "id" : "39FB0D5A-10B9-578F-A89B-469DB51539F9",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 4,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "396AE2C8-F48C-5734-81B6-F75738D6AC4F",
+        "date" : "2026-03-04T12:00:00.000Z",
+        "id" : "3ED6B497-B1A0-52AB-A6EA-D93312351665",
+        "notes" : "Period day 4 discomfort",
+        "severity" : 3,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "396AE2C8-F48C-5734-81B6-F75738D6AC4F",
+        "date" : "2026-03-04T12:00:00.000Z",
+        "id" : "C62BFEA3-F5C6-59A7-8D0D-2FE089047708",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 5,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "pain",
+        "cycleEntryID" : "C278E15B-199A-50CF-A40B-1B1E96073690",
+        "date" : "2026-03-05T12:00:00.000Z",
+        "id" : "A0202AAE-978B-5245-9A1E-7D3CE534DB7B",
+        "notes" : "Period day 5 discomfort",
+        "severity" : 4,
+        "symptomType" : "cramps"
+      },
+      {
+        "category" : "metabolic",
+        "cycleEntryID" : "C278E15B-199A-50CF-A40B-1B1E96073690",
+        "date" : "2026-03-05T12:00:00.000Z",
+        "id" : "868F4562-DA9D-5A88-B4E5-3CDB51811C40",
+        "notes" : "Associated symptom during menstrual phase",
+        "severity" : 2,
+        "symptomType" : "energy_crash"
+      },
+      {
+        "category" : "metabolic",
+        "date" : "2026-03-13T12:00:00.000Z",
+        "id" : "1895A19F-E68A-5961-A656-F57A951A2645",
+        "notes" : "Cravings noted during routine tracking",
+        "severity" : 4,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "mood",
+        "date" : "2026-03-09T12:00:00.000Z",
+        "id" : "C500E88F-3237-5D3C-AC1C-3B557009CEEB",
+        "notes" : "Anxiety noted during routine tracking",
+        "severity" : 2,
+        "symptomType" : "anxious"
+      },
+      {
+        "category" : "physical",
+        "date" : "2026-03-05T12:00:00.000Z",
+        "id" : "C40BE833-05DB-5575-844C-2304E6796BB5",
+        "notes" : "Fatigue noted during routine tracking",
+        "severity" : 3,
+        "symptomType" : "fatigue"
+      },
+      {
+        "category" : "metabolic",
+        "date" : "2026-03-01T12:00:00.000Z",
+        "id" : "235E232F-EE20-5119-8392-CDAE63DE1775",
+        "notes" : "Cravings noted during routine tracking",
+        "severity" : 4,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "mood",
+        "date" : "2026-02-25T12:00:00.000Z",
+        "id" : "B002C05E-FE3E-585C-9AB0-7CED3A683AA6",
+        "notes" : "Anxiety noted during routine tracking",
+        "severity" : 2,
+        "symptomType" : "anxious"
+      },
+      {
+        "category" : "physical",
+        "date" : "2026-02-21T12:00:00.000Z",
+        "id" : "278465D9-C518-54C4-A9F5-9F240CC4C6EE",
+        "notes" : "Fatigue noted during routine tracking",
+        "severity" : 3,
+        "symptomType" : "fatigue"
+      },
+      {
+        "category" : "metabolic",
+        "date" : "2026-02-17T12:00:00.000Z",
+        "id" : "ECE8A757-C9CD-52CA-ABD2-C278392A15D0",
+        "notes" : "Cravings noted during routine tracking",
+        "severity" : 4,
+        "symptomType" : "cravings"
+      },
+      {
+        "category" : "mood",
+        "date" : "2026-02-13T12:00:00.000Z",
+        "id" : "81F62B35-DE73-5827-87EF-F05B14D8FC5F",
+        "notes" : "Anxiety noted during routine tracking",
+        "severity" : 2,
+        "symptomType" : "anxious"
+      },
+      {
+        "category" : "physical",
+        "date" : "2026-02-09T12:00:00.000Z",
+        "id" : "61BC2798-6ED8-5ED3-9361-6C6060103877",
+        "notes" : "Fatigue noted during routine tracking",
+        "severity" : 3,
+        "symptomType" : "fatigue"
+      }
+    ]
+  },
+  "schemaVersion" : 2,
+  "source" : {
+    "kind" : "demo_scenario",
+    "scenarioID" : "symptomManagement"
+  }
+}

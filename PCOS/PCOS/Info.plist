@@ -18,6 +18,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CFBundleDisplayName</key>
 	<string>CycleBalance</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -27,18 +29,18 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>CycleBalance reads your Apple Health data to populate wellness trends and daily summaries.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>CycleBalance may write selected wellness records to Apple Health when you explicitly enable sync.</string>
-	<key>PREMIUM_BILLING_MODE</key>
-	<string>$(PREMIUM_BILLING_MODE)</string>
+	<string>CycleBalance reads your Apple Health data to populate wellness trends and daily summaries. The app does not write to Apple Health.</string>
 	<key>REVENUECAT_ENTITLEMENT_ID</key>
 	<string>$(REVENUECAT_ENTITLEMENT_ID)</string>
 	<key>REVENUECAT_OFFERING_ID</key>
 	<string>$(REVENUECAT_OFFERING_ID)</string>
 	<key>REVENUECAT_PUBLIC_SDK_KEY</key>
 	<string>$(REVENUECAT_PUBLIC_SDK_KEY)</string>
-	<key>UIBackgroundModes</key>
+	<key>UIAppFonts</key>
 	<array>
-		<string>remote-notification</string>
+		<string>CormorantGaramond-Regular.ttf</string>
+		<string>CormorantGaramond-SemiBold.ttf</string>
+		<string>CormorantGaramond-Italic.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

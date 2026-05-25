@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class BloodSugarReading {
+    #if swift(>=6.0)
+    @available(iOS 18, *)
+    #Index<BloodSugarReading>([\.timestamp])
+    #endif
+
     var id: UUID = UUID()
     var timestamp: Date = Date()
     var glucoseValue: Double = 0

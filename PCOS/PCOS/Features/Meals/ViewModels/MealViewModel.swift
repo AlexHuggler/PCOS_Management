@@ -5,9 +5,13 @@ import os
 @Observable
 @MainActor
 final class MealViewModel {
+    typealias ExistingMealsResolver = @MainActor (_ modelContext: ModelContext, _ targetDate: Date, _ targetType: MealType) throws -> [MealEntry]
+
     private let modelContext: ModelContext
     private let defaultsStore: UserEntryDefaultsStore
     private let suggestionProvider: SuggestionProvider
+    private let mealPlanningService: MealPlanningProviding
+    private let existingMealsResolver: ExistingMealsResolver
 
     // MARK: - Form State
 
@@ -20,6 +24,9 @@ final class MealViewModel {
     var photoData: Data? = nil
     var notes: String = ""
     var mealDate: Date = Date()
+    var selectedTemplateID: String?
+    var postMealSymptomSeverity: Int = 0
+    var postMealSymptomNote: String = ""
 
     // MARK: - Validation
 
@@ -27,16 +34,43 @@ final class MealViewModel {
         !mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    var hasMealDescriptionQuery: Bool {
+        !mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var mealDescriptionSuggestions: [String] {
         suggestionProvider.mealDescriptionSuggestions(
             query: mealDescription,
             mealType: mealType,
-            limit: 6
+            limit: hasMealDescriptionQuery ? 6 : 10
         )
     }
 
     var mealNoteSuggestions: [String] {
-        suggestionProvider.mealNoteSuggestions(query: noteSuggestionQuery, limit: 8)
+        let baseSuggestions = suggestionProvider.mealNoteSuggestions(
+            query: "",
+            mealType: mealType,
+            limit: 20
+        )
+        let filteredSuggestions = suggestionProvider.mealNoteSuggestions(
+            query: QuickNoteComposer.suggestionQuery(in: notes, availableSuggestions: baseSuggestions),
+            mealType: mealType,
+            limit: 10
+        )
+
+        return QuickNoteComposer.visibleSuggestions(
+            from: filteredSuggestions,
+            selectedIn: notes,
+            availableSuggestions: baseSuggestions
+        )
+    }
+
+    var mealTemplates: [MealTemplate] {
+        mealPlanningService.templates(for: mealType)
+    }
+
+    var swapSuggestions: [String] {
+        mealPlanningService.swapSuggestions(for: mealDescription, glycemicImpact: glycemicImpact)
     }
 
     // MARK: - Init
@@ -44,11 +78,15 @@ final class MealViewModel {
     init(
         modelContext: ModelContext,
         defaultsStore: UserEntryDefaultsStore = .shared,
-        suggestionProvider: SuggestionProvider? = nil
+        suggestionProvider: SuggestionProvider? = nil,
+        mealPlanningService: MealPlanningProviding = MealPlanningService(),
+        existingMealsResolver: ExistingMealsResolver? = nil
     ) {
         self.modelContext = modelContext
         self.defaultsStore = defaultsStore
         self.suggestionProvider = suggestionProvider ?? SuggestionProvider(defaultsStore: defaultsStore)
+        self.mealPlanningService = mealPlanningService
+        self.existingMealsResolver = existingMealsResolver ?? Self.resolveExistingMealsForUpsert
         self.mealType = defaultsStore.lastMealType
         self.glycemicImpact = defaultsStore.lastMealGlycemicImpact
     }
@@ -62,25 +100,34 @@ final class MealViewModel {
         // Delete-then-insert upsert: remove any existing meal for the same timestamp
         let targetDate = mealDate
         let targetType = mealType
-        let descriptor = FetchDescriptor<MealEntry>(
-            predicate: #Predicate<MealEntry> { entry in
-                entry.timestamp == targetDate && entry.mealType == targetType
-            }
-        )
 
         do {
-            let existing = try modelContext.fetch(descriptor)
+            let existing = try existingMealsResolver(modelContext, targetDate, targetType)
             for entry in existing {
                 modelContext.delete(entry)
             }
         } catch {
-            Logger.database.error("Failed to fetch existing meals for upsert: \(error.localizedDescription)")
+            let startupMode = UserDefaults.standard.string(forKey: Self.persistenceStartupModeKey) ?? "unknown"
+            Logger.meals.error(
+                "Meal upsert dedupe fetch failed. mealType=\(targetType.rawValue, privacy: .public) targetDate=\(targetDate.ISO8601Format(), privacy: .public) startupMode=\(startupMode, privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+            )
         }
 
         let carbs: Double? = if let value = Double(carbsText), value > 0 { value } else { nil }
         let protein: Double? = if let value = Double(proteinText), value > 0 { value } else { nil }
         let fats: Double? = if let value = Double(fatText), value > 0 { value } else { nil }
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPostMealSymptomNote = postMealSymptomNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        let postMealSeverity: Int? = if postMealSymptomSeverity > 0 {
+            min(max(postMealSymptomSeverity, 1), 5)
+        } else {
+            nil
+        }
+        let feedbackTimestamp: Date? = if postMealSeverity != nil || !trimmedPostMealSymptomNote.isEmpty {
+            Date()
+        } else {
+            nil
+        }
 
         let entry = MealEntry(
             timestamp: mealDate,
@@ -91,22 +138,27 @@ final class MealViewModel {
             carbsGrams: carbs,
             proteinGrams: protein,
             fatGrams: fats,
-            notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+            notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+            selectedTemplateID: selectedTemplateID,
+            postMealSymptomSeverity: postMealSeverity,
+            postMealSymptomNote: trimmedPostMealSymptomNote.isEmpty ? nil : trimmedPostMealSymptomNote,
+            postMealFeedbackTimestamp: feedbackTimestamp
         )
 
         modelContext.insert(entry)
         try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
         defaultsStore.lastMealType = mealType
         defaultsStore.lastMealGlycemicImpact = glycemicImpact
-        suggestionProvider.recordMealDescription(trimmedDescription)
+        suggestionProvider.recordMealDescription(trimmedDescription, mealType: mealType)
         if !trimmedNotes.isEmpty {
             let noteTokens = QuickNoteComposer.tokens(from: trimmedNotes)
             if noteTokens.count > 1 {
                 for token in noteTokens {
-                    suggestionProvider.recordMealNote(token)
+                    suggestionProvider.recordMealNote(token, mealType: mealType)
                 }
             } else {
-                suggestionProvider.recordMealNote(trimmedNotes)
+                suggestionProvider.recordMealNote(trimmedNotes, mealType: mealType)
             }
         }
         Logger.database.info("Saved meal: \(trimmedDescription) (\(self.mealType.displayName))")
@@ -162,6 +214,7 @@ final class MealViewModel {
         modelContext.delete(meal)
         do {
             try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
             Logger.database.info("Deleted meal: \(meal.mealDescription)")
         } catch {
             Logger.database.error("Failed to delete meal: \(error.localizedDescription)")
@@ -194,10 +247,21 @@ final class MealViewModel {
         photoData = nil
         notes = ""
         mealDate = Date()
+        selectedTemplateID = nil
+        postMealSymptomSeverity = 0
+        postMealSymptomNote = ""
     }
 
     func applyMealDescriptionSuggestion(_ suggestion: String) {
         mealDescription = suggestion
+        selectedTemplateID = nil
+    }
+
+    func applyMealTemplate(_ template: MealTemplate) {
+        mealType = template.mealType
+        mealDescription = template.description
+        glycemicImpact = template.glycemicImpact
+        selectedTemplateID = template.id
     }
 
     func isMealNoteSelected(_ suggestion: String) -> Bool {
@@ -208,22 +272,26 @@ final class MealViewModel {
         notes = QuickNoteComposer.toggled(suggestion, in: notes)
     }
 
-    private var noteSuggestionQuery: String {
-        let baseSuggestions = suggestionProvider.mealNoteSuggestions(query: "", limit: 20)
+    private static let persistenceStartupModeKey = "persistence.startupMode"
 
-        let segments = notes.split(separator: ",", omittingEmptySubsequences: false)
-        guard let lastSegment = segments.last else {
-            return notes.trimmingCharacters(in: .whitespacesAndNewlines)
+    private static func resolveExistingMealsForUpsert(
+        modelContext: ModelContext,
+        targetDate: Date,
+        targetType: MealType
+    ) throws -> [MealEntry] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: targetDate)
+        guard let endOfDay = calendar.endOfDay(for: targetDate) else {
+            return []
         }
 
-        let candidate = String(lastSegment).trimmingCharacters(in: .whitespacesAndNewlines)
-        if notes.contains(",") {
-            return candidate
-        }
+        let descriptor = FetchDescriptor<MealEntry>(
+            predicate: #Predicate<MealEntry> { entry in
+                entry.timestamp >= startOfDay && entry.timestamp < endOfDay
+            }
+        )
 
-        if baseSuggestions.contains(where: { $0.caseInsensitiveCompare(candidate) == .orderedSame }) {
-            return ""
-        }
-        return candidate
+        let candidates = try modelContext.fetch(descriptor)
+        return candidates.filter { $0.timestamp == targetDate && $0.mealType == targetType }
     }
 }

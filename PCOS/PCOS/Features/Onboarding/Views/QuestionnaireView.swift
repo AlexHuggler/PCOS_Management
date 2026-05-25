@@ -59,8 +59,8 @@ struct QuestionnaireView: View {
                 Button {
                     advanceOrComplete()
                 } label: {
-                    Text("Continue")
-                        .font(.headline)
+                    Text(String(localized: "Continue", comment: "Primary questionnaire button label."))
+                        .appFont(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, AppTheme.spacing12)
                         .background(
@@ -71,17 +71,32 @@ struct QuestionnaireView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!canContinue)
+                .accessibilityIdentifier("onboarding.questionnaire.continue")
 
-                Button("Skip", action: skipQuestionnaire)
-                    .font(.subheadline)
+                Button {
+                    skipQuestionnaire()
+                } label: {
+                    Text(String(localized: "Skip", comment: "Secondary questionnaire button label."))
+                }
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
-                    .accessibilityHint("Skip the questionnaire and continue setup")
+                    .accessibilityHint(
+                        Text(
+                            String(
+                                localized: "Skip the questionnaire and continue setup",
+                                comment: "Accessibility hint for the questionnaire skip button."
+                            )
+                        )
+                    )
+                    .accessibilityIdentifier("onboarding.questionnaire.skip")
             }
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
         }
-        .background(AppTheme.warmNeutral.ignoresSafeArea())
+        .background(BotanicalScreenBackground(style: .dense))
         .sensoryFeedback(.selection, trigger: questionIndex)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("screen.onboarding.questionnaire")
     }
 
     // MARK: - Questions
@@ -89,11 +104,11 @@ struct QuestionnaireView: View {
     private var goalQuestion: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Text("What brings you to CycleBalance?")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Text("This helps us focus on what matters most to you.")
-                    .font(.subheadline)
+                Text(String(localized: "What brings you to CycleBalance?", comment: "Questionnaire heading asking for the user's primary goal."))
+                    .appHeadingFont(.title2, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(String(localized: "This helps us focus on what matters most to you.", comment: "Questionnaire helper text under the primary goal heading."))
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, AppTheme.spacing24)
@@ -116,11 +131,11 @@ struct QuestionnaireView: View {
     private var experienceQuestion: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Text("How long have you been managing PCOS?")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Text("No wrong answers \u{2014} this helps us set the right pace.")
-                    .font(.subheadline)
+                Text(String(localized: "How long have you been managing PCOS?", comment: "Questionnaire heading asking about PCOS experience."))
+                    .appHeadingFont(.title2, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(String(localized: "No wrong answers — this helps us set the right pace.", comment: "Questionnaire helper text under the PCOS experience heading."))
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, AppTheme.spacing24)
@@ -143,18 +158,23 @@ struct QuestionnaireView: View {
     private var focusQuestion: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Text("Which symptoms matter most to you?")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Text("We'll highlight these on your dashboard. You can always change this later.")
-                    .font(.subheadline)
+                Text(String(localized: "Which symptoms matter most to you?", comment: "Questionnaire heading asking about symptom priorities."))
+                    .appHeadingFont(.title2, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(String(localized: "We'll highlight these on your dashboard. You can always change this later.", comment: "Questionnaire helper text under the symptom focus heading."))
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, AppTheme.spacing24)
 
             if !selectedFocusAreas.isEmpty {
-                Text("\(selectedFocusAreas.count) of \(Self.maxFocusSelections) selected")
-                    .font(.caption)
+                Text(
+                    String(
+                        localized: "\(selectedFocusAreas.count) of \(Self.maxFocusSelections) selected",
+                        comment: "Questionnaire progress text showing how many symptom focus areas are selected."
+                    )
+                )
+                    .appFont(.caption)
                     .foregroundStyle(AppTheme.accentColor)
                     .padding(.horizontal, AppTheme.spacing24)
             }

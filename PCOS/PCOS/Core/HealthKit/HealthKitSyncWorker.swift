@@ -18,6 +18,7 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
     typealias WeightFetcher = @Sendable (Date) async throws -> Double?
     typealias SleepHoursFetcher = @Sendable (Date) async throws -> Double?
     typealias ActiveMinutesFetcher = @Sendable (Date) async throws -> Int?
+    typealias RestingHeartRateFetcher = @Sendable (Date) async throws -> Double?
     typealias GlucoseReadingsFetcher = @Sendable (Date, Date) async throws -> [(date: Date, value: Double)]
 
     private let healthStore: HKHealthStore
@@ -26,6 +27,7 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
     private let weightFetcherOverride: WeightFetcher?
     private let sleepHoursFetcherOverride: SleepHoursFetcher?
     private let activeMinutesFetcherOverride: ActiveMinutesFetcher?
+    private let restingHeartRateFetcherOverride: RestingHeartRateFetcher?
     private let glucoseReadingsFetcherOverride: GlucoseReadingsFetcher?
 
     init(
@@ -34,6 +36,7 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
         weightFetcher: WeightFetcher? = nil,
         sleepHoursFetcher: SleepHoursFetcher? = nil,
         activeMinutesFetcher: ActiveMinutesFetcher? = nil,
+        restingHeartRateFetcher: RestingHeartRateFetcher? = nil,
         glucoseReadingsFetcher: GlucoseReadingsFetcher? = nil
     ) {
         self.healthStore = healthStore
@@ -41,6 +44,7 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
         self.weightFetcherOverride = weightFetcher
         self.sleepHoursFetcherOverride = sleepHoursFetcher
         self.activeMinutesFetcherOverride = activeMinutesFetcher
+        self.restingHeartRateFetcherOverride = restingHeartRateFetcher
         self.glucoseReadingsFetcherOverride = glucoseReadingsFetcher
     }
 
@@ -81,8 +85,15 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
         let weight = try await resolveWeight(for: date)
         let sleepHours = try await resolveSleepHours(for: date)
         let activeMinutes = try await resolveActiveMinutes(for: date)
+        let restingHeartRate: Double?
+        do {
+            restingHeartRate = try await resolveRestingHeartRate(for: date)
+        } catch {
+            restingHeartRate = nil
+            Logger.database.notice("HealthKit resting heart rate fetch skipped: \(error.localizedDescription)")
+        }
 
-        guard weight != nil || sleepHours != nil || activeMinutes != nil else {
+        guard weight != nil || sleepHours != nil || activeMinutes != nil || restingHeartRate != nil else {
             return false
         }
 
@@ -114,6 +125,10 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
                 existing.activeMinutes = activeMinutes
                 didMutate = true
             }
+            if let restingHeartRate {
+                existing.restingHeartRateBPM = restingHeartRate
+                didMutate = true
+            }
 
             guard didMutate else {
                 return false
@@ -128,7 +143,8 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
             date: startOfDay,
             weight: weight,
             sleepHours: sleepHours,
-            activeMinutes: activeMinutes
+            activeMinutes: activeMinutes,
+            restingHeartRateBPM: restingHeartRate
         )
         modelContext.insert(newLog)
         try modelContext.save()
@@ -205,6 +221,13 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
             return try await activeMinutesFetcherOverride(date)
         }
         return try await fetchActiveMinutes(for: date)
+    }
+
+    private func resolveRestingHeartRate(for date: Date) async throws -> Double? {
+        if let restingHeartRateFetcherOverride {
+            return try await restingHeartRateFetcherOverride(date)
+        }
+        return try await fetchRestingHeartRate(for: date)
     }
 
     private func resolveGlucoseReadings(
@@ -359,6 +382,49 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
                     total + sample.endDate.timeIntervalSince(sample.startDate)
                 }
                 continuation.resume(returning: max(Int(totalSeconds / 60.0), 0))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    private func fetchRestingHeartRate(for date: Date) async throws -> Double? {
+        guard availabilityProvider() else { return nil }
+        guard let quantityType = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else {
+            return nil
+        }
+
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return nil
+        }
+
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startOfDay,
+            end: endOfDay,
+            options: .strictStartDate
+        )
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: quantityType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]
+            ) { _, samples, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let bpmUnit = HKUnit.count().unitDivided(by: HKUnit.minute())
+                let bpm = sample.quantity.doubleValue(for: bpmUnit)
+                continuation.resume(returning: bpm)
             }
             healthStore.execute(query)
         }

@@ -21,11 +21,12 @@ struct PhotoComparisonView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .navigationTitle("Compare Photos")
+            .navigationTitle(L10n.string("Compare Photos", defaultValue: "Compare Photos"))
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.photo_comparison")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(L10n.string("Done", defaultValue: "Done")) { dismiss() }
                 }
             }
             .onAppear {
@@ -62,25 +63,25 @@ struct PhotoComparisonView: View {
 
         if earliest == nil && latest == nil {
             // No photos at all for this type
-            ContentUnavailableView {
-                Label("No Photos", systemImage: "photo.on.rectangle.angled")
-            } description: {
-                Text("Add photos for \(selectedType.displayName) to start comparing changes over time.")
-            }
+            AppEmptyStateView(
+                title: "No Photos",
+                message: "Add photos for \(selectedType.displayName) to start comparing changes over time.",
+                systemImage: "photo.on.rectangle.angled"
+            )
             .frame(maxHeight: .infinity)
         } else if earliest?.id == latest?.id {
             // Only one photo
             ScrollView {
                 VStack(spacing: AppTheme.spacing16) {
                     if let photo = earliest {
-                        ComparisonPhotoCard(label: "Current", photo: photo)
+                        ComparisonPhotoCard(label: "Current", photo: photo, image: vm.image(for: photo))
                     }
 
                     HStack(spacing: AppTheme.spacing8) {
                         Image(systemName: "info.circle")
                             .foregroundStyle(.secondary)
                         Text("Add more \(selectedType.displayName) photos to compare changes over time.")
-                            .font(.subheadline)
+                            .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding()
@@ -97,11 +98,11 @@ struct PhotoComparisonView: View {
             ScrollView {
                 HStack(alignment: .top, spacing: AppTheme.spacing12) {
                     if let before = earliest {
-                        ComparisonPhotoCard(label: "Before", photo: before)
+                        ComparisonPhotoCard(label: "Before", photo: before, image: vm.image(for: before))
                     }
 
                     if let after = latest {
-                        ComparisonPhotoCard(label: "After", photo: after)
+                        ComparisonPhotoCard(label: "After", photo: after, image: vm.image(for: after))
                     }
                 }
                 .padding()
@@ -115,42 +116,52 @@ struct PhotoComparisonView: View {
 private struct ComparisonPhotoCard: View {
     let label: String
     let photo: HairPhotoEntry
+    let image: UIImage?
+    private let presentation = ComparisonPhotoPresentation(style: .clinical)
 
     private var formattedDate: String {
         photo.date.formatted(date: .abbreviated, time: .omitted)
     }
 
     var body: some View {
-        VStack(spacing: AppTheme.spacing8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text(label)
-                .font(.headline)
+                .appFont(.headline)
                 .foregroundStyle(.primary)
 
-            if let uiImage = UIImage(data: photo.photoData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-                    )
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.tertiarySystemFill))
-                    .aspectRatio(1, contentMode: .fit)
-                    .overlay {
+            ZStack {
+                RoundedRectangle(cornerRadius: presentation.cornerRadius)
+                    .fill(Color(uiColor: presentation.slotBackgroundColor))
+
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(presentation.slotPadding)
+                } else {
+                    VStack(spacing: AppTheme.spacing8) {
                         Image(systemName: "photo")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
+                            .appFont(.largeTitle)
+                        Text("No Photo")
+                            .appFont(.caption, weight: .medium)
                     }
+                    .foregroundStyle(.secondary)
+                    .padding(presentation.slotPadding)
+                }
             }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(presentation.slotAspectRatio, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: presentation.cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: presentation.cornerRadius)
+                    .stroke(Color(uiColor: presentation.slotBorderColor), lineWidth: presentation.slotBorderWidth)
+            )
 
             Text(formattedDate)
-                .font(.caption)
+                .appFont(.caption)
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

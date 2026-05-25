@@ -36,4 +36,4 @@ Pruned on 2026-03-12 after confirming no app-lineage dependency.
 
 - Tree state is clean for further app development.
 - Canonical active development line is the `codex/dirty-tree-reconcile-20260312` branch.
-- Dual-tree parity policy remains enforced via `./scripts/check_tree_parity.sh`.
+- The former dual-tree parity policy is retired; active development now uses only `PCOS/PCOS`, `PCOS/PCOSTests`, and `PCOS/PCOSUITests`.

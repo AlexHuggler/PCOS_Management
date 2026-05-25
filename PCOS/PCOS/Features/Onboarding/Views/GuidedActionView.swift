@@ -1,4 +1,15 @@
 import SwiftUI
+import SwiftData
+
+enum GuidedActionCompletionPolicy {
+    static func didCreateRecord(initialCount: Int?, currentCount: Int) -> Bool {
+        guard let initialCount else {
+            return false
+        }
+
+        return currentCount > initialCount
+    }
+}
 
 /// Transitional screen that presents the user's recommended first action.
 /// Opens the existing CycleLogView or SymptomLogView as a sheet.
@@ -7,7 +18,11 @@ struct GuidedActionView: View {
     let onComplete: () -> Void
     let onSkip: () -> Void
 
+    @Environment(\.modelContext) private var modelContext
+
     @State private var showingSheet = false
+    @State private var initialGuidedLogRecordCount: Int?
+    @State private var guidedActionMessage: String?
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
 
@@ -30,18 +45,24 @@ struct GuidedActionView: View {
                 .symbolEffect(.bounce, value: showingSheet)
                 .accessibilityHidden(true)
 
+            Text(profile.firstLogContextLine)
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.accentColor)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, AppTheme.spacing24)
+
             VStack(spacing: AppTheme.spacing12) {
                 Text(isLogPeriod
-                     ? "Let's log your first period day"
-                     : "How are you feeling today?")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                     ? String(localized: "Let's log your first period day", comment: "Guided action screen heading for users focused on period logging.")
+                     : String(localized: "How are you feeling today?", comment: "Guided action screen heading for users focused on symptom logging."))
+                    .appHeadingFont(.title2, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
                     .multilineTextAlignment(.center)
 
                 Text(isLogPeriod
-                     ? "Even if your period isn't today, you can log your most recent one. This starts your cycle tracking."
-                     : "Tap any symptoms you're experiencing. Even logging once helps start building your pattern.")
-                    .font(.body)
+                     ? String(localized: "Even if your period isn't today, you can log your most recent one. This starts your cycle tracking.", comment: "Guided action helper text for period logging.")
+                     : String(localized: "Tap any symptoms you're experiencing. Even logging once helps start building your pattern.", comment: "Guided action helper text for symptom logging."))
+                    .appFont(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -49,15 +70,27 @@ struct GuidedActionView: View {
 
             Spacer()
 
+            if let guidedActionMessage {
+                Text(guidedActionMessage)
+                    .appFont(.footnote)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppTheme.spacing24)
+                    .accessibilityIdentifier("onboarding.guided_action.message")
+            }
+
             VStack(spacing: AppTheme.spacing12) {
                 Button {
-                    showingSheet = true
+                    beginGuidedAction()
                 } label: {
                     Label(
-                        isLogPeriod ? "Log Period Day" : "Log Symptoms",
+                        String(
+                            localized: isLogPeriod ? "Log Period Day" : "Log Symptoms",
+                            comment: "Primary guided action button label."
+                        ),
                         systemImage: isLogPeriod ? "drop.fill" : "list.bullet.clipboard"
                     )
-                    .font(.headline)
+                    .appFont(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppTheme.spacing12)
                     .background(
@@ -67,25 +100,70 @@ struct GuidedActionView: View {
                     .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("onboarding.guided_action.primary")
 
-                Button("Skip", action: onSkip)
-                    .font(.subheadline)
+                Button {
+                    onSkip()
+                } label: {
+                    Text(profile.suggestedFirstAction.guidedActionSkipTitle)
+                }
+                    .appFont(.subheadline)
                     .foregroundStyle(.secondary)
-                    .accessibilityHint("Skip this step and go to the dashboard")
+                    .accessibilityHint(Text(profile.suggestedFirstAction.guidedActionSkipHint))
+                    .accessibilityIdentifier("onboarding.guided_action.skip")
             }
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
         }
-        .background(AppTheme.warmNeutral.ignoresSafeArea())
-        .sheet(isPresented: $showingSheet, onDismiss: {
-            profile.hasCompletedGuidedAction = true
-            onComplete()
-        }) {
+        .background(BotanicalScreenBackground(style: .dense))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("screen.onboarding.guided_action")
+        .sheet(isPresented: $showingSheet, onDismiss: handleGuidedActionDismissal) {
             if isLogPeriod {
                 CycleLogView()
             } else {
                 SymptomLogView(initialCategory: suggestedCategory)
             }
+        }
+    }
+
+    private func beginGuidedAction() {
+        guidedActionMessage = nil
+        initialGuidedLogRecordCount = currentGuidedLogRecordCount()
+        showingSheet = true
+    }
+
+    private func handleGuidedActionDismissal() {
+        guard
+            let currentCount = currentGuidedLogRecordCount(),
+            GuidedActionCompletionPolicy.didCreateRecord(
+                initialCount: initialGuidedLogRecordCount,
+                currentCount: currentCount
+            )
+        else {
+            guidedActionMessage = String(
+                localized: "No log was saved yet. You can try again or continue without a first log.",
+                comment: "Guided action message shown after dismissing a first-log sheet without saving."
+            )
+            initialGuidedLogRecordCount = nil
+            return
+        }
+
+        initialGuidedLogRecordCount = nil
+        profile.hasCompletedGuidedAction = true
+        onComplete()
+    }
+
+    private func currentGuidedLogRecordCount() -> Int? {
+        do {
+            switch profile.suggestedFirstAction {
+            case .logPeriod:
+                return try modelContext.fetch(FetchDescriptor<CycleEntry>()).count
+            case .logSymptoms:
+                return try modelContext.fetch(FetchDescriptor<SymptomEntry>()).count
+            }
+        } catch {
+            return nil
         }
     }
 }

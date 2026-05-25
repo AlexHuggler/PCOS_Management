@@ -9,6 +9,8 @@ struct PhotoGalleryView: View {
     @State private var showCapture = false
     @State private var showComparison = false
     @State private var photos: [HairPhotoEntry] = []
+    @State private var pendingDeletePhoto: HairPhotoEntry?
+    @State private var showUndoToast = false
 
     private let columns = [
         GridItem(.flexible(), spacing: AppTheme.spacing4),
@@ -21,21 +23,26 @@ struct PhotoGalleryView: View {
             VStack(spacing: 0) {
                 // Filter bar
                 filterBar
+                photoJournalGuidanceCard
 
                 // Photo grid or empty state
                 if photos.isEmpty {
-                    ContentUnavailableView {
-                        Label("No Photos Yet", systemImage: "photo.on.rectangle.angled")
-                    } description: {
-                        Text("Start tracking changes by adding your first photo.")
-                    } actions: {
-                        Button("Add Photo") {
+                    AppEmptyStateView(
+                        title: L10n.string("No Photos Yet", defaultValue: "No Photos Yet"),
+                        message: L10n.string(
+                            "Start a private progress journal with a consistent angle and lighting.",
+                            defaultValue: "Start a private progress journal with a consistent angle and lighting."
+                        ),
+                        systemImage: "photo.on.rectangle.angled"
+                    ) {
+                        Button(L10n.string("Add Photo", defaultValue: "Add Photo")) {
                             showCapture = true
                         }
+                        .appFont(.subheadline, weight: .semibold)
                         .buttonStyle(.borderedProminent)
                         .tint(AppTheme.coralAccent)
                     }
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         VStack(spacing: AppTheme.spacing12) {
@@ -43,8 +50,13 @@ struct PhotoGalleryView: View {
                                 HStack(spacing: AppTheme.spacing8) {
                                     Image(systemName: "rectangle.split.2x1")
                                         .foregroundStyle(.secondary)
-                                    Text("Add one more photo to compare progress.")
-                                        .font(.subheadline)
+                                    Text(
+                                        L10n.string(
+                                            "Add one more photo to compare progress.",
+                                            defaultValue: "Add one more photo to compare progress."
+                                        )
+                                    )
+                                        .appFont(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -53,17 +65,17 @@ struct PhotoGalleryView: View {
 
                             LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
                                 ForEach(photos) { photo in
-                                    PhotoThumbnail(photo: photo)
+                                    PhotoThumbnail(image: viewModel?.image(for: photo))
                                         .onTapGesture {
                                             selectedPhoto = photo
                                         }
-                                        .contextMenu {
-                                            Button(role: .destructive) {
-                                                deletePhoto(photo)
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                            }
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            deletePhoto(photo)
+                                        } label: {
+                                            Label(L10n.string("Delete", defaultValue: "Delete"), systemImage: "trash")
                                         }
+                                    }
                                 }
                             }
                         }
@@ -71,8 +83,33 @@ struct PhotoGalleryView: View {
                     }
                 }
             }
-            .navigationTitle("Photo Journal")
+            .overlay(alignment: .bottom) {
+                if showUndoToast, pendingDeletePhoto != nil {
+                    UndoToast(
+                        message: L10n.string("Photo deleted", defaultValue: "Photo deleted"),
+                        onUndo: {
+                            withAnimation {
+                                pendingDeletePhoto = nil
+                                showUndoToast = false
+                            }
+                        },
+                        onExpire: {
+                            if let photo = pendingDeletePhoto {
+                                viewModel?.deletePhoto(photo)
+                                refreshPhotos()
+                            }
+                            withAnimation {
+                                pendingDeletePhoto = nil
+                                showUndoToast = false
+                            }
+                        }
+                    )
+                    .padding()
+                }
+            }
+            .navigationTitle(L10n.string("Photo Journal", defaultValue: "Photo Journal"))
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.photo_journal")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -88,15 +125,18 @@ struct PhotoGalleryView: View {
                         } label: {
                             Image(systemName: "rectangle.split.2x1")
                         }
+                        .accessibilityIdentifier("photo_journal.compare_button")
                     }
                 }
             }
+            .sensoryFeedback(.selection, trigger: selectedFilter)
+            .sensoryFeedback(.impact(flexibility: .soft), trigger: showCapture)
             .sheet(isPresented: $showCapture) {
                 PhotoCaptureView()
                     .onDisappear { refreshPhotos() }
             }
             .sheet(item: $selectedPhoto) { photo in
-                PhotoDetailSheet(photo: photo, onDelete: {
+                PhotoDetailSheet(photo: photo, image: viewModel?.image(for: photo), onDelete: {
                     deletePhoto(photo)
                     selectedPhoto = nil
                 })
@@ -111,6 +151,7 @@ struct PhotoGalleryView: View {
                 refreshPhotos()
             }
         }
+        .accessibilityIdentifier("screen.photo_journal")
         .premiumGated()
     }
 
@@ -120,7 +161,7 @@ struct PhotoGalleryView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: AppTheme.spacing8) {
                 CategoryChip(
-                    title: "All",
+                    title: L10n.string("All", defaultValue: "All"),
                     isSelected: selectedFilter == nil
                 ) {
                     selectedFilter = nil
@@ -143,6 +184,55 @@ struct PhotoGalleryView: View {
         .background(AppTheme.groupedBackground)
     }
 
+    private var photoJournalGuidanceCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Label(L10n.string("Private progress photos", defaultValue: "Private progress photos"), systemImage: "lock.shield")
+                .appFont(.headline)
+                .foregroundStyle(AppTheme.accentColor)
+
+            Text(
+                L10n.string(
+                    "Your photo journal stays on device. Keep lighting, distance, and angle as consistent as possible.",
+                    defaultValue: "Your photo journal stays on device. Keep lighting, distance, and angle as consistent as possible."
+                )
+            )
+                .appFont(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Text(
+                L10n.string(
+                    "Hair and body changes often need months of comparison, while acne and skin shifts may be easier to compare sooner.",
+                    defaultValue: "Hair and body changes often need months of comparison, while acne and skin shifts may be easier to compare sooner."
+                )
+            )
+                .appFont(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Text(
+                L10n.string(
+                    "Try to capture photos at a similar time or routine point each week.",
+                    defaultValue: "Try to capture photos at a similar time or routine point each week."
+                )
+            )
+                .appFont(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .fill(AppTheme.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
+        )
+        .padding(.horizontal)
+        .padding(.top, AppTheme.spacing12)
+        .padding(.bottom, AppTheme.spacing8)
+        .accessibilityIdentifier("photo_journal.guidance_card")
+    }
+
     // MARK: - Actions
 
     private func refreshPhotos() {
@@ -155,20 +245,22 @@ struct PhotoGalleryView: View {
     }
 
     private func deletePhoto(_ photo: HairPhotoEntry) {
-        viewModel?.deletePhoto(photo)
-        refreshPhotos()
+        pendingDeletePhoto = photo
+        withAnimation {
+            showUndoToast = true
+        }
     }
 }
 
 // MARK: - Photo Thumbnail
 
 private struct PhotoThumbnail: View {
-    let photo: HairPhotoEntry
+    let image: UIImage?
 
     var body: some View {
         Group {
-            if let uiImage = UIImage(data: photo.photoData) {
-                Image(uiImage: uiImage)
+            if let image {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
             } else {
@@ -191,6 +283,7 @@ private struct PhotoThumbnail: View {
 
 private struct PhotoDetailSheet: View {
     let photo: HairPhotoEntry
+    let image: UIImage?
     let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -204,34 +297,44 @@ private struct PhotoDetailSheet: View {
             ScrollView {
                 VStack(spacing: AppTheme.spacing16) {
                     // Full-size image
-                    if let uiImage = UIImage(data: photo.photoData) {
-                        Image(uiImage: uiImage)
+                    if let image {
+                        Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
                     }
 
                     // Metadata
                     VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                         HStack {
                             Label(photo.photoType.displayName, systemImage: "tag")
-                                .font(.subheadline)
+                                .appFont(.subheadline)
                                 .foregroundStyle(.secondary)
 
                             Spacer()
 
                             Text(formattedDate)
-                                .font(.subheadline)
+                                .appFont(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
 
                         if let notes = photo.notes, !notes.isEmpty {
                             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                                Text("Notes")
-                                    .font(.caption)
+                                Text(L10n.string("Notes", defaultValue: "Notes"))
+                                    .appFont(.caption)
                                     .foregroundStyle(.tertiary)
                                 Text(notes)
-                                    .font(.body)
+                                    .appFont(.body)
+                            }
+                        }
+
+                        if let analysis = photo.analysisResult, !analysis.isEmpty {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text("Density Analysis")
+                                    .appFont(.caption)
+                                    .foregroundStyle(.tertiary)
+                                Text(analysis)
+                                    .appFont(.body)
                             }
                         }
                     }
@@ -243,7 +346,7 @@ private struct PhotoDetailSheet: View {
                         dismiss()
                     } label: {
                         Label("Delete Photo", systemImage: "trash")
-                            .font(.headline)
+                            .appFont(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
@@ -252,11 +355,11 @@ private struct PhotoDetailSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Photo Detail")
+            .navigationTitle(L10n.string("Photo Detail", defaultValue: "Photo Detail"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(L10n.string("Done", defaultValue: "Done")) { dismiss() }
                 }
             }
         }

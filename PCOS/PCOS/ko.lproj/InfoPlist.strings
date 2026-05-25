@@ -1,0 +1,17 @@
+/* Bundle display name */
+"CFBundleDisplayName" = "CycleBalance";
+
+/* Bundle name */
+"CFBundleName" = "PCOS";
+
+/* Privacy - Camera Usage Description */
+"NSCameraUsageDescription" = "CycleBalance은 추적을 위해 카메라를 사용하여 모발 성장/탈모 진행 사진을 캡처합니다.";
+
+/* Privacy - Health Share Usage Description */
+"NSHealthShareUsageDescription" = "CycleBalance은(는) Apple Health 데이터를 읽어 웰빙 추세와 일일 요약을 채웁니다.";
+
+/* Privacy - Health Update Usage Description */
+"NSHealthUpdateUsageDescription" = "CycleBalance은(는) Apple Health 데이터를 읽어 웰빙 추세와 일일 요약을 채웁니다. 앱은 Apple Health에 쓰지 않습니다.";
+
+/* Privacy - Photo Library Usage Description */
+"NSPhotoLibraryUsageDescription" = "CycleBalance은(는) 사진 라이브러리를 사용하여 모발 성장/탈모 진행 사진을 저장하고 비교합니다.";

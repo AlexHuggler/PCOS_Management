@@ -1,12 +1,19 @@
 import Foundation
 import Observation
 import UIKit
+import os
+
+enum SaveFeedbackEvent: String {
+    case success
+    case error
+}
 
 @MainActor
 @Observable
 final class SaveInteractionCoordinator {
     var isShowingSavedFeedback = false
 
+    private let generator = UINotificationFeedbackGenerator()
     private var feedbackTask: Task<Void, Never>?
 
     func cancelPending() {
@@ -37,12 +44,26 @@ final class SaveInteractionCoordinator {
         }
     }
 
-    func showErrorHaptic() {
+    func showErrorFeedback() {
         emit(.error)
     }
 
-    private func emit(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
+    func emit(_ event: SaveFeedbackEvent) {
+#if targetEnvironment(simulator)
+        Logger.haptics.debug("Skipping haptic feedback on simulator for event \(event.rawValue, privacy: .public)")
+        return
+#else
+        let feedbackType: UINotificationFeedbackGenerator.FeedbackType
+        switch event {
+        case .success:
+            feedbackType = .success
+        case .error:
+            feedbackType = .error
+        }
+
+        generator.prepare()
+        generator.notificationOccurred(feedbackType)
+        Logger.haptics.debug("Dispatched haptic feedback event \(event.rawValue, privacy: .public)")
+#endif
     }
 }
