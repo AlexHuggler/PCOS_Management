@@ -55,13 +55,17 @@ final class BloodSugarViewModel {
         modelContext: ModelContext,
         defaultsStore: UserEntryDefaultsStore = .shared,
         suggestionProvider: SuggestionProvider? = nil,
-        irMetricService: InsulinResistanceMetricCalculating = InsulinResistanceMetricService()
+        irMetricService: InsulinResistanceMetricCalculating = InsulinResistanceMetricService(),
+        prefillContext: GlucosePrefillContext? = nil
     ) {
         self.modelContext = modelContext
         self.defaultsStore = defaultsStore
         self.suggestionProvider = suggestionProvider ?? SuggestionProvider(defaultsStore: defaultsStore)
         self.irMetricService = irMetricService
         self.readingType = defaultsStore.lastBloodSugarReadingType
+        if let prefillContext {
+            applyGlucosePrefill(prefillContext)
+        }
     }
 
     // MARK: - Actions
@@ -229,6 +233,12 @@ final class BloodSugarViewModel {
 
     func applyMealContextSuggestion(_ suggestion: String) {
         mealContext = suggestion
+    }
+
+    func applyGlucosePrefill(_ prefillContext: GlucosePrefillContext) {
+        mealContext = prefillContext.mealContext
+        readingType = prefillContext.readingType
+        readingDate = prefillContext.readingDate
     }
 
     func isNoteSuggestionSelected(_ suggestion: String) -> Bool {

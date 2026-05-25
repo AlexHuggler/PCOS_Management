@@ -1,7 +1,8 @@
-record_type,date,timestamp,flow_intensity,symptom_type,severity,glucose_value,reading_type,meal_context,supplement_name,dosage_mg,time_taken,taken,brand,meal_type,meal_description,glycemic_impact,carbs_grams,protein_grams,fat_grams,weight,sleep_hours,active_minutes,stress_level,energy_level,water_oz,notes
-period,2026-03-10,,medium,,,,,,,,,,,,,,,,,,,,,,,Fixture period entry
-symptom,2026-03-10,,,cramps,4,,,,,,,,,,,,,,,,,,,,,Fixture symptom entry
-blood_sugar,,2026-03-10T08:15:00Z,,,,112,fasting,Morning baseline,,,,,,,,,,,,,,,,,,Fixture glucose entry
-supplement,2026-03-10,,,,,,,,Inositol,2000,08:30,true,Theralogix,,,,,,,,,,,,,
-meal,,2026-03-10T12:30:00Z,,,,,,,,,,,,lunch,Salad bowl with chicken,low,25,18,9,,,,,,,Fixture meal entry
-daily_log,2026-03-10,,,,,,,,,,,,,,,,,,,152.5,7.2,42,3,4,80,
+record_type,date,timestamp,flow_intensity,symptom_type,severity,glucose_value,reading_type,meal_context,supplement_name,dosage_mg,time_taken,taken,brand,meal_type,meal_description,glycemic_impact,carbs_grams,protein_grams,fat_grams,weight,sleep_hours,active_minutes,stress_level,energy_level,water_oz,basal_body_temperature_celsius,cervical_mucus,lh_test_result,notes
+period,2026-03-10,,medium,,,,,,,,,,,,,,,,,,,,,,,,,,Fixture period entry
+symptom,2026-03-10,,,cramps,4,,,,,,,,,,,,,,,,,,,,,,,,Fixture symptom entry
+blood_sugar,,2026-03-10T08:15:00Z,,,,112,fasting,Morning baseline,,,,,,,,,,,,,,,,,,,,,Fixture glucose entry
+supplement,2026-03-10,,,,,,,,Inositol,2000,08:30,true,Theralogix,,,,,,,,,,,,,,,,
+meal,,2026-03-10T12:30:00Z,,,,,,,,,,,,lunch,Salad bowl with chicken,low,25,18,9,,,,,,,,,,Fixture meal entry
+daily_log,2026-03-10,,,,,,,,,,,,,,,,,,,152.5,7.2,42,3,4,80,,,,
+ovulation_observation,2026-03-14,,,,,,,,,,,,,,,,,,,,,,,,,36.72,eggWhite,peak,Fixture ovulation entry

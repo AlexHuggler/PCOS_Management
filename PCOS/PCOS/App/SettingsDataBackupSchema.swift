@@ -23,6 +23,7 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
     var dailyLogs: Int = 0
     var insights: Int = 0
     var pregnancyRecords: Int = 0
+    var ovulationObservations: Int = 0
 
     var total: Int {
         cycles
@@ -35,11 +36,12 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
             + dailyLogs
             + insights
             + pregnancyRecords
+            + ovulationObservations
     }
 }
 
 struct SettingsDataBackupFile: Codable, Sendable {
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
     var schemaVersion: Int = currentSchemaVersion
     var exportedAt: Date
@@ -59,6 +61,7 @@ struct SettingsDataBackupRecords: Codable, Sendable {
     var dailyLogs: [DailyLogRecord] = []
     var insights: [InsightRecord] = []
     var pregnancyRecords: [PregnancyRecordDTO] = []
+    var ovulationObservations: [OvulationObservationRecord] = []
 
     var counts: SettingsDataRecordCounts {
         SettingsDataRecordCounts(
@@ -71,7 +74,8 @@ struct SettingsDataBackupRecords: Codable, Sendable {
             hairPhotos: hairPhotos.count,
             dailyLogs: dailyLogs.count,
             insights: insights.count,
-            pregnancyRecords: pregnancyRecords.count
+            pregnancyRecords: pregnancyRecords.count,
+            ovulationObservations: ovulationObservations.count
         )
     }
 }
@@ -107,6 +111,7 @@ extension SettingsDataBackupRecords {
         case dailyLogs
         case insights
         case pregnancyRecords
+        case ovulationObservations
     }
 
     init(from decoder: Decoder) throws {
@@ -121,6 +126,7 @@ extension SettingsDataBackupRecords {
         self.dailyLogs = try container.decodeIfPresent([DailyLogRecord].self, forKey: .dailyLogs) ?? []
         self.insights = try container.decodeIfPresent([InsightRecord].self, forKey: .insights) ?? []
         self.pregnancyRecords = try container.decodeIfPresent([PregnancyRecordDTO].self, forKey: .pregnancyRecords) ?? []
+        self.ovulationObservations = try container.decodeIfPresent([OvulationObservationRecord].self, forKey: .ovulationObservations) ?? []
     }
 }
 
@@ -275,6 +281,16 @@ struct PregnancyRecordDTO: Codable, Sendable {
     var endReason: PregnancyEndReason?
     var isActive: Bool
     var notes: String?
+}
+
+struct OvulationObservationRecord: Codable, Sendable {
+    var id: UUID
+    var date: Date
+    var basalBodyTemperatureCelsius: Double?
+    var cervicalMucus: CervicalMucusType?
+    var lhTestResult: LHTestResult?
+    var notes: String?
+    var createdAt: Date
 }
 
 enum SettingsDataBackupCoding {

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import PhotosUI
 import UIKit
 import os
 
@@ -63,6 +64,7 @@ struct SettingsView: View {
     @Environment(AppLockManager.self) private var appLockManager
     @Environment(AppearancePreferences.self) private var appearancePreferences
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var showDeleteConfirmation = false
     @State private var pendingJSONImportSource: PendingJSONImportSource?
@@ -78,6 +80,10 @@ struct SettingsView: View {
     @State private var showingPregnancyActivation = false
     @State private var showingPregnancyEnd = false
     @State private var pregnancyViewModel: PregnancyViewModel?
+    @State private var selectedProfilePhotoItem: PhotosPickerItem?
+    @State private var profilePhotoData: Data?
+
+    private let profilePhotoStore = LocalProfilePhotoStore()
 
 #if DEBUG
     @State private var debugTools = SettingsDebugToolsState()
@@ -355,6 +361,53 @@ struct SettingsView: View {
                                 .appFont(.caption)
                                 .foregroundStyle(.orange)
                         }
+                    }
+                }
+
+                let profilePhotoPickerTitle = profilePhotoData == nil
+                    ? L10n.string("Choose Profile Photo", defaultValue: "Choose Profile Photo")
+                    : L10n.string("Change Profile Photo", defaultValue: "Change Profile Photo")
+
+                Section(L10n.string("Profile", defaultValue: "Profile")) {
+                    HStack(spacing: AppTheme.spacing12) {
+                        profilePhotoPreview
+
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text(L10n.string("Profile Photo", defaultValue: "Profile Photo"))
+                                .appFont(.body, weight: .medium)
+                            Text(
+                                L10n.string(
+                                    "Optional and stored only on this device.",
+                                    defaultValue: "Optional and stored only on this device."
+                                )
+                            )
+                            .appFont(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, AppTheme.spacing4)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("settings.profile.photo_preview")
+
+                    PhotosPicker(
+                        selection: $selectedProfilePhotoItem,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        Label(
+                            profilePhotoPickerTitle,
+                            systemImage: "photo.on.rectangle.angled"
+                        )
+                    }
+                    .accessibilityIdentifier("settings.profile.photo_picker")
+
+                    if profilePhotoData != nil {
+                        Button(role: .destructive) {
+                            deleteProfilePhoto()
+                        } label: {
+                            Label(L10n.string("Remove Profile Photo", defaultValue: "Remove Profile Photo"), systemImage: "trash")
+                        }
+                        .accessibilityIdentifier("settings.profile.photo_delete")
                     }
                 }
 
@@ -699,6 +752,12 @@ struct SettingsView: View {
                     pregnancyViewModel = PregnancyViewModel(modelContext: modelContext)
                     pregnancyViewModel?.loadData()
                 }
+                loadProfilePhoto()
+            }
+            .onChange(of: selectedProfilePhotoItem) { _, newItem in
+                Task {
+                    await importSelectedProfilePhoto(from: newItem)
+                }
             }
 #if DEBUG
             .sheet(isPresented: Binding(
@@ -711,6 +770,90 @@ struct SettingsView: View {
                 debugTools.primePremiumStatus(appState: appState)
             }
 #endif
+        }
+    }
+
+    @ViewBuilder
+    private var profilePhotoPreview: some View {
+        ZStack {
+            Circle()
+                .fill(AppTheme.groupedBackground)
+
+            if profilePhotoIsMasked {
+                Image(systemName: "lock.fill")
+                    .appFont(.title2, weight: .semibold)
+                    .foregroundStyle(.secondary)
+            } else if let profilePhotoData, let image = UIImage(data: profilePhotoData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.secondary.opacity(0.6))
+                    .padding(AppTheme.spacing8)
+            }
+        }
+        .frame(width: 58, height: 58)
+        .clipShape(Circle())
+        .overlay(
+            Circle()
+                .stroke(Color.secondary.opacity(0.18), lineWidth: 1)
+        )
+        .accessibilityHidden(true)
+    }
+
+    private var profilePhotoIsMasked: Bool {
+        profilePhotoStore.shouldMaskProfilePhoto(
+            isAppLockEnabled: appLockManager.settings.isEnabled,
+            isContentMasked: appLockManager.shouldMaskContent(for: scenePhase)
+        )
+    }
+
+    private func loadProfilePhoto() {
+        do {
+            profilePhotoData = try profilePhotoStore.loadProfilePhoto()
+        } catch {
+            operationError = String(
+                localized: "Could not load profile photo: \(error.localizedDescription)",
+                comment: "Error shown when the local profile photo cannot be loaded."
+            )
+        }
+    }
+
+    private func importSelectedProfilePhoto(from item: PhotosPickerItem?) async {
+        guard let item else { return }
+
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self) else {
+                operationError = L10n.string(
+                    "Could not import profile photo.",
+                    defaultValue: "Could not import profile photo."
+                )
+                return
+            }
+
+            try profilePhotoStore.saveProfilePhoto(data)
+            profilePhotoData = data
+            selectedProfilePhotoItem = nil
+        } catch {
+            operationError = String(
+                localized: "Could not import profile photo: \(error.localizedDescription)",
+                comment: "Error shown when profile photo import fails."
+            )
+        }
+    }
+
+    private func deleteProfilePhoto() {
+        do {
+            try profilePhotoStore.deleteProfilePhoto()
+            profilePhotoData = nil
+        } catch {
+            operationError = String(
+                localized: "Could not remove profile photo: \(error.localizedDescription)",
+                comment: "Error shown when the local profile photo cannot be removed."
+            )
         }
     }
 

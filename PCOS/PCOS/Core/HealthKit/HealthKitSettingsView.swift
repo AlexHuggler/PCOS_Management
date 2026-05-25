@@ -15,6 +15,7 @@ struct HealthKitSettingsView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var healthKitManager = HealthKitManager()
     @State private var authorizationTriggered = false
+    @State private var contributionSummaries: [HealthKitContributionSummary] = []
 
     private var dataDisclosureItems: [HealthKitDataDisclosureItem] {
         [
@@ -74,6 +75,7 @@ struct HealthKitSettingsView: View {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 connectionCard
                 dataAccessCard
+                contributionCard
                 privacyCard
 
                 if healthKitManager.isConfigured {
@@ -89,12 +91,14 @@ struct HealthKitSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await healthKitManager.refreshAuthorizationState()
+            refreshContributionSummaries()
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
 
             Task {
                 await healthKitManager.refreshAuthorizationState()
+                refreshContributionSummaries()
             }
         }
     }
@@ -214,6 +218,44 @@ struct HealthKitSettingsView: View {
                 }
             }
         }
+    }
+
+    private var contributionCard: some View {
+        healthKitCard {
+            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    Text(localized("Apple Health Contributions"))
+                        .appFont(.headline, weight: .semibold)
+
+                    Text(localized("See where Apple Health data is currently enriching CycleBalance. Counts reflect recent on-device records only."))
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                VStack(spacing: AppTheme.spacing8) {
+                    ForEach(contributionSummaries) { summary in
+                        HStack {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text(localized(summary.title))
+                                    .appFont(.subheadline, weight: .medium)
+                                Text(localized(summary.sourceLabel))
+                                    .appFont(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Text(summary.displayText)
+                                .appFont(.caption, weight: .semibold)
+                                .foregroundStyle(summary.sampleCount > 0 ? AppTheme.sage : .secondary)
+                        }
+                        .padding(.vertical, AppTheme.spacing4)
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("settings.healthkit.contributions")
     }
 
     private var syncCard: some View {
@@ -376,6 +418,7 @@ struct HealthKitSettingsView: View {
                 openAppSettings()
             case .needsAuthorization:
                 await healthKitManager.connectAndSync(modelContext: modelContext)
+                refreshContributionSummaries()
                 if healthKitManager.isConfigured {
                     authorizationTriggered.toggle()
                 }
@@ -397,6 +440,7 @@ struct HealthKitSettingsView: View {
         Button {
             Task {
                 await healthKitManager.performFullSync(modelContext: modelContext)
+                refreshContributionSummaries()
             }
         } label: {
             HStack(spacing: AppTheme.spacing8) {
@@ -428,6 +472,14 @@ struct HealthKitSettingsView: View {
 
     private func localized(_ key: String) -> String {
         L10n.string(key, defaultValue: key)
+    }
+
+    private func refreshContributionSummaries() {
+        do {
+            contributionSummaries = try HealthKitContributionSummaryService(modelContext: modelContext).summaries()
+        } catch {
+            contributionSummaries = []
+        }
     }
 }
 

@@ -30,8 +30,8 @@ struct PhotoGalleryView: View {
                     AppEmptyStateView(
                         title: L10n.string("No Photos Yet", defaultValue: "No Photos Yet"),
                         message: L10n.string(
-                            "Start a private progress journal with a consistent angle and lighting.",
-                            defaultValue: "Start a private progress journal with a consistent angle and lighting."
+                            "Start a private journal for visible PCOS changes with a consistent angle and lighting.",
+                            defaultValue: "Start a private journal for visible PCOS changes with a consistent angle and lighting."
                         ),
                         systemImage: "photo.on.rectangle.angled"
                     ) {
@@ -192,8 +192,8 @@ struct PhotoGalleryView: View {
 
             Text(
                 L10n.string(
-                    "Your photo journal stays on device. Keep lighting, distance, and angle as consistent as possible.",
-                    defaultValue: "Your photo journal stays on device. Keep lighting, distance, and angle as consistent as possible."
+                    "Your photo journal stays on device and is meant for personal documentation, not diagnosis.",
+                    defaultValue: "Your photo journal stays on device and is meant for personal documentation, not diagnosis."
                 )
             )
                 .appFont(.subheadline)
@@ -201,8 +201,8 @@ struct PhotoGalleryView: View {
 
             Text(
                 L10n.string(
-                    "Hair and body changes often need months of comparison, while acne and skin shifts may be easier to compare sooner.",
-                    defaultValue: "Hair and body changes often need months of comparison, while acne and skin shifts may be easier to compare sooner."
+                    "Use it for visible PCOS changes like hair, skin, bloating, or body composition when photos feel helpful.",
+                    defaultValue: "Use it for visible PCOS changes like hair, skin, bloating, or body composition when photos feel helpful."
                 )
             )
                 .appFont(.subheadline)

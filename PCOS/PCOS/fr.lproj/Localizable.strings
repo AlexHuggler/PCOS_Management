@@ -2167,6 +2167,13 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Charts & trends" = "Graphiques et tendances";
 "HealthKit sync" = "Synchronisation HealthKit";
 "Priority support" = "Support prioritaire";
+"Apple Health sync" = "Synchronisation Apple Santé";
+"Advanced insights" = "Analyses avancées";
+"Unlimited PDF reports" = "Rapports PDF illimités";
+"Meal & glucose logging" = "Journal repas et glycémie";
+"Supplement tracking" = "Suivi des compléments";
+"Photo journal" = "Journal photo";
+"Full cycle history" = "Historique complet du cycle";
 "Loading Premium Options..." = "Chargement des options Premium...";
 "Try Again" = "Réessayer";
 

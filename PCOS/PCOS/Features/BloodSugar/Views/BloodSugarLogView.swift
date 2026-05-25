@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct BloodSugarLogView: View {
+    let prefillContext: GlucosePrefillContext?
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: BloodSugarViewModel?
@@ -35,6 +37,10 @@ struct BloodSugarLogView: View {
             case .error: "error"
             }
         }
+    }
+
+    init(prefillContext: GlucosePrefillContext? = nil) {
+        self.prefillContext = prefillContext
     }
 
     var body: some View {
@@ -128,7 +134,7 @@ struct BloodSugarLogView: View {
             .sensoryFeedback(.success, trigger: saveCoordinator.isShowingSavedFeedback)
             .sensoryFeedback(.error, trigger: errorHapticTrigger)
             .onAppear {
-                let vm = BloodSugarViewModel(modelContext: modelContext)
+                let vm = BloodSugarViewModel(modelContext: modelContext, prefillContext: prefillContext)
                 viewModel = vm
                 dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
             }

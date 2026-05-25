@@ -30,6 +30,9 @@ enum SettingsExternalCSVSchema {
         case stressLevel = "stress_level"
         case energyLevel = "energy_level"
         case waterOz = "water_oz"
+        case basalBodyTemperatureCelsius = "basal_body_temperature_celsius"
+        case cervicalMucus = "cervical_mucus"
+        case lhTestResult = "lh_test_result"
         case notes
     }
 
@@ -40,6 +43,7 @@ enum SettingsExternalCSVSchema {
         case supplement
         case meal
         case dailyLog = "daily_log"
+        case ovulationObservation = "ovulation_observation"
     }
 
     struct FormatRule: Identifiable, Hashable, Sendable {
@@ -74,6 +78,12 @@ enum SettingsExternalCSVSchema {
     static let headerColumns = Column.allCases
 
     static let header = headerColumns.map(\.rawValue)
+
+    static let legacyHeaderColumns = Column.allCases.filter {
+        ![Column.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult].contains($0)
+    }
+
+    static let legacyHeader = legacyHeaderColumns.map(\.rawValue)
 
     static let formatRules = [
         FormatRule(
@@ -141,6 +151,13 @@ enum SettingsExternalCSVSchema {
             noteKey: "daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz.",
             noteDefaultValue: "daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz."
         ),
+        RecordDefinition(
+            type: .ovulationObservation,
+            requiredFields: [.recordType, .date],
+            optionalFields: [.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult, .notes],
+            noteKey: nil,
+            noteDefaultValue: nil
+        ),
     ]
 
     static func acceptedValues(for column: Column) -> [String]? {
@@ -157,6 +174,10 @@ enum SettingsExternalCSVSchema {
             MealType.allCases.map(\.rawValue)
         case .glycemicImpact:
             GlycemicImpact.allCases.map(\.rawValue)
+        case .cervicalMucus:
+            CervicalMucusType.allCases.map(\.rawValue)
+        case .lhTestResult:
+            LHTestResult.allCases.map(\.rawValue)
         case .taken:
             ["true", "false"]
         default:
@@ -353,6 +374,14 @@ struct SettingsExternalDataCSVService {
         let waterOz: Int?
     }
 
+    private struct OvulationObservationRow {
+        let date: Date
+        let basalBodyTemperatureCelsius: Double?
+        let cervicalMucus: CervicalMucusType?
+        let lhTestResult: LHTestResult?
+        let notes: String?
+    }
+
     private enum ParsedRecord {
         case period(PeriodRow)
         case symptom(SymptomRow)
@@ -360,6 +389,7 @@ struct SettingsExternalDataCSVService {
         case supplement(SupplementRow)
         case meal(MealRow)
         case dailyLog(DailyLogRow)
+        case ovulationObservation(OvulationObservationRow)
     }
 
     private struct ParsedRows {
@@ -399,6 +429,14 @@ struct SettingsExternalDataCSVService {
         let carbsGrams: Int64?
         let proteinGrams: Int64?
         let fatGrams: Int64?
+        let notes: String?
+    }
+
+    private struct OvulationObservationKey: Hashable {
+        let day: DayKey
+        let basalBodyTemperatureCelsius: Int64?
+        let cervicalMucus: String?
+        let lhTestResult: String?
         let notes: String?
     }
 
@@ -557,7 +595,12 @@ private extension SettingsExternalDataCSVService {
             throw ImportError.invalidHeader(expected: expectedHeader, actual: [])
         }
 
-        guard header == expectedHeader else {
+        let activeColumns: [Column]
+        if header == expectedHeader {
+            activeColumns = SettingsExternalCSVSchema.headerColumns
+        } else if header == SettingsExternalCSVSchema.legacyHeader {
+            activeColumns = SettingsExternalCSVSchema.legacyHeaderColumns
+        } else {
             throw ImportError.invalidHeader(expected: expectedHeader, actual: header)
         }
 
@@ -567,11 +610,11 @@ private extension SettingsExternalDataCSVService {
         for (index, rowValues) in rows.enumerated().dropFirst() {
             let rowNumber = index + 1
 
-            guard rowValues.count == SettingsExternalCSVSchema.headerColumns.count else {
+            guard rowValues.count == activeColumns.count else {
                 issues.append(
                     ImportError.invalidColumnCount(
                         row: rowNumber,
-                        expected: SettingsExternalCSVSchema.headerColumns.count,
+                        expected: activeColumns.count,
                         actual: rowValues.count
                     ).importIssue
                 )
@@ -580,7 +623,7 @@ private extension SettingsExternalDataCSVService {
 
             let row = CSVRow(
                 rowNumber: rowNumber,
-                values: Dictionary(uniqueKeysWithValues: zip(SettingsExternalCSVSchema.headerColumns, rowValues))
+                values: Dictionary(uniqueKeysWithValues: zip(activeColumns, rowValues))
             )
 
             do {
@@ -603,6 +646,8 @@ private extension SettingsExternalDataCSVService {
                     record = .meal(try parseMealRow(row))
                 case .dailyLog:
                     record = .dailyLog(try parseDailyLogRow(row))
+                case .ovulationObservation:
+                    record = .ovulationObservation(try parseOvulationObservationRow(row))
                 }
 
                 records.append(record)
@@ -718,6 +763,16 @@ private extension SettingsExternalDataCSVService {
         }
 
         return dailyLog
+    }
+
+    private func parseOvulationObservationRow(_ row: CSVRow) throws -> OvulationObservationRow {
+        OvulationObservationRow(
+            date: try parseDate(column: .date, in: row),
+            basalBodyTemperatureCelsius: try optionalDouble(column: .basalBodyTemperatureCelsius, in: row),
+            cervicalMucus: try optionalEnum(column: .cervicalMucus, in: row, as: CervicalMucusType.self),
+            lhTestResult: try optionalEnum(column: .lhTestResult, in: row, as: LHTestResult.self),
+            notes: cleanedText(row.value(.notes))
+        )
     }
 
     private func requiredValue(_ column: Column, in row: CSVRow) throws -> String {
@@ -919,6 +974,23 @@ private extension SettingsExternalDataCSVService {
         return value
     }
 
+    private func optionalEnum<T: RawRepresentable>(column: Column, in row: CSVRow, as type: T.Type) throws -> T? where T.RawValue == String {
+        guard let rawValue = row.value(column) else {
+            return nil
+        }
+
+        guard let value = T(rawValue: rawValue) else {
+            throw ImportError.invalidValue(
+                row: row.rowNumber,
+                column: column.rawValue,
+                value: rawValue,
+                reason: "Expected one of the app enum raw values."
+            )
+        }
+
+        return value
+    }
+
     private func apply(
         records: [ParsedRecord],
         issues: [SettingsDataImportService.ImportIssue]
@@ -975,6 +1047,15 @@ private extension SettingsExternalDataCSVService {
             try applyDailyLogs(
                 records.compactMap {
                     guard case let .dailyLog(row) = $0 else { return nil }
+                    return row
+                },
+                counts: &counts,
+                changeCounts: &changeCounts
+            )
+
+            try applyOvulationObservations(
+                records.compactMap {
+                    guard case let .ovulationObservation(row) = $0 else { return nil }
                     return row
                 },
                 counts: &counts,
@@ -1227,6 +1308,39 @@ private extension SettingsExternalDataCSVService {
         }
     }
 
+    private func applyOvulationObservations(
+        _ rows: [OvulationObservationRow],
+        counts: inout SettingsDataRecordCounts,
+        changeCounts: inout SettingsDataImportService.ImportChangeCounts
+    ) throws {
+        guard !rows.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<OvulationObservation>(sortBy: [SortDescriptor(\.date)])
+        let existingObservations = try modelContext.fetch(descriptor)
+        var existingKeys = Set(existingObservations.map(ovulationObservationKey(for:)))
+
+        for row in rows {
+            let key = ovulationObservationKey(for: row)
+            guard !existingKeys.contains(key) else {
+                changeCounts.skipped += 1
+                continue
+            }
+
+            modelContext.insert(
+                OvulationObservation(
+                    date: row.date,
+                    basalBodyTemperatureCelsius: row.basalBodyTemperatureCelsius,
+                    cervicalMucus: row.cervicalMucus,
+                    lhTestResult: row.lhTestResult,
+                    notes: row.notes
+                )
+            )
+            existingKeys.insert(key)
+            counts.ovulationObservations += 1
+            changeCounts.inserted += 1
+        }
+    }
+
     private func update(_ existingLog: DailyLog, with row: DailyLogRow) -> Bool {
         var didChange = false
 
@@ -1354,6 +1468,26 @@ private extension SettingsExternalDataCSVService {
             carbsGrams: row.carbsGrams.map(scaledNumberKey),
             proteinGrams: row.proteinGrams.map(scaledNumberKey),
             fatGrams: row.fatGrams.map(scaledNumberKey),
+            notes: dedupeText(row.notes)
+        )
+    }
+
+    private func ovulationObservationKey(for observation: OvulationObservation) -> OvulationObservationKey {
+        OvulationObservationKey(
+            day: dayKey(for: observation.date),
+            basalBodyTemperatureCelsius: observation.basalBodyTemperatureCelsius.map(scaledNumberKey),
+            cervicalMucus: observation.cervicalMucus?.rawValue,
+            lhTestResult: observation.lhTestResult?.rawValue,
+            notes: dedupeText(observation.notes)
+        )
+    }
+
+    private func ovulationObservationKey(for row: OvulationObservationRow) -> OvulationObservationKey {
+        OvulationObservationKey(
+            day: dayKey(for: row.date),
+            basalBodyTemperatureCelsius: row.basalBodyTemperatureCelsius.map(scaledNumberKey),
+            cervicalMucus: row.cervicalMucus?.rawValue,
+            lhTestResult: row.lhTestResult?.rawValue,
             notes: dedupeText(row.notes)
         )
     }

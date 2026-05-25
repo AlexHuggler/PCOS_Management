@@ -162,6 +162,56 @@ struct SettingsDataBackupImportServiceTests {
         #expect(importedReadings.first?.readingType == .afterMeal)
     }
 
+    @Test("JSON backup schema v3 preserves ovulation observations")
+    func jsonBackupSchemaV3PreservesOvulationObservations() throws {
+        let sourceContainer = try TestHelpers.makeModelContainer()
+        let sourceContext = sourceContainer.mainContext
+
+        let observationID = UUID()
+        let observationDate = Date(timeIntervalSince1970: 1_779_331_200)
+        let createdAt = Date(timeIntervalSince1970: 1_779_334_800)
+        sourceContext.insert(
+            OvulationObservation(
+                id: observationID,
+                date: observationDate,
+                basalBodyTemperatureCelsius: 36.72,
+                cervicalMucus: .eggWhite,
+                lhTestResult: .peak,
+                notes: "Peak test and fertile mucus",
+                createdAt: createdAt
+            )
+        )
+        try sourceContext.save()
+
+        let backupService = SettingsDataBackupService(modelContext: sourceContext)
+        let backupData = try backupService.generateJSONBackupData()
+        let backup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: backupData)
+        let record = try #require(backup.records.ovulationObservations.first)
+
+        #expect(backup.schemaVersion == 3)
+        #expect(backup.records.counts.ovulationObservations == 1)
+        #expect(record.id == observationID)
+        #expect(record.date == observationDate)
+        #expect(record.basalBodyTemperatureCelsius == 36.72)
+        #expect(record.cervicalMucus == .eggWhite)
+        #expect(record.lhTestResult == .peak)
+        #expect(record.notes == "Peak test and fertile mucus")
+        #expect(record.createdAt == createdAt)
+
+        let destinationContainer = try TestHelpers.makeModelContainer()
+        let importService = SettingsDataImportService(modelContext: destinationContainer.mainContext)
+        let summary = try importService.importJSONBackup(data: backupData)
+        let imported = try destinationContainer.mainContext.fetch(FetchDescriptor<OvulationObservation>())
+
+        #expect(summary.changeCounts.inserted == 1)
+        #expect(summary.counts.ovulationObservations == 1)
+        #expect(imported.count == 1)
+        #expect(imported.first?.id == observationID)
+        #expect(imported.first?.basalBodyTemperatureCelsius == 36.72)
+        #expect(imported.first?.cervicalMucus == .eggWhite)
+        #expect(imported.first?.lhTestResult == .peak)
+    }
+
     @Test("checked-in demo backup fixture imports successfully")
     func checkedInDemoBackupFixtureImportsSuccessfully() throws {
         let container = try TestHelpers.makeModelContainer()
@@ -195,6 +245,7 @@ struct SettingsDataBackupImportServiceTests {
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).count == fixtureBackup.records.dailyLogs.count)
         #expect(try context.fetch(FetchDescriptor<Insight>()).count == fixtureBackup.records.insights.count)
         #expect(try context.fetch(FetchDescriptor<PregnancyRecord>()).count == fixtureBackup.records.pregnancyRecords.count)
+        #expect(try context.fetch(FetchDescriptor<OvulationObservation>()).count == fixtureBackup.records.ovulationObservations.count)
     }
 
     @Test("all checked-in JSON backup fixtures import successfully")

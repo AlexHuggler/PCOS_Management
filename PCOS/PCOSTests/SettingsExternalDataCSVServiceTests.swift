@@ -40,6 +40,7 @@ struct SettingsExternalDataCSVServiceTests {
             "supplement",
             "meal",
             "daily_log",
+            "ovulation_observation",
         ])
 
         #expect(definitions[.period]?.requiredFields == [.recordType, .date, .flowIntensity])
@@ -61,12 +62,17 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(definitions[.dailyLog]?.optionalFields == [.weight, .sleepHours, .activeMinutes, .stressLevel, .energyLevel, .waterOz])
         #expect(definitions[.dailyLog]?.noteDefaultValue == "daily_log requires at least one of weight, sleep_hours, active_minutes, stress_level, energy_level, or water_oz.")
 
+        #expect(definitions[.ovulationObservation]?.requiredFields == [.recordType, .date])
+        #expect(definitions[.ovulationObservation]?.optionalFields == [.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult, .notes])
+
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .recordType) == SettingsExternalCSVSchema.RecordType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .flowIntensity) == FlowIntensity.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .symptomType) == SymptomType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .readingType) == GlucoseReadingType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .mealType) == MealType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .glycemicImpact) == GlycemicImpact.allCases.map(\.rawValue))
+        #expect(SettingsExternalCSVSchema.acceptedValues(for: .cervicalMucus) == CervicalMucusType.allCases.map(\.rawValue))
+        #expect(SettingsExternalCSVSchema.acceptedValues(for: .lhTestResult) == LHTestResult.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .taken) == ["true", "false"])
     }
 
@@ -81,7 +87,7 @@ struct SettingsExternalDataCSVServiceTests {
         let summary = try service.importCSV(data: fixtureData)
 
         #expect(summary.channel == .externalCSV)
-        #expect(summary.changeCounts.inserted == 6)
+        #expect(summary.changeCounts.inserted == 7)
         #expect(summary.changeCounts.updated == 0)
         #expect(summary.changeCounts.skipped == 0)
         #expect(summary.changeCounts.rejected == 0)
@@ -92,6 +98,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(summary.counts.supplements == 1)
         #expect(summary.counts.meals == 1)
         #expect(summary.counts.dailyLogs == 1)
+        #expect(summary.counts.ovulationObservations == 1)
         #expect(try context.fetch(FetchDescriptor<Cycle>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<CycleEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 1)
@@ -99,6 +106,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(try context.fetch(FetchDescriptor<SupplementLog>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<OvulationObservation>()).count == 1)
     }
 
     @Test("importCSV inserts one row for each supported record type")
@@ -158,12 +166,20 @@ struct SettingsExternalDataCSVServiceTests {
                 "energy_level": "4",
                 "water_oz": "80",
             ],
+            [
+                "record_type": "ovulation_observation",
+                "date": "2026-03-14",
+                "basal_body_temperature_celsius": "36.72",
+                "cervical_mucus": "eggWhite",
+                "lh_test_result": "peak",
+                "notes": "Imported ovulation signal",
+            ],
         ])
 
         let summary = try service.importCSV(data: data)
 
         #expect(summary.channel == .externalCSV)
-        #expect(summary.changeCounts.inserted == 6)
+        #expect(summary.changeCounts.inserted == 7)
         #expect(summary.changeCounts.updated == 0)
         #expect(summary.changeCounts.skipped == 0)
         #expect(summary.changeCounts.rejected == 0)
@@ -173,6 +189,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(summary.counts.supplements == 1)
         #expect(summary.counts.meals == 1)
         #expect(summary.counts.dailyLogs == 1)
+        #expect(summary.counts.ovulationObservations == 1)
 
         #expect(try context.fetch(FetchDescriptor<Cycle>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<CycleEntry>()).count == 1)
@@ -181,6 +198,33 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(try context.fetch(FetchDescriptor<SupplementLog>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<OvulationObservation>()).count == 1)
+    }
+
+    @Test("pre-v3 external CSV header remains importable")
+    func legacyExternalCSVHeaderImportsSuccessfully() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = SettingsExternalDataCSVService(modelContext: context)
+        let columns = SettingsExternalCSVSchema.legacyHeader
+        let row: [String: String] = [
+            "record_type": "blood_sugar",
+            "timestamp": "2026-03-10T08:15:00Z",
+            "glucose_value": "112",
+            "reading_type": "fasting",
+            "meal_context": "Morning baseline",
+            "notes": "Legacy header row",
+        ]
+        let csv = ([columns.joined(separator: ",")] + [
+            columns.map { row[$0] ?? "" }.joined(separator: ",")
+        ]).joined(separator: "\n") + "\n"
+
+        let summary = try service.importCSV(data: Data(csv.utf8))
+
+        #expect(summary.changeCounts.inserted == 1)
+        #expect(summary.changeCounts.rejected == 0)
+        #expect(summary.counts.bloodSugarReadings == 1)
+        #expect(try context.fetch(FetchDescriptor<BloodSugarReading>()).count == 1)
     }
 
     @Test("period rows stage through cycle logic and create separate cycles after a long gap")

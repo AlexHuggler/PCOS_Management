@@ -45,6 +45,22 @@ struct PaywallErrorHandlingTests {
         #expect(source.contains("Unlock Premium"))
     }
 
+    @Test("Paywall feature table matches enforced premium gates")
+    func paywallFeatureTableMatchesEnforcedPremiumGates() throws {
+        let source = try loadPaywallSource()
+
+        #expect(source.contains("advanced_insights"))
+        #expect(source.contains("unlimited_pdf_reports"))
+        #expect(source.contains("meal_glucose_logging"))
+        #expect(source.contains("supplement_tracking"))
+        #expect(source.contains("photo_journal"))
+        #expect(source.contains("full_cycle_history"))
+        #expect(source.contains("Apple Health sync"))
+        #expect(source.contains("freeIncluded: true"))
+        #expect(!source.contains("priority_support"))
+        #expect(!source.contains("HealthKit sync\", defaultValue: \"HealthKit sync\", language: language),\n                freeIncluded: false"))
+    }
+
     @Test("Insights errors include an explicit retry CTA")
     func insightsErrorsExposeRetryCTA() throws {
         let source = try loadSource(relativePath: insightsSourceRelativePath)

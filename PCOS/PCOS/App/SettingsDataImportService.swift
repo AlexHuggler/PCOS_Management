@@ -338,6 +338,7 @@ private extension SettingsDataImportService {
         let dailyLogs = try decodeArray(recordsObject["dailyLogs"], collection: "dailyLogs", issues: &issues, decode: parseDailyLogRecord)
         let insights = try decodeArray(recordsObject["insights"], collection: "insights", issues: &issues, decode: parseInsightRecord)
         let pregnancyRecords = try decodeArray(recordsObject["pregnancyRecords"], collection: "pregnancyRecords", issues: &issues, decode: parsePregnancyRecord)
+        let ovulationObservations = try decodeArray(recordsObject["ovulationObservations"], collection: "ovulationObservations", issues: &issues, decode: parseOvulationObservationRecord)
 
         let filtered = filterInvalidReferences(
             cycles: cycles,
@@ -356,7 +357,8 @@ private extension SettingsDataImportService {
             hairPhotos: hairPhotos.map(\.value),
             dailyLogs: dailyLogs.map(\.value),
             insights: insights.map(\.value),
-            pregnancyRecords: pregnancyRecords.map(\.value)
+            pregnancyRecords: pregnancyRecords.map(\.value),
+            ovulationObservations: ovulationObservations.map(\.value)
         )
 
         return ParsedJSONBackup(
@@ -626,6 +628,19 @@ private extension SettingsDataImportService {
             endReason: try optionalEnum(field: "endReason", in: object, location: location, as: PregnancyEndReason.self),
             isActive: try optionalBool(field: "isActive", in: object, location: location) ?? true,
             notes: try optionalString(field: "notes", in: object, location: location)
+        )
+    }
+
+    func parseOvulationObservationRecord(_ object: JSONObject, location: String) throws -> OvulationObservationRecord {
+        let date = try requiredDate(field: "date", in: object, location: location)
+        return OvulationObservationRecord(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            date: date,
+            basalBodyTemperatureCelsius: try optionalDouble(field: "basalBodyTemperatureCelsius", in: object, location: location),
+            cervicalMucus: try optionalEnum(field: "cervicalMucus", in: object, location: location, as: CervicalMucusType.self),
+            lhTestResult: try optionalEnum(field: "lhTestResult", in: object, location: location, as: LHTestResult.self),
+            notes: try optionalString(field: "notes", in: object, location: location),
+            createdAt: try optionalDate(field: "createdAt", in: object, location: location) ?? date
         )
     }
 
@@ -1125,6 +1140,20 @@ private extension SettingsDataImportService {
                     endReason: record.endReason,
                     isActive: record.isActive,
                     notes: record.notes
+                )
+            )
+        }
+
+        for record in records.ovulationObservations {
+            modelContext.insert(
+                OvulationObservation(
+                    id: record.id,
+                    date: record.date,
+                    basalBodyTemperatureCelsius: record.basalBodyTemperatureCelsius,
+                    cervicalMucus: record.cervicalMucus,
+                    lhTestResult: record.lhTestResult,
+                    notes: record.notes,
+                    createdAt: record.createdAt
                 )
             )
         }

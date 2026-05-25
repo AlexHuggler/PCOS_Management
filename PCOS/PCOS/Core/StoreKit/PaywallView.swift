@@ -416,32 +416,44 @@ private enum PaywallCopy {
                 premiumIncluded: true
             ),
             .init(
-                id: "insights_engine",
-                title: string("Insights engine", defaultValue: "Insights engine", language: language),
+                id: "apple_health_sync",
+                title: string("Apple Health sync", defaultValue: "Apple Health sync", language: language),
+                freeIncluded: true,
+                premiumIncluded: true
+            ),
+            .init(
+                id: "advanced_insights",
+                title: string("Advanced insights", defaultValue: "Advanced insights", language: language),
                 freeIncluded: false,
                 premiumIncluded: true
             ),
             .init(
-                id: "pdf_reports",
-                title: string("PDF reports", defaultValue: "PDF reports", language: language),
+                id: "unlimited_pdf_reports",
+                title: string("Unlimited PDF reports", defaultValue: "Unlimited PDF reports", language: language),
                 freeIncluded: false,
                 premiumIncluded: true
             ),
             .init(
-                id: "charts_and_trends",
-                title: string("Charts & trends", defaultValue: "Charts & trends", language: language),
+                id: "meal_glucose_logging",
+                title: string("Meal & glucose logging", defaultValue: "Meal & glucose logging", language: language),
                 freeIncluded: false,
                 premiumIncluded: true
             ),
             .init(
-                id: "healthkit_sync",
-                title: string("HealthKit sync", defaultValue: "HealthKit sync", language: language),
+                id: "supplement_tracking",
+                title: string("Supplement tracking", defaultValue: "Supplement tracking", language: language),
                 freeIncluded: false,
                 premiumIncluded: true
             ),
             .init(
-                id: "priority_support",
-                title: string("Priority support", defaultValue: "Priority support", language: language),
+                id: "photo_journal",
+                title: string("Photo journal", defaultValue: "Photo journal", language: language),
+                freeIncluded: false,
+                premiumIncluded: true
+            ),
+            .init(
+                id: "full_cycle_history",
+                title: string("Full cycle history", defaultValue: "Full cycle history", language: language),
                 freeIncluded: false,
                 premiumIncluded: true
             ),

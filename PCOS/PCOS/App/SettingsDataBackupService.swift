@@ -64,6 +64,7 @@ private extension SettingsDataBackupService {
         let dailyLogs = try modelContext.fetch(FetchDescriptor<DailyLog>(sortBy: [SortDescriptor(\.date)]))
         let insights = try modelContext.fetch(FetchDescriptor<Insight>(sortBy: [SortDescriptor(\.generatedDate)]))
         let pregnancies = try modelContext.fetch(FetchDescriptor<PregnancyRecord>(sortBy: [SortDescriptor(\.startDate)]))
+        let ovulationObservations = try modelContext.fetch(FetchDescriptor<OvulationObservation>(sortBy: [SortDescriptor(\.date)]))
 
         Logger.database.info(
             "Preparing JSON backup with \(cycles.count) cycles, \(cycleEntries.count) entries, \(symptoms.count) symptoms"
@@ -194,6 +195,17 @@ private extension SettingsDataBackupService {
                     endReason: $0.endReason,
                     isActive: $0.isActive,
                     notes: $0.notes
+                )
+            },
+            ovulationObservations: ovulationObservations.map {
+                OvulationObservationRecord(
+                    id: $0.id,
+                    date: $0.date,
+                    basalBodyTemperatureCelsius: $0.basalBodyTemperatureCelsius,
+                    cervicalMucus: $0.cervicalMucus,
+                    lhTestResult: $0.lhTestResult,
+                    notes: $0.notes,
+                    createdAt: $0.createdAt
                 )
             }
         )

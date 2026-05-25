@@ -18,6 +18,8 @@ struct MealLogView: View {
     @State private var activeAlert: ActiveAlert?
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var dirtyTracker: FormDirtyTracker<FormSnapshot>?
+    @State private var recentMealSuggestions: [RecentMealReuseSuggestion] = []
+    @State private var mealGlucoseReadiness: MealGlucoseReadiness?
     @FocusState private var focusedField: FocusedField?
 
     private enum FocusedField: Hashable {
@@ -61,9 +63,11 @@ struct MealLogView: View {
             Form {
                 if let viewModel {
                     mealTypeSection(viewModel: viewModel)
-                    mealTemplateSection(viewModel: viewModel)
                     descriptionSection(viewModel: viewModel)
+                    recentMealReuseSection(viewModel: viewModel)
+                    mealTemplateSection(viewModel: viewModel)
                     swapSuggestionsSection(viewModel: viewModel)
+                    mealGlucoseReadinessSection(viewModel: viewModel)
 
                     Section {
                         HStack(spacing: AppTheme.spacing8) {
@@ -303,6 +307,7 @@ struct MealLogView: View {
                     viewModel = vm
                     dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
                 }
+                refreshRoadmapContext()
             }
             .onDisappear {
                 Logger.meals.info("MealLogView disappeared from \(entryPoint.rawValue, privacy: .public)")
@@ -311,6 +316,39 @@ struct MealLogView: View {
         }
         .accessibilityIdentifier("screen.meal_log")
         .premiumGated()
+    }
+
+    @ViewBuilder
+    private func recentMealReuseSection(viewModel: MealViewModel) -> some View {
+        if !recentMealSuggestions.isEmpty {
+            Section {
+                FlowLayout(spacing: AppTheme.spacing8) {
+                    ForEach(recentMealSuggestions) { suggestion in
+                        Button {
+                            viewModel.applyRecentMeal(suggestion)
+                        } label: {
+                            Label(suggestion.mealDescription, systemImage: "arrow.clockwise")
+                                .appFont(.caption, weight: .semibold)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, AppTheme.spacing8)
+                                .background(
+                                    Capsule()
+                                        .fill(AppTheme.sage.opacity(AppTheme.opacityLight))
+                                )
+                                .foregroundStyle(AppTheme.sage)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            } header: {
+                Text(L10n.string("Recent Meals", defaultValue: "Recent Meals"))
+            } footer: {
+                Text(L10n.string(
+                    "Reuse meals you log often, then adjust anything that changed.",
+                    defaultValue: "Reuse meals you log often, then adjust anything that changed."
+                ))
+            }
+        }
     }
 
     private var hasUnsavedChanges: Bool {
@@ -432,6 +470,49 @@ struct MealLogView: View {
                 }
             } header: {
                 Text("Swap Suggestions")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func mealGlucoseReadinessSection(viewModel: MealViewModel) -> some View {
+        if let readiness = mealGlucoseReadiness {
+            Section {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Label(readinessTitle(for: readiness.state), systemImage: readinessIcon(for: readiness.state))
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(readinessColor(for: readiness.state))
+
+                    Text(readiness.message)
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(spacing: AppTheme.spacing8) {
+                        readinessMetric("\(readiness.mealCount)", label: "meals")
+                        readinessMetric("\(readiness.pairedReadingCount)", label: "paired readings")
+                        readinessMetric("\(readiness.postMealFeedbackCount)", label: "check-ins")
+                    }
+
+                    if !viewModel.mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        NavigationLink {
+                            BloodSugarLogView(
+                                prefillContext: GlucosePrefillContext(
+                                    mealContext: "After \(viewModel.mealDescription)",
+                                    readingType: .afterMeal,
+                                    readingDate: Date()
+                                )
+                            )
+                        } label: {
+                            Label(
+                                L10n.string("Log after-meal glucose", defaultValue: "Log after-meal glucose"),
+                                systemImage: "drop.fill"
+                            )
+                        }
+                    }
+                }
+            } header: {
+                Text(L10n.string("Meal + Glucose Readiness", defaultValue: "Meal + Glucose Readiness"))
             }
         }
     }
@@ -650,6 +731,7 @@ struct MealLogView: View {
     private func saveMeal() {
         do {
             try viewModel?.saveMeal()
+            refreshRoadmapContext()
             saveCoordinator.showSuccessAndDismiss {
                 dismiss()
             }
@@ -662,6 +744,66 @@ struct MealLogView: View {
                 )
             )
         }
+    }
+
+    private func refreshRoadmapContext() {
+        do {
+            let service = MealGlucoseContextService(modelContext: modelContext)
+            recentMealSuggestions = try service.recentMealReuseSuggestions(limit: 4)
+            mealGlucoseReadiness = try service.readiness(days: 14)
+        } catch {
+            Logger.meals.error("Failed to refresh meal roadmap context: \(error.localizedDescription)")
+        }
+    }
+
+    private func readinessTitle(for state: MealGlucoseReadiness.State) -> String {
+        switch state {
+        case .notReady:
+            L10n.string("Start pairing", defaultValue: "Start pairing")
+        case .building:
+            L10n.string("Pattern building", defaultValue: "Pattern building")
+        case .ready:
+            L10n.string("Ready for reflection", defaultValue: "Ready for reflection")
+        }
+    }
+
+    private func readinessIcon(for state: MealGlucoseReadiness.State) -> String {
+        switch state {
+        case .notReady:
+            "circle.dashed"
+        case .building:
+            "chart.xyaxis.line"
+        case .ready:
+            "checkmark.seal.fill"
+        }
+    }
+
+    private func readinessColor(for state: MealGlucoseReadiness.State) -> Color {
+        switch state {
+        case .notReady:
+            .secondary
+        case .building:
+            AppTheme.coralAccent
+        case .ready:
+            AppTheme.sage
+        }
+    }
+
+    private func readinessMetric(_ value: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .appFont(.caption, weight: .semibold)
+            Text(label)
+                .appFont(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppTheme.spacing8)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
+                .fill(Color(.tertiarySystemFill))
+        )
     }
 
     private func snapshot(for viewModel: MealViewModel) -> FormSnapshot {

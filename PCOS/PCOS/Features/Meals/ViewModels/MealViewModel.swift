@@ -264,6 +264,17 @@ final class MealViewModel {
         selectedTemplateID = template.id
     }
 
+    func applyRecentMeal(_ suggestion: RecentMealReuseSuggestion) {
+        mealType = suggestion.mealType
+        mealDescription = suggestion.mealDescription
+        glycemicImpact = suggestion.glycemicImpact
+        carbsText = suggestion.carbsGrams.map { Self.formattedMacro($0) } ?? ""
+        proteinText = suggestion.proteinGrams.map { Self.formattedMacro($0) } ?? ""
+        fatText = suggestion.fatGrams.map { Self.formattedMacro($0) } ?? ""
+        notes = suggestion.notes ?? ""
+        selectedTemplateID = nil
+    }
+
     func isMealNoteSelected(_ suggestion: String) -> Bool {
         QuickNoteComposer.isSelected(suggestion, in: notes)
     }
@@ -273,6 +284,13 @@ final class MealViewModel {
     }
 
     private static let persistenceStartupModeKey = "persistence.startupMode"
+
+    private static func formattedMacro(_ value: Double) -> String {
+        if value.rounded() == value {
+            return String(Int(value))
+        }
+        return String(value)
+    }
 
     private static func resolveExistingMealsForUpsert(
         modelContext: ModelContext,
