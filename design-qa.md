@@ -3,10 +3,10 @@
 
 **Implementation Evidence**
 - Local URL: `http://127.0.0.1:4174/`
-- Desktop screenshot: `/tmp/cyclebalance-further-fix-1122-v5.png`
+- Desktop screenshot: `/tmp/cyclebalance-hue-icons-1122-v3.png`
 - Emulated mobile screenshot: `/tmp/cyclebalance-further-fix-mobile-390.png`
 - Full-view comparison evidence: `/tmp/cyclebalance-further-fix-qa/full-desktop-comparison.png`
-- Focused region comparisons: `/tmp/cyclebalance-further-fix-qa/lower-assets-comparison.png`, `/tmp/cyclebalance-further-fix-qa/steps-trust-comparison.png`, `/tmp/cyclebalance-further-fix-qa/footer-comparison.png`
+- Focused region comparisons: `/tmp/cyclebalance-hue-qa/numbers-comparison.png`, `/tmp/cyclebalance-hue-qa/support-icons-comparison.png`, `/tmp/cyclebalance-further-fix-qa/footer-comparison.png`
 
 **Viewport And State**
 - Desktop: `1122x1402`, home page, default state, dark/lunar theme.
@@ -17,12 +17,13 @@
 - Intentional deviation: iPhone screenshots use the Lunar Calm app screens requested by the user instead of the exact screenshots embedded in the mockup.
 - Intentional deviation: a visible language row is added at the bottom footer to preserve multi-language support requested by the user.
 - Intentional asset treatment: several tiny lower-half line icons were redrawn as transparent raster PNGs in the mockup palette where direct crops became too faint or carried square dark backgrounds at web size.
+- Intentional asset treatment: support-row icon artwork is transparent PNG line art with a shared CSS circular chip so the icons align with the page background instead of carrying individual cropped disks.
 
 **Required Fidelity Surfaces**
 - Fonts and typography: Cormorant Garamond and Inter match the mockup direction; desktop headline is locked to the same two-line structure; responsive checks found no text overflow or clipped feature-card copy.
 - Spacing and layout rhythm: desktop frame matches the `1122x1402` source crop; lower-section spacing was tightened so the footer language row remains visible in the reference viewport; responsive grids collapse without horizontal overflow.
 - Colors and visual tokens: dark lunar background, rose/aqua gradient accents, card borders, and muted panel tones track the source palette.
-- Image quality and asset fidelity: lower-half icons, portrait, testimonial avatar, footer icons, trust icons, step icons, and hero crescent are raster assets placed in the mockup positions; rough dark square crop backgrounds were removed; phone screenshots use real Lunar Calm images as requested.
+- Image quality and asset fidelity: lower-half icons, portrait, testimonial avatar, footer icons, trust icons, step icons, support icon chips, and hero crescent are raster/CSS-backed assets placed in the mockup positions; rough dark square crop backgrounds were removed; phone screenshots use real Lunar Calm images as requested.
 - Copy and content: homepage marketing copy, FAQ labels, support text, and footer links remain coherent and aligned with the app-specific page purpose.
 
 **Patches Made Since Previous QA Pass**
@@ -32,6 +33,8 @@
 - Added source-aligned step detail icons to the first two How It Works cards.
 - Reduced the App Store rating star size in the trust metric.
 - Retuned lower-section gaps so support, steps, trust, FAQ, footer, and language row fit cleanly.
+- Added rose/aqua hue to the How It Works number badges.
+- Rebuilt the support-row icon artwork as transparent PNGs and moved the circular backing into CSS for better background alignment.
 
 **Verification**
 - `node tools/validate-site.mjs`: passed.
