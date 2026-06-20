@@ -93,6 +93,9 @@ async function validateHtmlFile(file) {
   const html = await fs.readFile(file, 'utf8');
   stats.htmlFiles += 1;
 
+  const placeholderMatch = html.match(/\{\{[^}]+\}\}/);
+  if (placeholderMatch) fail(`${rel}: unresolved template placeholder ${placeholderMatch[0]}`);
+
   const langMatch = html.match(/<html[^>]*\slang="([^"]+)"/i);
   if (!langMatch) fail(`${rel}: missing html lang`);
   else if (langMatch[1] !== expectedLangFor(file)) fail(`${rel}: html lang ${langMatch[1]} does not match path locale ${expectedLangFor(file)}`);
@@ -201,7 +204,7 @@ async function writeReport() {
     '# CycleBalance Validation Report',
     '',
     `Status: ${status}`,
-    `Generated: 2026-05-07`,
+    `Generated: ${new Date().toISOString().slice(0, 10)}`,
     '',
     '## Counts',
     `- HTML files checked: ${stats.htmlFiles}`,
@@ -230,7 +233,6 @@ async function main() {
 
   const htmlFiles = (await walk(DOCS)).filter(file => file.endsWith('.html'));
   for (const file of htmlFiles) {
-    if (file.endsWith('/blog/_TEMPLATE.html')) continue;
     await validateHtmlFile(file);
   }
 

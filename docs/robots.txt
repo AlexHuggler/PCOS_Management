@@ -7,6 +7,7 @@
 # ---- Default policy ----
 User-agent: *
 Allow: /
+Disallow: /blog/_TEMPLATE.html
 
 # ---- Major web search crawlers ----
 User-agent: Googlebot

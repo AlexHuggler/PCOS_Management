@@ -9,6 +9,12 @@
 - Privacy posture: health data is stored on-device; no advertising trackers or cloud health-data sync
 - Supported website languages: English, German, French, Italian, Japanese, Korean, Dutch
 
+## Primary pages
+- Homepage: https://cyclebalance.app/
+- PCOS support and FAQ: https://cyclebalance.app/support
+- Privacy policy: https://cyclebalance.app/privacy
+- Terms of use: https://cyclebalance.app/terms
+
 ## Localized blog indexes
 - English: https://cyclebalance.app/blog
 - Deutsch: https://cyclebalance.app/de/blog
