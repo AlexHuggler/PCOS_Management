@@ -1,51 +1,47 @@
 **Source Visual Truth**
+- `/var/folders/0b/k1m09vp508q4s2yhd017gsr40000gn/T/codex-clipboard-af520bd6-99ed-4644-980e-ad22d7f3282e.png`
 - `/Users/alexhuggler/Desktop/AI Work/PCOS/App Images/Website Mock Ups/Mockup 1.png`
 
 **Implementation Evidence**
-- Local URL: `http://127.0.0.1:4174/`
-- Desktop screenshot: `/tmp/cyclebalance-hue-icons-1122-v3.png`
-- Emulated mobile screenshot: `/tmp/cyclebalance-further-fix-mobile-390.png`
-- Full-view comparison evidence: `/tmp/cyclebalance-further-fix-qa/full-desktop-comparison.png`
-- Focused region comparisons: `/tmp/cyclebalance-hue-qa/numbers-comparison.png`, `/tmp/cyclebalance-hue-qa/support-icons-comparison.png`, `/tmp/cyclebalance-further-fix-qa/footer-comparison.png`
+- Local URL: `http://127.0.0.1:8140/`
+- Desktop feature screenshot: `/tmp/cyclebalance-features-desktop.png`
+- Mobile feature screenshot: `/tmp/cyclebalance-features-mobile.png`
+- Full-page desktop screenshot: `/tmp/cyclebalance-home-desktop-after-feature-polish.png`
+- Full-view comparison evidence: `/tmp/cyclebalance-features-comparison.png`
+- Focused region comparison evidence: focused comparison was the feature-card section itself because the request targeted that section plus page-level gradient accents.
 
 **Viewport And State**
 - Desktop: `1122x1402`, home page, default state, dark/lunar theme.
-- Mobile: `390x1200` emulated mobile viewport, home page, default state.
+- Mobile: `390x1200`, home page, default state, stacked responsive feature cards.
 
 **Findings**
 - No actionable P0/P1/P2 findings remain.
-- Intentional deviation: iPhone screenshots use the Lunar Calm app screens requested by the user instead of the exact screenshots embedded in the mockup.
-- Intentional deviation: a visible language row is added at the bottom footer to preserve multi-language support requested by the user.
-- Intentional asset treatment: several tiny lower-half line icons were redrawn as transparent raster PNGs in the mockup palette where direct crops became too faint or carried square dark backgrounds at web size.
-- Intentional asset treatment: support-row icon artwork is transparent PNG line art with a shared CSS circular chip so the icons align with the page background instead of carrying individual cropped disks.
+- Intentional deviation: feature-card icons now sit on subtle rose/aqua gradient backplates. The reference crop shows bare line icons, but the user specifically requested gradient/background softening so the assets belong in the current UI.
+- Intentional deviation: the current production page keeps its established card spacing and responsive behavior rather than reducing the cards exactly to the crop's compressed screenshot height.
 
 **Required Fidelity Surfaces**
-- Fonts and typography: Cormorant Garamond and Inter match the mockup direction; desktop headline is locked to the same two-line structure; responsive checks found no text overflow or clipped feature-card copy.
-- Spacing and layout rhythm: desktop frame matches the `1122x1402` source crop; lower-section spacing was tightened so the footer language row remains visible in the reference viewport; responsive grids collapse without horizontal overflow.
-- Colors and visual tokens: dark lunar background, rose/aqua gradient accents, card borders, and muted panel tones track the source palette.
-- Image quality and asset fidelity: lower-half icons, portrait, testimonial avatar, footer icons, trust icons, step icons, support icon chips, and hero crescent are raster/CSS-backed assets placed in the mockup positions; rough dark square crop backgrounds were removed; phone screenshots use real Lunar Calm images as requested.
-- Copy and content: homepage marketing copy, FAQ labels, support text, and footer links remain coherent and aligned with the app-specific page purpose.
+- Fonts and typography: Cormorant Garamond and Inter remain consistent with the homepage mockup; the feature section, How It Works title, FAQ title, support heading, and hero accent now use clipped gradient text where the mockup has rose/aqua gradient-style lettering.
+- Spacing and layout rhythm: desktop feature cards keep the existing six-column production grid with no text overflow; mobile cards stack cleanly without horizontal scroll or clipped labels.
+- Colors and visual tokens: new gradients reuse the existing rose, aqua, and lunar navy palette; card and icon backgrounds stay subtle enough to preserve the mockup's quiet dark UI.
+- Image quality and asset fidelity: all six feature symbols are freshly cropped from the supplied mockup imagery as transparent 64px PNG assets, then placed inside consistent CSS backplates so no dark square crop artifacts remain.
+- Copy and content: feature-card copy is unchanged; the pass only updates visual treatment and asset fidelity.
 
 **Patches Made Since Previous QA Pass**
-- Rebuilt feature, support, step, trust, and footer icon assets to remove choppy square crop backgrounds.
-- Re-matted the support moon portrait with softer transparent edges.
-- Updated How It Works number styling so the first badge reads as a clear `1`, not a roman-style glyph.
-- Added source-aligned step detail icons to the first two How It Works cards.
-- Reduced the App Store rating star size in the trust metric.
-- Retuned lower-section gaps so support, steps, trust, FAQ, footer, and language row fit cleanly.
-- Added rose/aqua hue to the How It Works number badges.
-- Rebuilt the support-row icon artwork as transparent PNGs and moved the circular backing into CSS for better background alignment.
+- Re-cropped `feature-*-icon.png` assets from the mockup source.
+- Added feature icon gradient backplates and subtle feature-card glow backgrounds.
+- Added clipped gradient text treatment to the hero accent, section headings, and PCOS support heading.
+- Documented feature icon source treatment in `docs/assets/MEDIA-INDEX.md`.
 
 **Verification**
 - `node tools/validate-site.mjs`: passed.
-- Responsive metric pass at `320`, `360`, `390`, `768`, `820`, `1024`, `1122`, and `898` CSS pixels: no horizontal overflow, no feature-card clipping, no image failures, and no obvious text overflow.
-- Emulated `390x1200` mobile screenshot confirms `innerWidth`, `scrollWidth`, and `clientWidth` are all `390`.
+- `git diff --check`: passed.
+- Browser render checks at desktop `1122x1402` and mobile `390x1200`: no horizontal text overflow in the updated feature-card, section-title, support-title, or FAQ-title areas.
 
 **Implementation Checklist**
-- Publish `docs/index.html`, `docs/assets/images/site/mockup/extracted/*.png`, and this QA report.
+- Publish `docs/index.html`, `docs/assets/MEDIA-INDEX.md`, the six `feature-*-icon.png` assets, and this QA report.
 - Verify GitHub Pages rebuild and live domain after push.
 
 **Follow-up Polish**
-- P3: If future work needs even tighter pixel parity, tune the exact optical weight of the Cormorant headings against the mockup source.
+- P3: If future work needs absolute pixel parity, the feature card heights and card-to-title gap can be tuned against the full mockup after confirming whether the new gradient icon backplates should remain.
 
 final result: passed

@@ -45,7 +45,7 @@ Once deployed, all assets are served at predictable paths:
 ## Homepage media notes
 
 - `docs/assets/images/site/mockup/extracted/testimonial-avatar.png` is a cropped representative stock portrait from Pexels: <https://www.pexels.com/photo/portrait-of-indian-woman-in-sunlight-15602468/>. It is used only as representative marketing media, not as a named testimonial or real endorsement.
-- `docs/assets/images/site/mockup/extracted/support-*-icon.png` and `docs/assets/images/site/mockup/extracted/trust-*-icon.png` are cropped from the supplied CycleBalance homepage mockup concept art.
+- `docs/assets/images/site/mockup/extracted/feature-*-icon.png`, `support-*-icon.png`, and `trust-*-icon.png` are cropped from the supplied CycleBalance homepage mockup concept art.
 
 ## How to use these assets
 
