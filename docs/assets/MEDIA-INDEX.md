@@ -10,6 +10,7 @@ docs/assets/
 │   └── blog.css                  # Shared styles for /blog and /<lang>/blog
 ├── images/
 │   ├── app-icon-1024.png         # 1024×1024 app icon (App Store source)
+│   ├── site/                     # Homepage, app mockup, and extracted UI assets
 │   └── blog/                     # 134 PCOS educational images, by topic
 │       ├── README.md             # Full image index with alt text + sizes
 │       ├── alt-text-reference.csv
@@ -37,8 +38,14 @@ Once deployed, all assets are served at predictable paths:
 | File on disk                                           | Public URL                                                    |
 |--------------------------------------------------------|---------------------------------------------------------------|
 | `docs/assets/css/blog.css`                             | `https://cyclebalance.app/assets/css/blog.css`                |
+| `docs/assets/images/site/mockup/extracted/`            | `https://cyclebalance.app/assets/images/site/mockup/extracted/` |
 | `docs/assets/images/blog/<topic>/<slug>.webp`          | `https://cyclebalance.app/assets/images/blog/<topic>/<slug>.webp` |
 | `docs/assets/videos/cyclebalance-promo-v1.mp4`         | `https://cyclebalance.app/assets/videos/cyclebalance-promo-v1.mp4` |
+
+## Homepage media notes
+
+- `docs/assets/images/site/mockup/extracted/testimonial-avatar.png` is a cropped representative stock portrait from Pexels: <https://www.pexels.com/photo/portrait-of-indian-woman-in-sunlight-15602468/>. It is used only as representative marketing media, not as a named testimonial or real endorsement.
+- `docs/assets/images/site/mockup/extracted/support-*-icon.png` and `docs/assets/images/site/mockup/extracted/trust-*-icon.png` are cropped from the supplied CycleBalance homepage mockup concept art.
 
 ## How to use these assets
 
