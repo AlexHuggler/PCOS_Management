@@ -53,7 +53,7 @@
         "name": "제 데이터는 정말 비공개로 보호되나요?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "예. 모든 것이 귀하의 기기에 머물러 있습니다. CycleBalance는 기기 내 처리 및 저장을 사용하므로, 귀하의 건강 데이터는 외부 서버로 전송되지 않습니다. 개인정보 보호는 기능이 아니라 토대입니다."
+          "text": "CycleBalance는 비공개 로컬 우선 기록을 중심으로 설계되었습니다. 내보내기 또는 공유를 선택하지 않는 한 건강 기록은 기기에 저장됩니다. 지원 요청은 FormSubmit을 통해 전송되고, 구매는 Apple과 RevenueCat에서 처리되며, 바코드 조회는 스캔한 바코드만 사용합니다. App Store 어트리뷰션은 개인정보 보호를 고려한 Apple Ads 신호를 사용할 수 있습니다."
         }
       },
       {
@@ -104,375 +104,28 @@
   </script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap");
 
-    :root {
-      --sage: #627F7A;
-      --sage-dark: #4A6460;
-      --sage-light: #8FA9A4;
-      --sage-pale: #E8EFED;
-      --coral: #E77C6A;
-      --coral-hover: #D4674F;
-      --warm-cream: #FAF7F4;
-      --warm-white: #FDFCFA;
-      --text-primary: #2D3B39;
-      --text-secondary: #5A6B68;
-      --text-muted: #8A9895;
-      --border: #D4DDD9;
-    }
+    :root{--bg:#050817;--panel:#12182c;--panel2:#171e34;--line:rgba(157,174,219,.2);--line2:rgba(204,218,255,.28);--text:#fff7f3;--muted:#c8cadd;--rose:#ffa9a2;--aqua:#67ded6;--lav:#bca6fb;--gold:#ffd39a;color-scheme:dark}
+    *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;background:var(--bg)}body{min-width:320px;min-height:100vh;background:radial-gradient(circle at 50% 18%,rgba(75,199,215,.14),transparent 24rem),radial-gradient(circle at 80% 12%,rgba(255,169,162,.12),transparent 18rem),linear-gradient(180deg,#040713 0%,#07102a 48%,#050817 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6;letter-spacing:0}body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle,rgba(255,169,162,.55) 0 1px,transparent 1.8px),radial-gradient(circle,rgba(103,222,214,.42) 0 1px,transparent 1.8px);background-position:86% 80px,36% 130px;background-size:74px 112px,126px 156px;opacity:.18}img,svg{display:block;max-width:100%}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}
+    .site-header{display:flex;align-items:center;justify-content:space-between;gap:28px;width:min(1122px,100%);margin:0 auto;padding:16px 44px 32px}.brand{display:inline-flex;align-items:center;gap:10px;min-width:300px}.brand img{width:48px;height:48px;border-radius:14px;box-shadow:0 0 22px rgba(103,222,214,.18)}.brand span{font-family:"Cormorant Garamond",Georgia,serif;font-size:32px;font-weight:700;line-height:1;color:var(--text);white-space:nowrap}.nav{display:flex;align-items:center;gap:28px;margin-left:auto;color:var(--text);font-size:14px;font-weight:500}.nav a{opacity:.92}.download-pill{display:inline-flex;align-items:center;justify-content:center;min-width:122px;height:32px;padding:0 24px;border-radius:999px;color:#12182a;font-size:13px;font-weight:800;background:linear-gradient(90deg,#ffc0b7 0%,#69d9d4 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)}
+    .page-wrapper{width:min(920px,100%);margin:0 auto;padding:12px 44px 46px}.page-heading{text-align:center;margin:0 auto 28px}.page-heading h1{display:inline-block;margin:0 0 10px;background:linear-gradient(92deg,#f7b2c5 0%,#fff8f2 48%,#9be2df 72%,#ffc1bc 100%);-webkit-background-clip:text;background-clip:text;color:transparent;font-family:"Cormorant Garamond",Georgia,serif;font-size:44px;font-weight:600;line-height:1.04}.page-heading p{max-width:640px;margin:0 auto;color:#f2e8ee;font-size:15px;line-height:1.5;font-weight:400}
+    .form-card{position:relative;border:1px solid var(--line2);border-radius:12px;background:radial-gradient(circle at 58px 42px,rgba(255,169,162,.11),transparent 78px),radial-gradient(circle at 92% 18%,rgba(103,222,214,.12),transparent 112px),linear-gradient(180deg,rgba(25,32,55,.94),rgba(15,23,43,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 18px 38px rgba(0,0,0,.18);padding:32px;margin-bottom:30px}.form-card h2,.thank-you h2{margin:0 0 6px;color:#fff8f2;font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;font-weight:600;line-height:1.06}.form-subtitle{margin:0 0 24px;color:#cfd1e2;font-size:14px}.form-group{margin-bottom:18px}.form-group label{display:block;margin-bottom:7px;color:#fff7f3;font-size:13px;font-weight:700}.required{color:var(--rose)}input,select,textarea{width:100%;border:1px solid rgba(204,218,255,.24);border-radius:10px;background:rgba(5,8,23,.58);color:#fff7f3;padding:13px 14px;outline:none;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}select{appearance:auto}textarea{min-height:140px;resize:vertical}input::placeholder,textarea::placeholder{color:#8d95b6}input:focus,select:focus,textarea:focus{border-color:rgba(103,222,214,.62);box-shadow:0 0 0 3px rgba(103,222,214,.12);background:rgba(7,12,31,.82)}select option{background:#12182c;color:#fff7f3}.submit-btn{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:48px;border:0;border-radius:10px;background:linear-gradient(90deg,#ffc0b7 0%,#69d9d4 100%);color:#11182a;font-weight:800;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.26),0 12px 24px rgba(0,0,0,.18)}.submit-btn:hover{filter:brightness(1.04)}.email-alternative{margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);text-align:center;color:#cfd1e2;font-size:13px}.email-alternative a{color:#ffd0c8;font-weight:700}.thank-you{display:none;text-align:center}.check-circle{width:58px;height:58px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(103,222,214,.12);border:1px solid rgba(103,222,214,.36)}.check-circle svg{width:30px;height:30px;stroke:var(--aqua)}.thank-you p{color:#cfd1e2}
+    .faq-section{margin:0 auto 26px}.faq-section h2{display:table;margin:0 auto 14px;text-align:center;background:linear-gradient(92deg,#f7b2c5 0%,#fff8f2 48%,#9be2df 72%,#ffc1bc 100%);-webkit-background-clip:text;background-clip:text;color:transparent;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;font-weight:600;line-height:1.1}.faq-item{border:1px solid rgba(255,169,162,.26);border-radius:10px;background:rgba(9,15,33,.64);overflow:hidden;margin-bottom:10px}.faq-question{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border:0;background:transparent;color:#f8ecf0;text-align:left;font-size:14px;font-weight:600;cursor:pointer}.faq-icon{width:18px;height:18px;flex:0 0 auto;color:#ffd0c8;transition:transform .18s ease}.faq-answer{display:none}.faq-answer-inner{padding:0 18px 16px;color:#d8d5e5;font-size:13px;line-height:1.55}.faq-item.open{border-color:rgba(103,222,214,.36);background:rgba(18,24,44,.74)}.faq-item.open .faq-answer{display:block}.faq-item.open .faq-icon{transform:rotate(45deg);color:var(--aqua)}
+    .footer{border-top:1px solid rgba(255,255,255,.12);padding:18px 8px 0;margin-top:22px}.footer-grid{display:grid;grid-template-columns:260px 120px 140px 160px 1fr;gap:18px;align-items:start}.footer .brand{min-width:auto;margin-bottom:6px}.footer .brand img{width:36px;height:36px}.footer .brand span{font-size:26px}.footer-tagline{margin:0;color:#cbd0e1;font-size:11.5px;font-weight:500}.footer h3{margin:2px 0 6px;font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#fff7f3;font-size:13px;font-weight:800}.footer ul{display:grid;gap:5px;margin:0;padding:0;list-style:none;color:#cfd1e2;font-size:11.5px;font-weight:500}.footer-cta{justify-self:end;display:grid;gap:8px}.app-store{display:inline-flex;align-items:center;justify-content:center;width:136px;height:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.22))}.app-store img{width:100%;height:auto}.socials{display:flex;justify-content:end;gap:10px}.socials a{display:grid;place-items:center;width:36px;height:36px}.socials img{width:36px;height:36px;object-fit:contain}.footer-languages{display:flex;justify-content:center;flex-wrap:wrap;gap:3px 13px;margin:10px 0 0;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);color:#cfd1e2;font-size:10.5px;font-weight:600}.footer-languages span{color:#d59aa0}.footer-languages a{white-space:nowrap}.footer-languages [aria-current="page"]{color:#fff7f3}.copyright{margin:4px 0 0;text-align:center;color:#d59aa0;font-size:10.5px;font-weight:600}
+    @media(max-width:940px){.site-header{padding-inline:28px;gap:18px}.brand{min-width:0}.nav{gap:18px}.page-wrapper{padding-inline:28px}.footer-grid{grid-template-columns:repeat(2,1fr)}.footer-cta{justify-self:start}.socials{justify-content:start}}
+    @media(max-width:680px){.site-header{display:grid;grid-template-columns:1fr;justify-items:start;padding:18px 18px 28px}.brand span{font-size:28px}.download-pill{min-width:112px;height:30px;padding-inline:18px}.nav{margin-left:0;display:flex;flex-wrap:wrap;gap:10px 18px;font-size:13px}.page-wrapper{padding:0 18px 36px}.page-heading h1{font-size:clamp(36px,12vw,48px)}.form-card{padding:24px 18px}.footer-grid{grid-template-columns:1fr}.footer-languages{justify-content:flex-start}}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--warm-cream);
-      color: var(--text-primary);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    /* Header */
-    .site-header {
-      text-align: center;
-      padding: 32px 24px 0;
-    }
-
-    .site-header a {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-logo-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(98, 127, 122, 0.2);
-    }
-
-    .header-logo-icon img { width: 100%; height: 100%; object-fit: cover; }
-
-    .header-logo-text {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--sage-dark);
-      letter-spacing: -0.3px;
-    }
-
-    /* Page wrapper */
-    .page-wrapper {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 32px 24px 60px;
-    }
-
-    /* Page heading */
-    .page-heading {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .page-heading h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text-primary);
-      line-height: 1.3;
-      margin-bottom: 12px;
-      letter-spacing: -0.3px;
-    }
-
-    .page-heading p {
-      font-size: 16px;
-      color: var(--text-secondary);
-      max-width: 540px;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    /* Form card */
-    .form-card {
-      background: var(--warm-white);
-      border-radius: 20px;
-      padding: 40px 36px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(98, 127, 122, 0.08);
-      border: 1px solid var(--border);
-      margin-bottom: 32px;
-    }
-
-    .form-card h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: var(--text-primary);
-    }
-
-    .form-card .form-subtitle {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-    }
-
-    .form-group { margin-bottom: 20px; }
-
-    .form-group label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 6px;
-    }
-
-    .form-group label .required { color: var(--coral); }
-
-    .form-group input[type="text"],
-    .form-group input[type="email"],
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 15px;
-      font-family: 'Inter', sans-serif;
-      color: var(--text-primary);
-      background: white;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .form-group select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235A6B68' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 16px center;
-      padding-right: 40px;
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: var(--sage);
-      box-shadow: 0 0 0 3px rgba(98, 127, 122, 0.12);
-    }
-
-    .form-group input::placeholder,
-    .form-group textarea::placeholder { color: var(--text-muted); }
-
-    /* Submit button */
-    .submit-btn {
-      width: 100%;
-      padding: 14px 24px;
-      background: var(--coral);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      margin-top: 8px;
-    }
-
-    .submit-btn:hover { background: var(--coral-hover); }
-    .submit-btn:active { transform: scale(0.98); }
-
-    /* Direct email */
-    .email-alternative {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    .email-alternative a {
-      color: var(--sage-dark);
-      font-weight: 600;
-      text-decoration: none;
-      border-bottom: 1px solid var(--border);
-      transition: border-color 0.2s;
-    }
-
-    .email-alternative a:hover {
-      border-color: var(--sage-dark);
-    }
-
-    /* Thank you state */
-    .thank-you {
-      display: none;
-      text-align: center;
-      padding: 48px 24px;
-    }
-
-    .thank-you .check-circle {
-      width: 64px;
-      height: 64px;
-      background: var(--sage-pale);
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .thank-you .check-circle svg {
-      width: 32px;
-      height: 32px;
-      stroke: var(--sage);
-    }
-
-    .thank-you h2 {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .thank-you p {
-      font-size: 15px;
-      color: var(--text-secondary);
-      max-width: 400px;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    /* FAQ section */
-    .faq-section {
-      margin-top: 32px;
-    }
-
-    .faq-section h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 20px;
-      text-align: center;
-      letter-spacing: -0.3px;
-    }
-
-    .faq-item {
-      background: var(--warm-white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 12px;
-      overflow: hidden;
-    }
-
-    .faq-question {
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 18px 24px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      color: var(--text-primary);
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      transition: background 0.15s;
-    }
-
-    .faq-question:hover {
-      background: var(--sage-pale);
-    }
-
-    .faq-question .faq-icon {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-      color: var(--sage);
-    }
-
-    .faq-item.open .faq-question .faq-icon {
-      transform: rotate(45deg);
-    }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-
-    .faq-answer-inner {
-      padding: 0 24px 18px;
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-    }
-
-    .faq-item.open .faq-answer {
-      max-height: 200px;
-    }
-
-    /* Footer */
-    .site-footer {
-      text-align: center;
-      margin-top: 48px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
-    }
-
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .footer-links a {
-      font-size: 14px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .footer-links a:hover {
-      color: var(--sage-dark);
-    }
-
-    .site-footer .copyright {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      .page-wrapper { padding: 24px 16px 48px; }
-      .page-heading h1 { font-size: 24px; }
-      .form-card { padding: 28px 20px; }
-      .faq-question { padding: 16px 18px; font-size: 14px; }
-      .faq-answer-inner { padding: 0 18px 16px; }
-    }
   </style>
 </head>
 <body>
 
 <!-- Header -->
-<div class="site-header">
-  <a href="/ko/">
-    <div class="header-logo-icon">
-      <img src="/icon-192.png" alt="CycleBalance" width="40" height="40">
-    </div>
-    <span class="header-logo-text">CycleBalance</span>
-  </a>
-</div>
+<header class="site-header" aria-label="CycleBalance site header">
+  <a class="brand" href="/ko/" aria-label="CycleBalance 홈"><img src="/assets/images/site/cyclebalance-app-icon-96.png" alt=""><span>CycleBalance</span></a>
+  <nav class="nav" aria-label="기본 내비게이션"><a href="/ko/#features">기능</a><a href="/ko/#how-it-works">사용 방법</a><a href="/ko/support">PCOS 지원</a><a href="#faq">FAQ</a></nav>
+  <a class="download-pill" href="https://apps.apple.com/kr/app/cyclebalance/id6760353511">다운로드</a>
+</header>
 
 <div class="page-wrapper">
 
@@ -548,7 +201,7 @@
   </div>
 
   <!-- FAQ section -->
-  <div class="faq-section">
+  <div class="faq-section" id="faq">
     <h2>자주 묻는 질문</h2>
 
     <div class="faq-item">
@@ -557,7 +210,7 @@
         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <div class="faq-answer">
-        <div class="faq-answer-inner">예. 모든 것이 귀하의 기기에 머물러 있습니다. CycleBalance는 기기 내 처리 및 저장을 사용하므로, 귀하의 건강 데이터는 외부 서버로 전송되지 않습니다. 개인정보 보호는 기능이 아니라 토대입니다.</div>
+        <div class="faq-answer-inner">CycleBalance는 비공개 로컬 우선 기록을 중심으로 설계되었습니다. 내보내기 또는 공유를 선택하지 않는 한 건강 기록은 기기에 저장됩니다. 지원 요청은 FormSubmit을 통해 전송되고, 구매는 Apple과 RevenueCat에서 처리되며, 바코드 조회는 스캔한 바코드만 사용합니다. App Store 어트리뷰션은 개인정보 보호를 고려한 Apple Ads 신호를 사용할 수 있습니다.</div>
       </div>
     </div>
 
@@ -603,25 +256,11 @@
   </div>
 
   <!-- Footer -->
-  <div class="site-footer">
-    <div class="footer-links">
-      <a href="/ko/">홈</a>
-      <a href="/ko/privacy">개인정보 처리방침</a>
-      <a href="/ko/terms">이용약관</a>
-      <a href="/ko/contact">문의</a>
-      <a href="/ko/support">지원</a>
-    </div>
-    <div class="footer-links" style="margin-top:12px;flex-wrap:wrap">
-      <a href="/support" hreflang="en" lang="en">English</a>
-      <a href="/de/support" hreflang="de" lang="de">Deutsch</a>
-      <a href="/fr/support" hreflang="fr" lang="fr">Français</a>
-      <a href="/it/support" hreflang="it" lang="it">Italiano</a>
-      <a href="/ja/support" hreflang="ja" lang="ja">日本語</a>
-      <a href="/ko/support" hreflang="ko" lang="ko">한국어</a>
-      <a href="/nl/support" hreflang="nl" lang="nl">Nederlands</a>
-    </div>
-    <p class="copyright">&copy; 2026 CycleBalance &middot; Huggler Holdings LLC. 모든 권리 보유.</p>
-  </div>
+  <footer class="footer">
+    <div class="footer-grid"><div><a class="brand" href="/ko/" aria-label="CycleBalance 홈"><img src="/assets/images/site/cyclebalance-app-icon-96.png" alt=""><span>CycleBalance</span></a><p class="footer-tagline">나의 주기. 나의 건강. 나의 균형.</p></div><div><h3>앱</h3><ul><li><a href="/ko/#features">기능</a></li><li><a href="/ko/#how-it-works">사용 방법</a></li><li><a href="https://apps.apple.com/kr/app/cyclebalance/id6760353511">다운로드</a></li></ul></div><div><h3>지원</h3><ul><li><a href="/ko/support">PCOS 지원</a></li><li><a href="#faq">FAQ</a></li><li><a href="mailto:contact@cyclebalance.app">문의</a></li></ul></div><div><h3>법적 고지</h3><ul><li><a href="/ko/privacy">개인정보 처리방침</a></li><li><a href="/ko/terms">이용 약관</a></li></ul></div><div class="footer-cta"><a class="app-store" href="https://apps.apple.com/kr/app/cyclebalance/id6760353511" aria-label="App Store에서 CycleBalance 다운로드"><img src="/assets/images/site/download-on-the-app-store.svg" alt="App Store에서 CycleBalance 다운로드" width="136" height="45"></a><div class="socials" aria-label="연락처 링크"><a href="https://www.instagram.com/" aria-label="Instagram"><img src="/assets/images/site/mockup/extracted/footer-instagram-icon.png" alt=""></a><a href="https://www.tiktok.com/" aria-label="TikTok"><img src="/assets/images/site/mockup/extracted/footer-tiktok-icon.png" alt=""></a><a href="mailto:contact@cyclebalance.app" aria-label="CycleBalance에 이메일 보내기"><img src="/assets/images/site/mockup/extracted/footer-email-icon.png" alt=""></a></div></div></div>
+    <nav class="footer-languages" aria-label="언어"><span>언어</span><a href="/support" hreflang="en" lang="en">English</a><a href="/de/support" hreflang="de" lang="de">Deutsch</a><a href="/fr/support" hreflang="fr" lang="fr">Français</a><a href="/it/support" hreflang="it" lang="it">Italiano</a><a href="/ja/support" hreflang="ja" lang="ja">日本語</a><a href="/ko/support" hreflang="ko" lang="ko" aria-current="page">한국어</a><a href="/nl/support" hreflang="nl" lang="nl">Nederlands</a></nav>
+    <p class="copyright">&copy; 2026 CycleBalance. All rights reserved.</p>
+  </footer>
 
 </div>
 
