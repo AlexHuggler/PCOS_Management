@@ -49,3 +49,4 @@ fastlane/test_output
 .superpowers/
 build/
 build-release/
+Artifacts/Archives/
