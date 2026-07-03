@@ -46,3 +46,4 @@ fastlane/test_output
 !Config/Release.xcconfig
 !Config/LocalSecrets.example.xcconfig
 .env
+.superpowers/
