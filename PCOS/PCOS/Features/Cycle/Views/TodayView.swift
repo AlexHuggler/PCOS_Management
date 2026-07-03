@@ -430,7 +430,13 @@ struct TodayView: View {
                     .foregroundStyle(AppTheme.premiumEditorCTAForeground)
             }
             .frame(width: 40, height: 40)
-            .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.26), radius: 14, y: 6)
+            .overlay(
+                Circle()
+                    .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 1)
+                    .padding(-3.5)
+                    .opacity(0.7)
+            )
+            .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.32), radius: 18, y: 6)
             .accessibilityHidden(true)
         }
         .padding(.horizontal, AppTheme.spacing4)
@@ -692,15 +698,8 @@ struct TodayView: View {
                 }
             }
         }
-        .padding(AppTheme.spacing16)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
-                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
-                .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
-        )
+        .padding(AppTheme.spacing20)
+        .premiumCardDecoration()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.lunar.snapshot")
     }
@@ -1849,7 +1848,16 @@ private struct LunarTodaySnapshotItemView: View {
         VStack(spacing: AppTheme.spacing8) {
             ZStack {
                 Circle()
-                    .fill(AppTheme.premiumEditorSurface.opacity(0.92))
+                    .fill(item.color.opacity(0.14))
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.3), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 0.8
+                    )
                 Image(systemName: item.systemImage)
                     .appFont(.headline, weight: .semibold)
                     .foregroundStyle(item.color)

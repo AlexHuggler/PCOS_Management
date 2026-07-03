@@ -836,6 +836,32 @@ struct CardStyle: ViewModifier {
     }
 }
 
+/// Quiet premium chrome for immersive Today cards: raised surface, hairline
+/// border, and a two-layer shadow (tight contact + wide ambient).
+struct PremiumCardDecoration: ViewModifier {
+    var cornerRadius: CGFloat = AppTheme.largeCardCornerRadius
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
+            )
+            .shadow(color: AppTheme.cardShadowColor.opacity(0.5), radius: 2, y: 1)
+            .shadow(color: AppTheme.cardShadowColor.opacity(0.35), radius: 24, y: 10)
+    }
+}
+
+extension View {
+    func premiumCardDecoration(cornerRadius: CGFloat = AppTheme.largeCardCornerRadius) -> some View {
+        modifier(PremiumCardDecoration(cornerRadius: cornerRadius))
+    }
+}
+
 enum BotanicalPosterBackgroundStyle {
     case dense
     case dashboard

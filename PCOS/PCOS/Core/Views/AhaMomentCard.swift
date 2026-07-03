@@ -84,15 +84,8 @@ struct ImmersiveInsightCard: View {
                 decorativeMoonscape
             }
         }
-        .padding(AppTheme.spacing16)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
-                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
-                .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
-        )
+        .padding(AppTheme.spacing20)
+        .premiumCardDecoration()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.lunar.insight")
     }
