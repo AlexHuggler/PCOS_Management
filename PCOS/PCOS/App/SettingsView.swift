@@ -620,6 +620,19 @@ struct SettingsView: View {
                         if let summary = debugTools.lastImportSummary {
                             importSummaryCard(summary)
                         }
+
+                        Picker(
+                            "Ring Motion (debug)",
+                            selection: Binding(
+                                get: { RingMotionStyle.stored() },
+                                set: { RingMotionStyle.store($0) }
+                            )
+                        ) {
+                            ForEach(RingMotionStyle.allCases, id: \.self) { style in
+                                Text(style.rawValue.capitalized).tag(style)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.debug.ring_motion")
                     }
 
                     Section("Debug: Premium QA") {
