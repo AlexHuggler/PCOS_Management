@@ -197,9 +197,10 @@ struct InterfaceResilienceTests {
     func cycleHeroRingReflectsCycleDayProgress() throws {
         let source = try loadSource(relativePath: todayViewSourceRelativePath)
 
-        #expect(source.contains("LunarCycleHeroRing(progress: cycleHeroRingProgress)"))
+        #expect(source.contains("LunarCycleHeroRing("))
+        #expect(source.contains("progress: cycleHeroRingProgress"))
         #expect(source.contains("private var cycleHeroRingProgress: Double"))
-        #expect(source.contains("private var clampedProgress: Double"))
+        #expect(source.contains("SilkCometRingModel("))
         #expect(!source.contains(".trim(from: 0.08, to: 0.82)"))
         #expect(!source.contains(".offset(x: 66, y: -72)"))
     }

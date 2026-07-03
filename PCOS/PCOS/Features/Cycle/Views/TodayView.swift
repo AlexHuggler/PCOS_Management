@@ -39,6 +39,11 @@ struct TodayView: View {
             }
         }
 
+        var isCurrentCycle: Bool {
+            if case .currentCycle = self { return true }
+            return false
+        }
+
         var logValue: String {
             switch self {
             case .welcome:
@@ -367,7 +372,10 @@ struct TodayView: View {
             GeometryReader { proxy in
                 let ringDiameter = min(max(proxy.size.width - 56, 238), 296)
                 ZStack {
-                    LunarCycleHeroRing(progress: cycleHeroRingProgress)
+                    LunarCycleHeroRing(
+                        progress: cycleHeroRingProgress,
+                        isWelcome: !heroState.isCurrentCycle
+                    )
                         .frame(width: ringDiameter, height: ringDiameter)
                         .accessibilityHidden(true)
 
@@ -387,7 +395,7 @@ struct TodayView: View {
 
     private var cycleHeroRingProgress: Double {
         guard case .currentCycle(let dayCount) = heroState else {
-            return 0.12
+            return 0
         }
 
         let expectedCycleLength = viewModel?.currentManualCycleLengthOverride
@@ -1862,105 +1870,144 @@ private struct LunarTodaySnapshotItemView: View {
 
 private struct LunarCycleHeroRing: View {
     let progress: Double
+    var isWelcome: Bool = false
 
-    private let arcStart = 0.12
-    private let arcSpan = 0.98
-    private let maxArcEnd = 0.78
-    private let accentGap = 0.05
-    private let gapStart = 0.39
-    private let rotationDegrees = 180.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var sweepDone = false
+    @State private var bloomBreathing = false
+    @State private var aliveShimmer = false
 
-    private var clampedProgress: Double {
-        min(max(progress, 0.08), 1)
-    }
+    /// Arc starts at 12 o'clock. Circle paths start at 3 o'clock, so offset -90°.
+    private let rotationDegrees = -90.0
 
-    private var activeArcEnd: Double {
-        min(arcStart + arcSpan * clampedProgress, maxArcEnd)
-    }
-
-    private var gapEnd: Double {
-        gapStart + accentGap
-    }
-
-    private var glowTrim: Double {
-        activeArcEnd > gapEnd ? gapStart + accentGap * 0.42 : activeArcEnd
+    private var motionStyle: RingMotionStyle {
+        RingMotionStyle.resolved(reduceMotion: reduceMotion)
     }
 
     var body: some View {
         GeometryReader { proxy in
             let size = min(proxy.size.width, proxy.size.height)
-            let palette = AppTheme.cycleHeroRingPalette
-            let lineWidth = max(size * 0.048, 12)
-            let progressLineWidth = lineWidth + 0.8
-            let glowDiameter = max(size * 0.052, 14)
-            let sparkleSize = max(size * 0.036, 9)
+            let ringPalette = AppTheme.cycleHeroRingPalette
+            let model = SilkCometRingModel(
+                progress: progress,
+                isWelcome: isWelcome,
+                tailFloorOpacity: ringPalette.tailFloorOpacity
+            )
+            let lineWidth = max(size * 0.05, 13)
+            let trackWidth = max(size * 0.012, 2.5)
             let center = CGPoint(x: size / 2, y: size / 2)
-            let radius = (size - progressLineWidth) / 2
-            let glowPoint = point(on: center, radius: radius, trim: glowTrim)
-            let firstArcEnd = min(activeArcEnd, gapStart)
+            let radius = (size - lineWidth) / 2
+            let visibleEnd = sweepDone ? model.arcEnd : 0.001
+            let tipPoint = point(on: center, radius: radius, trim: model.arcEnd)
 
             ZStack {
                 Circle()
-                    .stroke(
-                        palette.trackGradient,
-                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
-                    )
-                    .opacity(0.82)
+                    .stroke(ringPalette.trackGradient, style: StrokeStyle(lineWidth: trackWidth))
+                    .padding((lineWidth - trackWidth) / 2)
+                    .opacity(0.8)
 
                 Circle()
-                    .stroke(palette.innerShadowColor, lineWidth: 0.8)
-                    .padding(lineWidth * 1.26)
+                    .trim(from: 0, to: visibleEnd)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(stops: gradientStops(model: model, ringPalette: ringPalette)),
+                            center: .center
+                        ),
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(rotationDegrees + (aliveShimmer ? 4 : 0)))
+                    .shadow(color: ringPalette.tipGlowColor.opacity(0.18), radius: 13, y: 3)
 
-                if firstArcEnd > arcStart {
-                    Circle()
-                        .trim(from: arcStart, to: firstArcEnd)
-                        .stroke(
-                            palette.upperArcGradient,
-                            style: StrokeStyle(lineWidth: progressLineWidth, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(rotationDegrees))
-                        .shadow(color: palette.activeShadowColor, radius: 13, y: 3)
-                        .shadow(color: palette.innerShadowColor.opacity(0.22), radius: 18, y: 6)
+                if model.showsTip {
+                    tip(ringPalette: ringPalette, size: size)
+                        .position(tipPoint)
+                        .opacity(sweepDone ? 1 : 0)
                 }
-
-                if activeArcEnd > gapEnd {
-                    Circle()
-                        .trim(from: gapEnd, to: activeArcEnd)
-                        .stroke(
-                            palette.lowerArcGradient,
-                            style: StrokeStyle(lineWidth: progressLineWidth, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(rotationDegrees))
-                        .shadow(color: palette.lowerShadowColor, radius: 13, y: 4)
-                        .shadow(color: palette.innerShadowColor.opacity(0.2), radius: 17, y: 6)
-                }
-
-                ringGlow(palette: palette, diameter: glowDiameter, point: glowPoint)
-
-                Image(systemName: "sparkle")
-                    .font(.system(size: sparkleSize, weight: .regular))
-                    .foregroundStyle(palette.sparkleColor)
-                    .shadow(color: palette.sparkleColor.opacity(0.68), radius: 5)
-                    .position(glowPoint)
             }
             .frame(width: size, height: size)
             .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
         }
+        .onAppear { startMotion() }
+    }
+
+    private func gradientStops(model: SilkCometRingModel, ringPalette: CycleHeroRingPalette) -> [Gradient.Stop] {
+        var stops = model.stops.map { stop in
+            Gradient.Stop(
+                color: ringPalette.silkColors[min(stop.colorIndex, ringPalette.silkColors.count - 1)]
+                    .opacity(stop.opacity),
+                location: stop.position
+            )
+        }
+
+        // Guard the wrap-around: the arc's round start cap bulges just past
+        // location 0, where the angular gradient samples positions below 1.0
+        // and would repeat the bright tip color, painting a solid half-disc
+        // at 12 o'clock. Fade to clear right after the arc end so the tail
+        // cap stays invisible; the comet-head overlay covers the tip cap.
+        if let tip = stops.last, tip.location < 1 {
+            let clearTip = tip.color.opacity(0)
+            stops.append(Gradient.Stop(color: clearTip, location: min(tip.location + 0.012, 1)))
+            stops.append(Gradient.Stop(color: clearTip, location: 1))
+        }
+        return stops
     }
 
     @ViewBuilder
-    private func ringGlow(palette: CycleHeroRingPalette, diameter: CGFloat, point: CGPoint) -> some View {
-        if palette.usesGlowBlend {
+    private func tip(ringPalette: CycleHeroRingPalette, size: CGFloat) -> some View {
+        let coreDiameter = max(size * 0.034, 9)
+        let bloomDiameter = max(size * 0.16, 40)
+
+        ZStack {
+            if ringPalette.showsTipBloom {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                ringPalette.tipGlowColor.opacity(0.55),
+                                ringPalette.tipGlowColor.opacity(0.16),
+                                .clear,
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: bloomDiameter / 2
+                        )
+                    )
+                    .frame(width: bloomDiameter, height: bloomDiameter)
+                    .scaleEffect(bloomBreathing ? 1.12 : 1)
+                    .modifier(GlowBlendModifier(enabled: ringPalette.usesGlowBlend))
+            }
+
             Circle()
-                .fill(palette.glowGradient)
-                .frame(width: diameter, height: diameter)
-                .position(point)
-                .blendMode(.plusLighter)
-        } else {
-            Circle()
-                .fill(palette.glowGradient)
-                .frame(width: diameter, height: diameter)
-                .position(point)
+                .fill(ringPalette.tipCoreColor)
+                .frame(width: coreDiameter, height: coreDiameter)
+                .shadow(color: ringPalette.tipGlowColor.opacity(0.7), radius: 5)
+        }
+    }
+
+    private func startMotion() {
+        switch motionStyle {
+        case .off:
+            sweepDone = true
+        case .subtle:
+            sweepDone = false
+            withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
+            withAnimation(.easeInOut(duration: 0.75).repeatCount(4, autoreverses: true).delay(1.1)) {
+                bloomBreathing = true
+            }
+            // Settle back to rest after the two breaths.
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(4.2))
+                withAnimation(.easeOut(duration: 0.4)) { bloomBreathing = false }
+            }
+        case .alive:
+            sweepDone = false
+            withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
+            withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(1.1)) {
+                bloomBreathing = true
+            }
+            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
+                aliveShimmer = true
+            }
         }
     }
 
@@ -1970,6 +2017,18 @@ private struct LunarCycleHeroRing: View {
             x: center.x + cos(angle) * radius,
             y: center.y + sin(angle) * radius
         )
+    }
+}
+
+private struct GlowBlendModifier: ViewModifier {
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.blendMode(.plusLighter)
+        } else {
+            content
+        }
     }
 }
 

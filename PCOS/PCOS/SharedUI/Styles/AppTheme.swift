@@ -3,14 +3,16 @@ import UIKit
 
 struct CycleHeroRingPalette {
     let trackGradient: AngularGradient
-    let upperArcGradient: LinearGradient
-    let lowerArcGradient: LinearGradient
-    let glowGradient: RadialGradient
-    let sparkleColor: Color
-    let activeShadowColor: Color
-    let lowerShadowColor: Color
+    /// Four silk colors, tail → tip.
+    let silkColors: [Color]
+    let tipCoreColor: Color
+    let tipGlowColor: Color
     let innerShadowColor: Color
     let usesGlowBlend: Bool
+    /// 0 for the standard zero-fade tail; lifted for High Contrast legibility.
+    let tailFloorOpacity: Double
+    /// High Contrast uses a solid marker dot instead of a bloom.
+    let showsTipBloom: Bool
 }
 
 /// CycleBalance design system. The default Botanical Journal theme uses soft
@@ -124,49 +126,22 @@ enum AppTheme {
         )
     }
 
-    static var lunarCalmCycleGlowGradient: RadialGradient {
-        RadialGradient(
-            colors: [
-                lunarCalmPeachRGB.color.opacity(0.95),
-                lunarCalmGoldRGB.color.opacity(0.55),
-                lunarCalmPeachRGB.color.opacity(0.16),
-                .clear,
-            ],
-            center: .center,
-            startRadius: 0,
-            endRadius: 22
-        )
-    }
-
     static var cycleHeroRingPalette: CycleHeroRingPalette {
         if isLunarCalm {
             return CycleHeroRingPalette(
                 trackGradient: lunarCalmCycleTrackGradient,
-                upperArcGradient: LinearGradient(
-                    colors: [
-                        lunarCalmPeachRGB.color,
-                        ThemeRGB(hex: 0xC9F0E2).color,
-                        lunarCalmTealRGB.color,
-                        ThemeRGB(hex: 0x273143).color,
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ),
-                lowerArcGradient: LinearGradient(
-                    colors: [
-                        lunarCalmPeachRGB.color,
-                        lunarCalmCoralRGB.color,
-                        lunarCalmLavenderRGB.color,
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                glowGradient: lunarCalmCycleGlowGradient,
-                sparkleColor: lunarCalmPeachRGB.color,
-                activeShadowColor: lunarCalmTealRGB.color.opacity(0.24),
-                lowerShadowColor: lunarCalmCoralRGB.color.opacity(0.22),
+                silkColors: [
+                    lunarCalmTealRGB.color,
+                    lunarCalmLavenderRGB.color,
+                    lunarCalmCoralRGB.color,
+                    lunarCalmPeachRGB.color,
+                ],
+                tipCoreColor: ThemeRGB(hex: 0xFFF6E8).color,
+                tipGlowColor: lunarCalmPeachRGB.color,
                 innerShadowColor: lunarCalmBackgroundRGB.color.opacity(0.46),
-                usesGlowBlend: true
+                usesGlowBlend: true,
+                tailFloorOpacity: 0,
+                showsTipBloom: true
             )
         }
 
@@ -174,46 +149,26 @@ enum AppTheme {
             return CycleHeroRingPalette(
                 trackGradient: AngularGradient(
                     colors: [
-                        Color.black.opacity(0.7),
-                        Color.black.opacity(0.34),
-                        palette.accent.color.opacity(0.62),
-                        Color.black.opacity(0.34),
-                        Color.black.opacity(0.7),
+                        Color.black.opacity(0.55),
+                        Color.black.opacity(0.3),
+                        Color.black.opacity(0.55),
                     ],
                     center: .center,
                     startAngle: .degrees(180),
                     endAngle: .degrees(540)
                 ),
-                upperArcGradient: LinearGradient(
-                    colors: [
-                        palette.sage.color,
-                        palette.accent.color,
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ),
-                lowerArcGradient: LinearGradient(
-                    colors: [
-                        palette.coral.color,
-                        palette.accent.color,
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                glowGradient: RadialGradient(
-                    colors: [
-                        palette.coral.color.opacity(0.5),
-                        .clear,
-                    ],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: 16
-                ),
-                sparkleColor: palette.coral.color,
-                activeShadowColor: .clear,
-                lowerShadowColor: .clear,
+                silkColors: [
+                    palette.accent.color,
+                    palette.accent.color,
+                    palette.accent.color,
+                    palette.accent.color,
+                ],
+                tipCoreColor: palette.coral.color,
+                tipGlowColor: palette.coral.color,
                 innerShadowColor: Color.black.opacity(0.24),
-                usesGlowBlend: false
+                usesGlowBlend: false,
+                tailFloorOpacity: 0.35,
+                showsTipBloom: false
             )
         }
 
@@ -230,41 +185,18 @@ enum AppTheme {
                 startAngle: .degrees(180),
                 endAngle: .degrees(540)
             ),
-            upperArcGradient: LinearGradient(
-                colors: [
-                    softGoldAccent.opacity(0.92),
-                    palette.sage.color.opacity(0.9),
-                    premiumEditorAccentColor,
-                    primaryText.opacity(0.68),
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            ),
-            lowerArcGradient: LinearGradient(
-                colors: [
-                    softGoldAccent.opacity(0.92),
-                    premiumEditorSecondaryAccentColor,
-                    lavenderAccent.opacity(0.86),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            ),
-            glowGradient: RadialGradient(
-                colors: [
-                    premiumEditorSecondaryAccentColor.opacity(0.88),
-                    softGoldAccent.opacity(0.4),
-                    premiumEditorSecondaryAccentColor.opacity(0.12),
-                    .clear,
-                ],
-                center: .center,
-                startRadius: 0,
-                endRadius: 18
-            ),
-            sparkleColor: premiumEditorSecondaryAccentColor,
-            activeShadowColor: premiumEditorAccentColor.opacity(0.18),
-            lowerShadowColor: premiumEditorSecondaryAccentColor.opacity(0.18),
+            silkColors: [
+                palette.sage.color,
+                premiumEditorAccentColor,
+                premiumEditorSecondaryAccentColor,
+                softGoldAccent,
+            ],
+            tipCoreColor: Color.white,
+            tipGlowColor: premiumEditorSecondaryAccentColor,
             innerShadowColor: cardBorder.opacity(0.28),
-            usesGlowBlend: true
+            usesGlowBlend: true,
+            tailFloorOpacity: 0,
+            showsTipBloom: true
         )
     }
 
