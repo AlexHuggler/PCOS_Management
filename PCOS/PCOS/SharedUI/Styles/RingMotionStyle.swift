@@ -1,19 +1,20 @@
 import Foundation
 
-/// Motion treatment for the Silk Comet hero ring. `subtle` is the shipped
-/// default; `alive` is kept for on-device comparison and is only reachable
-/// via the DEBUG settings toggle or the launch argument.
+/// Motion treatment for the Silk Comet hero ring. `alive` is the shipped
+/// default (chosen after on-device comparison); `subtle` and `off` remain
+/// selectable via the DEBUG settings toggle or the launch argument.
 enum RingMotionStyle: String, CaseIterable {
     case subtle
     case alive
     case off
 
     static let defaultsKey = "appearance.ringMotionStyle"
+    static let shippedDefault: RingMotionStyle = .alive
 
     static func stored(defaults: UserDefaults = .standard) -> RingMotionStyle {
         guard let raw = defaults.string(forKey: defaultsKey),
               let style = RingMotionStyle(rawValue: raw) else {
-            return .subtle
+            return shippedDefault
         }
         return style
     }

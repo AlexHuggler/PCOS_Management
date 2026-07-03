@@ -158,7 +158,7 @@ struct SettingsView: View {
     @State private var debugTools = SettingsDebugToolsState()
     @State private var debugTapCount = 0
     @State private var showDebugSections = false
-    @AppStorage(RingMotionStyle.defaultsKey) private var ringMotionRawValue = RingMotionStyle.subtle.rawValue
+    @AppStorage(RingMotionStyle.defaultsKey) private var ringMotionRawValue = RingMotionStyle.shippedDefault.rawValue
 #endif
 
     var body: some View {
@@ -625,7 +625,7 @@ struct SettingsView: View {
                         Picker(
                             "Ring Motion (debug)",
                             selection: Binding(
-                                get: { RingMotionStyle(rawValue: ringMotionRawValue) ?? .subtle },
+                                get: { RingMotionStyle(rawValue: ringMotionRawValue) ?? .shippedDefault },
                                 set: { ringMotionRawValue = $0.rawValue }
                             )
                         ) {

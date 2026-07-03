@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-02
 **Scope:** CycleBalance Today (home) screen visual/UX refinement across all 9 themes.
-**Decisions made with user:** direction = "Balanced" (quiet refined cards, ring as the one luminous focal point); ring style = **Silk Comet, single tail, zero fade** (chosen over dual-tail + star variant after visual comparison); motion default = **subtle**, with a **"more alive" variant kept behind a toggle** for on-device comparison.
+**Decisions made with user:** direction = "Balanced" (quiet refined cards, ring as the one luminous focal point); ring style = **Silk Comet, single tail, zero fade** (chosen over dual-tail + star variant after visual comparison); motion default = **"more alive"** (chosen 2026-07-03 after comparing on-device recordings of both variants; subtle and off remain selectable via the debug toggle / launch argument).
 
 ## 1. Silk Comet hero ring
 
