@@ -846,13 +846,13 @@ struct PremiumCardDecoration: ViewModifier {
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+                    .shadow(color: AppTheme.cardShadowColor.opacity(0.5), radius: 2, y: 1)
+                    .shadow(color: AppTheme.cardShadowColor.opacity(0.35), radius: 24, y: 10)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
             )
-            .shadow(color: AppTheme.cardShadowColor.opacity(0.5), radius: 2, y: 1)
-            .shadow(color: AppTheme.cardShadowColor.opacity(0.35), radius: 24, y: 10)
     }
 }
 
