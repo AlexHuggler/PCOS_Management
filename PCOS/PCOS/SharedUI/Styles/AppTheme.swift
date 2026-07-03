@@ -7,7 +7,6 @@ struct CycleHeroRingPalette {
     let silkColors: [Color]
     let tipCoreColor: Color
     let tipGlowColor: Color
-    let innerShadowColor: Color
     let usesGlowBlend: Bool
     /// 0 for the standard zero-fade tail; lifted for High Contrast legibility.
     let tailFloorOpacity: Double
@@ -138,7 +137,6 @@ enum AppTheme {
                 ],
                 tipCoreColor: ThemeRGB(hex: 0xFFF6E8).color,
                 tipGlowColor: lunarCalmPeachRGB.color,
-                innerShadowColor: lunarCalmBackgroundRGB.color.opacity(0.46),
                 usesGlowBlend: true,
                 tailFloorOpacity: 0,
                 showsTipBloom: true
@@ -157,15 +155,9 @@ enum AppTheme {
                     startAngle: .degrees(180),
                     endAngle: .degrees(540)
                 ),
-                silkColors: [
-                    palette.accent.color,
-                    palette.accent.color,
-                    palette.accent.color,
-                    palette.accent.color,
-                ],
+                silkColors: Array(repeating: palette.accent.color, count: 4),
                 tipCoreColor: palette.coral.color,
                 tipGlowColor: palette.coral.color,
-                innerShadowColor: Color.black.opacity(0.24),
                 usesGlowBlend: false,
                 tailFloorOpacity: 0.35,
                 showsTipBloom: false
@@ -193,7 +185,6 @@ enum AppTheme {
             ],
             tipCoreColor: Color.white,
             tipGlowColor: premiumEditorSecondaryAccentColor,
-            innerShadowColor: cardBorder.opacity(0.28),
             usesGlowBlend: true,
             tailFloorOpacity: 0,
             showsTipBloom: true

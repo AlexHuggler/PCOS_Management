@@ -1876,6 +1876,7 @@ private struct LunarCycleHeroRing: View {
     @State private var sweepDone = false
     @State private var bloomBreathing = false
     @State private var aliveShimmer = false
+    @State private var settleTask: Task<Void, Never>?
 
     /// Arc starts at 12 o'clock. Circle paths start at 3 o'clock, so offset -90°.
     private let rotationDegrees = -90.0
@@ -1898,24 +1899,36 @@ private struct LunarCycleHeroRing: View {
             let center = CGPoint(x: size / 2, y: size / 2)
             let radius = (size - lineWidth) / 2
             let visibleEnd = sweepDone ? model.arcEnd : 0.001
-            let tipPoint = point(on: center, radius: radius, trim: model.arcEnd)
+            let shimmerAngle = aliveShimmer ? 4.0 : 0.0
+            let tipPoint = point(
+                on: center,
+                radius: radius,
+                trim: model.arcEnd,
+                angleOffsetDegrees: shimmerAngle
+            )
 
             ZStack {
                 Circle()
                     .stroke(ringPalette.trackGradient, style: StrokeStyle(lineWidth: trackWidth))
-                    .padding((lineWidth - trackWidth) / 2)
+                    .padding(lineWidth / 2)
                     .opacity(0.8)
 
                 Circle()
                     .trim(from: 0, to: visibleEnd)
                     .stroke(
                         AngularGradient(
-                            gradient: Gradient(stops: gradientStops(model: model, ringPalette: ringPalette)),
+                            gradient: Gradient(stops: gradientStops(
+                                model: model,
+                                ringPalette: ringPalette,
+                                lineWidth: lineWidth,
+                                radius: radius
+                            )),
                             center: .center
                         ),
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                     )
-                    .rotationEffect(.degrees(rotationDegrees + (aliveShimmer ? 4 : 0)))
+                    .padding(lineWidth / 2)
+                    .rotationEffect(.degrees(rotationDegrees + shimmerAngle))
                     .shadow(color: ringPalette.tipGlowColor.opacity(0.18), radius: 13, y: 3)
 
                 if model.showsTip {
@@ -1928,12 +1941,20 @@ private struct LunarCycleHeroRing: View {
             .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
         }
         .onAppear { startMotion() }
+        .onDisappear { settleTask?.cancel() }
     }
 
-    private func gradientStops(model: SilkCometRingModel, ringPalette: CycleHeroRingPalette) -> [Gradient.Stop] {
+    private func gradientStops(
+        model: SilkCometRingModel,
+        ringPalette: CycleHeroRingPalette,
+        lineWidth: CGFloat,
+        radius: CGFloat
+    ) -> [Gradient.Stop] {
+        guard !ringPalette.silkColors.isEmpty else { return [] }
+
         var stops = model.stops.map { stop in
             Gradient.Stop(
-                color: ringPalette.silkColors[min(stop.colorIndex, ringPalette.silkColors.count - 1)]
+                color: ringPalette.silkColors[max(0, min(stop.colorIndex, ringPalette.silkColors.count - 1))]
                     .opacity(stop.opacity),
                 location: stop.position
             )
@@ -1944,9 +1965,13 @@ private struct LunarCycleHeroRing: View {
         // and would repeat the bright tip color, painting a solid half-disc
         // at 12 o'clock. Fade to clear right after the arc end so the tail
         // cap stays invisible; the comet-head overlay covers the tip cap.
-        if let tip = stops.last, tip.location < 1 {
-            let clearTip = tip.color.opacity(0)
-            stops.append(Gradient.Stop(color: clearTip, location: min(tip.location + 0.012, 1)))
+        // The guard band spans 1.5x the round cap's angular footprint
+        // (lineWidth over the stroke centerline circumference).
+        if let tipStop = stops.last, tipStop.location < 1 {
+            let capFraction = Double(lineWidth / (2 * .pi * radius))
+            let guardBand = max(0.012, capFraction * 1.5)
+            let clearTip = tipStop.color.opacity(0)
+            stops.append(Gradient.Stop(color: clearTip, location: min(tipStop.location + guardBand, 1)))
             stops.append(Gradient.Stop(color: clearTip, location: 1))
         }
         return stops
@@ -1985,18 +2010,27 @@ private struct LunarCycleHeroRing: View {
     }
 
     private func startMotion() {
+        // Reset to a known rest state (no animation) so re-appearing after a
+        // previous run doesn't leave repeatForever animations stuck mid-flight.
+        settleTask?.cancel()
+        bloomBreathing = false
+        aliveShimmer = false
+
         switch motionStyle {
         case .off:
             sweepDone = true
         case .subtle:
             sweepDone = false
             withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
-            withAnimation(.easeInOut(duration: 0.75).repeatCount(4, autoreverses: true).delay(1.1)) {
+            // Odd repeat count ends the presentation expanded, matching the
+            // model value, so there is no snap before the settle ease-out.
+            withAnimation(.easeInOut(duration: 0.75).repeatCount(3, autoreverses: true).delay(1.1)) {
                 bloomBreathing = true
             }
-            // Settle back to rest after the two breaths.
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(4.2))
+            // Settle back to rest after the breaths (sweep 1.1 + 3 x 0.75 = 3.35).
+            settleTask = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3.5))
+                guard !Task.isCancelled else { return }
                 withAnimation(.easeOut(duration: 0.4)) { bloomBreathing = false }
             }
         case .alive:
@@ -2011,8 +2045,13 @@ private struct LunarCycleHeroRing: View {
         }
     }
 
-    private func point(on center: CGPoint, radius: CGFloat, trim: Double) -> CGPoint {
-        let angle = (trim * 360 + rotationDegrees) * .pi / 180
+    private func point(
+        on center: CGPoint,
+        radius: CGFloat,
+        trim: Double,
+        angleOffsetDegrees: Double = 0
+    ) -> CGPoint {
+        let angle = (trim * 360 + rotationDegrees + angleOffsetDegrees) * .pi / 180
         return CGPoint(
             x: center.x + cos(angle) * radius,
             y: center.y + sin(angle) * radius
