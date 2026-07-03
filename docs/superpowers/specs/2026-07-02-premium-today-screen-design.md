@@ -55,7 +55,7 @@ Greeting block unchanged in content; the moon emblem gets a hairline gradient ri
 |---|---|
 | `CycleHeroRingPalette` refactor + shadow tokens | `PCOS/PCOS/SharedUI/Styles/AppTheme.swift` |
 | `LunarCycleHeroRing` rewrite (Silk Comet + motion), streak pill, remove immersive `predictionSection`, emblem ring | `PCOS/PCOS/Features/Cycle/Views/TodayView.swift` |
-| `ringMotionStyle` flag + launch-arg plumbing | `PCOS/PCOS/SharedUI/Styles/AppearancePreferences.swift`, `PCOS/PCOS/App/CycleBalanceApp.swift` |
+| `ringMotionStyle` flag + launch-arg plumbing | `PCOS/PCOS/SharedUI/Styles/RingMotionStyle.swift` (self-contained; amended from AppearancePreferences during implementation), `PCOS/PCOS/App/CycleBalanceApp.swift` |
 | DEBUG Settings toggle | `PCOS/PCOS/App/SettingsView.swift` |
 
 Constraints: no SwiftData changes; no accessibility identifier renames; Swift 6 strict concurrency; all 9 themes via token branches only.
