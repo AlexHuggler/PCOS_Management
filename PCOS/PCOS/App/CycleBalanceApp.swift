@@ -491,6 +491,11 @@ extension CycleBalanceApp {
            let fontOption = FontOption(rawValue: rawFontOption) {
             appearancePreferences.setFontOption(fontOption)
         }
+
+        if let rawMotionStyle = launchArgumentValue(for: RingMotionStyle.defaultsKey, in: arguments),
+           let motionStyle = RingMotionStyle(rawValue: rawMotionStyle) {
+            RingMotionStyle.store(motionStyle)
+        }
     }
 
     static func applyUITestAppearanceOverrideIfNeeded(
