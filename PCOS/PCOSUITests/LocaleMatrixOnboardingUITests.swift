@@ -18,7 +18,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "Qu'est-ce qui vous amène à CycleBalance ?",
                 resultsHeadline: "CycleBalance est prête à vous aider",
                 featureTitle: "Votre espace santé personnel",
-                socialProofTitle: "Ce qu'en disent les femmes",
+                socialProofTitle: "Conçue autour de vos données, pas du battage",
                 permissionsTitle: "Aidez CycleBalance à mieux vous servir",
                 completionMessage: "Vous faites partie d'une communauté grandissante de femmes qui reprennent la main sur leur PCOS. Nous sommes ravis de vous accueillir."
             ),
@@ -28,7 +28,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "Was bringt Sie zu CycleBalance?",
                 resultsHeadline: "CycleBalance ist bereit, dir zu helfen",
                 featureTitle: "Dein persönlicher Gesundheits-Hub",
-                socialProofTitle: "Was Frauen sagen",
+                socialProofTitle: "Um deine Daten gebaut, nicht um Hype",
                 permissionsTitle: "Hilf CycleBalance, noch besser zu werden",
                 completionMessage: "Du bist Teil einer wachsenden Community von Frauen, die ihr PCOS selbst in die Hand nehmen. Schön, dass du da bist."
             ),
@@ -38,7 +38,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "Wat brengt jou bij CycleBalance?",
                 resultsHeadline: "CycleBalance staat klaar om je te helpen",
                 featureTitle: "Jouw persoonlijke gezondheidshub",
-                socialProofTitle: "Wat vrouwen zeggen",
+                socialProofTitle: "Gebouwd rond jouw gegevens, niet rond hype",
                 permissionsTitle: "Help CycleBalance beter te werken",
                 completionMessage: "Je maakt deel uit van een groeiende community van vrouwen die grip krijgen op hun PCOS. Fijn dat je er bent."
             ),
@@ -51,7 +51,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "CycleBalance に興味を持ったのは何ですか?",
                 resultsHeadline: "CycleBalanceはあなたをサポートする準備ができています",
                 featureTitle: "あなたのパーソナル健康ハブ",
-                socialProofTitle: "みんなの声",
+                socialProofTitle: "誇張ではなく、あなたのデータを中心に",
                 permissionsTitle: "CycleBalanceをもっと役立てるために",
                 completionMessage: "あなたはPCOSと向き合う女性たちの広がるコミュニティの一員です。ここに来てくれてうれしいです。"
             ),
@@ -61,7 +61,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "Cosa ti porta a CycleBalance?",
                 resultsHeadline: "CycleBalance è pronta ad aiutarti",
                 featureTitle: "Il tuo hub personale per la salute",
-                socialProofTitle: "Cosa dicono le donne",
+                socialProofTitle: "Costruita sui tuoi dati, non sull'hype",
                 permissionsTitle: "Aiuta CycleBalance a funzionare meglio",
                 completionMessage: "Fai parte di una comunità in crescita di donne che stanno prendendo in mano il proprio PCOS. Siamo felici che tu sia qui."
             ),
@@ -71,7 +71,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
                 questionnaireTitle: "CycleBalance을(를) 방문하게 된 계기는 무엇인가요?",
                 resultsHeadline: "CycleBalance가 도와드릴 준비를 마쳤어요",
                 featureTitle: "나만의 건강 허브",
-                socialProofTitle: "다른 여성들의 이야기",
+                socialProofTitle: "과장이 아니라 내 데이터를 중심으로",
                 permissionsTitle: "CycleBalance가 더 잘 작동하도록 도와주세요",
                 completionMessage: "이제 PCOS를 스스로 관리해 나가는 여성들의 커뮤니티에 함께하고 있어요. 함께해 주셔서 반가워요."
             ),
@@ -87,7 +87,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
     private let englishQuestionnaireTitle = "What brings you to CycleBalance?"
     private let englishResultsHeadline = "CycleBalance is ready to help"
     private let englishFeatureTitle = "Your Personal Health Hub"
-    private let englishSocialProofTitle = "What women are saying"
+    private let englishSocialProofTitle = "Built around your data, not hype"
     private let englishPermissionsTitle = "Help CycleBalance work better"
     private let englishCompletionMessage = "You're part of a growing community of women taking control of their PCOS. We're glad you're here."
 
@@ -109,7 +109,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
     private func runLocaleMatrix(specs: [LocaleSpec]) throws {
         for spec in specs {
             for expectation in phaseExpectations(for: spec) {
-                try XCTContext.runActivity(
+                XCTContext.runActivity(
                     named: "\(spec.languageIdentifier) \(expectation.launchPhase)"
                 ) { _ in
                     let app = makeApp(
@@ -177,6 +177,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
             "-onboarding.primaryGoal", "__unset__",
             "-onboarding.pcosExperience", "__unset__",
             "-onboarding.symptomFocusAreas", "__unset__",
+            "-onboarding.preferredName", "__unset__",
             "-AppleLanguages", "(\(language))",
             "-AppleLocale", locale,
             "-app.language", "system",
@@ -193,8 +194,12 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        let localizedText = app.staticTexts.matching(NSPredicate(format: "label == %@", localized)).firstMatch
-        let englishText = app.staticTexts.matching(NSPredicate(format: "label == %@", englishFallback)).firstMatch
+        let localizedText = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", localized))
+            .firstMatch
+        let englishText = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", englishFallback))
+            .firstMatch
 
         XCTAssertTrue(localizedText.waitForExistence(timeout: 5), file: file, line: line)
         XCTAssertFalse(englishText.exists, file: file, line: line)

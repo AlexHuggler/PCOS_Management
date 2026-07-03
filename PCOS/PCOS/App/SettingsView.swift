@@ -51,6 +51,67 @@ struct SettingsView: View {
         }
     }
 
+    private enum LunarReminderKind {
+        case period
+        case symptoms
+        case supplements
+    }
+
+    private enum LunarSettingsMood: String, CaseIterable, Identifiable {
+        case great
+        case good
+        case okay
+        case low
+        case tough
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .great:
+                L10n.string("Great", defaultValue: "Great")
+            case .good:
+                L10n.string("Good", defaultValue: "Good")
+            case .okay:
+                L10n.string("Okay", defaultValue: "Okay")
+            case .low:
+                L10n.string("Low", defaultValue: "Low")
+            case .tough:
+                L10n.string("Tough", defaultValue: "Tough")
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .great:
+                "sun.max.fill"
+            case .good:
+                "cloud.sun.fill"
+            case .okay:
+                "cloud.fill"
+            case .low:
+                "cloud.rain.fill"
+            case .tough:
+                "bolt.fill"
+            }
+        }
+
+        var tint: Color {
+            switch self {
+            case .great:
+                AppTheme.softGoldAccent
+            case .good:
+                AppTheme.premiumEditorAccentColor
+            case .okay:
+                AppTheme.lavenderAccent
+            case .low:
+                AppTheme.accentColor
+            case .tough:
+                AppTheme.premiumEditorSecondaryAccentColor
+            }
+        }
+    }
+
     fileprivate struct ImportResultPresentation: Identifiable {
         let id = UUID()
         let title: String
@@ -70,6 +131,7 @@ struct SettingsView: View {
     @State private var pendingJSONImportSource: PendingJSONImportSource?
     @State private var activeFileImportRequest: SettingsFileImportRequest?
     @State private var activeSheet: SettingsSheet?
+    @State private var showingCSVImportGuide = false
     @State private var importResult: ImportResultPresentation?
     @State private var showImportConfirmation = false
     @State private var lastImportSummary: SettingsDataImportService.ImportSummary?
@@ -79,9 +141,16 @@ struct SettingsView: View {
     @State private var importSuccessToggle = false
     @State private var showingPregnancyActivation = false
     @State private var showingPregnancyEnd = false
+    @State private var showingPrivateJournal = false
     @State private var pregnancyViewModel: PregnancyViewModel?
     @State private var selectedProfilePhotoItem: PhotosPickerItem?
     @State private var profilePhotoData: Data?
+    @State private var lunarNotificationManager: NotificationManager?
+    @State private var lunarPeriodReminderEnabled = false
+    @State private var lunarSymptomReminderEnabled = false
+    @State private var lunarSupplementReminderEnabled = false
+    @State private var lunarCheckInMood: LunarSettingsMood = .good
+    @AppStorage("mealScan.enableMealPhotoRetention") private var enableMealPhotoRetention = true
 
     private let profilePhotoStore = LocalProfilePhotoStore()
 
@@ -94,21 +163,39 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                if AppTheme.usesImmersiveHomeShell {
+                    Section {
+                        lunarSupportOverview
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                }
+
                 if appState.showsSubscriptionUI {
                     Section(L10n.string("Account", defaultValue: "Account")) {
-                        NavigationLink {
-                            PaywallView()
-                        } label: {
-                            HStack {
-                                Label(L10n.string("Subscription", defaultValue: "Subscription"), systemImage: "star.circle")
-                                Spacer()
-                                Text(
-                                    appState.isPremium
-                                        ? L10n.string("Premium", defaultValue: "Premium")
-                                        : L10n.string("Free", defaultValue: "Free")
-                                )
-                                    .foregroundStyle(.secondary)
-                            }
+                        HStack {
+                            Label(L10n.string("Subscription", defaultValue: "Subscription"), systemImage: "star.circle")
+                            Spacer()
+                            Text(
+                                appState.isPremium
+                                    ? L10n.string("Premium", defaultValue: "Premium")
+                                    : L10n.string("Free", defaultValue: "Free")
+                            )
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right")
+                                .appFont(.caption, weight: .semibold)
+                                .foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            appState.showPremiumPaywall = true
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction {
+                            appState.showPremiumPaywall = true
                         }
                         .accessibilityIdentifier("settings.subscription.row")
                     }
@@ -262,6 +349,24 @@ struct SettingsView: View {
                         }
                     }
 
+                    if appearancePreferences.experimentalThemeControlVisible {
+                        Toggle(isOn: Binding(
+                            get: { appearancePreferences.experimentalThemesEnabled },
+                            set: { appearancePreferences.setExperimentalThemesEnabled($0) }
+                        )) {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text(L10n.string("Experimental Themes", defaultValue: "Experimental Themes"))
+                                Text(L10n.string(
+                                    "Unlock internal design lab themes like Lunar Calm for review before public release.",
+                                    defaultValue: "Unlock internal design lab themes like Lunar Calm for review before public release."
+                                ))
+                                .appFont(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.display.experimental_themes")
+                    }
+
                     Picker(
                         L10n.string("Color Theme", defaultValue: "Color Theme"),
                         selection: Binding(
@@ -269,7 +374,7 @@ struct SettingsView: View {
                             set: { appearancePreferences.setThemeOption($0) }
                         )
                     ) {
-                        ForEach(ThemeOption.allCases) { theme in
+                        ForEach(appearancePreferences.availableThemeOptions) { theme in
                             Text(theme.displayName)
                                 .tag(theme)
                         }
@@ -292,32 +397,9 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings.display.font")
 
-                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                        if appearancePreferences.themeOption == .botanicalJournal {
-                            BotanicalPosterHeader(
-                                title: L10n.string("Botanical Journal", defaultValue: "Botanical Journal"),
-                                subtitle: L10n.string("Warm cream paper, watercolor botanicals, and Cormorant Garamond headings.", defaultValue: "Warm cream paper, watercolor botanicals, and Cormorant Garamond headings."),
-                                dividerStyle: .ornamental
-                            )
-                            .padding(.vertical, AppTheme.spacing8)
-                            .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
-                        } else {
-                            Text(L10n.string("Preview", defaultValue: "Preview"))
-                                .appHeadingFont(.headline, weight: .regular)
-                                .foregroundStyle(AppTheme.primaryText)
-                        }
-                        Text(L10n.string(
-                            "Theme and font changes apply across the app right away. PDF exports keep their current report styling.",
-                            defaultValue: "Theme and font changes apply across the app right away. PDF exports keep their current report styling."
-                        ))
-                            .appFont(.subheadline)
-                        Text(appearancePreferences.themeOption.isHighContrast
-                             ? L10n.string("High-contrast mode uses stronger color separation for readability.", defaultValue: "High-contrast mode uses stronger color separation for readability.")
-                             : L10n.string("Choose the palette that feels most like yours.", defaultValue: "Choose the palette that feels most like yours."))
-                            .appFont(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, AppTheme.spacing8)
+                    ThemeDesignPreviewCard(themeOption: appearancePreferences.themeOption)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("settings.display.theme_preview")
                 }
 
                 Section(L10n.string("Privacy", defaultValue: "Privacy")) {
@@ -340,6 +422,21 @@ struct SettingsView: View {
                         }
                     }
                     .accessibilityIdentifier("settings.privacy.app_lock")
+
+                    if MealScanFeatureFlags.current.enableMealScanV2 {
+                        Toggle(isOn: $enableMealPhotoRetention) {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text(L10n.string("Keep Saved Meal Photos", defaultValue: "Keep Saved Meal Photos"))
+                                Text(L10n.string(
+                                    "Meal estimate photos are stored locally only after you save the meal. Turn this off to save nutrition without keeping a photo.",
+                                    defaultValue: "Meal estimate photos are stored locally only after you save the meal. Turn this off to save nutrition without keeping a photo."
+                                ))
+                                .appFont(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.privacy.meal_scan_photo_retention")
+                    }
 
                     if appLockManager.settings.isEnabled {
                         Picker(
@@ -434,7 +531,7 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings.download_csv_template")
 
                     Button {
-                        activeSheet = .csvImportGuide
+                        showingCSVImportGuide = true
                     } label: {
                         Label(L10n.string("CSV Import Guide", defaultValue: "CSV Import Guide"), systemImage: "questionmark.circle")
                     }
@@ -488,6 +585,7 @@ struct SettingsView: View {
                             Spacer(minLength: 0)
                         }
                     }
+                    .accessibilityIdentifier("settings.fsa_hsa.row")
 
                     Button {
                         showDeleteConfirmation = true
@@ -612,6 +710,7 @@ struct SettingsView: View {
                     } label: {
                         Label(L10n.string("Notifications", defaultValue: "Notifications"), systemImage: "bell.badge")
                     }
+                    .accessibilityIdentifier("settings.notifications.row")
                 }
 
                 Section(L10n.string("About", defaultValue: "About")) {
@@ -630,16 +729,22 @@ struct SettingsView: View {
                         }
                     }
 #endif
-                    Link(destination: URL(string: "https://cyclebalance.app/privacy")!) {
-                        Label(L10n.string("Privacy Policy", defaultValue: "Privacy Policy"), systemImage: "hand.raised")
+                    if let url = AppLinks.privacyPolicy {
+                        Link(destination: url) {
+                            Label(L10n.string("Privacy Policy", defaultValue: "Privacy Policy"), systemImage: "hand.raised")
+                        }
                     }
 
-                    Link(destination: URL(string: "https://cyclebalance.app/terms")!) {
-                        Label(L10n.string("Terms of Service", defaultValue: "Terms of Service"), systemImage: "doc.text")
+                    if let url = AppLinks.termsOfService {
+                        Link(destination: url) {
+                            Label(L10n.string("Terms of Service", defaultValue: "Terms of Service"), systemImage: "doc.text")
+                        }
                     }
 
-                    Link(destination: URL(string: "mailto:feedback@cyclebalance.app")!) {
-                        Label(L10n.string("Get in Touch with the Dev Team ⚡!", defaultValue: "Get in Touch with the Dev Team ⚡!"), systemImage: "envelope")
+                    if let url = AppLinks.feedbackMail {
+                        Link(destination: url) {
+                            Label(L10n.string("Get in Touch with the Dev Team ⚡!", defaultValue: "Get in Touch with the Dev Team ⚡!"), systemImage: "envelope")
+                        }
                     }
 
                 }
@@ -664,15 +769,23 @@ struct SettingsView: View {
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("screen.settings")
-            .navigationTitle(L10n.string("Settings", defaultValue: "Settings"))
+            .navigationTitle(AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Settings", defaultValue: "Settings"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(AppTheme.usesImmersiveHomeShell ? .hidden : .visible, for: .navigationBar)
             .scrollContentBackground(.hidden)
-            .background(AppTheme.warmNeutral)
+            .background(AppTheme.usesImmersiveHomeShell ? AppTheme.premiumEditorBackground : AppTheme.warmNeutral)
             .sensoryFeedback(.warning, trigger: showDeleteConfirmation)
             .sensoryFeedback(.success, trigger: deleteSuccessToggle)
             .sensoryFeedback(.success, trigger: exportSuccessToggle)
             .sensoryFeedback(.success, trigger: importSuccessToggle)
-            .sheet(item: $importResult) { result in
+            .lunarSettingsItemPresentation(item: $importResult) { result in
                 SettingsImportResultView(result: result)
+            }
+            .lunarSettingsPresentation(isPresented: $showingCSVImportGuide) {
+                SettingsCSVImportGuideView()
+            }
+            .lunarSettingsPresentation(isPresented: $showingPrivateJournal) {
+                DailyJournalEditorView()
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
@@ -682,12 +795,12 @@ struct SettingsView: View {
                     SettingsActivityShareSheet(url: payload.url)
                 }
             }
-            .sheet(isPresented: $showingPregnancyActivation, onDismiss: {
+            .lunarSettingsPresentation(isPresented: $showingPregnancyActivation, onDismiss: {
                 pregnancyViewModel?.loadData()
             }) {
                 PregnancyActivationView()
             }
-            .sheet(isPresented: $showingPregnancyEnd, onDismiss: {
+            .lunarSettingsPresentation(isPresented: $showingPregnancyEnd, onDismiss: {
                 pregnancyViewModel?.loadData()
             }) {
                 PregnancyEndView()
@@ -753,6 +866,7 @@ struct SettingsView: View {
                     pregnancyViewModel?.loadData()
                 }
                 loadProfilePhoto()
+                configureLunarReminderState()
             }
             .onChange(of: selectedProfilePhotoItem) { _, newItem in
                 Task {
@@ -771,6 +885,282 @@ struct SettingsView: View {
             }
 #endif
         }
+    }
+
+    private var lunarSupportOverview: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    HStack(spacing: AppTheme.spacing8) {
+                        Text(L10n.string("You've got this", defaultValue: "You've got this"))
+                            .appHeadingFont(.title2, weight: .regular)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.78)
+
+                        Image(systemName: "sparkle")
+                            .appFont(.caption, weight: .semibold)
+                            .foregroundStyle(AppTheme.premiumEditorSecondaryAccentColor)
+                            .accessibilityHidden(true)
+                    }
+
+                    Text(L10n.string("Small steps. Big difference.", defaultValue: "Small steps. Big difference."))
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: AppTheme.spacing8)
+
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.premiumEditorAccentGradient)
+                    Image(systemName: "moon.stars.fill")
+                        .appFont(.title3, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                }
+                .frame(width: 52, height: 52)
+                .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.22), radius: 16, y: 8)
+                .accessibilityHidden(true)
+            }
+
+            lunarReminderPanel
+            lunarDailyCheckInPanel
+            lunarPrivateNotesPanel
+            lunarEncouragementPanel
+        }
+        .padding(.horizontal, AppTheme.spacing16)
+        .padding(.top, AppTheme.spacing4)
+        .padding(.bottom, AppTheme.spacing8)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.lunar.support_overview")
+    }
+
+    private var lunarReminderPanel: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Text(L10n.string("Reminders", defaultValue: "Reminders"))
+                .appFont(.headline, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+
+            lunarReminderRow(
+                title: L10n.string("Log your symptoms", defaultValue: "Log your symptoms"),
+                subtitle: L10n.string("Daily reminder", defaultValue: "Daily reminder"),
+                timeLabel: lunarSymptomReminderTimeText,
+                systemImage: "bell.fill",
+                tint: AppTheme.premiumEditorSecondaryAccentColor,
+                isOn: Binding(
+                    get: { lunarSymptomReminderEnabled },
+                    set: { setLunarReminder(.symptoms, enabled: $0) }
+                ),
+                accessibilityIdentifier: "settings.lunar.reminder.symptoms"
+            )
+
+            lunarReminderRow(
+                title: L10n.string("Period predictions", defaultValue: "Period predictions"),
+                subtitle: L10n.string("Two days before", defaultValue: "Two days before"),
+                timeLabel: L10n.string("Adaptive", defaultValue: "Adaptive"),
+                systemImage: "calendar.badge.clock",
+                tint: AppTheme.premiumEditorWarningAccentColor,
+                isOn: Binding(
+                    get: { lunarPeriodReminderEnabled },
+                    set: { setLunarReminder(.period, enabled: $0) }
+                ),
+                accessibilityIdentifier: "settings.lunar.reminder.period"
+            )
+
+            lunarReminderRow(
+                title: L10n.string("Supplements", defaultValue: "Supplements"),
+                subtitle: L10n.string("Use your saved schedule", defaultValue: "Use your saved schedule"),
+                timeLabel: L10n.string("On device", defaultValue: "On device"),
+                systemImage: "drop.fill",
+                tint: AppTheme.premiumEditorAccentColor,
+                isOn: Binding(
+                    get: { lunarSupplementReminderEnabled },
+                    set: { setLunarReminder(.supplements, enabled: $0) }
+                ),
+                accessibilityIdentifier: "settings.lunar.reminder.supplements"
+            )
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.lunar.reminders")
+    }
+
+    private var lunarDailyCheckInPanel: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(L10n.string("Daily check-in", defaultValue: "Daily check-in"))
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(L10n.string("Your check-in helps improve your insights.", defaultValue: "Your check-in helps improve your insights."))
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: AppTheme.spacing8) {
+                ForEach(LunarSettingsMood.allCases) { mood in
+                    Button {
+                        lunarCheckInMood = mood
+                    } label: {
+                        VStack(spacing: AppTheme.spacing8) {
+                            Image(systemName: mood.systemImage)
+                                .appFont(.subheadline, weight: .semibold)
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(mood.tint)
+                                .frame(width: 38, height: 38)
+                                .background(Circle().fill(mood.tint.opacity(mood == lunarCheckInMood ? 0.24 : 0.14)))
+                                .overlay(Circle().stroke(mood.tint.opacity(mood == lunarCheckInMood ? 0.52 : 0), lineWidth: 0.8))
+
+                            Text(mood.title)
+                                .appFont(.caption2, weight: mood == lunarCheckInMood ? .semibold : .regular)
+                                .foregroundStyle(mood == lunarCheckInMood ? AppTheme.primaryText : AppTheme.secondaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.72)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(mood.title)
+                    .accessibilityAddTraits(mood == lunarCheckInMood ? .isSelected : [])
+                    .accessibilityIdentifier("settings.lunar.mood.\(mood.rawValue)")
+                }
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.lunar.daily_checkin")
+    }
+
+    private var lunarPrivateNotesPanel: some View {
+        Button {
+            showingPrivateJournal = true
+        } label: {
+            HStack(spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    Text(L10n.string("Your space", defaultValue: "Your space"))
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                    Text(L10n.string("Write freely, reflect, and release.", defaultValue: "Write freely, reflect, and release."))
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: AppTheme.spacing8)
+
+                Image(systemName: "pencil.and.scribble")
+                    .appFont(.title3, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(AppTheme.premiumEditorRaisedSurface.opacity(0.76)))
+                    .overlay(Circle().stroke(AppTheme.premiumEditorBorder.opacity(0.48), lineWidth: 0.8))
+                    .accessibilityHidden(true)
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("settings.lunar.private_notes.open")
+    }
+
+    private var lunarEncouragementPanel: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: "heart.fill")
+                .appFont(.title3, weight: .semibold)
+                .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(AppTheme.premiumEditorWarningAccentColor.opacity(0.16)))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(L10n.string("Your feelings are valid.", defaultValue: "Your feelings are valid."))
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(L10n.string("You are not alone.", defaultValue: "You are not alone."))
+                    .appFont(.subheadline, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(L10n.string("We're here for you, always.", defaultValue: "We're here for you, always."))
+                    .appFont(.caption2)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(AppTheme.spacing8)
+        .lunarSettingsCard()
+        .overlay(alignment: .bottomTrailing) {
+            SettingsLunarWaveMark()
+                .frame(width: 142, height: 62)
+                .opacity(0.76)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("settings.lunar.support_card")
+    }
+
+    private var lunarSymptomReminderTimeText: String {
+        let manager = lunarNotificationManager ?? NotificationManager()
+        let formatter = DateFormatter()
+        formatter.locale = L10n.locale()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        return formatter.string(from: manager.symptomReminderTime)
+    }
+
+    private func lunarReminderRow(
+        title: String,
+        subtitle: String,
+        timeLabel: String,
+        systemImage: String,
+        tint: Color,
+        isOn: Binding<Bool>,
+        accessibilityIdentifier: String
+    ) -> some View {
+        HStack(spacing: AppTheme.spacing12) {
+            Image(systemName: systemImage)
+                .appFont(.headline, weight: .semibold)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(tint)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(tint.opacity(0.16)))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(title)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.76)
+                Text(L10n.format("%@, %@", defaultValue: "%@, %@", subtitle, timeLabel))
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.78)
+            }
+
+            Spacer(minLength: AppTheme.spacing8)
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(AppTheme.premiumEditorAccentColor)
+                .accessibilityIdentifier(accessibilityIdentifier)
+        }
+        .padding(AppTheme.spacing8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.48), lineWidth: 0.8)
+        )
     }
 
     @ViewBuilder
@@ -854,6 +1244,42 @@ struct SettingsView: View {
                 localized: "Could not remove profile photo: \(error.localizedDescription)",
                 comment: "Error shown when the local profile photo cannot be removed."
             )
+        }
+    }
+
+    private func configureLunarReminderState() {
+        let manager = lunarNotificationManager ?? NotificationManager()
+        lunarPeriodReminderEnabled = manager.periodRemindersEnabled
+        lunarSymptomReminderEnabled = manager.symptomRemindersEnabled
+        lunarSupplementReminderEnabled = manager.supplementRemindersEnabled
+        lunarNotificationManager = manager
+    }
+
+    private func setLunarReminder(_ kind: LunarReminderKind, enabled: Bool) {
+        let manager = lunarNotificationManager ?? NotificationManager()
+        lunarNotificationManager = manager
+
+        switch kind {
+        case .period:
+            lunarPeriodReminderEnabled = enabled
+            manager.periodRemindersEnabled = enabled
+            if !enabled {
+                manager.cancelReminders(withPrefix: "period.")
+            }
+        case .symptoms:
+            lunarSymptomReminderEnabled = enabled
+            manager.symptomRemindersEnabled = enabled
+            if enabled {
+                manager.scheduleSymptomLoggingReminder()
+            } else {
+                manager.cancelReminders(withPrefix: "symptom.")
+            }
+        case .supplements:
+            lunarSupplementReminderEnabled = enabled
+            manager.supplementRemindersEnabled = enabled
+            if !enabled {
+                manager.cancelReminders(withPrefix: "supplement.")
+            }
         }
     }
 
@@ -1336,6 +1762,9 @@ private struct ThemePaletteSwatchRow: View {
         if themeOption == .botanicalJournal {
             baseColors.insert(AppTheme.botanicalLavenderRGB.color, at: 3)
             baseColors.append(AppTheme.botanicalGoldRGB.color)
+        } else if themeOption == .lunarCalm {
+            baseColors.insert(AppTheme.lunarCalmPeachRGB.color, at: 3)
+            baseColors.append(AppTheme.lunarCalmGoldRGB.color)
         }
         return baseColors
     }
@@ -1362,6 +1791,265 @@ private struct ThemePaletteSwatchRow: View {
             )
         )
         .accessibilityIdentifier("settings.display.theme_swatch")
+    }
+}
+
+private struct ThemeDesignPreviewCard: View {
+    let themeOption: ThemeOption
+
+    private var palette: ThemePalette {
+        themeOption.palette
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                        .fill(previewGradient)
+
+                    Image(systemName: themeOption.previewSystemImage)
+                        .appFont(.title3, weight: .semibold)
+                        .foregroundStyle(iconForegroundColor)
+                        .accessibilityHidden(true)
+                }
+                .frame(width: 54, height: 54)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                )
+
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    Text(themeOption.displayName)
+                        .appHeadingFont(.title3, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(themeOption.previewSubtitle)
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            HStack(spacing: AppTheme.spacing8) {
+                ForEach(themeOption.previewTraits, id: \.self) { trait in
+                    Text(trait)
+                        .appFont(.caption2, weight: .semibold)
+                        .foregroundStyle(traitForegroundColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                        .padding(.horizontal, AppTheme.spacing8)
+                        .padding(.vertical, AppTheme.spacing4)
+                        .background(
+                            Capsule()
+                                .fill(traitFillColor)
+                        )
+                }
+            }
+
+            Text(L10n.string(
+                "Theme and font changes apply across the app right away. PDF exports keep their current report styling.",
+                defaultValue: "Theme and font changes apply across the app right away. PDF exports keep their current report styling."
+            ))
+            .appFont(.caption)
+            .foregroundStyle(AppTheme.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, AppTheme.spacing8)
+        .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+    }
+
+    private var previewGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                palette.accent.color,
+                palette.sage.color,
+                palette.coral.color,
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var iconForegroundColor: Color {
+        themeOption == .lunarCalm
+            ? AppTheme.lunarCalmBackgroundRGB.color
+            : palette.warmNeutralLight.color
+    }
+
+    private var traitForegroundColor: Color {
+        themeOption == .lunarCalm ? AppTheme.lunarCalmTealRGB.color : AppTheme.accentColor
+    }
+
+    private var traitFillColor: Color {
+        themeOption == .lunarCalm
+            ? AppTheme.lunarCalmTealRGB.color.opacity(0.12)
+            : AppTheme.accentColor.opacity(AppTheme.opacitySubtle)
+    }
+}
+
+private extension ThemeOption {
+    var previewSystemImage: String {
+        switch self {
+        case .botanicalJournal:
+            "leaf.fill"
+        case .lunarCalm:
+            "moon.stars.fill"
+        case .sage:
+            "checkmark.seal.fill"
+        case .sunrise:
+            "sunrise.fill"
+        case .ocean:
+            "water.waves"
+        case .botanicalMist:
+            "camera.macro"
+        case .blushMoonrise:
+            "sparkles"
+        case .fruitGrove:
+            "circle.grid.2x2.fill"
+        case .highContrast:
+            "circle.lefthalf.filled"
+        }
+    }
+
+    var previewSubtitle: String {
+        switch self {
+        case .botanicalJournal:
+            L10n.string("Warm cream paper, watercolor botanicals, and editorial serif headings.", defaultValue: "Warm cream paper, watercolor botanicals, and editorial serif headings.")
+        case .lunarCalm:
+            L10n.string("Moonlit cards, true-dark contrast, gentle gradients, and quiet review language.", defaultValue: "Moonlit cards, true-dark contrast, gentle gradients, and quiet review language.")
+        case .sage:
+            L10n.string("Calm clinical greens with crisp structure for daily health review.", defaultValue: "Calm clinical greens with crisp structure for daily health review.")
+        case .sunrise:
+            L10n.string("Sun-warmed clay tones for grounded morning planning and reflection.", defaultValue: "Sun-warmed clay tones for grounded morning planning and reflection.")
+        case .ocean:
+            L10n.string("Clear tidepool blues for scan-friendly tracking, charts, and trends.", defaultValue: "Clear tidepool blues for scan-friendly tracking, charts, and trends.")
+        case .botanicalMist:
+            L10n.string("Soft botanical neutrals with enough definition for dense health inputs.", defaultValue: "Soft botanical neutrals with enough definition for dense health inputs.")
+        case .blushMoonrise:
+            L10n.string("Polished blush and teal contrast for expressive, reassuring check-ins.", defaultValue: "Polished blush and teal contrast for expressive, reassuring check-ins.")
+        case .fruitGrove:
+            L10n.string("Fresh grove tones that make frequent logging feel lighter and more energetic.", defaultValue: "Fresh grove tones that make frequent logging feel lighter and more energetic.")
+        case .highContrast:
+            L10n.string("Sharper separation, stronger borders, and direct hierarchy for readability.", defaultValue: "Sharper separation, stronger borders, and direct hierarchy for readability.")
+        }
+    }
+
+    var previewTraits: [String] {
+        switch self {
+        case .botanicalJournal:
+            [L10n.string("Editorial", defaultValue: "Editorial"), L10n.string("Soft", defaultValue: "Soft"), L10n.string("Reflective", defaultValue: "Reflective")]
+        case .lunarCalm:
+            [L10n.string("True dark", defaultValue: "True dark"), L10n.string("Glassy", defaultValue: "Glassy"), L10n.string("Calm", defaultValue: "Calm")]
+        case .sage:
+            [L10n.string("Grounded", defaultValue: "Grounded"), L10n.string("Clinical", defaultValue: "Clinical"), L10n.string("Quiet", defaultValue: "Quiet")]
+        case .sunrise:
+            [L10n.string("Warm", defaultValue: "Warm"), L10n.string("Steady", defaultValue: "Steady"), L10n.string("Morning", defaultValue: "Morning")]
+        case .ocean:
+            [L10n.string("Clear", defaultValue: "Clear"), L10n.string("Analytical", defaultValue: "Analytical"), L10n.string("Cool", defaultValue: "Cool")]
+        case .botanicalMist:
+            [L10n.string("Airy", defaultValue: "Airy"), L10n.string("Natural", defaultValue: "Natural"), L10n.string("Refined", defaultValue: "Refined")]
+        case .blushMoonrise:
+            [L10n.string("Polished", defaultValue: "Polished"), L10n.string("Expressive", defaultValue: "Expressive"), L10n.string("Gentle", defaultValue: "Gentle")]
+        case .fruitGrove:
+            [L10n.string("Fresh", defaultValue: "Fresh"), L10n.string("Bright", defaultValue: "Bright"), L10n.string("Quick", defaultValue: "Quick")]
+        case .highContrast:
+            [L10n.string("Readable", defaultValue: "Readable"), L10n.string("Precise", defaultValue: "Precise"), L10n.string("Direct", defaultValue: "Direct")]
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func lunarSettingsPresentation<Content: View>(
+        isPresented: Binding<Bool>,
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        if AppTheme.usesImmersivePresentation {
+            fullScreenCover(isPresented: isPresented, onDismiss: onDismiss, content: content)
+        } else {
+            sheet(isPresented: isPresented, onDismiss: onDismiss, content: content)
+        }
+    }
+
+    @ViewBuilder
+    func lunarSettingsItemPresentation<Item: Identifiable, Content: View>(
+        item: Binding<Item?>,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View {
+        if AppTheme.usesImmersivePresentation {
+            fullScreenCover(item: item, content: content)
+        } else {
+            sheet(item: item, content: content)
+        }
+    }
+
+    @ViewBuilder
+    func lunarSettingsSecondaryNavigation() -> some View {
+        if AppTheme.usesImmersivePresentation {
+            toolbarBackground(AppTheme.premiumEditorBackground, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        } else {
+            self
+        }
+    }
+
+    func lunarSettingsCard() -> some View {
+        background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            AppTheme.premiumEditorRaisedSurface.opacity(0.92),
+                            AppTheme.premiumEditorSurface.opacity(0.78),
+                            AppTheme.premiumEditorBackground.opacity(0.9),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 0.8)
+                .opacity(0.72)
+        )
+        .shadow(color: AppTheme.cardShadowColor, radius: 14, y: 8)
+    }
+}
+
+private struct SettingsLunarWaveMark: View {
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            WaveBand(offsetY: 14, color: AppTheme.accentColor)
+            WaveBand(offsetY: 3, color: AppTheme.premiumEditorAccentColor)
+            WaveBand(offsetY: -8, color: AppTheme.premiumEditorSecondaryAccentColor)
+        }
+        .mask(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .padding(.leading, 16)
+        )
+    }
+
+    private struct WaveBand: View {
+        let offsetY: CGFloat
+        let color: Color
+
+        var body: some View {
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 62))
+                path.addCurve(
+                    to: CGPoint(x: 142, y: 30 + offsetY),
+                    control1: CGPoint(x: 36, y: 32 + offsetY),
+                    control2: CGPoint(x: 86, y: 4 + offsetY)
+                )
+                path.addLine(to: CGPoint(x: 142, y: 62))
+                path.closeSubpath()
+            }
+            .fill(color.opacity(0.68))
+        }
     }
 }
 
@@ -1403,42 +2091,15 @@ private struct SettingsImportResultView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text(result.channelTitle)
-                        .appFont(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(result.summary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Section(L10n.string("Import Counts", defaultValue: "Import Counts")) {
-                    LabeledContent(L10n.string("Inserted", defaultValue: "Inserted"), value: String(result.changeCounts.inserted))
-                    LabeledContent(L10n.string("Updated", defaultValue: "Updated"), value: String(result.changeCounts.updated))
-                    LabeledContent(L10n.string("Skipped", defaultValue: "Skipped"), value: String(result.changeCounts.skipped))
-                    LabeledContent(L10n.string("Rejected", defaultValue: "Rejected"), value: String(result.changeCounts.rejected))
-                }
-
-                Section(L10n.string("Example Issues", defaultValue: "Example Issues")) {
-                    ForEach(Array(visibleIssues.enumerated()), id: \.offset) { _, issue in
-                        Text(issue.message)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    if hiddenIssueCount > 0 {
-                        Text(
-                            L10n.format(
-                                "And %lld more issues...",
-                                defaultValue: "And %lld more issues...",
-                                hiddenIssueCount
-                            )
-                        )
-                        .foregroundStyle(.secondary)
-                    }
+            Group {
+                if AppTheme.usesImmersivePresentation {
+                    lunarImportResultContent
+                } else {
+                    standardImportResultList
                 }
             }
-            .accessibilityIdentifier("screen.settings.import_result")
             .navigationTitle(result.title)
+            .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("Done", defaultValue: "Done")) {
@@ -1446,7 +2107,173 @@ private struct SettingsImportResultView: View {
                     }
                 }
             }
+            .lunarSettingsSecondaryNavigation()
         }
+    }
+
+    private var standardImportResultList: some View {
+        List {
+            Section {
+                Text(result.channelTitle)
+                    .appFont(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(result.summary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Section(L10n.string("Import Counts", defaultValue: "Import Counts")) {
+                LabeledContent(L10n.string("Inserted", defaultValue: "Inserted"), value: String(result.changeCounts.inserted))
+                LabeledContent(L10n.string("Updated", defaultValue: "Updated"), value: String(result.changeCounts.updated))
+                LabeledContent(L10n.string("Skipped", defaultValue: "Skipped"), value: String(result.changeCounts.skipped))
+                LabeledContent(L10n.string("Rejected", defaultValue: "Rejected"), value: String(result.changeCounts.rejected))
+            }
+
+            Section(L10n.string("Example Issues", defaultValue: "Example Issues")) {
+                ForEach(Array(visibleIssues.enumerated()), id: \.offset) { _, issue in
+                    Text(issue.message)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if hiddenIssueCount > 0 {
+                    Text(
+                        L10n.format(
+                            "And %lld more issues...",
+                            defaultValue: "And %lld more issues...",
+                            hiddenIssueCount
+                        )
+                    )
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .accessibilityIdentifier("screen.settings.import_result")
+    }
+
+    private var lunarImportResultContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                lunarImportHeader
+                lunarImportCountsCard
+
+                if !visibleIssues.isEmpty {
+                    lunarImportIssuesCard
+                }
+            }
+            .padding(AppTheme.spacing16)
+            .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+        }
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.premiumEditorBackground.ignoresSafeArea())
+        .tint(AppTheme.premiumEditorAccentColor)
+        .accessibilityIdentifier("screen.settings.import_result")
+    }
+
+    private var lunarImportHeader: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: visibleIssues.isEmpty ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .appFont(.title3, weight: .semibold)
+                .foregroundStyle(visibleIssues.isEmpty ? AppTheme.premiumEditorAccentColor : AppTheme.premiumEditorSecondaryAccentColor)
+                .frame(width: 42, height: 42)
+                .background(Circle().fill(AppTheme.premiumEditorRaisedSurface.opacity(0.78)))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text(result.channelTitle)
+                    .appFont(.caption, weight: .semibold)
+                    .textCase(.uppercase)
+                    .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                Text(result.summary)
+                    .appFont(.body)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.import_result.lunar.header")
+    }
+
+    private var lunarImportCountsCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Text(L10n.string("Import Counts", defaultValue: "Import Counts"))
+                .appFont(.headline, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AppTheme.spacing8) {
+                ForEach(Array(lunarImportCounts.enumerated()), id: \.offset) { _, count in
+                    lunarImportCountCell(count)
+                }
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.import_result.lunar.counts")
+    }
+
+    private var lunarImportIssuesCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Text(L10n.string("Example Issues", defaultValue: "Example Issues"))
+                .appFont(.headline, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+
+            ForEach(Array(visibleIssues.enumerated()), id: \.offset) { _, issue in
+                Text(issue.message)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(AppTheme.spacing8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(AppTheme.premiumEditorSurface.opacity(0.72))
+                    )
+            }
+
+            if hiddenIssueCount > 0 {
+                Text(
+                    L10n.format(
+                        "And %lld more issues...",
+                        defaultValue: "And %lld more issues...",
+                        hiddenIssueCount
+                    )
+                )
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.import_result.lunar.issues")
+    }
+
+    private var lunarImportCounts: [(title: String, value: Int, tint: Color)] {
+        [
+            (L10n.string("Inserted", defaultValue: "Inserted"), result.changeCounts.inserted, AppTheme.premiumEditorAccentColor),
+            (L10n.string("Updated", defaultValue: "Updated"), result.changeCounts.updated, AppTheme.lavenderAccent),
+            (L10n.string("Skipped", defaultValue: "Skipped"), result.changeCounts.skipped, AppTheme.premiumEditorSecondaryAccentColor),
+            (L10n.string("Rejected", defaultValue: "Rejected"), result.changeCounts.rejected, AppTheme.premiumEditorWarningAccentColor),
+        ]
+    }
+
+    private func lunarImportCountCell(_ count: (title: String, value: Int, tint: Color)) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+            Text(count.title)
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+            Text(String(count.value))
+                .appHeadingFont(.title2, weight: .regular)
+                .foregroundStyle(count.tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.spacing8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(count.tint.opacity(0.28), lineWidth: 0.8)
+        )
     }
 }
 
@@ -1455,82 +2282,15 @@ private struct SettingsCSVImportGuideView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text(
-                        L10n.string(
-                            "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank.",
-                            defaultValue: "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank."
-                        )
-                    )
-                    Text(
-                        L10n.string(
-                            "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here.",
-                            defaultValue: "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here."
-                        )
-                    )
-                    .foregroundStyle(.secondary)
-                }
-                .appFont(.caption)
-
-                Section(L10n.string("Supported Record Types", defaultValue: "Supported Record Types")) {
-                    Text(verbatim: SettingsExternalCSVSchema.RecordType.allCases.map(\.rawValue).joined(separator: ", "))
-                        .font(.caption.monospaced())
-                        .textSelection(.enabled)
-                }
-
-                Section(L10n.string("Format Rules", defaultValue: "Format Rules")) {
-                    ForEach(SettingsExternalCSVSchema.formatRules) { rule in
-                        Text(L10n.string(rule.key, defaultValue: rule.defaultValue))
-                            .appFont(.caption)
-                    }
-                }
-
-                ForEach(SettingsExternalCSVSchema.recordDefinitions) { definition in
-                    Section {
-                        fieldsBlock(
-                            title: L10n.string("Required fields", defaultValue: "Required fields"),
-                            value: definition.requiredFields.map(\.rawValue).joined(separator: ", ")
-                        )
-                        fieldsBlock(
-                            title: L10n.string("Optional fields", defaultValue: "Optional fields"),
-                            value: definition.optionalFields.map(\.rawValue).joined(separator: ", ")
-                        )
-
-                        let acceptedValueColumns = definition.acceptedValueColumns.filter { $0 != .recordType }
-                        if !acceptedValueColumns.isEmpty {
-                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                                Text(L10n.string("Accepted values", defaultValue: "Accepted values"))
-                                    .appFont(.caption, weight: .semibold)
-
-                                ForEach(acceptedValueColumns, id: \.self) { column in
-                                    if let values = SettingsExternalCSVSchema.acceptedValues(for: column) {
-                                        Text(verbatim: "\(column.rawValue): \(values.joined(separator: ", "))")
-                                            .font(.caption.monospaced())
-                                            .foregroundStyle(.secondary)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .textSelection(.enabled)
-                                    }
-                                }
-                            }
-                        }
-
-                        if
-                            let noteKey = definition.noteKey,
-                            let noteDefaultValue = definition.noteDefaultValue
-                        {
-                            Text(L10n.string(noteKey, defaultValue: noteDefaultValue))
-                                .appFont(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } header: {
-                        Text(verbatim: definition.type.rawValue)
-                            .font(.subheadline.monospaced())
-                    }
+            Group {
+                if AppTheme.usesImmersivePresentation {
+                    lunarGuideContent
+                } else {
+                    standardGuideList
                 }
             }
-            .accessibilityIdentifier("screen.settings.csv_import_guide")
             .navigationTitle(L10n.string("CSV Import Guide", defaultValue: "CSV Import Guide"))
+            .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("Done", defaultValue: "Done")) {
@@ -1538,7 +2298,231 @@ private struct SettingsCSVImportGuideView: View {
                     }
                 }
             }
+            .lunarSettingsSecondaryNavigation()
         }
+    }
+
+    private var standardGuideList: some View {
+        List {
+            Section {
+                Text(
+                    L10n.string(
+                        "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank.",
+                        defaultValue: "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank."
+                    )
+                )
+                Text(
+                    L10n.string(
+                        "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here.",
+                        defaultValue: "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here."
+                    )
+                )
+                .foregroundStyle(.secondary)
+            }
+            .appFont(.caption)
+
+            Section(L10n.string("Supported Record Types", defaultValue: "Supported Record Types")) {
+                Text(verbatim: SettingsExternalCSVSchema.RecordType.allCases.map(\.rawValue).joined(separator: ", "))
+                    .font(.caption.monospaced())
+                    .textSelection(.enabled)
+            }
+
+            Section(L10n.string("Format Rules", defaultValue: "Format Rules")) {
+                ForEach(SettingsExternalCSVSchema.formatRules) { rule in
+                    Text(L10n.string(rule.key, defaultValue: rule.defaultValue))
+                        .appFont(.caption)
+                }
+            }
+
+            ForEach(SettingsExternalCSVSchema.recordDefinitions) { definition in
+                Section {
+                    fieldsBlock(
+                        title: L10n.string("Required fields", defaultValue: "Required fields"),
+                        value: definition.requiredFields.map(\.rawValue).joined(separator: ", ")
+                    )
+                    fieldsBlock(
+                        title: L10n.string("Optional fields", defaultValue: "Optional fields"),
+                        value: definition.optionalFields.map(\.rawValue).joined(separator: ", ")
+                    )
+
+                    let acceptedValueColumns = definition.acceptedValueColumns.filter { $0 != .recordType }
+                    if !acceptedValueColumns.isEmpty {
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text(L10n.string("Accepted values", defaultValue: "Accepted values"))
+                                .appFont(.caption, weight: .semibold)
+
+                            ForEach(acceptedValueColumns, id: \.self) { column in
+                                if let values = SettingsExternalCSVSchema.acceptedValues(for: column) {
+                                    Text(verbatim: "\(column.rawValue): \(values.joined(separator: ", "))")
+                                        .font(.caption.monospaced())
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .textSelection(.enabled)
+                                }
+                            }
+                        }
+                    }
+
+                    if
+                        let noteKey = definition.noteKey,
+                        let noteDefaultValue = definition.noteDefaultValue
+                    {
+                        Text(L10n.string(noteKey, defaultValue: noteDefaultValue))
+                            .appFont(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text(verbatim: definition.type.rawValue)
+                        .font(.subheadline.monospaced())
+                }
+            }
+        }
+        .accessibilityIdentifier("screen.settings.csv_import_guide")
+    }
+
+    private var lunarGuideContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                lunarGuideIntro
+                lunarSupportedTypesCard
+                lunarFormatRulesCard
+
+                ForEach(SettingsExternalCSVSchema.recordDefinitions) { definition in
+                    lunarRecordDefinitionCard(definition)
+                }
+            }
+            .padding(AppTheme.spacing16)
+            .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+        }
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.premiumEditorBackground.ignoresSafeArea())
+        .tint(AppTheme.premiumEditorAccentColor)
+        .accessibilityIdentifier("screen.settings.csv_import_guide")
+    }
+
+    private var lunarGuideIntro: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: "tablecells.badge.ellipsis")
+                .appFont(.title3, weight: .semibold)
+                .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                .frame(width: 42, height: 42)
+                .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text(L10n.string("Prepare a clean import", defaultValue: "Prepare a clean import"))
+                    .appHeadingFont(.title3, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(
+                    L10n.string(
+                        "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank.",
+                        defaultValue: "Use the CSV template for imports. Each row must set record_type, and unused columns can be left blank."
+                    )
+                )
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    L10n.string(
+                        "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here.",
+                        defaultValue: "Export Data (CSV) creates a readable report. Import External Data (CSV) expects the template columns shown here."
+                    )
+                )
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.csv_guide.lunar.intro")
+    }
+
+    private var lunarSupportedTypesCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(L10n.string("Supported Record Types", defaultValue: "Supported Record Types"))
+                .appFont(.headline, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+            Text(verbatim: SettingsExternalCSVSchema.RecordType.allCases.map(\.rawValue).joined(separator: ", "))
+                .font(.caption.monospaced())
+                .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.csv_guide.lunar.types")
+    }
+
+    private var lunarFormatRulesCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(L10n.string("Format Rules", defaultValue: "Format Rules"))
+                .appFont(.headline, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+
+            ForEach(SettingsExternalCSVSchema.formatRules) { rule in
+                Label {
+                    Text(L10n.string(rule.key, defaultValue: rule.defaultValue))
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                }
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
+        .accessibilityIdentifier("settings.csv_guide.lunar.rules")
+    }
+
+    private func lunarRecordDefinitionCard(_ definition: SettingsExternalCSVSchema.RecordDefinition) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Text(verbatim: definition.type.rawValue)
+                .font(.subheadline.monospaced().weight(.semibold))
+                .foregroundStyle(AppTheme.premiumEditorSecondaryAccentColor)
+
+            lunarFieldsBlock(
+                title: L10n.string("Required fields", defaultValue: "Required fields"),
+                value: definition.requiredFields.map(\.rawValue).joined(separator: ", ")
+            )
+            lunarFieldsBlock(
+                title: L10n.string("Optional fields", defaultValue: "Optional fields"),
+                value: definition.optionalFields.map(\.rawValue).joined(separator: ", ")
+            )
+
+            let acceptedValueColumns = definition.acceptedValueColumns.filter { $0 != .recordType }
+            if !acceptedValueColumns.isEmpty {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(L10n.string("Accepted values", defaultValue: "Accepted values"))
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+
+                    ForEach(acceptedValueColumns, id: \.self) { column in
+                        if let values = SettingsExternalCSVSchema.acceptedValues(for: column) {
+                            Text(verbatim: "\(column.rawValue): \(values.joined(separator: ", "))")
+                                .font(.caption.monospaced())
+                                .foregroundStyle(AppTheme.secondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+            }
+
+            if
+                let noteKey = definition.noteKey,
+                let noteDefaultValue = definition.noteDefaultValue
+            {
+                Text(L10n.string(noteKey, defaultValue: noteDefaultValue))
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .lunarSettingsCard()
     }
 
     @ViewBuilder
@@ -1553,6 +2537,25 @@ private struct SettingsCSVImportGuideView: View {
                 .textSelection(.enabled)
         }
     }
+
+    private func lunarFieldsBlock(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+            Text(title)
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+            Text(verbatim: value)
+                .font(.caption.monospaced())
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.spacing8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(AppTheme.premiumEditorSurface.opacity(0.72))
+        )
+    }
 }
 
 private struct SettingsActivityShareSheet: UIViewControllerRepresentable {
@@ -1565,31 +2568,235 @@ private struct SettingsActivityShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
+private struct DailyJournalEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var selectedDate = Date()
+    @State private var noteText = ""
+    @State private var currentPainLevel0To10: Int?
+    @State private var saveError: String?
+    @State private var savedToggle = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                    VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                        Text(L10n.string("Your space", defaultValue: "Your space"))
+                            .appHeadingFont(.title2, weight: .regular)
+                            .foregroundStyle(AppTheme.primaryText)
+                        Text(prompt)
+                            .appFont(.subheadline)
+                            .foregroundStyle(AppTheme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    DatePicker(
+                        L10n.string("Journal date", defaultValue: "Journal date"),
+                        selection: $selectedDate,
+                        in: ...Date(),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.compact)
+                    .accessibilityIdentifier("journal.date")
+
+                    TextEditor(text: $noteText)
+                        .appFont(.body)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .frame(minHeight: 220)
+                        .scrollContentBackground(.hidden)
+                        .padding(AppTheme.spacing12)
+                        .background(
+                            RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                                .fill(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorRaisedSurface.opacity(0.78) : Color(.secondarySystemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                                .stroke(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorBorder.opacity(0.6) : AppTheme.cardBorder, lineWidth: 0.8)
+                        )
+                        .accessibilityIdentifier("journal.private_note")
+
+                    if let saveError {
+                        Label(saveError, systemImage: "exclamationmark.triangle.fill")
+                            .appFont(.caption)
+                            .foregroundStyle(.orange)
+                    }
+
+                    Button {
+                        save()
+                    } label: {
+                        Text(L10n.string("Save journal entry", defaultValue: "Save journal entry"))
+                            .appFont(.headline, weight: .semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, AppTheme.spacing12)
+                            .background(
+                                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                                    .fill(AppTheme.usesImmersivePresentation ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(AppTheme.accentColor))
+                            )
+                            .foregroundStyle(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorCTAForeground : .white)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("journal.save")
+                }
+                .padding(AppTheme.spacing16)
+                .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+            }
+            .background(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorBackground.ignoresSafeArea() : AppTheme.groupedBackground.ignoresSafeArea())
+            .navigationTitle(L10n.string("Journal", defaultValue: "Journal"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.string("Done", defaultValue: "Done")) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .sensoryFeedback(.success, trigger: savedToggle)
+        .onAppear(perform: loadEntry)
+        .onChange(of: selectedDate) { _, _ in
+            loadEntry()
+        }
+    }
+
+    private var prompt: String {
+        L10n.string("What do you need today? Write freely, reflect, and release.", defaultValue: "What do you need today? Write freely, reflect, and release.")
+    }
+
+    private func loadEntry() {
+        do {
+            let log = try DailyLogService(modelContext: modelContext).fetchLog(on: selectedDate)
+            noteText = log?.privateNote ?? ""
+            currentPainLevel0To10 = log?.painLevel0To10
+            saveError = nil
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    private func save() {
+        do {
+            try DailyLogService(modelContext: modelContext).saveDailyCheckIn(
+                date: selectedDate,
+                painLevel0To10: currentPainLevel0To10,
+                privateNote: noteText
+            )
+            savedToggle.toggle()
+            saveError = nil
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+}
+
 private struct AppLanguageSelectionView: View {
     @Binding var selection: AppLanguage
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        List {
-            ForEach(AppLanguage.allCases) { language in
-                Button {
-                    selection = language
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(language.displayName)
-                        Spacer()
-                        if selection == language {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(AppTheme.accentColor)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("settings.app_language.option.\(language.rawValue)")
+        Group {
+            if AppTheme.usesImmersivePresentation {
+                lunarLanguageContent
+            } else {
+                standardLanguageList
             }
         }
         .navigationTitle(L10n.string("App Language", defaultValue: "App Language"))
+        .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
+        .lunarSettingsSecondaryNavigation()
+    }
+
+    private var standardLanguageList: some View {
+        List {
+            ForEach(AppLanguage.allCases) { language in
+                languageButton(for: language)
+            }
+        }
+        .accessibilityIdentifier("screen.settings.app_language")
+    }
+
+    private var lunarLanguageContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                    Image(systemName: "globe")
+                        .appFont(.title3, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                        .frame(width: 42, height: 42)
+                        .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
+                        .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                        Text(L10n.string("Choose your app language", defaultValue: "Choose your app language"))
+                            .appHeadingFont(.title3, weight: .regular)
+                            .foregroundStyle(AppTheme.primaryText)
+                        Text(
+                            L10n.string(
+                                "Language changes apply immediately. Some system surfaces update the next time they appear.",
+                                defaultValue: "Language changes apply immediately. Some system surfaces update the next time they appear."
+                            )
+                        )
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(AppTheme.spacing12)
+                .lunarSettingsCard()
+                .accessibilityIdentifier("settings.app_language.lunar.header")
+
+                VStack(spacing: AppTheme.spacing8) {
+                    ForEach(AppLanguage.allCases) { language in
+                        languageButton(for: language)
+                            .padding(AppTheme.spacing12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(AppTheme.premiumEditorRaisedSurface.opacity(selection == language ? 0.94 : 0.72))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(
+                                        selection == language
+                                        ? AppTheme.premiumEditorBorderGradient
+                                        : LinearGradient(
+                                            colors: [AppTheme.premiumEditorBorder.opacity(0.52)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        ),
+                                        lineWidth: 0.9
+                                    )
+                            )
+                    }
+                }
+            }
+            .padding(AppTheme.spacing16)
+            .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+        }
+        .background(AppTheme.premiumEditorBackground.ignoresSafeArea())
+        .tint(AppTheme.premiumEditorAccentColor)
+        .accessibilityIdentifier("screen.settings.app_language")
+    }
+
+    private func languageButton(for language: AppLanguage) -> some View {
+        Button {
+            selection = language
+            dismiss()
+        } label: {
+            HStack(spacing: AppTheme.spacing12) {
+                Text(language.displayName)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+                Spacer()
+                if selection == language {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorAccentColor : AppTheme.accentColor)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("settings.app_language.option.\(language.rawValue)")
     }
 }
 

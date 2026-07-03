@@ -121,15 +121,16 @@ struct AccentColorAssetTests {
 
 @Suite("App Appearance Policy", .serialized)
 struct AppAppearancePolicyTests {
-    @Test("App root enforces light mode globally")
+    @Test("App root keeps light mode by default while allowing Lunar Calm dark mode")
     @MainActor
-    func appRootEnforcesLightModeGlobally() throws {
+    func appRootKeepsLightModeByDefaultWhileAllowingLunarCalmDarkMode() throws {
         let projectRoot = try TestHelpers.projectRoot(from: #filePath)
         let appFileURL = projectRoot
             .appendingPathComponent("PCOS/PCOS/App/CycleBalanceApp.swift")
         let source = try String(contentsOf: appFileURL)
 
-        #expect(source.contains(".preferredColorScheme(.light)"))
+        #expect(source.contains(".preferredColorScheme(appearancePreferences.preferredColorScheme)"))
+        #expect(source.contains("appearance.enableExperimentalThemes"))
         #expect(!source.contains("#if DEBUG && targetEnvironment(simulator)"))
     }
 

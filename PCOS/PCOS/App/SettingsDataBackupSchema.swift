@@ -24,6 +24,11 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
     var insights: Int = 0
     var pregnancyRecords: Int = 0
     var ovulationObservations: Int = 0
+    var nutritionImports: Int = 0
+    var mealScanFoodItems: Int = 0
+    var mealScanNutritionSummaries: Int = 0
+    var mealScanMetadata: Int = 0
+    var healthKitImportedSamples: Int = 0
 
     var total: Int {
         cycles
@@ -37,11 +42,16 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
             + insights
             + pregnancyRecords
             + ovulationObservations
+            + nutritionImports
+            + mealScanFoodItems
+            + mealScanNutritionSummaries
+            + mealScanMetadata
+            + healthKitImportedSamples
     }
 }
 
 struct SettingsDataBackupFile: Codable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 5
 
     var schemaVersion: Int = currentSchemaVersion
     var exportedAt: Date
@@ -62,6 +72,11 @@ struct SettingsDataBackupRecords: Codable, Sendable {
     var insights: [InsightRecord] = []
     var pregnancyRecords: [PregnancyRecordDTO] = []
     var ovulationObservations: [OvulationObservationRecord] = []
+    var nutritionImports: [NutritionImportRecordDTO] = []
+    var mealScanFoodItems: [MealScanFoodItemRecord] = []
+    var mealScanNutritionSummaries: [MealScanNutritionSummaryRecord] = []
+    var mealScanMetadata: [MealScanMetadataRecord] = []
+    var healthKitImportedSamples: [HealthKitImportedSampleRecordDTO] = []
 
     var counts: SettingsDataRecordCounts {
         SettingsDataRecordCounts(
@@ -75,7 +90,12 @@ struct SettingsDataBackupRecords: Codable, Sendable {
             dailyLogs: dailyLogs.count,
             insights: insights.count,
             pregnancyRecords: pregnancyRecords.count,
-            ovulationObservations: ovulationObservations.count
+            ovulationObservations: ovulationObservations.count,
+            nutritionImports: nutritionImports.count,
+            mealScanFoodItems: mealScanFoodItems.count,
+            mealScanNutritionSummaries: mealScanNutritionSummaries.count,
+            mealScanMetadata: mealScanMetadata.count,
+            healthKitImportedSamples: healthKitImportedSamples.count
         )
     }
 }
@@ -112,6 +132,11 @@ extension SettingsDataBackupRecords {
         case insights
         case pregnancyRecords
         case ovulationObservations
+        case nutritionImports
+        case mealScanFoodItems
+        case mealScanNutritionSummaries
+        case mealScanMetadata
+        case healthKitImportedSamples
     }
 
     init(from decoder: Decoder) throws {
@@ -127,6 +152,11 @@ extension SettingsDataBackupRecords {
         self.insights = try container.decodeIfPresent([InsightRecord].self, forKey: .insights) ?? []
         self.pregnancyRecords = try container.decodeIfPresent([PregnancyRecordDTO].self, forKey: .pregnancyRecords) ?? []
         self.ovulationObservations = try container.decodeIfPresent([OvulationObservationRecord].self, forKey: .ovulationObservations) ?? []
+        self.nutritionImports = try container.decodeIfPresent([NutritionImportRecordDTO].self, forKey: .nutritionImports) ?? []
+        self.mealScanFoodItems = try container.decodeIfPresent([MealScanFoodItemRecord].self, forKey: .mealScanFoodItems) ?? []
+        self.mealScanNutritionSummaries = try container.decodeIfPresent([MealScanNutritionSummaryRecord].self, forKey: .mealScanNutritionSummaries) ?? []
+        self.mealScanMetadata = try container.decodeIfPresent([MealScanMetadataRecord].self, forKey: .mealScanMetadata) ?? []
+        self.healthKitImportedSamples = try container.decodeIfPresent([HealthKitImportedSampleRecordDTO].self, forKey: .healthKitImportedSamples) ?? []
     }
 }
 
@@ -199,6 +229,144 @@ struct MealEntryRecord: Codable, Sendable {
     var postMealSymptomSeverity: Int?
     var postMealSymptomNote: String?
     var postMealFeedbackTimestamp: Date?
+    var nutritionImportID: UUID?
+    var barcode: String?
+    var sourceLabel: String?
+    var calories: Double?
+    var fiberGrams: Double?
+    var sugarGrams: Double?
+    var servingText: String?
+    var mealSource: String?
+    var photoLocalPath: String?
+    var confidenceScore: Double?
+    var userConfirmed: Bool = false
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
+}
+
+extension MealEntryRecord {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case timestamp
+        case mealType
+        case mealDescription
+        case glycemicImpact
+        case photoData
+        case carbsGrams
+        case proteinGrams
+        case fatGrams
+        case notes
+        case selectedTemplateID
+        case postMealSymptomSeverity
+        case postMealSymptomNote
+        case postMealFeedbackTimestamp
+        case nutritionImportID
+        case barcode
+        case sourceLabel
+        case calories
+        case fiberGrams
+        case sugarGrams
+        case servingText
+        case mealSource
+        case photoLocalPath
+        case confidenceScore
+        case userConfirmed
+        case createdAt
+        case updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let timestamp = try container.decode(Date.self, forKey: .timestamp)
+        self.init(
+            id: try container.decode(UUID.self, forKey: .id),
+            timestamp: timestamp,
+            mealType: try container.decode(MealType.self, forKey: .mealType),
+            mealDescription: try container.decode(String.self, forKey: .mealDescription),
+            glycemicImpact: try container.decode(GlycemicImpact.self, forKey: .glycemicImpact),
+            photoData: try container.decodeIfPresent(Data.self, forKey: .photoData),
+            carbsGrams: try container.decodeIfPresent(Double.self, forKey: .carbsGrams),
+            proteinGrams: try container.decodeIfPresent(Double.self, forKey: .proteinGrams),
+            fatGrams: try container.decodeIfPresent(Double.self, forKey: .fatGrams),
+            notes: try container.decodeIfPresent(String.self, forKey: .notes),
+            selectedTemplateID: try container.decodeIfPresent(String.self, forKey: .selectedTemplateID),
+            postMealSymptomSeverity: try container.decodeIfPresent(Int.self, forKey: .postMealSymptomSeverity),
+            postMealSymptomNote: try container.decodeIfPresent(String.self, forKey: .postMealSymptomNote),
+            postMealFeedbackTimestamp: try container.decodeIfPresent(Date.self, forKey: .postMealFeedbackTimestamp),
+            nutritionImportID: try container.decodeIfPresent(UUID.self, forKey: .nutritionImportID),
+            barcode: try container.decodeIfPresent(String.self, forKey: .barcode),
+            sourceLabel: try container.decodeIfPresent(String.self, forKey: .sourceLabel),
+            calories: try container.decodeIfPresent(Double.self, forKey: .calories),
+            fiberGrams: try container.decodeIfPresent(Double.self, forKey: .fiberGrams),
+            sugarGrams: try container.decodeIfPresent(Double.self, forKey: .sugarGrams),
+            servingText: try container.decodeIfPresent(String.self, forKey: .servingText),
+            mealSource: try container.decodeIfPresent(String.self, forKey: .mealSource),
+            photoLocalPath: try container.decodeIfPresent(String.self, forKey: .photoLocalPath),
+            confidenceScore: try container.decodeIfPresent(Double.self, forKey: .confidenceScore),
+            userConfirmed: try container.decodeIfPresent(Bool.self, forKey: .userConfirmed) ?? false,
+            createdAt: try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? timestamp,
+            updatedAt: try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? timestamp
+        )
+    }
+}
+
+struct MealScanFoodItemRecord: Codable, Sendable {
+    var id: UUID
+    var mealId: UUID
+    var displayName: String
+    var canonicalFoodId: String?
+    var nutritionSource: NutritionDataSource
+    var estimatedGrams: Double
+    var estimatedVolumeMl: Double?
+    var servingDescription: String?
+    var caloriesKcal: Double
+    var proteinGrams: Double
+    var carbsGrams: Double
+    var netCarbsGrams: Double
+    var fatGrams: Double
+    var fiberGrams: Double
+    var sugarGrams: Double
+    var sodiumMg: Double
+    var saturatedFatGrams: Double
+    var confidenceScore: Double
+    var detectionSource: String?
+    var portionEstimationMethod: PortionEstimationMethod
+    var wasUserEdited: Bool
+    var warning: String?
+    var createdAt: Date
+    var updatedAt: Date
+}
+
+struct MealScanNutritionSummaryRecord: Codable, Sendable {
+    var id: UUID
+    var mealId: UUID
+    var caloriesKcal: Double
+    var proteinGrams: Double
+    var carbsGrams: Double
+    var netCarbsGrams: Double
+    var fatGrams: Double
+    var fiberGrams: Double
+    var sugarGrams: Double
+    var sodiumMg: Double
+    var saturatedFatGrams: Double
+    var confidenceScore: Double
+    var estimatedGlycemicImpact: GlycemicImpactLevel
+    var nutritionSourceSummary: String
+    var createdAt: Date
+    var updatedAt: Date
+}
+
+struct MealScanMetadataRecord: Codable, Sendable {
+    var id: UUID
+    var mealId: UUID
+    var originalPredictionJSON: String
+    var finalUserConfirmedJSON: String
+    var modelVersion: String
+    var pipelineVersion: String
+    var userConfirmed: Bool
+    var hasUserEdits: Bool
+    var createdAt: Date
+    var updatedAt: Date
 }
 
 struct HairPhotoEntryRecord: Codable, Sendable {
@@ -293,6 +461,55 @@ struct OvulationObservationRecord: Codable, Sendable {
     var createdAt: Date
 }
 
+struct NutritionImportRecordDTO: Codable, Sendable {
+    var id: UUID
+    var sourceKind: NutritionImportSourceKind
+    var sourceName: String?
+    var externalIdentifier: String?
+    var startDate: Date
+    var endDate: Date?
+    var barcode: String?
+    var productName: String?
+    var brandName: String?
+    var servingText: String?
+    var calories: Double?
+    var carbsGrams: Double?
+    var proteinGrams: Double?
+    var fatGrams: Double?
+    var fiberGrams: Double?
+    var sugarGrams: Double?
+    var waterOz: Double?
+    var sodiumMg: Double?
+    var saturatedFatGrams: Double?
+    var cholesterolMg: Double?
+    var potassiumMg: Double?
+    var calciumMg: Double?
+    var ironMg: Double?
+    var confidence: Double
+    var completeness: Double
+    var importedAt: Date
+    var reviewStatus: NutritionImportReviewStatus
+    var userReviewed: Bool
+    var notes: String?
+}
+
+struct HealthKitImportedSampleRecordDTO: Codable, Sendable {
+    var id: UUID
+    var sampleUUID: String
+    var healthKitIdentifier: String
+    var sourceName: String
+    var sourceBundleIdentifier: String?
+    var startDate: Date
+    var endDate: Date?
+    var valueDouble: Double?
+    var valueUnit: String?
+    var categoryValue: Int?
+    var derivedRecordKind: HealthKitDerivedRecordKind
+    var derivedRecordID: UUID?
+    var importedAt: Date
+    var notes: String?
+}
+
 enum SettingsDataBackupCoding {
     private static func makeFractionalFormatter() -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
@@ -339,5 +556,17 @@ enum SettingsDataBackupCoding {
             )
         }
         return decoder
+    }
+}
+
+extension JSONEncoder {
+    static var cycleBalanceBackup: JSONEncoder {
+        SettingsDataBackupCoding.makeEncoder()
+    }
+}
+
+extension JSONDecoder {
+    static var cycleBalanceBackup: JSONDecoder {
+        SettingsDataBackupCoding.makeDecoder()
     }
 }

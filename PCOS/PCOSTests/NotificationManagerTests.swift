@@ -13,6 +13,7 @@ struct NotificationManagerTests {
             "notifications.periodReminders",
             "notifications.symptomReminders",
             "notifications.supplementReminders",
+            "notifications.mealScanReminders",
             "notifications.symptomReminderTime",
         ]
         for key in keys {
@@ -47,6 +48,13 @@ struct NotificationManagerTests {
         #expect(manager.supplementRemindersEnabled == false)
     }
 
+    @Test("Default meal scan reminders preference is false")
+    func defaultMealScanRemindersDisabled() {
+        cleanDefaults()
+        let manager = NotificationManager()
+        #expect(manager.mealScanRemindersEnabled == false)
+    }
+
     @Test("Setting period reminders persists to UserDefaults")
     func periodRemindersPersists() {
         cleanDefaults()
@@ -79,6 +87,17 @@ struct NotificationManagerTests {
 
         let manager2 = NotificationManager()
         #expect(manager2.supplementRemindersEnabled == true)
+    }
+
+    @Test("Setting meal scan reminders persists to UserDefaults")
+    func mealScanRemindersPersists() {
+        cleanDefaults()
+        let manager = NotificationManager()
+        manager.mealScanRemindersEnabled = true
+        #expect(UserDefaults.standard.bool(forKey: "notifications.mealScanReminders") == true)
+
+        let manager2 = NotificationManager()
+        #expect(manager2.mealScanRemindersEnabled == true)
     }
 
     @Test("Default symptom reminder time is 8 PM")
@@ -118,17 +137,40 @@ struct NotificationManagerTests {
         manager.periodRemindersEnabled = true
         manager.symptomRemindersEnabled = true
         manager.supplementRemindersEnabled = true
+        manager.mealScanRemindersEnabled = true
 
         #expect(manager.periodRemindersEnabled == true)
         #expect(manager.symptomRemindersEnabled == true)
         #expect(manager.supplementRemindersEnabled == true)
+        #expect(manager.mealScanRemindersEnabled == true)
 
         manager.periodRemindersEnabled = false
         manager.symptomRemindersEnabled = false
         manager.supplementRemindersEnabled = false
+        manager.mealScanRemindersEnabled = false
 
         #expect(manager.periodRemindersEnabled == false)
         #expect(manager.symptomRemindersEnabled == false)
         #expect(manager.supplementRemindersEnabled == false)
+        #expect(manager.mealScanRemindersEnabled == false)
+    }
+
+    @Test("Meal scan notification route selects Track and can be consumed")
+    func mealScanNotificationRouteSelectsTrackAndCanBeConsumed() {
+        let suiteName = "notification-route-tests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let appState = AppState(defaults: defaults, launchArguments: [])
+        #expect(appState.selectedTab == .today)
+        #expect(appState.pendingNotificationRoute == nil)
+
+        appState.handleNotificationRoute(.mealScan)
+
+        #expect(appState.selectedTab == .track)
+        #expect(appState.pendingNotificationRoute == .mealScan)
+
+        appState.consumeNotificationRoute(.mealScan)
+        #expect(appState.pendingNotificationRoute == nil)
     }
 }

@@ -1,6 +1,18 @@
 import SwiftUI
 import UIKit
 
+struct CycleHeroRingPalette {
+    let trackGradient: AngularGradient
+    let upperArcGradient: LinearGradient
+    let lowerArcGradient: LinearGradient
+    let glowGradient: RadialGradient
+    let sparkleColor: Color
+    let activeShadowColor: Color
+    let lowerShadowColor: Color
+    let innerShadowColor: Color
+    let usesGlowBlend: Bool
+}
+
 /// CycleBalance design system. The default Botanical Journal theme uses soft
 /// botanical wellness colors while preserving legacy theme choices.
 enum AppTheme {
@@ -21,8 +33,341 @@ enum AppTheme {
     static let botanicalCreamRGB = ThemeRGB(hex: 0xFFF8EF)
     static let botanicalCreamAltRGB = ThemeRGB(hex: 0xFAF1E8)
 
+    // MARK: - Lunar Calm Tokens
+
+    static let lunarCalmBackgroundRGB = ThemeRGB(hex: 0x05060D)
+    static let lunarCalmBackgroundAltRGB = ThemeRGB(hex: 0x0B0C15)
+    static let lunarCalmSurfaceRGB = ThemeRGB(hex: 0x151621)
+    static let lunarCalmRaisedSurfaceRGB = ThemeRGB(hex: 0x1B1C28)
+    static let lunarCalmBorderRGB = ThemeRGB(hex: 0x30313F)
+    static let lunarCalmPrimaryTextRGB = ThemeRGB(hex: 0xF7F2EE)
+    static let lunarCalmSecondaryTextRGB = ThemeRGB(hex: 0xCBC7D2)
+    static let lunarCalmMutedTextRGB = ThemeRGB(hex: 0x9692A3)
+    static let lunarCalmTealRGB = ThemeRGB(hex: 0x68E0D4)
+    static let lunarCalmCoralRGB = ThemeRGB(hex: 0xFFAAA0)
+    static let lunarCalmPeachRGB = ThemeRGB(hex: 0xFFD4A3)
+    static let lunarCalmLavenderRGB = ThemeRGB(hex: 0xB8A7F5)
+    static let lunarCalmBlueRGB = ThemeRGB(hex: 0x6DB9E8)
+    static let lunarCalmRoseRGB = ThemeRGB(hex: 0xE77D91)
+    static let lunarCalmGoldRGB = ThemeRGB(hex: 0xFFC86D)
+
     static var isBotanicalJournal: Bool {
         appearance.themeOption == .botanicalJournal
+    }
+
+    static var isLunarCalm: Bool {
+        appearance.themeOption == .lunarCalm
+    }
+
+    static var usesCustomTabBar: Bool {
+        true
+    }
+
+    static var usesImmersiveHomeShell: Bool {
+        usesCustomTabBar
+    }
+
+    static var usesImmersivePresentation: Bool {
+        isLunarCalm
+    }
+
+    static var usesPremiumEditorStyling: Bool {
+        isEditorialTheme
+    }
+
+    static var isEditorialTheme: Bool {
+        !appearance.themeOption.isHighContrast
+    }
+
+    static var preferredColorScheme: ColorScheme {
+        appearance.preferredColorScheme
+    }
+
+    static var lunarCalmGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                lunarCalmTealRGB.color,
+                lunarCalmLavenderRGB.color,
+                lunarCalmCoralRGB.color,
+                lunarCalmPeachRGB.color,
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    static var lunarCalmCycleGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                ThemeRGB(hex: 0x3CBFD2).color,
+                lunarCalmTealRGB.color,
+                ThemeRGB(hex: 0xF6B8D1).color,
+                ThemeRGB(hex: 0xFFC78F).color,
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    static var lunarCalmCycleTrackGradient: AngularGradient {
+        AngularGradient(
+            colors: [
+                lunarCalmBorderRGB.color.opacity(0.72),
+                lunarCalmSurfaceRGB.color.opacity(0.34),
+                lunarCalmBorderRGB.color.opacity(0.54),
+                lunarCalmBackgroundAltRGB.color.opacity(0.82),
+                lunarCalmBorderRGB.color.opacity(0.72),
+            ],
+            center: .center,
+            startAngle: .degrees(180),
+            endAngle: .degrees(540)
+        )
+    }
+
+    static var lunarCalmCycleGlowGradient: RadialGradient {
+        RadialGradient(
+            colors: [
+                lunarCalmPeachRGB.color.opacity(0.95),
+                lunarCalmGoldRGB.color.opacity(0.55),
+                lunarCalmPeachRGB.color.opacity(0.16),
+                .clear,
+            ],
+            center: .center,
+            startRadius: 0,
+            endRadius: 22
+        )
+    }
+
+    static var cycleHeroRingPalette: CycleHeroRingPalette {
+        if isLunarCalm {
+            return CycleHeroRingPalette(
+                trackGradient: lunarCalmCycleTrackGradient,
+                upperArcGradient: LinearGradient(
+                    colors: [
+                        lunarCalmPeachRGB.color,
+                        ThemeRGB(hex: 0xC9F0E2).color,
+                        lunarCalmTealRGB.color,
+                        ThemeRGB(hex: 0x273143).color,
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                lowerArcGradient: LinearGradient(
+                    colors: [
+                        lunarCalmPeachRGB.color,
+                        lunarCalmCoralRGB.color,
+                        lunarCalmLavenderRGB.color,
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ),
+                glowGradient: lunarCalmCycleGlowGradient,
+                sparkleColor: lunarCalmPeachRGB.color,
+                activeShadowColor: lunarCalmTealRGB.color.opacity(0.24),
+                lowerShadowColor: lunarCalmCoralRGB.color.opacity(0.22),
+                innerShadowColor: lunarCalmBackgroundRGB.color.opacity(0.46),
+                usesGlowBlend: true
+            )
+        }
+
+        if appearance.themeOption.isHighContrast {
+            return CycleHeroRingPalette(
+                trackGradient: AngularGradient(
+                    colors: [
+                        Color.black.opacity(0.7),
+                        Color.black.opacity(0.34),
+                        palette.accent.color.opacity(0.62),
+                        Color.black.opacity(0.34),
+                        Color.black.opacity(0.7),
+                    ],
+                    center: .center,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(540)
+                ),
+                upperArcGradient: LinearGradient(
+                    colors: [
+                        palette.sage.color,
+                        palette.accent.color,
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                lowerArcGradient: LinearGradient(
+                    colors: [
+                        palette.coral.color,
+                        palette.accent.color,
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ),
+                glowGradient: RadialGradient(
+                    colors: [
+                        palette.coral.color.opacity(0.5),
+                        .clear,
+                    ],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 16
+                ),
+                sparkleColor: palette.coral.color,
+                activeShadowColor: .clear,
+                lowerShadowColor: .clear,
+                innerShadowColor: Color.black.opacity(0.24),
+                usesGlowBlend: false
+            )
+        }
+
+        return CycleHeroRingPalette(
+            trackGradient: AngularGradient(
+                colors: [
+                    cardBorder.opacity(0.5),
+                    premiumEditorSurface.opacity(0.28),
+                    cardBorder.opacity(0.34),
+                    premiumEditorRaisedSurface.opacity(0.42),
+                    cardBorder.opacity(0.5),
+                ],
+                center: .center,
+                startAngle: .degrees(180),
+                endAngle: .degrees(540)
+            ),
+            upperArcGradient: LinearGradient(
+                colors: [
+                    softGoldAccent.opacity(0.92),
+                    palette.sage.color.opacity(0.9),
+                    premiumEditorAccentColor,
+                    primaryText.opacity(0.68),
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            ),
+            lowerArcGradient: LinearGradient(
+                colors: [
+                    softGoldAccent.opacity(0.92),
+                    premiumEditorSecondaryAccentColor,
+                    lavenderAccent.opacity(0.86),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            ),
+            glowGradient: RadialGradient(
+                colors: [
+                    premiumEditorSecondaryAccentColor.opacity(0.88),
+                    softGoldAccent.opacity(0.4),
+                    premiumEditorSecondaryAccentColor.opacity(0.12),
+                    .clear,
+                ],
+                center: .center,
+                startRadius: 0,
+                endRadius: 18
+            ),
+            sparkleColor: premiumEditorSecondaryAccentColor,
+            activeShadowColor: premiumEditorAccentColor.opacity(0.18),
+            lowerShadowColor: premiumEditorSecondaryAccentColor.opacity(0.18),
+            innerShadowColor: cardBorder.opacity(0.28),
+            usesGlowBlend: true
+        )
+    }
+
+    static var lunarCalmBorderGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                lunarCalmTealRGB.color.opacity(0.8),
+                lunarCalmLavenderRGB.color.opacity(0.54),
+                lunarCalmCoralRGB.color.opacity(0.58),
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static var themeAccentGradient: LinearGradient {
+        if isLunarCalm {
+            lunarCalmGradient
+        } else {
+            LinearGradient(
+                colors: [
+                    palette.accent.color,
+                    palette.sage.color,
+                    palette.coral.color,
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    static var themeBorderGradient: LinearGradient {
+        if isLunarCalm {
+            lunarCalmBorderGradient
+        } else {
+            LinearGradient(
+                colors: [
+                    palette.accent.color.opacity(appearance.themeOption.isHighContrast ? 0.72 : 0.34),
+                    palette.sage.color.opacity(appearance.themeOption.isHighContrast ? 0.62 : 0.22),
+                    palette.coral.color.opacity(appearance.themeOption.isHighContrast ? 0.54 : 0.24),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    static var premiumEditorAccentGradient: LinearGradient {
+        isLunarCalm ? lunarCalmGradient : themeAccentGradient
+    }
+
+    static var premiumEditorBorderGradient: LinearGradient {
+        isLunarCalm ? lunarCalmBorderGradient : themeBorderGradient
+    }
+
+    static var premiumEditorBackground: Color {
+        if isLunarCalm {
+            lunarCalmBackgroundRGB.color
+        } else {
+            warmNeutral
+        }
+    }
+
+    static var premiumEditorSurface: Color {
+        if isLunarCalm {
+            lunarCalmSurfaceRGB.color.opacity(0.82)
+        } else {
+            cardBackground.opacity(isBotanicalJournal ? 0.84 : 0.94)
+        }
+    }
+
+    static var premiumEditorRaisedSurface: Color {
+        if isLunarCalm {
+            lunarCalmRaisedSurfaceRGB.color
+        } else if isBotanicalJournal {
+            botanicalCreamAltRGB.color.opacity(0.92)
+        } else {
+            palette.warmNeutralLight.color.opacity(0.92)
+        }
+    }
+
+    static var premiumEditorBorder: Color {
+        if isLunarCalm {
+            lunarCalmBorderRGB.color
+        } else {
+            cardBorder
+        }
+    }
+
+    static var premiumEditorAccentColor: Color {
+        isLunarCalm ? lunarCalmTealRGB.color : accentColor
+    }
+
+    static var premiumEditorSecondaryAccentColor: Color {
+        isLunarCalm ? lunarCalmPeachRGB.color : coralAccent
+    }
+
+    static var premiumEditorWarningAccentColor: Color {
+        isLunarCalm ? lunarCalmCoralRGB.color : roseAccent
+    }
+
+    static var premiumEditorCTAForeground: Color {
+        isLunarCalm ? lunarCalmBackgroundRGB.color : .white
     }
 
     // MARK: - Primary Colors
@@ -89,63 +434,132 @@ enum AppTheme {
     // MARK: - Semantic Colors
 
     static var cardBackground: Color {
-        isBotanicalJournal
-            ? Color(red: 1, green: 250.0 / 255.0, blue: 242.0 / 255.0).opacity(0.78)
-            : Color(.secondarySystemGroupedBackground)
+        if isBotanicalJournal {
+            Color(red: 1, green: 250.0 / 255.0, blue: 242.0 / 255.0).opacity(0.78)
+        } else if isLunarCalm {
+            lunarCalmSurfaceRGB.color.opacity(0.82)
+        } else if appearance.themeOption.isHighContrast {
+            Color.white.opacity(0.98)
+        } else {
+            palette.warmNeutralLight.color.opacity(0.86)
+        }
     }
 
     static var groupedBackground: Color {
-        isBotanicalJournal ? warmNeutral : Color(.systemGroupedBackground)
+        warmNeutral
     }
 
     static var primaryText: Color {
-        isBotanicalJournal ? botanicalForestRGB.color : .primary
+        if isBotanicalJournal {
+            botanicalForestRGB.color
+        } else if isLunarCalm {
+            lunarCalmPrimaryTextRGB.color
+        } else if appearance.themeOption.isHighContrast {
+            Color.black
+        } else {
+            palette.accent.color
+        }
     }
 
     static var secondaryText: Color {
-        isBotanicalJournal ? botanicalForestAltRGB.color.opacity(0.72) : .secondary
+        if isBotanicalJournal {
+            botanicalForestAltRGB.color.opacity(0.72)
+        } else if isLunarCalm {
+            lunarCalmSecondaryTextRGB.color
+        } else if appearance.themeOption.isHighContrast {
+            Color.black.opacity(0.72)
+        } else {
+            // Pale sage accents (e.g. Blush Moonrise) need darkening to stay
+            // legible as text on light backgrounds.
+            palette.sage.darkened(by: 0.32).color.opacity(0.92)
+        }
     }
 
     static var lavenderAccent: Color {
-        botanicalLavenderRGB.color
+        isLunarCalm ? lunarCalmLavenderRGB.color : botanicalLavenderRGB.color
     }
 
     static var roseAccent: Color {
-        botanicalRoseRGB.color
+        isLunarCalm ? lunarCalmRoseRGB.color : botanicalRoseRGB.color
     }
 
     static var softGoldAccent: Color {
-        botanicalGoldRGB.color
+        isLunarCalm ? lunarCalmGoldRGB.color : botanicalGoldRGB.color
     }
 
     static var cardBorder: Color {
-        isBotanicalJournal
-            ? botanicalRoseSoftRGB.color.opacity(0.34)
-            : Color.secondary.opacity(0.12)
+        if isBotanicalJournal {
+            botanicalRoseSoftRGB.color.opacity(0.34)
+        } else if isLunarCalm {
+            lunarCalmBorderRGB.color.opacity(0.92)
+        } else if appearance.themeOption.isHighContrast {
+            palette.accent.color.opacity(0.78)
+        } else {
+            palette.sage.color.opacity(0.26)
+        }
     }
 
     static var dividerColor: Color {
-        isBotanicalJournal
-            ? botanicalSageRGB.color.opacity(0.38)
-            : Color.secondary.opacity(0.18)
+        if isBotanicalJournal {
+            botanicalSageRGB.color.opacity(0.38)
+        } else if isLunarCalm {
+            lunarCalmBorderRGB.color.opacity(0.82)
+        } else if appearance.themeOption.isHighContrast {
+            palette.accent.color.opacity(0.7)
+        } else {
+            palette.sage.color.opacity(0.32)
+        }
     }
 
     static var cardShadowColor: Color {
-        isBotanicalJournal
-            ? botanicalRoseRGB.color.opacity(0.14)
-            : Color.black.opacity(0.06)
+        if isBotanicalJournal {
+            botanicalRoseRGB.color.opacity(0.14)
+        } else if isLunarCalm {
+            Color.black.opacity(0.42)
+        } else if appearance.themeOption.isHighContrast {
+            Color.black.opacity(0.12)
+        } else {
+            palette.accent.color.opacity(0.11)
+        }
     }
 
     static var defaultCardCornerRadius: CGFloat {
-        isBotanicalJournal ? 28 : cornerRadiusMedium
+        if isBotanicalJournal {
+            28
+        } else if isLunarCalm {
+            cornerRadiusLarge
+        } else if appearance.themeOption.isHighContrast {
+            cornerRadiusMedium
+        } else {
+            cornerRadiusLarge
+        }
     }
 
     static var largeCardCornerRadius: CGFloat {
-        isBotanicalJournal ? 32 : cornerRadiusXL
+        if isBotanicalJournal {
+            32
+        } else if isLunarCalm {
+            cornerRadiusXL
+        } else if appearance.themeOption.isHighContrast {
+            cornerRadiusLarge
+        } else {
+            cornerRadiusXL
+        }
     }
 
+    static let botanicalCustomTabBarBottomClearance: CGFloat = 126
+    static let botanicalTabIconFrame = CGSize(width: 28, height: 22)
+    static let botanicalTabMinHeight: CGFloat = 56
+    static let botanicalTabLabelSpacing: CGFloat = 3
+    static let botanicalTabItemVerticalPadding: CGFloat = 8
+    static let botanicalBadgeDefaultSize: CGFloat = 48
+    static let botanicalBadgeCompactSize: CGFloat = 44
+    static let botanicalCardSparkleSize: CGFloat = 44
+    static let botanicalPosterEmblemSize: CGFloat = 72
+    static let lunarPosterEmblemSize: CGFloat = 64
+
     static var botanicalScrollableBottomPadding: CGFloat {
-        isBotanicalJournal ? 126 : 0
+        usesCustomTabBar ? botanicalCustomTabBarBottomClearance : 0
     }
 
     // MARK: - Severity Colors
@@ -251,14 +665,24 @@ enum AppTheme {
         themeOption: ThemeOption,
         selectedFontOption: FontOption
     ) -> FontOption {
-        themeOption == .botanicalJournal ? .systemDefault : selectedFontOption
+        switch themeOption {
+        case .botanicalJournal, .lunarCalm:
+            .systemDefault
+        default:
+            selectedFontOption
+        }
     }
 
     static func resolvedHeadingFontOption(
         themeOption: ThemeOption,
         selectedFontOption: FontOption
     ) -> FontOption {
-        themeOption == .botanicalJournal ? .cormorantGaramond : selectedFontOption
+        switch themeOption {
+        case .botanicalJournal, .lunarCalm:
+            .cormorantGaramond
+        default:
+            selectedFontOption
+        }
     }
 
     static func resolvedUIFont(
@@ -393,7 +817,7 @@ struct CardStyle: ViewModifier {
                     Image("botanical-sparkles")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 44, height: 44)
+                        .frame(width: AppTheme.botanicalCardSparkleSize, height: AppTheme.botanicalCardSparkleSize)
                         .opacity(0.34)
                         .padding(8)
                         .accessibilityHidden(true)
@@ -413,12 +837,77 @@ struct CardStyle: ViewModifier {
                         )
                 )
                 .shadow(color: AppTheme.cardShadowColor, radius: 18, x: 0, y: 10)
+        } else if AppTheme.isLunarCalm {
+            content
+                .padding(AppTheme.spacing16)
+                .background(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppTheme.lunarCalmRaisedSurfaceRGB.color.opacity(0.86),
+                                    AppTheme.lunarCalmSurfaceRGB.color.opacity(0.76),
+                                    AppTheme.lunarCalmBackgroundAltRGB.color.opacity(0.92),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                )
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "sparkle")
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.lunarCalmPeachRGB.color.opacity(0.72))
+                        .padding(AppTheme.spacing12)
+                        .accessibilityHidden(true)
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .strokeBorder(AppTheme.lunarCalmBorderGradient, lineWidth: 0.9)
+                        .opacity(0.68)
+                )
+                .shadow(color: AppTheme.cardShadowColor, radius: 22, x: 0, y: 12)
+        } else if AppTheme.isEditorialTheme {
+            content
+                .padding(AppTheme.spacing16)
+                .background(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppTheme.accentColor.opacity(0.08),
+                                    AppTheme.sage.opacity(0.06),
+                                    AppTheme.coralAccent.opacity(0.08),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .strokeBorder(AppTheme.themeBorderGradient, lineWidth: 0.8)
+                        .opacity(0.74)
+                )
+                .shadow(color: AppTheme.cardShadowColor, radius: 16, x: 0, y: 9)
         } else {
             content
                 .padding(AppTheme.spacing16)
                 .background(
                     RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
                         .fill(AppTheme.cardBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: resolvedCornerRadius, style: .continuous)
+                        .strokeBorder(AppTheme.cardBorder, lineWidth: 1.1)
                 )
         }
     }
@@ -440,7 +929,12 @@ struct BotanicalScreenBackground: View {
     var style: BotanicalPosterBackgroundStyle = .dashboard
 
     var body: some View {
-        BotanicalPosterBackground(style: style)
+        GeometryReader { proxy in
+            BotanicalPosterBackground(style: style)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -585,6 +1079,95 @@ struct BotanicalPosterBackground: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
                     .padding(.trailing, ornamentOffset(-92))
                     .padding(.top, floatingSideOrnamentInset)
+            } else if AppTheme.isLunarCalm {
+                LinearGradient(
+                    colors: [
+                        AppTheme.lunarCalmBackgroundRGB.color,
+                        AppTheme.lunarCalmBackgroundAltRGB.color,
+                        AppTheme.lunarCalmBackgroundRGB.color,
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                Circle()
+                    .stroke(AppTheme.lunarCalmTealRGB.color.opacity(style == .dense ? 0.34 : 0.22), lineWidth: 46)
+                    .frame(width: 360 * ornamentScale, height: 360 * ornamentScale)
+                    .blur(radius: 18)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(.leading, ornamentOffset(-210))
+                    .padding(.bottom, ornamentOffset(-180))
+
+                Circle()
+                    .stroke(AppTheme.lunarCalmPeachRGB.color.opacity(style == .quiet ? 0.18 : 0.28), lineWidth: 54)
+                    .frame(width: 340 * ornamentScale, height: 340 * ornamentScale)
+                    .blur(radius: 18)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(.trailing, ornamentOffset(-220))
+                    .padding(.bottom, ornamentOffset(-148))
+
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                AppTheme.lunarCalmLavenderRGB.color.opacity(0.18),
+                                AppTheme.lunarCalmTealRGB.color.opacity(0.08),
+                                .clear,
+                            ],
+                            center: .center,
+                            startRadius: 8,
+                            endRadius: 130
+                        )
+                    )
+                    .frame(width: 260, height: 260)
+                    .blur(radius: 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding(.top, 40)
+                    .padding(.trailing, -88)
+
+                Image(systemName: "sparkle")
+                    .font(.system(size: style == .quiet ? 12 : 16, weight: .regular))
+                    .foregroundStyle(AppTheme.lunarCalmPeachRGB.color.opacity(0.78))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding(.top, style == .dense ? 84 : 112)
+                    .padding(.trailing, 52)
+
+                Image(systemName: "sparkle")
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(AppTheme.lunarCalmPeachRGB.color.opacity(0.58))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .padding(.leading, 220)
+                    .padding(.bottom, 190)
+            } else if AppTheme.isEditorialTheme {
+                LinearGradient(
+                    colors: [
+                        AppTheme.warmNeutral,
+                        AppTheme.sage.opacity(0.10),
+                        AppTheme.warmNeutral,
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                Rectangle()
+                    .fill(AppTheme.themeAccentGradient.opacity(style == .quiet ? 0.08 : 0.12))
+                    .frame(height: 190 * ornamentScale)
+                    .rotationEffect(.degrees(-12))
+                    .blur(radius: 28)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(.top, -96)
+                    .padding(.horizontal, -90)
+
+                Rectangle()
+                    .fill(AppTheme.coralAccent.opacity(style == .dense ? 0.12 : 0.08))
+                    .frame(height: 180 * ornamentScale)
+                    .rotationEffect(.degrees(11))
+                    .blur(radius: 30)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, -104)
+                    .padding(.horizontal, -90)
+            } else {
+                Color.white
             }
         }
         .ignoresSafeArea()
@@ -841,16 +1424,29 @@ struct BotanicalOrnamentalDivider: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: width)
+            } else if AppTheme.isLunarCalm {
+                HStack(spacing: AppTheme.spacing8) {
+                    Rectangle()
+                        .fill(AppTheme.lunarCalmCycleGradient)
+                        .frame(height: 1.2)
+                    Image(systemName: "moon.fill")
+                        .appFont(.caption2)
+                        .foregroundStyle(AppTheme.lunarCalmPeachRGB.color)
+                    Rectangle()
+                        .fill(AppTheme.lunarCalmCycleGradient)
+                        .frame(height: 1.2)
+                }
+                .frame(maxWidth: width)
             } else {
                 HStack(spacing: AppTheme.spacing8) {
                     Rectangle()
-                        .fill(AppTheme.dividerColor)
+                        .fill(AppTheme.themeAccentGradient)
                         .frame(height: 1)
-                    Image(systemName: "circle.fill")
+                    Image(systemName: AppTheme.isEditorialTheme ? "sparkle" : "circle.fill")
                         .appFont(.caption2)
-                        .foregroundStyle(AppTheme.dividerColor)
+                        .foregroundStyle(AppTheme.accentColor)
                     Rectangle()
-                        .fill(AppTheme.dividerColor)
+                        .fill(AppTheme.themeAccentGradient)
                         .frame(height: 1)
                 }
             }
@@ -870,6 +1466,17 @@ struct BotanicalMoonPhaseDivider: View {
                     .scaledToFit()
                     .frame(maxWidth: width)
                     .opacity(0.76)
+            } else if AppTheme.isLunarCalm {
+                HStack(spacing: AppTheme.spacing8) {
+                    Image(systemName: "moon.fill")
+                    Image(systemName: "circle.lefthalf.filled")
+                    Image(systemName: "circle.fill")
+                    Image(systemName: "circle.righthalf.filled")
+                    Image(systemName: "moon")
+                }
+                .appFont(.caption2)
+                .foregroundStyle(AppTheme.lunarCalmCycleGradient)
+                .frame(maxWidth: width)
             } else {
                 BotanicalOrnamentalDivider(width: width)
             }
@@ -881,7 +1488,7 @@ struct BotanicalMoonPhaseDivider: View {
 struct BotanicalIconBadge: View {
     let systemImage: String
     var color: Color = AppTheme.accentColor
-    var size: CGFloat = 48
+    var size: CGFloat = AppTheme.botanicalBadgeDefaultSize
 
     var body: some View {
         BotanicalIllustrationBadge(systemImage: systemImage, color: color, size: size)
@@ -892,19 +1499,17 @@ struct BotanicalIllustrationBadge: View {
     var assetName: String?
     var systemImage: String?
     var color: Color = AppTheme.accentColor
-    var size: CGFloat = 48
+    var size: CGFloat = AppTheme.botanicalBadgeDefaultSize
 
     var body: some View {
         ZStack {
             Circle()
                 .fill(
-                    AppTheme.isBotanicalJournal
-                        ? AppTheme.botanicalCreamAltRGB.color.opacity(0.76)
-                        : color.opacity(AppTheme.opacityLight)
+                    badgeFillColor(color: color)
                 )
 
             Circle()
-                .fill(color.opacity(AppTheme.isBotanicalJournal ? 0.12 : 0))
+                .fill(color.opacity(AppTheme.isBotanicalJournal ? 0.12 : AppTheme.isLunarCalm ? 0.16 : 0.08))
 
             if AppTheme.isBotanicalJournal, let assetName {
                 Image(assetName)
@@ -922,10 +1527,22 @@ struct BotanicalIllustrationBadge: View {
         .overlay(
             Circle()
                 .strokeBorder(
-                    color.opacity(AppTheme.isBotanicalJournal ? 0.24 : 0),
-                    lineWidth: AppTheme.isBotanicalJournal ? 0.8 : 0
+                    color.opacity(AppTheme.isBotanicalJournal ? 0.24 : AppTheme.isLunarCalm ? 0.42 : 0.26),
+                    lineWidth: 0.8
                 )
         )
+    }
+
+    private func badgeFillColor(color: Color) -> Color {
+        if AppTheme.isBotanicalJournal {
+            AppTheme.botanicalCreamAltRGB.color.opacity(0.76)
+        } else if AppTheme.isLunarCalm {
+            AppTheme.lunarCalmRaisedSurfaceRGB.color.opacity(0.92)
+        } else if AppTheme.isEditorialTheme {
+            color.opacity(0.12)
+        } else {
+            Color.white
+        }
     }
 }
 
@@ -955,13 +1572,24 @@ struct BotanicalPosterHeader: View {
                 Image(emblemAssetName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 72, height: 72)
+                    .frame(width: AppTheme.botanicalPosterEmblemSize, height: AppTheme.botanicalPosterEmblemSize)
                     .background(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
                             .fill(AppTheme.botanicalCreamRGB.color.opacity(0.74))
                             .shadow(color: AppTheme.botanicalRoseRGB.color.opacity(0.13), radius: 14, y: 8)
                     )
                     .accessibilityHidden(true)
+            } else if AppTheme.isLunarCalm {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.lunarCalmGradient)
+                    Image(systemName: "moon.stars.fill")
+                        .appFont(.title2)
+                        .foregroundStyle(AppTheme.lunarCalmBackgroundRGB.color)
+                }
+                .frame(width: AppTheme.lunarPosterEmblemSize, height: AppTheme.lunarPosterEmblemSize)
+                .shadow(color: AppTheme.lunarCalmTealRGB.color.opacity(0.24), radius: 18, y: 8)
+                .accessibilityHidden(true)
             }
 
             Text(title)

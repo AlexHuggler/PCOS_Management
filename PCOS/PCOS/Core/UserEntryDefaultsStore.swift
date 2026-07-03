@@ -176,6 +176,20 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         }
     }
 
+    var lastFlowIntensity: FlowIntensity? {
+        get {
+            guard let raw = defaults.string(forKey: Keys.lastFlowIntensity) else { return nil }
+            return FlowIntensity(rawValue: raw)
+        }
+        set {
+            if let newValue {
+                defaults.set(newValue.rawValue, forKey: Keys.lastFlowIntensity)
+            } else {
+                defaults.removeObject(forKey: Keys.lastFlowIntensity)
+            }
+        }
+    }
+
     func recordRecentBloodSugarMealContext(_ value: String) {
         recordRecent(value, key: Keys.recentBloodSugarContexts)
     }
@@ -339,6 +353,8 @@ final class UserEntryDefaultsStore: @unchecked Sendable {
         static let lastSupplementMinute = "entryDefaults.lastSupplementMinute"
         static let lastPhotoType = "entryDefaults.lastPhotoType"
         static let lastLoggerShortcut = "entryDefaults.lastLoggerShortcut"
+        /// Legacy key predates this store; must stay "cycle.lastFlowIntensity" for existing users.
+        static let lastFlowIntensity = "cycle.lastFlowIntensity"
 
         static let recentBloodSugarContexts = "entryDefaults.recentBloodSugarContexts"
         static let recentBloodSugarNotes = "entryDefaults.recentBloodSugarNotes"

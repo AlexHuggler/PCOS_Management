@@ -74,8 +74,10 @@ func assertMainTabShellPresent(
     line: UInt = #line
 ) {
     let customBar = app.otherElements["botanical.tab_bar"]
+    let lunarBar = app.otherElements["lunar.tab_bar"]
+    let themedBar = app.otherElements["themed.tab_bar"]
     let firstCustomTab = app.buttons[MainTab.today.identifier]
-    if customBar.exists || firstCustomTab.exists {
+    if customBar.exists || lunarBar.exists || themedBar.exists || firstCustomTab.exists {
         for tab in MainTab.allCases {
             XCTAssertTrue(app.buttons[tab.identifier].exists, "Missing custom tab \(tab.identifier)", file: file, line: line)
         }
@@ -88,7 +90,10 @@ func assertMainTabShellPresent(
         return
     }
 
-    if customBar.waitForExistence(timeout: 1) || firstCustomTab.waitForExistence(timeout: 1) {
+    if customBar.waitForExistence(timeout: 1)
+        || lunarBar.waitForExistence(timeout: 1)
+        || themedBar.waitForExistence(timeout: 1)
+        || firstCustomTab.waitForExistence(timeout: 1) {
         for tab in MainTab.allCases {
             XCTAssertTrue(app.buttons[tab.identifier].exists, "Missing custom tab \(tab.identifier)", file: file, line: line)
         }
@@ -176,24 +181,44 @@ func firstVisibleInsightDisclosureButton(
     timeout: TimeInterval = 1,
     maxSwipes: Int = 5
 ) -> XCUIElement {
-    let button = app.buttons.matching(insightDisclosureButtonPredicate()).firstMatch
-    if button.waitForExistence(timeout: timeout) {
-        return button
+    let buttons = app.buttons.matching(insightDisclosureButtonPredicate())
+
+    if let visibleButton = firstHittableElement(in: buttons, within: app) {
+        return visibleButton
+    }
+
+    _ = buttons.firstMatch.waitForExistence(timeout: timeout)
+    if let visibleButton = firstHittableElement(in: buttons, within: app) {
+        return visibleButton
     }
 
     for _ in 0..<maxSwipes {
         app.swipeUp()
-        if button.waitForExistence(timeout: 1) {
-            return button
+        _ = buttons.firstMatch.waitForExistence(timeout: 1)
+        if let visibleButton = firstHittableElement(in: buttons, within: app) {
+            return visibleButton
         }
     }
 
     for _ in 0..<maxSwipes {
         app.swipeDown()
-        if button.waitForExistence(timeout: 1) {
-            return button
+        _ = buttons.firstMatch.waitForExistence(timeout: 1)
+        if let visibleButton = firstHittableElement(in: buttons, within: app) {
+            return visibleButton
         }
     }
 
-    return button
+    return buttons.firstMatch
+}
+
+@MainActor
+private func firstHittableElement(
+    in query: XCUIElementQuery,
+    within app: XCUIApplication
+) -> XCUIElement? {
+    query.allElementsBoundByIndex.first { element in
+        element.exists
+            && element.isHittable
+            && app.frame.intersects(element.frame)
+    }
 }

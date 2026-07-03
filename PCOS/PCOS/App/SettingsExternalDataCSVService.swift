@@ -33,6 +33,18 @@ enum SettingsExternalCSVSchema {
         case basalBodyTemperatureCelsius = "basal_body_temperature_celsius"
         case cervicalMucus = "cervical_mucus"
         case lhTestResult = "lh_test_result"
+        case sourceKind = "source_kind"
+        case sourceName = "source_name"
+        case externalIdentifier = "external_identifier"
+        case barcode
+        case productName = "product_name"
+        case servingText = "serving_text"
+        case calories
+        case fiberGrams = "fiber_grams"
+        case sugarGrams = "sugar_grams"
+        case confidence
+        case completeness
+        case reviewStatus = "review_status"
         case notes
     }
 
@@ -44,6 +56,7 @@ enum SettingsExternalCSVSchema {
         case meal
         case dailyLog = "daily_log"
         case ovulationObservation = "ovulation_observation"
+        case nutritionImport = "nutrition_import"
     }
 
     struct FormatRule: Identifiable, Hashable, Sendable {
@@ -79,8 +92,30 @@ enum SettingsExternalCSVSchema {
 
     static let header = headerColumns.map(\.rawValue)
 
+    static let nutritionHeaderColumns: Set<Column> = [
+        .sourceKind,
+        .sourceName,
+        .externalIdentifier,
+        .barcode,
+        .productName,
+        .servingText,
+        .calories,
+        .fiberGrams,
+        .sugarGrams,
+        .confidence,
+        .completeness,
+        .reviewStatus,
+    ]
+
+    static let v3HeaderColumns = Column.allCases.filter {
+        !nutritionHeaderColumns.contains($0)
+    }
+
+    static let v3Header = v3HeaderColumns.map(\.rawValue)
+
     static let legacyHeaderColumns = Column.allCases.filter {
         ![Column.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult].contains($0)
+            && !nutritionHeaderColumns.contains($0)
     }
 
     static let legacyHeader = legacyHeaderColumns.map(\.rawValue)
@@ -158,6 +193,31 @@ enum SettingsExternalCSVSchema {
             noteKey: nil,
             noteDefaultValue: nil
         ),
+        RecordDefinition(
+            type: .nutritionImport,
+            requiredFields: [.recordType, .timestamp, .sourceKind],
+            optionalFields: [
+                .sourceName,
+                .externalIdentifier,
+                .barcode,
+                .productName,
+                .brand,
+                .servingText,
+                .calories,
+                .carbsGrams,
+                .proteinGrams,
+                .fatGrams,
+                .fiberGrams,
+                .sugarGrams,
+                .waterOz,
+                .confidence,
+                .completeness,
+                .reviewStatus,
+                .notes,
+            ],
+            noteKey: nil,
+            noteDefaultValue: nil
+        ),
     ]
 
     static func acceptedValues(for column: Column) -> [String]? {
@@ -178,6 +238,10 @@ enum SettingsExternalCSVSchema {
             CervicalMucusType.allCases.map(\.rawValue)
         case .lhTestResult:
             LHTestResult.allCases.map(\.rawValue)
+        case .sourceKind:
+            NutritionImportSourceKind.allCases.map(\.rawValue)
+        case .reviewStatus:
+            NutritionImportReviewStatus.allCases.map(\.rawValue)
         case .taken:
             ["true", "false"]
         default:
@@ -382,6 +446,28 @@ struct SettingsExternalDataCSVService {
         let notes: String?
     }
 
+    private struct NutritionImportRow {
+        let timestamp: Date
+        let sourceKind: NutritionImportSourceKind
+        let sourceName: String?
+        let externalIdentifier: String?
+        let barcode: String?
+        let productName: String?
+        let brandName: String?
+        let servingText: String?
+        let calories: Double?
+        let carbsGrams: Double?
+        let proteinGrams: Double?
+        let fatGrams: Double?
+        let fiberGrams: Double?
+        let sugarGrams: Double?
+        let waterOz: Double?
+        let confidence: Double?
+        let completeness: Double?
+        let reviewStatus: NutritionImportReviewStatus?
+        let notes: String?
+    }
+
     private enum ParsedRecord {
         case period(PeriodRow)
         case symptom(SymptomRow)
@@ -390,6 +476,7 @@ struct SettingsExternalDataCSVService {
         case meal(MealRow)
         case dailyLog(DailyLogRow)
         case ovulationObservation(OvulationObservationRow)
+        case nutritionImport(NutritionImportRow)
     }
 
     private struct ParsedRows {
@@ -438,6 +525,15 @@ struct SettingsExternalDataCSVService {
         let cervicalMucus: String?
         let lhTestResult: String?
         let notes: String?
+    }
+
+    private struct NutritionImportKey: Hashable {
+        let timestamp: Date
+        let sourceKind: String
+        let sourceName: String?
+        let externalIdentifier: String?
+        let barcode: String?
+        let productName: String?
     }
 
     private let modelContext: ModelContext
@@ -598,6 +694,8 @@ private extension SettingsExternalDataCSVService {
         let activeColumns: [Column]
         if header == expectedHeader {
             activeColumns = SettingsExternalCSVSchema.headerColumns
+        } else if header == SettingsExternalCSVSchema.v3Header {
+            activeColumns = SettingsExternalCSVSchema.v3HeaderColumns
         } else if header == SettingsExternalCSVSchema.legacyHeader {
             activeColumns = SettingsExternalCSVSchema.legacyHeaderColumns
         } else {
@@ -648,6 +746,8 @@ private extension SettingsExternalDataCSVService {
                     record = .dailyLog(try parseDailyLogRow(row))
                 case .ovulationObservation:
                     record = .ovulationObservation(try parseOvulationObservationRow(row))
+                case .nutritionImport:
+                    record = .nutritionImport(try parseNutritionImportRow(row))
                 }
 
                 records.append(record)
@@ -771,6 +871,30 @@ private extension SettingsExternalDataCSVService {
             basalBodyTemperatureCelsius: try optionalDouble(column: .basalBodyTemperatureCelsius, in: row),
             cervicalMucus: try optionalEnum(column: .cervicalMucus, in: row, as: CervicalMucusType.self),
             lhTestResult: try optionalEnum(column: .lhTestResult, in: row, as: LHTestResult.self),
+            notes: cleanedText(row.value(.notes))
+        )
+    }
+
+    private func parseNutritionImportRow(_ row: CSVRow) throws -> NutritionImportRow {
+        NutritionImportRow(
+            timestamp: try parseTimestamp(column: .timestamp, in: row),
+            sourceKind: try parseEnum(column: .sourceKind, in: row, as: NutritionImportSourceKind.self),
+            sourceName: cleanedText(row.value(.sourceName)),
+            externalIdentifier: cleanedText(row.value(.externalIdentifier)),
+            barcode: cleanedText(row.value(.barcode)),
+            productName: cleanedText(row.value(.productName)),
+            brandName: cleanedText(row.value(.brand)),
+            servingText: cleanedText(row.value(.servingText)),
+            calories: try optionalDouble(column: .calories, in: row),
+            carbsGrams: try optionalDouble(column: .carbsGrams, in: row),
+            proteinGrams: try optionalDouble(column: .proteinGrams, in: row),
+            fatGrams: try optionalDouble(column: .fatGrams, in: row),
+            fiberGrams: try optionalDouble(column: .fiberGrams, in: row),
+            sugarGrams: try optionalDouble(column: .sugarGrams, in: row),
+            waterOz: try optionalDouble(column: .waterOz, in: row),
+            confidence: try optionalDouble(column: .confidence, in: row),
+            completeness: try optionalDouble(column: .completeness, in: row),
+            reviewStatus: try optionalEnum(column: .reviewStatus, in: row, as: NutritionImportReviewStatus.self),
             notes: cleanedText(row.value(.notes))
         )
     }
@@ -1062,6 +1186,15 @@ private extension SettingsExternalDataCSVService {
                 changeCounts: &changeCounts
             )
 
+            try applyNutritionImports(
+                records.compactMap {
+                    guard case let .nutritionImport(row) = $0 else { return nil }
+                    return row
+                },
+                counts: &counts,
+                changeCounts: &changeCounts
+            )
+
             try modelContext.save()
             Logger.database.info(
                 "Imported external CSV with inserted=\(changeCounts.inserted), updated=\(changeCounts.updated), skipped=\(changeCounts.skipped), rejected=\(issues.count)"
@@ -1341,6 +1474,65 @@ private extension SettingsExternalDataCSVService {
         }
     }
 
+    private func applyNutritionImports(
+        _ rows: [NutritionImportRow],
+        counts: inout SettingsDataRecordCounts,
+        changeCounts: inout SettingsDataImportService.ImportChangeCounts
+    ) throws {
+        guard !rows.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<NutritionImportRecord>(sortBy: [SortDescriptor(\.startDate)])
+        let existingImports = try modelContext.fetch(descriptor)
+        var existingKeys = Set(existingImports.map(nutritionImportKey(for:)))
+
+        for row in rows {
+            let key = nutritionImportKey(for: row)
+            guard !existingKeys.contains(key) else {
+                changeCounts.skipped += 1
+                continue
+            }
+
+            let reviewStatus = row.reviewStatus ?? .needsReview
+            let completeness = row.completeness ?? FoodProductCandidate.estimatedCompleteness(
+                productName: row.productName,
+                calories: row.calories,
+                carbsGrams: row.carbsGrams,
+                proteinGrams: row.proteinGrams,
+                fatGrams: row.fatGrams,
+                fiberGrams: row.fiberGrams,
+                sugarGrams: row.sugarGrams
+            )
+            modelContext.insert(
+                NutritionImportRecord(
+                    sourceKind: row.sourceKind,
+                    sourceName: row.sourceName,
+                    externalIdentifier: row.externalIdentifier,
+                    startDate: row.timestamp,
+                    barcode: row.barcode,
+                    productName: row.productName,
+                    brandName: row.brandName,
+                    servingText: row.servingText,
+                    calories: row.calories,
+                    carbsGrams: row.carbsGrams,
+                    proteinGrams: row.proteinGrams,
+                    fatGrams: row.fatGrams,
+                    fiberGrams: row.fiberGrams,
+                    sugarGrams: row.sugarGrams,
+                    waterOz: row.waterOz,
+                    confidence: row.confidence ?? 0,
+                    completeness: completeness,
+                    importedAt: Date(),
+                    reviewStatus: reviewStatus,
+                    userReviewed: reviewStatus == .reviewed,
+                    notes: row.notes
+                )
+            )
+            existingKeys.insert(key)
+            counts.nutritionImports += 1
+            changeCounts.inserted += 1
+        }
+    }
+
     private func update(_ existingLog: DailyLog, with row: DailyLogRow) -> Bool {
         var didChange = false
 
@@ -1489,6 +1681,28 @@ private extension SettingsExternalDataCSVService {
             cervicalMucus: row.cervicalMucus?.rawValue,
             lhTestResult: row.lhTestResult?.rawValue,
             notes: dedupeText(row.notes)
+        )
+    }
+
+    private func nutritionImportKey(for record: NutritionImportRecord) -> NutritionImportKey {
+        NutritionImportKey(
+            timestamp: record.startDate,
+            sourceKind: record.sourceKind.rawValue,
+            sourceName: dedupeText(record.sourceName),
+            externalIdentifier: dedupeText(record.externalIdentifier),
+            barcode: dedupeText(record.barcode),
+            productName: dedupeText(record.productName)
+        )
+    }
+
+    private func nutritionImportKey(for row: NutritionImportRow) -> NutritionImportKey {
+        NutritionImportKey(
+            timestamp: row.timestamp,
+            sourceKind: row.sourceKind.rawValue,
+            sourceName: dedupeText(row.sourceName),
+            externalIdentifier: dedupeText(row.externalIdentifier),
+            barcode: dedupeText(row.barcode),
+            productName: dedupeText(row.productName)
         )
     }
 

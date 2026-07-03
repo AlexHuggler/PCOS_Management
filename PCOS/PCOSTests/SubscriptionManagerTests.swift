@@ -169,8 +169,8 @@ struct SubscriptionManagerTests {
             BillingProduct(
                 id: SubscriptionManager.monthlyProductID,
                 displayName: "CycleBalance Premium Monthly",
-                displayPrice: "$6.99",
-                price: 6.99,
+                displayPrice: "$9.99",
+                price: 9.99,
                 subscriptionPeriod: BillingPeriod(unit: .month, value: 1)
             ),
         ]

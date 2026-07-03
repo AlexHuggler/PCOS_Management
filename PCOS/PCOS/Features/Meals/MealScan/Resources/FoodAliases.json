@@ -1,0 +1,14 @@
+[
+  { "inputName": "white rice", "canonicalFoodName": "rice, white, cooked", "defaultFoodId": "rice-white-cooked", "category": "cookedRice" },
+  { "inputName": "plain rice", "canonicalFoodName": "rice, white, cooked", "defaultFoodId": "rice-white-cooked", "category": "cookedRice" },
+  { "inputName": "chicken", "canonicalFoodName": "chicken breast, cooked", "defaultFoodId": "chicken-breast-cooked", "category": "chicken" },
+  { "inputName": "eggs", "canonicalFoodName": "egg, whole", "defaultFoodId": "egg", "category": "eggs" },
+  { "inputName": "toast", "canonicalFoodName": "bread, white", "defaultFoodId": "white-bread", "category": "bread" },
+  { "inputName": "oatmeal", "canonicalFoodName": "oatmeal, cooked", "defaultFoodId": "oats-oatmeal", "category": "oatmeal" },
+  { "inputName": "berries", "canonicalFoodName": "berries, mixed", "defaultFoodId": "berries", "category": "fruit" },
+  { "inputName": "salad", "canonicalFoodName": "salad greens", "defaultFoodId": "salad-greens", "category": "salad" },
+  { "inputName": "dressing", "canonicalFoodName": "vinaigrette", "defaultFoodId": "vinaigrette", "category": "oilDressing" },
+  { "inputName": "burrito bowl", "canonicalFoodName": "burrito bowl template", "defaultFoodId": "rice-white-cooked", "category": "mixedDish" },
+  { "inputName": "avocado toast", "canonicalFoodName": "avocado toast template", "defaultFoodId": "whole-wheat-bread", "category": "mixedDish" },
+  { "inputName": "smoothie", "canonicalFoodName": "smoothie generic", "defaultFoodId": "smoothie-generic", "category": "mixedDish" }
+]

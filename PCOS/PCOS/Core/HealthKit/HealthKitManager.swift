@@ -23,6 +23,7 @@ final class HealthKitManager {
         _ completion: @escaping @Sendable (HKAuthorizationRequestStatus, Error?) -> Void
     ) -> Void
     typealias SyncOperation = @Sendable (_ modelContainer: ModelContainer, _ now: Date) async throws -> HealthKitSyncResult
+    typealias HealthStoreProvider = @MainActor @Sendable () -> HKHealthStore
 
     // MARK: - Public State
 
@@ -45,38 +46,27 @@ final class HealthKitManager {
     private let authorizationRequester: AuthorizationRequester
     private let authorizationStatusProvider: AuthorizationStatusProvider
     private let syncOperation: SyncOperation
+    private let healthStoreProvider: HealthStoreProvider
 
-    static let defaultReadTypes: Set<HKObjectType> = {
-        var types = Set<HKObjectType>()
-        if let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass) {
-            types.insert(bodyMass)
-        }
-        if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
-            types.insert(sleep)
-        }
-        if let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
-            types.insert(activeEnergy)
-        }
-        if let glucose = HKObjectType.quantityType(forIdentifier: .bloodGlucose) {
-            types.insert(glucose)
-        }
-        if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) {
-            types.insert(steps)
-        }
-        if let restingHeartRate = HKObjectType.quantityType(forIdentifier: .restingHeartRate) {
-            types.insert(restingHeartRate)
-        }
-        return types
-    }()
+    static let defaultReadTypes: Set<HKObjectType> = HealthKitDataTypeDescriptor.defaultReadTypes
 
     private let readTypes = HealthKitManager.defaultReadTypes
     private static let lastSyncKey = "healthkit.lastSyncDate"
+    private static let unavailableError = NSError(
+        domain: "CycleBalance.HealthKit",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "HealthKit is unavailable for this build or device."]
+    )
+
+    private static let defaultAvailabilityProvider: AvailabilityProvider = {
+        HKHealthStore.isHealthDataAvailable()
+    }
 
     // MARK: - Init
 
     init(
-        healthStore: HKHealthStore = HKHealthStore(),
-        availabilityProvider: @escaping AvailabilityProvider = { HKHealthStore.isHealthDataAvailable() },
+        healthStore: HKHealthStore? = nil,
+        availabilityProvider: @escaping AvailabilityProvider = HealthKitManager.defaultAvailabilityProvider,
         authorizationRequester: AuthorizationRequester? = nil,
         authorizationStatusProvider: AuthorizationStatusProvider? = nil,
         syncOperation: SyncOperation? = nil
@@ -85,34 +75,70 @@ final class HealthKitManager {
 
         self.authorizationState = initialAuthorizationState
         self.availabilityProvider = availabilityProvider
+        self.healthStoreProvider = {
+            if let healthStore {
+                return healthStore
+            }
+            return HKHealthStore()
+        }
 
         if let authorizationRequester {
             self.authorizationRequester = authorizationRequester
         } else {
-            let store = healthStore
+            let availabilityProvider = availabilityProvider
+            let healthStoreProvider = self.healthStoreProvider
             self.authorizationRequester = { toShare, read, completion in
-                store.requestAuthorization(toShare: toShare, read: read, completion: completion)
+                guard availabilityProvider() else {
+                    completion(false, Self.unavailableError)
+                    return
+                }
+                let store = Task { @MainActor in healthStoreProvider() }
+                Task {
+                    let resolvedStore = await store.value
+                    do {
+                        try await resolvedStore.requestAuthorization(toShare: toShare ?? [], read: read)
+                        completion(true, nil)
+                    } catch {
+                        completion(false, error)
+                    }
+                }
             }
         }
 
         if let authorizationStatusProvider {
             self.authorizationStatusProvider = authorizationStatusProvider
         } else {
-            let store = healthStore
+            let availabilityProvider = availabilityProvider
+            let healthStoreProvider = self.healthStoreProvider
             self.authorizationStatusProvider = { toShare, read, completion in
-                store.getRequestStatusForAuthorization(toShare: toShare, read: read, completion: completion)
+                guard availabilityProvider() else {
+                    completion(.unknown, Self.unavailableError)
+                    return
+                }
+                let store = Task { @MainActor in healthStoreProvider() }
+                Task {
+                    let resolvedStore = await store.value
+                    resolvedStore.getRequestStatusForAuthorization(toShare: toShare, read: read, completion: completion)
+                }
             }
         }
 
         if let syncOperation {
             self.syncOperation = syncOperation
         } else {
-            let syncWorker = HealthKitSyncWorker(
-                healthStore: healthStore,
-                availabilityProvider: availabilityProvider
-            )
+            let availabilityProvider = availabilityProvider
+            let healthStoreProvider = self.healthStoreProvider
             self.syncOperation = { modelContainer, now in
-                try await syncWorker.performFullSync(using: modelContainer, now: now)
+                guard availabilityProvider() else {
+                    Logger.database.notice("HealthKit full sync skipped because HealthKit is unavailable")
+                    return HealthKitSyncResult(syncedAt: now, didUpdateDailyLog: false, insertedGlucoseCount: 0)
+                }
+                let store = await MainActor.run { healthStoreProvider() }
+                let syncWorker = HealthKitSyncWorker(
+                    healthStore: store,
+                    availabilityProvider: availabilityProvider
+                )
+                return try await syncWorker.performFullSync(using: modelContainer, now: now)
             }
         }
 
@@ -189,7 +215,7 @@ final class HealthKitManager {
 
     // MARK: - Sync
 
-    /// Performs a full sync for today: DailyLog + glucose readings for the last 7 days.
+    /// Performs a full sync for today: DailyLog + glucose and nutrition reads for the last 7 days.
     func performFullSync(modelContext: ModelContext) async {
         isSyncing = true
         lastError = nil
@@ -205,7 +231,7 @@ final class HealthKitManager {
             UserDefaults.standard.set(syncResult.syncedAt, forKey: Self.lastSyncKey)
 
             Logger.database.info(
-                "HealthKit full sync completed successfully. dailyLogUpdated=\(syncResult.didUpdateDailyLog, privacy: .public), glucoseInserted=\(syncResult.insertedGlucoseCount, privacy: .public)"
+                "HealthKit full sync completed successfully. dailyLogUpdated=\(syncResult.didUpdateDailyLog, privacy: .public), glucoseInserted=\(syncResult.insertedGlucoseCount, privacy: .public), nutritionInserted=\(syncResult.insertedNutritionImportCount, privacy: .public)"
             )
         } catch {
             lastError = error.localizedDescription

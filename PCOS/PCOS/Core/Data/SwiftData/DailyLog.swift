@@ -17,6 +17,8 @@ final class DailyLog {
     var stressLevel: Int?
     var energyLevel: Int?
     var waterOz: Int?
+    var painLevel0To10: Int?
+    var privateNote: String?
     var positiveActionRawValues: String = ""
 
     init(
@@ -29,6 +31,8 @@ final class DailyLog {
         stressLevel: Int? = nil,
         energyLevel: Int? = nil,
         waterOz: Int? = nil,
+        painLevel0To10: Int? = nil,
+        privateNote: String? = nil,
         positiveActionRawValues: String = ""
     ) {
         self.id = id
@@ -40,6 +44,8 @@ final class DailyLog {
         self.stressLevel = stressLevel
         self.energyLevel = energyLevel
         self.waterOz = waterOz
+        self.painLevel0To10 = painLevel0To10
+        self.privateNote = privateNote
         self.positiveActionRawValues = positiveActionRawValues
     }
 }
@@ -89,6 +95,12 @@ extension DailyLog {
 
 @MainActor
 struct DailyLogService {
+    enum ValidationError: Error, Equatable {
+        case invalidPainLevel
+        case invalidStressLevel
+        case invalidWaterOz
+    }
+
     private let modelContext: ModelContext
     private let calendar = Calendar.current
 
@@ -142,5 +154,178 @@ struct DailyLogService {
         try modelContext.save()
         InsightRefreshCoordinator.invalidate()
         return log
+    }
+
+    @discardableResult
+    func saveDailyCheckIn(
+        date: Date = Date(),
+        painLevel0To10: Int?,
+        privateNote: String?,
+        stressLevel: Int? = nil,
+        waterOz: Int? = nil
+    ) throws -> DailyLog {
+        if let painLevel0To10, !(0...10).contains(painLevel0To10) {
+            throw ValidationError.invalidPainLevel
+        }
+        if let stressLevel, !(1...5).contains(stressLevel) {
+            throw ValidationError.invalidStressLevel
+        }
+        if let waterOz, waterOz < 0 {
+            throw ValidationError.invalidWaterOz
+        }
+
+        let log = try upsertLog(on: date)
+        log.painLevel0To10 = painLevel0To10
+        if let stressLevel {
+            log.stressLevel = stressLevel
+        }
+        if let waterOz {
+            log.waterOz = waterOz
+        }
+
+        let trimmedNote = privateNote?.trimmingCharacters(in: .whitespacesAndNewlines)
+        log.privateNote = trimmedNote?.isEmpty == true ? nil : trimmedNote
+
+        try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
+        return log
+    }
+}
+
+struct PositiveActionRecommendation: Identifiable, Equatable {
+    let action: PositiveActionType
+    let reason: String
+    let score: Int
+
+    var id: String { action.rawValue }
+}
+
+enum PositiveActionRecommendationEngine {
+    static func rankedRecommendations(
+        cycleDay: Int?,
+        symptoms: [SymptomEntry],
+        completedActions: Set<PositiveActionType>
+    ) -> [PositiveActionRecommendation] {
+        let topSymptom = symptoms.reduce(nil as SymptomEntry?) { current, symptom in
+            guard let current else { return symptom }
+            return symptom.severity > current.severity ? symptom : current
+        }
+        let completed = completedActions
+        let scores = scores(cycleDay: cycleDay, topSymptom: topSymptom)
+
+        return PositiveActionType.allCases
+            .filter { !completed.contains($0) }
+            .map { action in
+                PositiveActionRecommendation(
+                    action: action,
+                    reason: reason(for: action, cycleDay: cycleDay, topSymptom: topSymptom),
+                    score: scores[action, default: 0]
+                )
+            }
+            .sorted { lhs, rhs in
+                if lhs.score == rhs.score {
+                    return actionOrder(lhs.action) < actionOrder(rhs.action)
+                }
+                return lhs.score > rhs.score
+            }
+    }
+
+    private static func scores(
+        cycleDay: Int?,
+        topSymptom: SymptomEntry?
+    ) -> [PositiveActionType: Int] {
+        var scores = Dictionary(uniqueKeysWithValues: PositiveActionType.allCases.map { ($0, 1) })
+
+        if let cycleDay {
+            switch cycleDay {
+            case ...7:
+                scores[.stressReduction, default: 0] += 4
+                scores[.goodSleep, default: 0] += 3
+                scores[.pcosFriendlyMeal, default: 0] += 2
+            case 8...15:
+                scores[.walkMovement, default: 0] += 4
+                scores[.highProteinMeal, default: 0] += 2
+                scores[.cycleSupportiveSigns, default: 0] += 2
+            default:
+                scores[.highProteinMeal, default: 0] += 4
+                scores[.pcosFriendlyMeal, default: 0] += 3
+                scores[.lowerCarbMeal, default: 0] += 2
+                scores[.goodSleep, default: 0] += 2
+            }
+        }
+
+        guard let topSymptom else {
+            return scores
+        }
+
+        switch topSymptom.symptomType.category {
+        case .pain:
+            scores[.stressReduction, default: 0] += 6
+            scores[.goodSleep, default: 0] += 4
+            scores[.walkMovement, default: 0] += 1
+        case .mood:
+            scores[.stressReduction, default: 0] += 6
+            scores[.goodSleep, default: 0] += 2
+        case .physical:
+            scores[.goodSleep, default: 0] += 4
+            scores[.stressReduction, default: 0] += 2
+            scores[.pcosFriendlyMeal, default: 0] += 1
+        case .digestive:
+            scores[.pcosFriendlyMeal, default: 0] += 4
+            scores[.stressReduction, default: 0] += 2
+        case .metabolic:
+            scores[.highProteinMeal, default: 0] += 5
+            scores[.lowerCarbMeal, default: 0] += 5
+            scores[.pcosFriendlyMeal, default: 0] += 3
+            scores[.walkMovement, default: 0] += 2
+        case .hair, .skin:
+            scores[.goodSleep, default: 0] += 3
+            scores[.supplementsTaken, default: 0] += 2
+            scores[.stressReduction, default: 0] += 2
+        }
+
+        return scores
+    }
+
+    private static func reason(
+        for action: PositiveActionType,
+        cycleDay: Int?,
+        topSymptom: SymptomEntry?
+    ) -> String {
+        if let topSymptom, topSymptom.severity >= 3 {
+            return L10n.format(
+                "Recommended because %@ is elevated today.",
+                defaultValue: "Recommended because %@ is elevated today.",
+                topSymptom.symptomType.displayName.lowercased()
+            )
+        }
+
+        if let cycleDay {
+            if cycleDay <= 7 {
+                return L10n.string(
+                    "A gentler support for early-cycle recovery.",
+                    defaultValue: "A gentler support for early-cycle recovery."
+                )
+            } else if cycleDay <= 15 {
+                return L10n.string(
+                    "A light support for a steadier mid-cycle day.",
+                    defaultValue: "A light support for a steadier mid-cycle day."
+                )
+            }
+
+            return L10n.string(
+                "A steadying support for the later part of your cycle.",
+                defaultValue: "A steadying support for the later part of your cycle."
+            )
+        }
+
+        return L10n.string(
+            "A quick supportive action you can complete today.",
+            defaultValue: "A quick supportive action you can complete today."
+        )
+    }
+
+    private static func actionOrder(_ action: PositiveActionType) -> Int {
+        PositiveActionType.allCases.firstIndex(of: action) ?? Int.max
     }
 }

@@ -31,7 +31,7 @@ struct AppEmptyStateView<Actions: View>: View {
                     Image(systemName: systemImage)
                 }
             }
-            .font(.system(size: 44))
+            .appFont(.largeTitle, weight: .semibold)
             .foregroundStyle(.secondary)
 
             VStack(spacing: AppTheme.spacing8) {

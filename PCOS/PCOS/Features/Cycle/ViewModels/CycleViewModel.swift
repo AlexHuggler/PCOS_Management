@@ -138,6 +138,17 @@ final class CycleViewModel {
     }
 
     @discardableResult
+    func markPeriodEnded(on endDate: Date, referenceDate: Date = Date()) throws -> CycleRangeSaveResult {
+        let result = try logService.markPeriodEnded(
+            on: endDate,
+            referenceDate: referenceDate,
+            existingCycles: cycles
+        )
+        loadData(referenceDate: referenceDate)
+        return result
+    }
+
+    @discardableResult
     func logNoPeriodToday() throws -> CycleRangeSaveResult {
         try saveNoPeriodDay(date: Date())
     }
@@ -182,12 +193,28 @@ final class CycleViewModel {
 
     // MARK: - Computed Helpers
 
+    var currentPeriodState: CurrentPeriodState? {
+        logService.currentPeriodState(
+            existingCycles: cycles,
+            entries: currentCycleEntries,
+            referenceDate: Date()
+        )
+    }
+
+    var canMarkPeriodEnd: Bool {
+        currentPeriodState != nil
+    }
+
     var currentCycleDayCount: Int? {
+        currentCycleDayCount(on: Date())
+    }
+
+    func currentCycleDayCount(on referenceDate: Date) -> Int? {
         guard let lastCycle = cycles.last, lastCycle.endDate == nil else { return nil }
         return Calendar.current.dateComponents(
             [.day],
             from: lastCycle.startDate,
-            to: Date()
+            to: referenceDate
         ).day.map { $0 + 1 }
     }
 
@@ -286,6 +313,96 @@ final class CycleViewModel {
             "%lld%% confidence",
             defaultValue: "%lld%% confidence",
             Int64((prediction.confidence * 100).rounded())
+        )
+    }
+
+    /// Countdown to the middle of the predicted window, e.g. "in 8 days",
+    /// "today", or "tomorrow". Nil without an actionable prediction or once
+    /// the window midpoint has passed (the range headline covers overdue).
+    func predictionCountdownText(now: Date = Date()) -> String? {
+        guard case .actionable(let prediction) = predictionPresentation,
+              let midpoint = predictionWindowMidpoint(for: prediction) else {
+            return nil
+        }
+
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: now),
+            to: midpoint
+        ).day ?? 0
+
+        if days < 0 { return nil }
+        if days == 0 {
+            return L10n.string("today", defaultValue: "today")
+        }
+        if days == 1 {
+            return L10n.string("tomorrow", defaultValue: "tomorrow")
+        }
+        return L10n.format("in %lld days", defaultValue: "in %lld days", Int64(days))
+    }
+
+    /// Window midpoint with its spread, e.g. "May 28 ± 2 days". Nil without
+    /// an actionable prediction.
+    var predictionMidpointText: String? {
+        guard case .actionable(let prediction) = predictionPresentation,
+              let midpoint = predictionWindowMidpoint(for: prediction) else {
+            return nil
+        }
+
+        let formatStyle = Date.FormatStyle()
+            .locale(L10n.locale())
+            .month(.abbreviated)
+            .day(.defaultDigits)
+        let formattedMidpoint = midpoint.formatted(formatStyle)
+
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: prediction.earliestDate)
+        let end = calendar.startOfDay(for: prediction.latestDate)
+        let midOffset = calendar.dateComponents([.day], from: start, to: midpoint).day ?? 0
+        let span = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+        let spread = max(midOffset, span - midOffset)
+
+        guard spread > 0 else { return formattedMidpoint }
+        return L10n.format(
+            "%@ ± %lld days",
+            defaultValue: "%@ ± %lld days",
+            formattedMidpoint,
+            Int64(spread)
+        )
+    }
+
+    private func predictionWindowMidpoint(for prediction: CyclePredictionEngine.Prediction) -> Date? {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: prediction.earliestDate)
+        let end = calendar.startOfDay(for: prediction.latestDate)
+        guard end >= start else { return nil }
+        let span = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+        return calendar.date(byAdding: .day, value: span / 2, to: start)
+    }
+
+    /// Conservative phase approximation for the ongoing cycle, or nil when
+    /// the inference policy declines (irregular, long, or anovulatory
+    /// patterns). Never fabricates a phase for unsupported cycles.
+    var currentApproximatePhase: CyclePhase? {
+        currentApproximatePhase(on: Date())
+    }
+
+    func currentApproximatePhase(on referenceDate: Date) -> CyclePhase? {
+        let policy = CyclePhaseInferencePolicy()
+        if let phase = policy.approximatePhase(for: referenceDate, cycles: cycles) {
+            return phase
+        }
+
+        guard let dayInCycle = currentCycleDayCount(on: referenceDate) else { return nil }
+        let expectedLength = currentManualCycleLengthOverride
+            ?? statistics.map { Int($0.averageLength.rounded()) }
+        let completedCycles = cycles.filter { !$0.isPredicted && $0.lengthDays != nil }
+
+        return policy.approximateOngoingPhase(
+            dayInCycle: dayInCycle,
+            expectedCycleLength: expectedLength,
+            recentCompletedCycles: completedCycles
         )
     }
 

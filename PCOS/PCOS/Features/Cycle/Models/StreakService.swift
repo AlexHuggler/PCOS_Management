@@ -6,6 +6,10 @@ import os
 /// A day counts if it has at least one SymptomEntry or CycleEntry.
 @MainActor
 struct StreakService {
+    /// Maximum reported streak; also bounds the fetch window so the
+    /// computation runs exactly two fetches regardless of history size.
+    private static let maxStreakDays = 366
+
     private let modelContext: ModelContext
 
     init(modelContext: ModelContext) {
@@ -13,84 +17,63 @@ struct StreakService {
     }
 
     /// Returns the number of consecutive days (ending today or yesterday)
-    /// that have at least one logged entry.
+    /// that have at least one logged entry, capped at 366.
     func currentStreak() -> Int {
         let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard let lookbackStart = calendar.date(byAdding: .day, value: -Self.maxStreakDays, to: today) else {
+            return 0
+        }
+        let windowStart = calendar.startOfDay(for: lookbackStart)
+
+        let loggedDays = loggedDayStarts(since: windowStart, calendar: calendar)
+
         var streak = 0
-        var checkDate = calendar.startOfDay(for: Date())
+        var checkDate = today
 
-        while true {
-            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: checkDate) else { break }
-
-            let hasSymptom = entryExists(
-                type: SymptomEntry.self,
-                from: checkDate,
-                to: nextDay
-            )
-            let hasCycle = entryExists(
-                type: CycleEntry.self,
-                from: checkDate,
-                to: nextDay
-            )
-
-            if hasSymptom || hasCycle {
+        while streak < Self.maxStreakDays {
+            if loggedDays.contains(checkDate) {
                 streak += 1
-                guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-                checkDate = previousDay
-            } else if streak == 0 {
-                // Today might not have entries yet — check if yesterday starts a streak
-                guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-                checkDate = previousDay
-                // Only allow this skip once (for today)
-                guard let nextAfterYesterday = calendar.date(byAdding: .day, value: 1, to: checkDate) else { break }
-                let hasYesterdaySymptom = entryExists(
-                    type: SymptomEntry.self,
-                    from: checkDate,
-                    to: nextAfterYesterday
-                )
-                let hasYesterdayCycle = entryExists(
-                    type: CycleEntry.self,
-                    from: checkDate,
-                    to: nextAfterYesterday
-                )
-                if hasYesterdaySymptom || hasYesterdayCycle {
-                    streak += 1
-                    guard let dayBefore = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-                    checkDate = dayBefore
-                } else {
-                    break
-                }
+            } else if streak == 0, checkDate == today {
+                // Today might not have entries yet — skip it once so
+                // yesterday's streak still counts.
             } else {
                 break
             }
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = calendar.startOfDay(for: previousDay)
         }
 
         return streak
     }
 
-    private func entryExists<T: PersistentModel>(type: T.Type, from: Date, to: Date) -> Bool {
-        // Use fetchCount for efficiency
-        if type == SymptomEntry.self {
-            let descriptor = FetchDescriptor<SymptomEntry>(
-                predicate: #Predicate<SymptomEntry> { $0.date >= from && $0.date < to }
-            )
-            do {
-                return try modelContext.fetchCount(descriptor) > 0
-            } catch {
-                Logger.database.error("Failed to count symptom entries for streak: \(error.localizedDescription)")
-                return false
+    /// Fetches all entry dates within the lookback window (one fetch per
+    /// entity) and maps them to their start-of-day values.
+    private func loggedDayStarts(since windowStart: Date, calendar: Calendar) -> Set<Date> {
+        var days = Set<Date>()
+
+        let symptomDescriptor = FetchDescriptor<SymptomEntry>(
+            predicate: #Predicate<SymptomEntry> { $0.date >= windowStart }
+        )
+        do {
+            for entry in try modelContext.fetch(symptomDescriptor) {
+                days.insert(calendar.startOfDay(for: entry.date))
             }
-        } else if type == CycleEntry.self {
-            let descriptor = FetchDescriptor<CycleEntry>(
-                predicate: #Predicate<CycleEntry> { $0.date >= from && $0.date < to }
-            )
-            do {
-                return try modelContext.fetchCount(descriptor) > 0
-            } catch {
-                Logger.database.error("Failed to count cycle entries for streak: \(error.localizedDescription)")
-                return false
-            }
+        } catch {
+            Logger.database.error("Failed to fetch symptom entries for streak: \(error.localizedDescription)")
         }
-        return false
+
+        let cycleDescriptor = FetchDescriptor<CycleEntry>(
+            predicate: #Predicate<CycleEntry> { $0.date >= windowStart }
+        )
+        do {
+            for entry in try modelContext.fetch(cycleDescriptor) {
+                days.insert(calendar.startOfDay(for: entry.date))
+            }
+        } catch {
+            Logger.database.error("Failed to fetch cycle entries for streak: \(error.localizedDescription)")
+        }
+
+        return days
     }
 }

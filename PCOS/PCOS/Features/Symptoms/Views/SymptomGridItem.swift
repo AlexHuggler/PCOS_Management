@@ -5,27 +5,67 @@ struct SymptomGridItem: View {
     let severity: Int
     let onSeverityChange: (Int) -> Void
 
-    var body: some View {
-        VStack(spacing: AppTheme.spacing8) {
-            // Icon
-            Image(systemName: symptomType.systemImage)
-                .appFont(.title2)
-                .foregroundStyle(severity > 0 ? severityColor : .secondary)
-                .frame(height: 32)
+    private enum SymptomIntensityOption: Int, CaseIterable, Identifiable {
+        case none = 0
+        case mild = 1
+        case moderate = 3
+        case severe = 5
 
-            // Name
-            Text(symptomType.displayName)
-                .appFont(.caption2, weight: .medium)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.8)
-                .frame(height: 28)
+        var id: Int { rawValue }
 
-            // Severity dots
-            SeverityPicker(severity: severity, onSeverityChange: onSeverityChange)
+        var title: String {
+            switch self {
+            case .none: "None"
+            case .mild: "Mild"
+            case .moderate: "Moderate"
+            case .severe: "Severe"
+            }
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 6)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            HStack(alignment: .center, spacing: AppTheme.spacing8) {
+                Image(systemName: symptomType.systemImage)
+                    .appFont(.title3, weight: .semibold)
+                    .foregroundStyle(severity > 0 ? severityColor : .secondary)
+                    .frame(width: 28, height: 28)
+
+                Text(symptomType.displayName)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.78)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
+                ForEach(SymptomIntensityOption.allCases) { option in
+                    Button {
+                        onSeverityChange(option.rawValue)
+                    } label: {
+                        Text(option.title)
+                            .appFont(.caption2, weight: selectedOption == option ? .semibold : .medium)
+                            .foregroundStyle(selectedOption == option ? selectedTextColor(for: option) : AppTheme.secondaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .frame(maxWidth: .infinity, minHeight: 28)
+                            .padding(.horizontal, 6)
+                            .background(
+                                Capsule()
+                                    .fill(selectedOption == option ? severityColor.opacity(0.18) : Color(.secondarySystemFill).opacity(0.55))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(selectedOption == option ? severityColor.opacity(AppTheme.opacityStrong) : Color.clear, lineWidth: 0.8)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("symptom_log.tile.\(symptomType.rawValue).intensity.\(option.rawValue)")
+                }
+            }
+        }
+        .padding(AppTheme.spacing12)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
@@ -37,24 +77,17 @@ struct SymptomGridItem: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            // Cycle through: 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 0
-            let next = severity >= 5 ? 0 : severity + 1
+            let options = SymptomIntensityOption.allCases
+            let currentIndex = options.firstIndex(of: selectedOption) ?? 0
+            let next = options[(currentIndex + 1) % options.count].rawValue
             onSeverityChange(next)
         }
         .contextMenu {
-            ForEach(1...5, id: \.self) { level in
+            ForEach(SymptomIntensityOption.allCases) { option in
                 Button {
-                    onSeverityChange(level)
+                    onSeverityChange(option.rawValue)
                 } label: {
-                    Label(SeverityPicker.labels[level - 1], systemImage: level <= severity ? "circle.fill" : "circle")
-                }
-            }
-            if severity > 0 {
-                Divider()
-                Button(role: .destructive) {
-                    onSeverityChange(0)
-                } label: {
-                    Label("Clear", systemImage: "xmark.circle")
+                    Label(option.title, systemImage: selectedOption == option ? "checkmark.circle.fill" : "circle")
                 }
             }
         }
@@ -64,13 +97,13 @@ struct SymptomGridItem: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             String(
-                localized: "\(symptomType.displayName), severity \(severity > 0 ? SeverityPicker.label(for: severity) : SeverityPicker.noneLabel)",
+                localized: "\(symptomType.displayName), \(selectedOption.title)",
                 comment: "Accessibility label for a symptom selection tile."
             )
         )
         .accessibilityHint(
             String(
-                localized: "Tap to cycle severity, long press for direct selection. Currently \(severity) of 5.",
+                localized: "Tap to cycle intensity, or use the visible choices to select None, Mild, Moderate, or Severe.",
                 comment: "Accessibility hint explaining how to change symptom severity and announcing the current level."
             )
         )
@@ -86,6 +119,23 @@ struct SymptomGridItem: View {
         case 5: .red
         default: .secondary
         }
+    }
+
+    private var selectedOption: SymptomIntensityOption {
+        switch severity {
+        case ..<1:
+            .none
+        case 1...2:
+            .mild
+        case 3...4:
+            .moderate
+        default:
+            .severe
+        }
+    }
+
+    private func selectedTextColor(for option: SymptomIntensityOption) -> Color {
+        option == .none ? AppTheme.primaryText : severityColor
     }
 }
 

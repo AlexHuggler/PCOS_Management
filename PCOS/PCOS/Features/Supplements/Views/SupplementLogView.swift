@@ -23,6 +23,10 @@ struct SupplementLogView: View {
     @State private var addFormAlert: AddFormAlert?
     @FocusState private var addSheetFocusedField: AddSheetFocusedField?
 
+    private var supplementAccent: Color {
+        AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : AppTheme.sage
+    }
+
     private enum AddSheetFocusedField: Hashable {
         case supplementName
         case dosage
@@ -56,33 +60,61 @@ struct SupplementLogView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                if let viewModel {
-                    ScrollView {
-                        VStack(spacing: AppTheme.spacing16) {
-                            utilityActionsSection(viewModel: viewModel)
-                            todaysSupplementsSection(viewModel: viewModel)
-                            addSupplementButton
-                        }
-                        .padding()
-                    }
-                } else {
-                    ScrollView {
-                        VStack(spacing: AppTheme.spacing16) {
-                            ForEach(0..<4, id: \.self) { _ in
-                                SkeletonListRow()
-                                    .cardStyle()
+            ZStack {
+                if AppTheme.usesPremiumEditorStyling {
+                    AppTheme.premiumEditorBackground
+                        .ignoresSafeArea()
+                }
+
+                VStack(spacing: 0) {
+                    if let viewModel {
+                        ScrollView {
+                            VStack(spacing: AppTheme.spacing16) {
+                                if AppTheme.usesPremiumEditorStyling {
+                                    lunarSupplementHeader
+                                }
+                                utilityActionsSection(viewModel: viewModel)
+                                todaysSupplementsSection(viewModel: viewModel)
+                                addSupplementButton
                             }
-                            SkeletonRing()
-                                .frame(maxWidth: .infinity)
+                            .padding()
                         }
-                        .padding()
+                    } else {
+                        ScrollView {
+                            VStack(spacing: AppTheme.spacing16) {
+                                ForEach(0..<4, id: \.self) { _ in
+                                    if AppTheme.usesPremiumEditorStyling {
+                                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                                            .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.76))
+                                            .frame(height: 108)
+                                            .redacted(reason: .placeholder)
+                                    } else {
+                                        SkeletonListRow()
+                                            .cardStyle()
+                                    }
+                                }
+                                if !AppTheme.usesPremiumEditorStyling {
+                                    SkeletonRing()
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                            .padding()
+                        }
                     }
                 }
             }
-            .navigationTitle(L10n.string("Log Supplements", defaultValue: "Log Supplements"))
+            .accessibilityIdentifier("screen.supplement_log")
+            .background(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : Color.clear)
+            .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : L10n.string("Log Supplements", defaultValue: "Log Supplements"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if AppTheme.usesPremiumEditorStyling {
+                    ToolbarItem(placement: .principal) {
+                        Text(L10n.string("Supplement rhythm", defaultValue: "Supplement rhythm"))
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                    }
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedChanges {
@@ -100,6 +132,7 @@ struct SupplementLogView: View {
                     }
                 }
             }
+            .lunarSupplementNavigationBackground()
             .interactiveDismissDisabled(hasUnsavedChanges)
             .alert(item: $activeAlert) { alert in
                 switch alert {
@@ -138,6 +171,57 @@ struct SupplementLogView: View {
             }
         }
         .premiumGated()
+    }
+
+    private var lunarSupplementHeader: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(L10n.string("Support your routine", defaultValue: "Support your routine"))
+                        .appFont(.largeTitle, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.string(
+                        "Track doses, timing, and consistency without turning your supplement routine into a scorecard.",
+                        defaultValue: "Track doses, timing, and consistency without turning your supplement routine into a scorecard."
+                    ))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: AppTheme.spacing8)
+
+                Image(systemName: "pills.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                    .frame(width: 56, height: 56)
+                    .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
+                    .shadow(color: AppTheme.premiumEditorSecondaryAccentColor.opacity(0.24), radius: 16, y: 8)
+            }
+
+            HStack(spacing: AppTheme.spacing8) {
+                lunarSummaryPill(
+                    title: L10n.string("Today", defaultValue: "Today"),
+                    value: "\(todaysLogs.count)",
+                    systemImage: "calendar.badge.clock"
+                )
+                lunarSummaryPill(
+                    title: L10n.string("Taken", defaultValue: "Taken"),
+                    value: "\(todaysLogs.filter(\.taken).count)",
+                    systemImage: "checkmark.seal.fill"
+                )
+                lunarSummaryPill(
+                    title: L10n.string("Remaining", defaultValue: "Remaining"),
+                    value: "\(todaysLogs.filter { !$0.taken }.count)",
+                    systemImage: "moon.zzz.fill"
+                )
+            }
+        }
+        .padding(AppTheme.spacing16)
+        .lunarSupplementCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("supplement_log.lunar.header")
     }
 
     @ViewBuilder
@@ -187,56 +271,105 @@ struct SupplementLogView: View {
         tint: Color,
         showsDisclosure: Bool = false
     ) -> some View {
-        HStack(spacing: AppTheme.spacing12) {
-            Image(systemName: systemImage)
-                .appFont(.title3)
-                .foregroundStyle(tint)
+        Group {
+            if AppTheme.usesPremiumEditorStyling {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: systemImage)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(tint)
+                            .frame(width: 36, height: 36)
+                            .background(Circle().fill(tint.opacity(0.14)))
 
-            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                Text(title)
-                    .appFont(.headline)
-                    .foregroundStyle(.primary)
+                        Spacer()
 
-                Text(subtitle)
-                    .appFont(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+                        if showsDisclosure {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppTheme.secondaryText)
+                        }
+                    }
 
-            Spacer()
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        Text(title)
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.78)
 
-            if showsDisclosure {
-                Image(systemName: "chevron.right")
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(.tertiary)
+                        Text(subtitle)
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
+            } else {
+                HStack(spacing: AppTheme.spacing12) {
+                    Image(systemName: systemImage)
+                        .appFont(.title3)
+                        .foregroundStyle(tint)
+
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        Text(title)
+                            .appFont(.headline)
+                            .foregroundStyle(Color.primary)
+
+                        Text(subtitle)
+                            .appFont(.caption)
+                            .foregroundStyle(Color.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    if showsDisclosure {
+                        Image(systemName: "chevron.right")
+                            .appFont(.caption, weight: .semibold)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .cardStyle()
+        .padding(AppTheme.usesPremiumEditorStyling ? AppTheme.spacing12 : 0)
+        .lunarSupplementCard()
     }
 
     @ViewBuilder
     private func todaysSupplementsSection(viewModel: SupplementViewModel) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-            AppTheme.sectionHeader("Today's Supplements")
+            if AppTheme.usesPremiumEditorStyling {
+                lunarSectionHeader(
+                    title: L10n.string("Today's supplements", defaultValue: "Today's supplements"),
+                    subtitle: L10n.string("Tap a dose to mark it taken", defaultValue: "Tap a dose to mark it taken"),
+                    systemImage: "list.bullet.clipboard.fill"
+                )
+            } else {
+                AppTheme.sectionHeader("Today's Supplements")
+            }
 
             if todaysLogs.isEmpty {
                 VStack(spacing: AppTheme.spacing12) {
                     Image(systemName: "pill")
                         .appFont(.largeTitle)
-                        .foregroundStyle(.tertiary)
-                    Text("No supplements logged today")
+                        .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : Color(.tertiaryLabel))
+                    Text(L10n.string("No supplements logged today", defaultValue: "No supplements logged today"))
                         .appFont(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text("Tap the button below to add your first supplement.")
+                        .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.primaryText : Color.secondary)
+                    Text(L10n.string("Tap the button below to add your first supplement.", defaultValue: "Tap the button below to add your first supplement."))
                         .appFont(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.secondaryText : Color(.tertiaryLabel))
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, AppTheme.spacing24)
-                .cardStyle()
+                .lunarSupplementCard()
+                .accessibilityIdentifier("supplement_log.lunar.empty")
             } else {
                 ForEach(todaysLogs) { log in
                     supplementRow(log: log, viewModel: viewModel)
@@ -253,25 +386,26 @@ struct SupplementLogView: View {
             } label: {
                 Image(systemName: log.taken ? "checkmark.circle.fill" : "circle")
                     .appFont(.title2)
-                    .foregroundStyle(log.taken ? AppTheme.sage : .secondary)
+                    .foregroundStyle(log.taken ? supplementAccent : AppTheme.secondaryText)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                 Text(log.supplementName)
                     .appFont(.subheadline, weight: .medium)
-                    .strikethrough(!log.taken, color: .secondary)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .strikethrough(!log.taken, color: AppTheme.secondaryText)
 
                 HStack(spacing: AppTheme.spacing8) {
                     if let dosage = log.dosageMg, dosage > 0 {
                         Text("\(Int(dosage)) mg")
                             .appFont(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppTheme.secondaryText)
                     }
                     if let brand = log.brand, !brand.isEmpty {
                         Text(brand)
                             .appFont(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(AppTheme.secondaryText.opacity(0.72))
                     }
                 }
             }
@@ -280,7 +414,7 @@ struct SupplementLogView: View {
 
             Text(log.timeTaken, style: .time)
                 .appFont(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppTheme.secondaryText)
 
             Button {
                 viewModel.deleteLog(log)
@@ -289,13 +423,13 @@ struct SupplementLogView: View {
             } label: {
                 Image(systemName: "trash")
                     .appFont(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorWarningAccentColor : Color.secondary)
             }
             .buttonStyle(.plain)
         }
         .padding(.vertical, AppTheme.spacing8)
         .padding(.horizontal, AppTheme.spacing12)
-        .cardStyle()
+        .lunarSupplementCard()
         .sensoryFeedback(.selection, trigger: log.taken)
     }
 
@@ -307,13 +441,22 @@ struct SupplementLogView: View {
             HStack(spacing: AppTheme.spacing8) {
                 Image(systemName: "plus.circle.fill")
                     .appFont(.title3)
-                Text("Add Supplement")
+                Text(L10n.string("Add Supplement", defaultValue: "Add Supplement"))
                     .appFont(.subheadline, weight: .semibold)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorCTAForeground : .white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Capsule().fill(AppTheme.accentColor))
+            .background(
+                Capsule()
+                    .fill(AppTheme.usesPremiumEditorStyling ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(AppTheme.accentColor))
+            )
+            .overlay {
+                if AppTheme.usesPremiumEditorStyling {
+                    Capsule()
+                        .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 0.8)
+                }
+            }
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("supplement_log.add_button")
@@ -480,9 +623,18 @@ struct SupplementLogView: View {
                     }
                 }
             }
-            .navigationTitle(L10n.string("Add Supplement", defaultValue: "Add Supplement"))
+            .scrollContentBackground(AppTheme.usesPremiumEditorStyling ? .hidden : .automatic)
+            .background(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : Color.clear)
+            .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : L10n.string("Add Supplement", defaultValue: "Add Supplement"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if AppTheme.usesPremiumEditorStyling {
+                    ToolbarItem(placement: .principal) {
+                        Text(L10n.string("Add supplement", defaultValue: "Add supplement"))
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                    }
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("Cancel", defaultValue: "Cancel")) {
                         if hasUnsavedAddFormChanges {
@@ -509,6 +661,8 @@ struct SupplementLogView: View {
                     Button(L10n.string("Done", defaultValue: "Done")) { addSheetFocusedField = nil }
                 }
             }
+            .lunarSupplementNavigationBackground()
+            .accessibilityIdentifier("supplement_log.add_sheet")
             .interactiveDismissDisabled(hasUnsavedAddFormChanges)
             .alert(item: $addFormAlert) { _ in
                 Alert(
@@ -678,9 +832,92 @@ struct SupplementLogView: View {
             )
         }
     }
+
+    private func lunarSummaryPill(title: String, value: String, systemImage: String) -> some View {
+        HStack(spacing: AppTheme.spacing8) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(supplementAccent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .appFont(.caption2)
+                    .foregroundStyle(AppTheme.secondaryText)
+                Text(value)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppTheme.spacing8)
+        .padding(.vertical, AppTheme.spacing8)
+        .background(Capsule().fill(AppTheme.premiumEditorSurface.opacity(0.76)))
+        .overlay(Capsule().stroke(AppTheme.premiumEditorBorder.opacity(0.56), lineWidth: 0.8))
+    }
+
+    private func lunarSectionHeader(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(supplementAccent)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(supplementAccent.opacity(0.12)))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(subtitle)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
 }
 
 // MARK: - Supplement Search Result
+
+private extension View {
+    @ViewBuilder
+    func lunarSupplementNavigationBackground() -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            toolbarBackground(AppTheme.premiumEditorBackground, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func lunarSupplementCard(cornerRadius: CGFloat = AppTheme.cornerRadiusLarge) -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.premiumEditorRaisedSurface.opacity(0.92),
+                                AppTheme.premiumEditorSurface.opacity(0.78),
+                                AppTheme.premiumEditorBackground.opacity(0.9)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 0.85)
+            )
+            .shadow(color: AppTheme.cardShadowColor, radius: 18, y: 12)
+        } else {
+            cardStyle(cornerRadius: cornerRadius)
+        }
+    }
+}
 
 private enum SupplementSearchResult: Identifiable {
     case catalog(PCOSSupplement)

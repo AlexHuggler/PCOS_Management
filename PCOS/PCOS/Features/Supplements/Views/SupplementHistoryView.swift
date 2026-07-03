@@ -63,8 +63,21 @@ struct SupplementHistoryView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle(String(localized: "Supplement History", comment: "Navigation title for supplement history."))
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : Color.clear)
+        .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : String(localized: "Supplement History", comment: "Navigation title for supplement history."))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if AppTheme.usesPremiumEditorStyling {
+                ToolbarItem(placement: .principal) {
+                    Text(String(localized: "Supplement patterns", comment: "Navigation title for Lunar Calm supplement history."))
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                }
+            }
+        }
+        .lunarSupplementHistoryNavigationBackground()
+        .accessibilityIdentifier("screen.supplement_history")
         .onAppear {
             let vm = SupplementViewModel(modelContext: modelContext)
             viewModel = vm
@@ -82,7 +95,7 @@ struct SupplementHistoryView: View {
             ZStack {
                 // Background ring
                 Circle()
-                    .stroke(Color(.tertiarySystemFill), lineWidth: 12)
+                    .stroke(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBorder.opacity(0.72) : Color(.tertiarySystemFill), lineWidth: 12)
                     .frame(width: clampedAdherenceRingDiameter, height: clampedAdherenceRingDiameter)
 
                 // Progress ring
@@ -105,15 +118,18 @@ struct SupplementHistoryView: View {
 
                     Text(String(localized: "adherence", comment: "Supplement adherence summary label."))
                         .appFont(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.secondaryText)
 
                     Text(adherenceStatusLabel)
                         .appFont(.caption2, weight: .medium)
                         .foregroundStyle(adherenceColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.66)
                 }
+                .frame(width: clampedAdherenceRingDiameter * 0.72)
             }
 
-            HStack(spacing: AppTheme.spacing24) {
+            HStack(spacing: AppTheme.spacing16) {
                 statLabel(
                     value: "\(adherence.totalTaken)",
                     label: String(localized: "Taken", comment: "Supplement adherence status label for doses that were taken."),
@@ -130,9 +146,13 @@ struct SupplementHistoryView: View {
                     color: .secondary
                 )
             }
+            .frame(maxWidth: .infinity)
         }
-        .cardStyle()
+        .frame(maxWidth: .infinity)
+        .lunarSupplementHistoryCard()
         .padding(.horizontal)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("supplement_history.lunar.adherence")
     }
 
     private func statLabel(value: String, label: String, color: Color) -> some View {
@@ -147,6 +167,16 @@ struct SupplementHistoryView: View {
     }
 
     private var adherenceColor: Color {
+        if AppTheme.usesPremiumEditorStyling {
+            if adherence.percentage >= 80 {
+                return AppTheme.premiumEditorAccentColor
+            } else if adherence.percentage >= 50 {
+                return AppTheme.premiumEditorSecondaryAccentColor
+            } else {
+                return AppTheme.premiumEditorWarningAccentColor
+            }
+        }
+
         if adherence.percentage >= 80 {
             return AppTheme.sage
         } else if adherence.percentage >= 50 {
@@ -175,8 +205,17 @@ struct SupplementHistoryView: View {
 
     private var supplementBreakdownSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-            AppTheme.sectionHeader(String(localized: "By Supplement", comment: "Section title for supplement history broken down by supplement."))
+            if AppTheme.usesPremiumEditorStyling {
+                lunarHistorySectionHeader(
+                    title: String(localized: "By supplement", comment: "Lunar Calm supplement history breakdown section title."),
+                    subtitle: String(localized: "Taken and missed doses by item", comment: "Lunar Calm supplement history breakdown section subtitle."),
+                    systemImage: "pills.fill"
+                )
                 .padding(.horizontal)
+            } else {
+                AppTheme.sectionHeader(String(localized: "By Supplement", comment: "Section title for supplement history broken down by supplement."))
+                    .padding(.horizontal)
+            }
 
             if supplementBreakdown.isEmpty {
                 VStack(spacing: AppTheme.spacing8) {
@@ -196,14 +235,14 @@ struct SupplementHistoryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, AppTheme.spacing24)
                 .padding(.horizontal)
-                .cardStyle()
+                .lunarSupplementHistoryCard()
                 .padding(.horizontal)
             } else {
                 ForEach(supplementBreakdown) { item in
                     HStack(spacing: AppTheme.spacing12) {
                         Image(systemName: "pill.fill")
                             .appFont(.body)
-                            .foregroundStyle(AppTheme.sage)
+                            .foregroundStyle(historyAccent)
                             .frame(width: 28)
 
                         VStack(alignment: .leading, spacing: AppTheme.spacing4) {
@@ -214,11 +253,11 @@ struct SupplementHistoryView: View {
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
                                     RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color(.tertiarySystemFill))
+                                        .fill(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBorder.opacity(0.6) : Color(.tertiarySystemFill))
                                         .frame(height: 6)
 
                                     RoundedRectangle(cornerRadius: 3)
-                                        .fill(AppTheme.sage)
+                                        .fill(historyAccent)
                                         .frame(
                                             width: item.total > 0
                                                 ? geo.size.width * CGFloat(item.takenCount) / CGFloat(item.total)
@@ -234,7 +273,7 @@ struct SupplementHistoryView: View {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("\(item.takenCount)/\(item.total)")
                                 .appFont(.caption, weight: .medium)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(AppTheme.primaryText)
 
                             if item.missedCount > 0 {
                                 Text(
@@ -250,7 +289,7 @@ struct SupplementHistoryView: View {
                     }
                     .padding(.vertical, AppTheme.spacing8)
                     .padding(.horizontal, AppTheme.spacing12)
-                    .cardStyle()
+                    .lunarSupplementHistoryCard(cornerRadius: AppTheme.cornerRadiusMedium)
                     .padding(.horizontal)
                 }
             }
@@ -259,8 +298,17 @@ struct SupplementHistoryView: View {
 
     private var dosageChangesSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-            AppTheme.sectionHeader("Dosage Change Timeline")
+            if AppTheme.usesPremiumEditorStyling {
+                lunarHistorySectionHeader(
+                    title: String(localized: "Dosage timeline", comment: "Lunar Calm supplement history dosage timeline section title."),
+                    subtitle: String(localized: "Changes appear here when doses shift", comment: "Lunar Calm supplement history dosage timeline section subtitle."),
+                    systemImage: "arrow.triangle.2.circlepath"
+                )
                 .padding(.horizontal)
+            } else {
+                AppTheme.sectionHeader("Dosage Change Timeline")
+                    .padding(.horizontal)
+            }
 
             if dosageChanges.isEmpty {
                 VStack(spacing: AppTheme.spacing8) {
@@ -275,13 +323,13 @@ struct SupplementHistoryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, AppTheme.spacing24)
                 .padding(.horizontal)
-                .cardStyle()
+                .lunarSupplementHistoryCard()
                 .padding(.horizontal)
             } else {
                 ForEach(dosageChanges) { change in
                     HStack(spacing: AppTheme.spacing12) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundStyle(AppTheme.accentColor)
+                            .foregroundStyle(historyAccent)
                             .frame(width: 24)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -300,10 +348,35 @@ struct SupplementHistoryView: View {
                     }
                     .padding(.vertical, AppTheme.spacing8)
                     .padding(.horizontal, AppTheme.spacing12)
-                    .cardStyle()
+                    .lunarSupplementHistoryCard(cornerRadius: AppTheme.cornerRadiusMedium)
                     .padding(.horizontal)
                 }
             }
+        }
+    }
+
+    private var historyAccent: Color {
+        AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : AppTheme.sage
+    }
+
+    private func lunarHistorySectionHeader(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppTheme.premiumEditorAccentGradient)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(historyAccent.opacity(0.12)))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Text(subtitle)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+            }
+
+            Spacer(minLength: 0)
         }
     }
 
@@ -341,6 +414,45 @@ struct SupplementHistoryView: View {
             ? L10n.decimal(dosage, fractionDigits: 0)
             : L10n.decimal(dosage, fractionDigits: 1)
         return "\(formatted) mg"
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func lunarSupplementHistoryNavigationBackground() -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            toolbarBackground(AppTheme.premiumEditorBackground, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func lunarSupplementHistoryCard(cornerRadius: CGFloat = AppTheme.cornerRadiusLarge) -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.premiumEditorRaisedSurface.opacity(0.92),
+                                AppTheme.premiumEditorSurface.opacity(0.78),
+                                AppTheme.premiumEditorBackground.opacity(0.9)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 0.85)
+            )
+            .shadow(color: AppTheme.cardShadowColor, radius: 18, y: 12)
+        } else {
+            cardStyle(cornerRadius: cornerRadius)
+        }
     }
 }
 

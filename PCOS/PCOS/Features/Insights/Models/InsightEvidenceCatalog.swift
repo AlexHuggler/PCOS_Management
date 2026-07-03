@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct EvidenceReference: Identifiable, Hashable, Sendable {
     let title: String
@@ -249,15 +250,33 @@ enum InsightEvidenceCatalog {
             ),
             evidenceSummary: "\(supplement.evidenceSummary) \(L10n.string("Your card still does not prove that the supplement caused the change; it highlights a pattern worth tracking over time.", defaultValue: "Your card still does not prove that the supplement caused the change; it highlights a pattern worth tracking over time."))",
             evidenceStrength: supplement.evidenceStrength,
-            referenceDocket: supplement.sources + [guidelineReference]
+            referenceDocket: supplement.sources + [guidelineReference].compactMap { $0 }
         )
     }
 
-    private static var guidelineReference: EvidenceReference {
-        EvidenceReference(
+    private static func reference(
+        title: String,
+        sourceLabel: String,
+        urlString: String,
+        relevanceNote: String
+    ) -> EvidenceReference? {
+        guard let url = URL(string: urlString) else {
+            Logger.insights.error("InsightEvidenceCatalog: Dropping reference with invalid URL for \(title)")
+            return nil
+        }
+        return EvidenceReference(
+            title: title,
+            sourceLabel: sourceLabel,
+            url: url,
+            relevanceNote: relevanceNote
+        )
+    }
+
+    private static var guidelineReference: EvidenceReference? {
+        reference(
             title: "Recommendations from the 2023 International Evidence-based Guideline for the Assessment and Management of Polycystic Ovarian Syndrome",
             sourceLabel: L10n.string("International PCOS guideline (2023)", defaultValue: "International PCOS guideline (2023)"),
-            url: URL(string: "https://www.monash.edu/__data/assets/pdf_file/0003/3379521/Evidence-Based-Guidelines-2023.pdf")!,
+            urlString: "https://www.monash.edu/__data/assets/pdf_file/0003/3379521/Evidence-Based-Guidelines-2023.pdf",
             relevanceNote: L10n.string(
                 "Benchmark international guideline used for broad PCOS assessment and management context.",
                 defaultValue: "Benchmark international guideline used for broad PCOS assessment and management context."
@@ -265,11 +284,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var bmjOverviewReference: EvidenceReference {
-        EvidenceReference(
+    private static var bmjOverviewReference: EvidenceReference? {
+        reference(
             title: "Polycystic ovary syndrome: pathophysiology and therapeutic opportunities",
             sourceLabel: L10n.string("BMJ Medicine review (2023)", defaultValue: "BMJ Medicine review (2023)"),
-            url: URL(string: "https://bmjmedicine.bmj.com/content/2/1/e000548")!,
+            urlString: "https://bmjmedicine.bmj.com/content/2/1/e000548",
             relevanceNote: L10n.string(
                 "High-level review explaining core PCOS mechanisms and why cycle and metabolic patterns matter.",
                 defaultValue: "High-level review explaining core PCOS mechanisms and why cycle and metabolic patterns matter."
@@ -277,11 +296,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var womensHealthCycleReference: EvidenceReference {
-        EvidenceReference(
+    private static var womensHealthCycleReference: EvidenceReference? {
+        reference(
             title: "Your menstrual cycle",
             sourceLabel: L10n.string("Office on Women's Health", defaultValue: "Office on Women's Health"),
-            url: URL(string: "https://womenshealth.gov/menstrual-cycle/your-menstrual-cycle")!,
+            urlString: "https://womenshealth.gov/menstrual-cycle/your-menstrual-cycle",
             relevanceNote: L10n.string(
                 "Official patient guidance explaining menstrual-cycle timing, ovulation, and common symptom changes across the cycle.",
                 defaultValue: "Official patient guidance explaining menstrual-cycle timing, ovulation, and common symptom changes across the cycle."
@@ -289,11 +308,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var dietBehaviorsReference: EvidenceReference {
-        EvidenceReference(
+    private static var dietBehaviorsReference: EvidenceReference? {
+        reference(
             title: "Dietary and Physical Activity Behaviors in Women with Polycystic Ovary Syndrome per the New International Evidence-Based Guideline",
             sourceLabel: L10n.string("PubMed review (2019)", defaultValue: "PubMed review (2019)"),
-            url: URL(string: "https://pubmed.ncbi.nlm.nih.gov/31717369/")!,
+            urlString: "https://pubmed.ncbi.nlm.nih.gov/31717369/",
             relevanceNote: L10n.string(
                 "Guideline-linked review summarizing diet and activity patterns discussed in PCOS care.",
                 defaultValue: "Guideline-linked review summarizing diet and activity patterns discussed in PCOS care."
@@ -301,11 +320,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var exerciseMetaReference: EvidenceReference {
-        EvidenceReference(
+    private static var exerciseMetaReference: EvidenceReference? {
+        reference(
             title: "Exercise, or exercise and diet, for the management of polycystic ovary syndrome: a systematic review and meta-analysis",
             sourceLabel: L10n.string("PubMed meta-analysis (2019)", defaultValue: "PubMed meta-analysis (2019)"),
-            url: URL(string: "https://pubmed.ncbi.nlm.nih.gov/30755271/")!,
+            urlString: "https://pubmed.ncbi.nlm.nih.gov/30755271/",
             relevanceNote: L10n.string(
                 "Commonly cited evidence showing why exercise and lifestyle patterns are discussed in PCOS management.",
                 defaultValue: "Commonly cited evidence showing why exercise and lifestyle patterns are discussed in PCOS management."
@@ -313,11 +332,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var physicalActivityGuidelinesReference: EvidenceReference {
-        EvidenceReference(
+    private static var physicalActivityGuidelinesReference: EvidenceReference? {
+        reference(
             title: "Physical Activity Guidelines for Americans, 2nd edition",
             sourceLabel: L10n.string("U.S. Department of Health and Human Services", defaultValue: "U.S. Department of Health and Human Services"),
-            url: URL(string: "https://health.gov/sites/default/files/2019-09/Physical_Activity_Guidelines_2nd_edition.pdf")!,
+            urlString: "https://health.gov/sites/default/files/2019-09/Physical_Activity_Guidelines_2nd_edition.pdf",
             relevanceNote: L10n.string(
                 "Official U.S. physical-activity guidance used for general movement and exercise recommendations when interpreting lifestyle patterns.",
                 defaultValue: "Official U.S. physical-activity guidance used for general movement and exercise recommendations when interpreting lifestyle patterns."
@@ -325,11 +344,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var sleepMetaReference: EvidenceReference {
-        EvidenceReference(
+    private static var sleepMetaReference: EvidenceReference? {
+        reference(
             title: "Eating, sleeping and sexual function disorders in women with polycystic ovary syndrome: a systematic review and meta-analysis",
             sourceLabel: L10n.string("PubMed systematic review (2019)", defaultValue: "PubMed systematic review (2019)"),
-            url: URL(string: "https://pubmed.ncbi.nlm.nih.gov/31917860/")!,
+            urlString: "https://pubmed.ncbi.nlm.nih.gov/31917860/",
             relevanceNote: L10n.string(
                 "Overview of sleep-related difficulties reported more often in PCOS populations.",
                 defaultValue: "Overview of sleep-related difficulties reported more often in PCOS populations."
@@ -337,11 +356,23 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var healthySleepReference: EvidenceReference {
-        EvidenceReference(
+    private static var heartRateVariabilityReference: EvidenceReference? {
+        reference(
+            title: "Exploring heart rate variability in polycystic ovary syndrome: implications for cardiovascular health: a systematic review and meta-analysis",
+            sourceLabel: L10n.string("PubMed meta-analysis (2024)", defaultValue: "PubMed meta-analysis (2024)"),
+            urlString: "https://pubmed.ncbi.nlm.nih.gov/39049099/",
+            relevanceNote: L10n.string(
+                "PCOS-studied context for why HRV and resting-heart-rate patterns can be useful recovery signals when interpreted cautiously.",
+                defaultValue: "PCOS-studied context for why HRV and resting-heart-rate patterns can be useful recovery signals when interpreted cautiously."
+            )
+        )
+    }
+
+    private static var healthySleepReference: EvidenceReference? {
+        reference(
             title: "Healthy Sleep",
             sourceLabel: L10n.string("MedlinePlus", defaultValue: "MedlinePlus"),
-            url: URL(string: "https://medlineplus.gov/healthysleep.html")!,
+            urlString: "https://medlineplus.gov/healthysleep.html",
             relevanceNote: L10n.string(
                 "Official patient guidance for sleep habits and practical sleep-hygiene steps that can support recovery and energy.",
                 defaultValue: "Official patient guidance for sleep habits and practical sleep-hygiene steps that can support recovery and energy."
@@ -349,11 +380,11 @@ enum InsightEvidenceCatalog {
         )
     }
 
-    private static var mentalHealthOverviewReference: EvidenceReference {
-        EvidenceReference(
+    private static var mentalHealthOverviewReference: EvidenceReference? {
+        reference(
             title: "Anxiety and depression in polycystic ovary syndrome: an overview of systematic reviews with meta-analysis",
             sourceLabel: L10n.string("PubMed overview (2024)", defaultValue: "PubMed overview (2024)"),
-            url: URL(string: "https://pubmed.ncbi.nlm.nih.gov/39453529/")!,
+            urlString: "https://pubmed.ncbi.nlm.nih.gov/39453529/",
             relevanceNote: L10n.string(
                 "Shows why symptom burden and emotional wellbeing are often discussed together in PCOS care.",
                 defaultValue: "Shows why symptom burden and emotional wellbeing are often discussed together in PCOS care."
@@ -362,18 +393,18 @@ enum InsightEvidenceCatalog {
     }
 
     private static var cyclePatternReferences: [EvidenceReference] {
-        [guidelineReference, bmjOverviewReference, womensHealthCycleReference]
+        [guidelineReference, bmjOverviewReference, womensHealthCycleReference].compactMap { $0 }
     }
 
     private static var symptomCorrelationReferences: [EvidenceReference] {
-        [guidelineReference, mentalHealthOverviewReference, womensHealthCycleReference]
+        [guidelineReference, mentalHealthOverviewReference, womensHealthCycleReference].compactMap { $0 }
     }
 
     private static var dietImpactReferences: [EvidenceReference] {
-        [guidelineReference, dietBehaviorsReference, exerciseMetaReference, physicalActivityGuidelinesReference]
+        [guidelineReference, dietBehaviorsReference, exerciseMetaReference, physicalActivityGuidelinesReference].compactMap { $0 }
     }
 
     private static var sleepActivityReferences: [EvidenceReference] {
-        [guidelineReference, sleepMetaReference, healthySleepReference]
+        [guidelineReference, sleepMetaReference, heartRateVariabilityReference, healthySleepReference].compactMap { $0 }
     }
 }

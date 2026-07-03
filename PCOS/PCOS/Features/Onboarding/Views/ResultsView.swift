@@ -105,7 +105,7 @@ struct ResultsView: View {
                 Button {
                     onSkip()
                 } label: {
-                    Text(String(localized: "Skip", comment: "Secondary button label on the results screen."))
+                    Text(L10n.string("Skip for now", defaultValue: "Skip for now"))
                 }
                 .appFont(.subheadline)
                 .foregroundStyle(.secondary)

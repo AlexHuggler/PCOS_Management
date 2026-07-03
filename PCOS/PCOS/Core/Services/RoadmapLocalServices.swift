@@ -220,6 +220,11 @@ struct HealthKitContributionSummary: Equatable, Identifiable {
         case activeMinutes
         case restingHeartRate
         case bloodGlucose
+        case nutrition
+        case cycle
+        case ovulation
+        case symptoms
+        case reproductiveContext
     }
 
     var id: Kind { kind }
@@ -249,39 +254,120 @@ struct HealthKitContributionSummaryService {
             .filter { $0.date >= startDate && $0.date <= now }
         let glucoseReadings = try modelContext.fetch(FetchDescriptor<BloodSugarReading>())
             .filter { $0.timestamp >= startDate && $0.timestamp <= now && $0.fromHealthKit }
+        let nutritionImports = try modelContext.fetch(FetchDescriptor<NutritionImportRecord>())
+            .filter { $0.startDate >= startDate && $0.startDate <= now && $0.sourceKind == .healthKit }
+        let provenance = try modelContext.fetch(FetchDescriptor<HealthKitImportedSampleRecord>())
+            .filter { $0.startDate >= startDate && $0.startDate <= now }
+        let activityIdentifiers: Set<String> = [
+            "HKQuantityTypeIdentifierActiveEnergyBurned",
+            "HKQuantityTypeIdentifierAppleExerciseTime",
+            "HKQuantityTypeIdentifierStepCount",
+            "HKQuantityTypeIdentifierDistanceWalkingRunning",
+            "HKWorkoutTypeIdentifier",
+        ]
+        let activityProvenanceCount = provenance.filter {
+            activityIdentifiers.contains($0.healthKitIdentifier)
+        }.count
 
         return [
             HealthKitContributionSummary(
                 kind: .bodyMass,
                 title: "Weight",
                 sampleCount: dailyLogs.filter { $0.weight != nil }.count,
-                sourceLabel: "Apple Health"
+                sourceLabel: sourceSummary(for: provenance, matching: ["HKQuantityTypeIdentifierBodyMass"])
             ),
             HealthKitContributionSummary(
                 kind: .sleepAnalysis,
                 title: "Sleep",
                 sampleCount: dailyLogs.filter { $0.sleepHours != nil }.count,
-                sourceLabel: "Apple Health"
+                sourceLabel: sourceSummary(for: provenance, matching: ["HKCategoryTypeIdentifierSleepAnalysis"])
             ),
             HealthKitContributionSummary(
                 kind: .activeMinutes,
                 title: "Activity",
-                sampleCount: dailyLogs.filter { $0.activeMinutes != nil }.count,
-                sourceLabel: "Apple Health"
+                sampleCount: max(dailyLogs.filter { $0.activeMinutes != nil }.count, activityProvenanceCount),
+                sourceLabel: sourceSummary(for: provenance, matching: activityIdentifiers)
             ),
             HealthKitContributionSummary(
                 kind: .restingHeartRate,
                 title: "Resting heart rate",
                 sampleCount: dailyLogs.filter { $0.restingHeartRateBPM != nil }.count,
-                sourceLabel: "Apple Health"
+                sourceLabel: sourceSummary(for: provenance, matching: ["HKQuantityTypeIdentifierRestingHeartRate"])
             ),
             HealthKitContributionSummary(
                 kind: .bloodGlucose,
                 title: "Blood glucose",
                 sampleCount: glucoseReadings.count,
-                sourceLabel: "Apple Health"
+                sourceLabel: sourceSummary(for: provenance, matching: ["HKQuantityTypeIdentifierBloodGlucose"])
+            ),
+            HealthKitContributionSummary(
+                kind: .nutrition,
+                title: "Nutrition",
+                sampleCount: nutritionImports.count,
+                sourceLabel: sourceSummary(for: provenance, kind: .nutritionImport, fallbackRecords: nutritionImports.map(\.sourceLabel))
+            ),
+            HealthKitContributionSummary(
+                kind: .cycle,
+                title: "Cycle context",
+                sampleCount: provenance.filter { $0.derivedRecordKind == .cycleEntry }.count,
+                sourceLabel: sourceSummary(for: provenance, kind: .cycleEntry)
+            ),
+            HealthKitContributionSummary(
+                kind: .ovulation,
+                title: "Ovulation context",
+                sampleCount: provenance.filter { $0.derivedRecordKind == .ovulationObservation }.count,
+                sourceLabel: sourceSummary(for: provenance, kind: .ovulationObservation)
+            ),
+            HealthKitContributionSummary(
+                kind: .symptoms,
+                title: "Symptoms",
+                sampleCount: provenance.filter { $0.derivedRecordKind == .symptomEntry }.count,
+                sourceLabel: sourceSummary(for: provenance, kind: .symptomEntry)
+            ),
+            HealthKitContributionSummary(
+                kind: .reproductiveContext,
+                title: "Reviewable reproductive context",
+                sampleCount: provenance.filter { $0.derivedRecordKind == .sensitiveContext }.count,
+                sourceLabel: sourceSummary(for: provenance, kind: .sensitiveContext)
             ),
         ]
+    }
+
+    private func sourceSummary(
+        for records: [HealthKitImportedSampleRecord],
+        matching identifiers: Set<String>
+    ) -> String {
+        sourceSummary(for: records.filter { identifiers.contains($0.healthKitIdentifier) })
+    }
+
+    private func sourceSummary(
+        for records: [HealthKitImportedSampleRecord],
+        kind: HealthKitDerivedRecordKind,
+        fallbackRecords: [String] = []
+    ) -> String {
+        let matching = records.filter { $0.derivedRecordKind == kind }
+        if matching.isEmpty, !fallbackRecords.isEmpty {
+            return compactSourceLabel(from: fallbackRecords)
+        }
+        return sourceSummary(for: matching)
+    }
+
+    private func sourceSummary(for records: [HealthKitImportedSampleRecord]) -> String {
+        compactSourceLabel(from: records.map(\.sourceLabel))
+    }
+
+    private func compactSourceLabel(from sourceLabels: [String]) -> String {
+        let uniqueSources = Array(Set(sourceLabels.filter { !$0.isEmpty })).sorted()
+        switch uniqueSources.count {
+        case 0:
+            return "Apple Health"
+        case 1:
+            return "From \(uniqueSources[0]) via Apple Health"
+        case 2:
+            return "From \(uniqueSources[0]) and \(uniqueSources[1]) via Apple Health"
+        default:
+            return "From \(uniqueSources[0]) and \(uniqueSources.count - 1) more apps via Apple Health"
+        }
     }
 }
 
@@ -290,7 +376,9 @@ struct LocalProfilePhotoStore {
     private let fileManager: FileManager
 
     init(baseDirectory: URL? = nil, fileManager: FileManager = .default) {
-        self.baseDirectory = baseDirectory ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        self.baseDirectory = baseDirectory
+            ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
         self.fileManager = fileManager
     }
 

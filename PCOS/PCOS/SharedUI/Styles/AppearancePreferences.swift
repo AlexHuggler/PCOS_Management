@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 
 enum ThemeOption: String, CaseIterable, Identifiable, Codable {
+    case lunarCalm
     case botanicalJournal
     case sage
     case sunrise
@@ -18,6 +19,8 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .botanicalJournal:
             L10n.string("Botanical Journal", defaultValue: "Botanical Journal")
+        case .lunarCalm:
+            L10n.string("Lunar Calm", defaultValue: "Lunar Calm")
         case .sage:
             L10n.string("Sage Bloom", defaultValue: "Sage Bloom")
         case .sunrise:
@@ -39,6 +42,14 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
         self == .highContrast
     }
 
+    var isExperimental: Bool {
+        false
+    }
+
+    var preferredColorScheme: ColorScheme {
+        self == .lunarCalm ? .dark : .light
+    }
+
     var palette: ThemePalette {
         switch self {
         case .botanicalJournal:
@@ -56,6 +67,22 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
                 flowLightDark: .init(hex: 0xB86F82),
                 flowMediumDark: .init(hex: 0x9B5067),
                 flowHeavyDark: .init(hex: 0x75374C)
+            )
+        case .lunarCalm:
+            ThemePalette(
+                accent: .init(hex: 0x68E0D4),
+                sage: .init(hex: 0xB8A7F5),
+                coral: .init(hex: 0xFFAAA0),
+                warmNeutralLight: .init(hex: 0x05060D),
+                warmNeutralDark: .init(hex: 0x05060D),
+                flowSpottingLight: .init(hex: 0xE77D91),
+                flowLightLight: .init(hex: 0xF69AA9),
+                flowMediumLight: .init(hex: 0xFFAAA0),
+                flowHeavyLight: .init(hex: 0xC95B72),
+                flowSpottingDark: .init(hex: 0xE77D91),
+                flowLightDark: .init(hex: 0xF69AA9),
+                flowMediumDark: .init(hex: 0xFFAAA0),
+                flowHeavyDark: .init(hex: 0xC95B72)
             )
         case .sage:
             ThemePalette(
@@ -295,6 +322,13 @@ extension ThemeRGB {
         green = Double((hex >> 8) & 0xFF) / 255.0
         blue = Double(hex & 0xFF) / 255.0
     }
+
+    /// Returns the color scaled toward black. Used to derive legible text
+    /// variants from pale palette accents on light backgrounds.
+    func darkened(by amount: Double) -> ThemeRGB {
+        let factor = max(0, 1 - amount)
+        return ThemeRGB(red: red * factor, green: green * factor, blue: blue * factor)
+    }
 }
 
 private struct AppearanceSelection: Codable, Equatable {
@@ -302,7 +336,7 @@ private struct AppearanceSelection: Codable, Equatable {
     var fontOption: FontOption
 
     static let `default` = AppearanceSelection(
-        themeOption: .botanicalJournal,
+        themeOption: .lunarCalm,
         fontOption: .systemDefault
     )
 }
@@ -311,6 +345,7 @@ private struct AppearanceSelection: Codable, Equatable {
 final class AppearancePreferences {
     nonisolated(unsafe) static let shared = AppearancePreferences()
     private static let settingsKey = "appearance.preferences"
+    private static let experimentalThemesKey = "appearance.enableExperimentalThemes"
 
     private let defaults: UserDefaults
 
@@ -341,12 +376,70 @@ final class AppearancePreferences {
         themeOption.palette
     }
 
+    var preferredColorScheme: ColorScheme {
+        themeOption.preferredColorScheme
+    }
+
+    var availableThemeOptions: [ThemeOption] {
+        let stableOptions = ThemeOption.allCases.filter { !$0.isExperimental }
+        guard experimentalThemesEnabled || themeOption.isExperimental else {
+            return stableOptions
+        }
+
+        guard !stableOptions.contains(.lunarCalm) else {
+            return stableOptions
+        }
+
+        var options = stableOptions
+        let insertionIndex = min(1, options.count)
+        options.insert(.lunarCalm, at: insertionIndex)
+        return options
+    }
+
+    var experimentalThemesEnabled: Bool {
+        defaults.bool(forKey: Self.experimentalThemesKey)
+            || ProcessInfo.processInfo.arguments.contains("UITestMode")
+            || Self.isInternalReviewRuntime
+    }
+
+    var experimentalThemeControlVisible: Bool {
+        defaults.bool(forKey: Self.experimentalThemesKey)
+            || themeOption.isExperimental
+            || ProcessInfo.processInfo.arguments.contains("UITestMode")
+            || Self.isInternalReviewRuntime
+    }
+
     func setThemeOption(_ option: ThemeOption) {
         themeOption = option
     }
 
     func setFontOption(_ option: FontOption) {
         fontOption = option
+    }
+
+    func setExperimentalThemesEnabled(_ isEnabled: Bool) {
+        defaults.set(isEnabled, forKey: Self.experimentalThemesKey)
+        renderKey = UUID()
+    }
+
+    private static var isInternalReviewRuntime: Bool {
+        let processInfo = ProcessInfo.processInfo
+        let isRunningUnitTests = processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || processInfo.environment["XCTestBundlePath"] != nil
+            || processInfo.arguments.contains { argument in
+                argument.contains("xctest") || argument.hasSuffix(".xctest")
+            }
+        guard !isRunningUnitTests else {
+            return false
+        }
+
+        #if targetEnvironment(simulator)
+        return true
+        #elseif DEBUG
+        return true
+        #else
+        return false
+        #endif
     }
 }
 

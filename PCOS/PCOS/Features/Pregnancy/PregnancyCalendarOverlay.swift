@@ -11,21 +11,28 @@ struct PregnancyCalendarDayCell: View {
         ZStack {
             if isPregnancyDay {
                 Circle()
-                    .fill(AppTheme.accentColor.opacity(0.15))
+                    .fill(AppTheme.usesPremiumEditorStyling ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(AppTheme.accentColor.opacity(0.15)))
             } else if isToday {
                 Circle()
-                    .strokeBorder(AppTheme.accentColor, lineWidth: 2)
+                    .strokeBorder(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : AppTheme.accentColor, lineWidth: 2)
             }
 
             Text("\(day)")
                 .appFont(.subheadline, weight: isToday ? .bold : .regular)
-                .foregroundStyle(isPregnancyDay ? AppTheme.accentColor : .primary)
+                .foregroundStyle(dayTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
         .frame(minHeight: 44)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var dayTextColor: Color {
+        if isPregnancyDay {
+            return AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorCTAForeground : AppTheme.accentColor
+        }
+        return AppTheme.usesPremiumEditorStyling ? AppTheme.primaryText : .primary
     }
 
     private var accessibilityDescription: String {

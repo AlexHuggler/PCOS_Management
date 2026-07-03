@@ -19,6 +19,14 @@ struct CycleRangeSaveResult {
     let undoSnapshot: CycleLogUndoSnapshot?
 }
 
+struct CurrentPeriodState: Equatable {
+    let periodStartDate: Date
+    let lastBleedingDate: Date
+    let isActive: Bool
+    let suggestedEndDate: Date
+    let periodEndedDate: Date?
+}
+
 struct CycleLogUndoSnapshot {
     fileprivate struct CycleSnapshot {
         let id: UUID
@@ -136,6 +144,27 @@ struct CycleLogService {
         return .continueCurrentCycle
     }
 
+    func currentPeriodState(
+        existingCycles: [Cycle],
+        entries: [CycleEntry],
+        referenceDate: Date = Date()
+    ) -> CurrentPeriodState? {
+        guard let targetCycle = currentOpenCycle(in: existingCycles) else { return nil }
+        let normalizedReferenceDate = normalized(referenceDate)
+        let cycleStartDate = normalized(targetCycle.startDate)
+        let cycleEntries = entries.filter { entry in
+            let entryDate = normalized(entry.date)
+            let belongsToTargetCycle = entry.cycle?.id == nil || entry.cycle?.id == targetCycle.id
+            return belongsToTargetCycle && entryDate >= cycleStartDate && entryDate <= normalizedReferenceDate
+        }
+
+        return resolvedCurrentPeriodState(
+            cycleStartDate: cycleStartDate,
+            entries: cycleEntries,
+            referenceDate: normalizedReferenceDate
+        )
+    }
+
     @discardableResult
     func logPeriodDay(
         date: Date,
@@ -205,6 +234,142 @@ struct CycleLogService {
         return CycleRangeSaveResult(
             primaryEntryID: entry.id,
             savedDates: [normalizedDate],
+            undoSnapshot: undoSnapshot.hasChanges ? undoSnapshot : nil
+        )
+    }
+
+    @discardableResult
+    func markPeriodEnded(
+        on finalBleedingDate: Date,
+        referenceDate: Date = Date(),
+        existingCycles: [Cycle]
+    ) throws -> CycleRangeSaveResult {
+        let normalizedEndDate = normalized(finalBleedingDate)
+        let normalizedReferenceDate = normalized(referenceDate)
+
+        guard normalizedEndDate <= normalizedReferenceDate else {
+            throw CycleLoggingError.periodEndDateOutOfRange
+        }
+
+        let sortedCycles = existingCycles.sorted(by: { $0.startDate < $1.startDate })
+        guard let targetCycle = currentOpenCycle(in: sortedCycles) else {
+            throw CycleLoggingError.noPeriodToEnd
+        }
+
+        let cycleStartDate = normalized(targetCycle.startDate)
+        let fetchedEntries = try fetchEntries(from: cycleStartDate, through: normalizedReferenceDate)
+        let currentCycleEntries = fetchedEntries.filter { entry in
+            entry.cycle?.id == nil || entry.cycle?.id == targetCycle.id
+        }
+
+        guard let periodState = resolvedCurrentPeriodState(
+            cycleStartDate: cycleStartDate,
+            entries: currentCycleEntries,
+            referenceDate: normalizedReferenceDate
+        ) else {
+            throw CycleLoggingError.noPeriodToEnd
+        }
+
+        guard normalizedEndDate >= periodState.periodStartDate else {
+            throw CycleLoggingError.periodEndDateOutOfRange
+        }
+
+        let entriesByDate = Dictionary(
+            currentCycleEntries.map { (normalized($0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let periodDates = dates(from: periodState.periodStartDate, through: normalizedEndDate)
+        let noPeriodDates = calendar.date(byAdding: .day, value: 1, to: normalizedEndDate)
+            .map { dates(from: $0, through: normalizedReferenceDate) } ?? []
+        var undoSnapshot = CycleLogUndoSnapshot()
+        var savedEntryIDs: [UUID] = []
+        var savedDates: [Date] = []
+        var lastKnownFlow = lastKnownPeriodFlow(
+            entries: currentCycleEntries,
+            through: normalizedEndDate
+        ) ?? .medium
+
+        for periodDate in periodDates {
+            let entry: CycleEntry
+
+            if let existingEntry = entriesByDate[periodDate] {
+                entry = existingEntry
+
+                if existingEntry.isPeriodDay {
+                    if let flowIntensity = existingEntry.flowIntensity, flowIntensity != FlowIntensity.none {
+                        lastKnownFlow = flowIntensity
+                    }
+                } else {
+                    undoSnapshot.snapshot(existingEntry)
+                    existingEntry.date = periodDate
+                    existingEntry.flowIntensity = lastKnownFlow
+                    existingEntry.isPeriodDay = true
+                    existingEntry.cyclePhase = .menstrual
+                }
+            } else {
+                entry = CycleEntry(
+                    date: periodDate,
+                    flowIntensity: lastKnownFlow,
+                    isPeriodDay: true,
+                    cyclePhase: .menstrual,
+                    notes: nil
+                )
+                modelContext.insert(entry)
+                undoSnapshot.recordInserted(entry: entry)
+            }
+
+            if entry.cycle?.id != targetCycle.id {
+                undoSnapshot.snapshot(entry)
+                entry.cycle = targetCycle
+            }
+
+            savedEntryIDs.append(entry.id)
+            savedDates.append(periodDate)
+        }
+
+        for noPeriodDate in noPeriodDates {
+            let entry: CycleEntry
+
+            if let existingEntry = entriesByDate[noPeriodDate] {
+                entry = existingEntry
+                let wasPeriodDay = existingEntry.isPeriodDay
+                if existingEntry.isPeriodDay || existingEntry.flowIntensity != FlowIntensity.none || existingEntry.cyclePhase != nil {
+                    undoSnapshot.snapshot(existingEntry)
+                    existingEntry.date = noPeriodDate
+                    existingEntry.flowIntensity = FlowIntensity.none
+                    existingEntry.isPeriodDay = false
+                    existingEntry.cyclePhase = nil
+                    if wasPeriodDay {
+                        existingEntry.notes = nil
+                    }
+                }
+            } else {
+                entry = CycleEntry(
+                    date: noPeriodDate,
+                    flowIntensity: FlowIntensity.none,
+                    isPeriodDay: false,
+                    cyclePhase: nil,
+                    notes: nil
+                )
+                modelContext.insert(entry)
+                undoSnapshot.recordInserted(entry: entry)
+            }
+
+            if entry.cycle?.id != targetCycle.id {
+                undoSnapshot.snapshot(entry)
+                entry.cycle = targetCycle
+            }
+
+            savedEntryIDs.append(entry.id)
+            savedDates.append(noPeriodDate)
+        }
+
+        try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
+
+        return CycleRangeSaveResult(
+            primaryEntryID: savedEntryIDs.first,
+            savedDates: savedDates,
             undoSnapshot: undoSnapshot.hasChanges ? undoSnapshot : nil
         )
     }
@@ -436,6 +601,8 @@ struct CycleLogService {
 extension CycleLogService {
     enum CycleLoggingError: LocalizedError {
         case newCycleConfirmationRequired
+        case noPeriodToEnd
+        case periodEndDateOutOfRange
 
         var errorDescription: String? {
             switch self {
@@ -444,12 +611,86 @@ extension CycleLogService {
                     "Please confirm before starting a new cycle.",
                     defaultValue: "Please confirm before starting a new cycle."
                 )
+            case .noPeriodToEnd:
+                return L10n.string(
+                    "There is no current period to end.",
+                    defaultValue: "There is no current period to end."
+                )
+            case .periodEndDateOutOfRange:
+                return L10n.string(
+                    "Choose a period end date between the period start and today.",
+                    defaultValue: "Choose a period end date between the period start and today."
+                )
             }
         }
     }
 }
 
 private extension CycleLogService {
+    func resolvedCurrentPeriodState(
+        cycleStartDate: Date,
+        entries: [CycleEntry],
+        referenceDate: Date
+    ) -> CurrentPeriodState? {
+        let entriesByDate = Dictionary(
+            entries.map { (normalized($0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let bleedingDates = entriesByDate
+            .filter { item in
+                item.value.isPeriodDay && item.key >= cycleStartDate && item.key <= referenceDate
+            }
+            .map(\.key)
+            .sorted()
+
+        guard let lastBleedingDate = bleedingDates.last else { return nil }
+
+        var periodStartDate = lastBleedingDate
+        var cursorDate = lastBleedingDate
+
+        while let previousDate = calendar.date(byAdding: .day, value: -1, to: cursorDate),
+              previousDate >= cycleStartDate,
+              let previousEntry = entriesByDate[previousDate],
+              previousEntry.isPeriodDay {
+            periodStartDate = previousDate
+            cursorDate = previousDate
+        }
+
+        let laterNoPeriodDate = entriesByDate
+            .filter { item in
+                item.key > lastBleedingDate && item.key <= referenceDate && !item.value.isPeriodDay
+            }
+            .map(\.key)
+            .sorted()
+            .first
+        let daysSinceLastBleeding = calendar.dateComponents(
+            [.day],
+            from: lastBleedingDate,
+            to: referenceDate
+        ).day ?? 0
+        let isActive = laterNoPeriodDate == nil && daysSinceLastBleeding <= 10
+        let periodEndedDate = isActive ? nil : lastBleedingDate
+
+        return CurrentPeriodState(
+            periodStartDate: periodStartDate,
+            lastBleedingDate: lastBleedingDate,
+            isActive: isActive,
+            suggestedEndDate: periodEndedDate ?? lastBleedingDate,
+            periodEndedDate: periodEndedDate
+        )
+    }
+
+    func lastKnownPeriodFlow(entries: [CycleEntry], through endDate: Date) -> FlowIntensity? {
+        entries
+            .filter { entry in
+                entry.isPeriodDay && normalized(entry.date) <= endDate
+            }
+            .sorted(by: { normalized($0.date) < normalized($1.date) })
+            .compactMap(\.flowIntensity)
+            .filter { $0 != FlowIntensity.none }
+            .last
+    }
+
     func prepareTargetCycle(
         earliestDate: Date,
         existingCycles: [Cycle],
@@ -536,7 +777,8 @@ private extension CycleLogService {
                 ? normalized(sortedCycles[sortedCycles.index(after: index)].startDate)
                 : nil
 
-            if normalizedDate >= cycleStart && (nextCycleStart == nil || normalizedDate < nextCycleStart!) {
+            let isBeforeNextCycle = nextCycleStart.map { normalizedDate < $0 } ?? true
+            if normalizedDate >= cycleStart && isBeforeNextCycle {
                 return cycle
             }
         }

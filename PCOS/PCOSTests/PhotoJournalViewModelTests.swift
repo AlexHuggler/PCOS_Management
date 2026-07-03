@@ -15,6 +15,19 @@ struct PhotoJournalViewModelTests {
         }
     }
 
+    private struct MockPhotoEncryptor: PhotoEncrypting {
+        private let header = Data("TESTENC".utf8)
+
+        func encrypt(_ data: Data) -> Data? {
+            header + data
+        }
+
+        func decrypt(_ data: Data) -> Data? {
+            guard data.starts(with: header) else { return nil }
+            return Data(data.dropFirst(header.count))
+        }
+    }
+
     /// Creates an in-memory ModelContainer that includes HairPhotoEntry.
     private func makeContainer() throws -> ModelContainer {
         let schema = Schema([HairPhotoEntry.self])
@@ -93,7 +106,8 @@ struct PhotoJournalViewModelTests {
     @Test("Saved photo data is encrypted and decryptable")
     func savedPhotoDataEncrypted() throws {
         let container = try makeContainer()
-        let vm = PhotoJournalViewModel(modelContext: container.mainContext)
+        let encryptor = MockPhotoEncryptor()
+        let vm = PhotoJournalViewModel(modelContext: container.mainContext, photoEncryptor: encryptor)
 
         let original = makeImageData()
         vm.selectedPhotoType = .hairline
@@ -105,7 +119,7 @@ struct PhotoJournalViewModelTests {
         let saved = try #require(vm.fetchAllPhotos().first)
         #expect(saved.photoData != original)
 
-        let decrypted = PhotoEncryptionService().decrypt(saved.photoData)
+        let decrypted = encryptor.decrypt(saved.photoData)
         #expect(decrypted == original)
     }
 

@@ -330,11 +330,7 @@ struct BloodSugarViewModelTests {
         let container = try TestHelpers.makeModelContainer()
         let context = container.mainContext
         let vm = BloodSugarViewModel(modelContext: context)
-        let now = try #require(
-            Calendar.current.date(
-                from: DateComponents(year: 2026, month: 5, day: 19, hour: 12, minute: 0)
-            )
-        )
+        let now = Date()
 
         let cycle = Cycle(
             startDate: Calendar.current.date(byAdding: .day, value: -20, to: now) ?? now,

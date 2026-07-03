@@ -160,87 +160,114 @@ struct PermissionsStepView: View {
         }
     }
 
+    private var wearableExampleChips: [String] {
+        [
+            "Apple Watch",
+            "Oura",
+            "MyFitnessPal",
+            "Cal AI",
+            L10n.string("CGM / glucose", defaultValue: "CGM / glucose"),
+            L10n.string("Smart scale", defaultValue: "Smart scale"),
+            L10n.string("Cycle apps", defaultValue: "Cycle apps"),
+        ]
+    }
+
+    private var healthSourceSetupSteps: [String] {
+        [
+            L10n.string("Connect Apple Health", defaultValue: "Connect Apple Health"),
+            L10n.string(
+                "Make sure your wearable or nutrition app shares data to Apple Health",
+                defaultValue: "Make sure your wearable or nutrition app shares data to Apple Health"
+            ),
+            L10n.string(
+                "CycleBalance reads only the data you approve",
+                defaultValue: "CycleBalance reads only the data you approve"
+            ),
+        ]
+    }
+
     var body: some View {
-        VStack(spacing: AppTheme.spacing24) {
-            Spacer()
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: AppTheme.spacing20) {
+                    Image(systemName: "lock.shield")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(AppTheme.accentColor)
+                        .accessibilityHidden(true)
 
-            Image(systemName: "lock.shield")
-                .font(.system(size: iconSize))
-                .foregroundStyle(AppTheme.accentColor)
-                .accessibilityHidden(true)
+                    VStack(spacing: AppTheme.spacing12) {
+                        Text(L10n.string("Help CycleBalance work better", defaultValue: "Help CycleBalance work better"))
+                            .appHeadingFont(.title2, weight: .regular)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .multilineTextAlignment(.center)
 
-            VStack(spacing: AppTheme.spacing12) {
-                Text(L10n.string("Help CycleBalance work better", defaultValue: "Help CycleBalance work better"))
-                    .appHeadingFont(.title2, weight: .regular)
-                    .foregroundStyle(AppTheme.primaryText)
-                    .multilineTextAlignment(.center)
+                        Text(
+                            L10n.string(
+                                "These permissions are optional. You can change them anytime in Settings.",
+                                defaultValue: "These permissions are optional. You can change them anytime in Settings."
+                            )
+                        )
+                        .appFont(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    }
 
-                Text(
-                    L10n.string(
-                        "These permissions are optional. You can change them anytime in Settings.",
-                        defaultValue: "These permissions are optional. You can change them anytime in Settings."
-                    )
-                )
-                .appFont(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                    HStack(spacing: AppTheme.spacing8) {
+                        Image(systemName: "lock.shield.fill")
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.accentColor)
+                        Text(
+                            L10n.string(
+                                "Your data stays on your device. No accounts, no servers, no exceptions.",
+                                defaultValue: "Your data stays on your device. No accounts, no servers, no exceptions."
+                            )
+                        )
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+
+                    healthDataBridgeCard
+
+                    VStack(spacing: AppTheme.spacing12) {
+                        permissionCard(
+                            icon: "camera.fill",
+                            title: L10n.string("Camera", defaultValue: "Camera"),
+                            description: L10n.string(
+                                "Take photos for your hair & skin journal to track changes over time.",
+                                defaultValue: "Take photos for your hair & skin journal to track changes over time."
+                            ),
+                            benefit: L10n.string(
+                                "See skin and hair changes side by side over months.",
+                                defaultValue: "See skin and hair changes side by side over months."
+                            ),
+                            status: permissionState.cameraStatus,
+                            action: .requestCamera
+                        )
+
+                        permissionCard(
+                            icon: "heart.fill",
+                            title: L10n.string("Apple Health", defaultValue: "Apple Health"),
+                            description: L10n.string(
+                                "Read nutrition, glucose, cycle, ovulation, symptoms, sleep, activity, heart, and body context for richer insights.",
+                                defaultValue: "Read nutrition, glucose, cycle, ovulation, symptoms, sleep, activity, heart, and body context for richer insights."
+                            ),
+                            benefit: L10n.string(
+                                "See which source apps contributed data and reduce manual entry.",
+                                defaultValue: "See which source apps contributed data and reduce manual entry."
+                            ),
+                            status: permissionState.healthKitStatus,
+                            action: .requestHealthKit
+                        )
+                    }
+
+                    if let healthKitErrorMessage {
+                        healthKitRecoveryNotice(message: healthKitErrorMessage)
+                    }
+                }
+                .padding(.horizontal, AppTheme.spacing24)
+                .padding(.top, AppTheme.spacing24)
+                .padding(.bottom, AppTheme.spacing16)
             }
-            .padding(.horizontal, AppTheme.spacing24)
-
-            HStack(spacing: AppTheme.spacing8) {
-                Image(systemName: "lock.shield.fill")
-                    .appFont(.caption)
-                    .foregroundStyle(AppTheme.accentColor)
-                Text(
-                    L10n.string(
-                        "Your data stays on your device. No accounts, no servers, no exceptions.",
-                        defaultValue: "Your data stays on your device. No accounts, no servers, no exceptions."
-                    )
-                )
-                .appFont(.caption)
-                .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, AppTheme.spacing24)
-
-            VStack(spacing: AppTheme.spacing12) {
-                permissionCard(
-                    icon: "camera.fill",
-                    title: L10n.string("Camera", defaultValue: "Camera"),
-                    description: L10n.string(
-                        "Take photos for your hair & skin journal to track changes over time.",
-                        defaultValue: "Take photos for your hair & skin journal to track changes over time."
-                    ),
-                    benefit: L10n.string(
-                        "See skin and hair changes side by side over months.",
-                        defaultValue: "See skin and hair changes side by side over months."
-                    ),
-                    status: permissionState.cameraStatus,
-                    action: .requestCamera
-                )
-
-                permissionCard(
-                    icon: "heart.fill",
-                    title: L10n.string("Apple Health", defaultValue: "Apple Health"),
-                    description: L10n.string(
-                        "Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights.",
-                        defaultValue: "Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights."
-                    ),
-                    benefit: L10n.string(
-                        "Get deeper insights when health data is connected.",
-                        defaultValue: "Get deeper insights when health data is connected."
-                    ),
-                    status: permissionState.healthKitStatus,
-                    action: .requestHealthKit
-                )
-            }
-            .padding(.horizontal, AppTheme.spacing24)
-
-            if let healthKitErrorMessage {
-                healthKitRecoveryNotice(message: healthKitErrorMessage)
-                    .padding(.horizontal, AppTheme.spacing24)
-            }
-
-            Spacer()
 
             VStack(spacing: AppTheme.spacing12) {
                 Button(action: handlePrimaryButtonTap) {
@@ -288,6 +315,8 @@ struct PermissionsStepView: View {
             }
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
+            .padding(.top, AppTheme.spacing12)
+            .background(AppTheme.cardBackground.opacity(0.96))
         }
         .background(BotanicalScreenBackground(style: .dense))
         .accessibilityElement(children: .contain)
@@ -304,6 +333,80 @@ struct PermissionsStepView: View {
     }
 
     // MARK: - Permission Card
+
+    private var healthDataBridgeCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Label(
+                L10n.string("Apple Health is the bridge", defaultValue: "Apple Health is the bridge"),
+                systemImage: "heart.text.square.fill"
+            )
+            .appFont(.caption, weight: .semibold)
+            .foregroundStyle(AppTheme.accentColor)
+
+            Text(
+                L10n.string(
+                    "Already tracking with Apple Watch, Oura, MyFitnessPal, Cal AI, or another health app?",
+                    defaultValue: "Already tracking with Apple Watch, Oura, MyFitnessPal, Cal AI, or another health app?"
+                )
+            )
+            .appFont(.subheadline, weight: .semibold)
+            .foregroundStyle(AppTheme.primaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Text(
+                L10n.string(
+                    "Connect Apple Health once, then CycleBalance can use approved data for richer cycle, nutrition, sleep, activity, and recovery context.",
+                    defaultValue: "Connect Apple Health once, then CycleBalance can use approved data for richer cycle, nutrition, sleep, activity, and recovery context."
+                )
+            )
+            .appFont(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+            FlowLayout(spacing: AppTheme.spacing8) {
+                ForEach(wearableExampleChips, id: \.self) { chip in
+                    Text(chip)
+                        .appFont(.caption2, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .padding(.horizontal, AppTheme.spacing12)
+                        .padding(.vertical, AppTheme.spacing4)
+                        .background(
+                            Capsule()
+                                .fill(AppTheme.accentColor.opacity(0.10))
+                        )
+                }
+            }
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                ForEach(Array(healthSourceSetupSteps.enumerated()), id: \.offset) { index, step in
+                    HStack(alignment: .top, spacing: AppTheme.spacing8) {
+                        Text("\(index + 1)")
+                            .appFont(.caption2, weight: .bold)
+                            .foregroundStyle(.white)
+                            .frame(width: 20, height: 20)
+                            .background(Circle().fill(AppTheme.accentColor))
+
+                        Text(step)
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(.top, AppTheme.spacing4)
+        }
+        .padding(AppTheme.spacing16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .fill(AppTheme.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                .stroke(AppTheme.accentColor.opacity(0.18), lineWidth: 1)
+        )
+        .accessibilityIdentifier("onboarding.permissions.health_data_bridge")
+    }
 
     private func permissionCard(
         icon: String,

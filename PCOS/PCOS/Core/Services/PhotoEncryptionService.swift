@@ -1,6 +1,7 @@
 import Foundation
 import CryptoKit
 import Security
+import os
 
 protocol PhotoEncrypting {
     func encrypt(_ data: Data) -> Data?
@@ -22,6 +23,7 @@ struct PhotoEncryptionService: PhotoEncrypting {
             guard let combined = sealed.combined else { return nil }
             return Self.header + combined
         } catch {
+            Logger.photoJournal.error("Photo encryption failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -35,6 +37,7 @@ struct PhotoEncryptionService: PhotoEncrypting {
             let box = try AES.GCM.SealedBox(combined: encryptedPayload)
             return try AES.GCM.open(box, using: key)
         } catch {
+            Logger.photoJournal.error("Photo decryption failed: \(error.localizedDescription)")
             return nil
         }
     }

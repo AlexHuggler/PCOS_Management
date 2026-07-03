@@ -121,29 +121,29 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
     }
 
     @MainActor
-    func testSystemLocalePaywallMatrixShardOne() throws {
-        try runSystemLocaleMatrix(specs: LocaleSpec.shardOne)
+    func testSystemLocalePaywallMatrixShardOne() {
+        runSystemLocaleMatrix(specs: LocaleSpec.shardOne)
     }
 
     @MainActor
-    func testSystemLocalePaywallMatrixShardTwo() throws {
-        try runSystemLocaleMatrix(specs: LocaleSpec.shardTwo)
+    func testSystemLocalePaywallMatrixShardTwo() {
+        runSystemLocaleMatrix(specs: LocaleSpec.shardTwo)
     }
 
     @MainActor
-    func testAppLanguagePaywallMatrixShardOne() throws {
-        try runAppLanguageMatrix(specs: LocaleSpec.shardOne)
+    func testAppLanguagePaywallMatrixShardOne() {
+        runAppLanguageMatrix(specs: LocaleSpec.shardOne)
     }
 
     @MainActor
-    func testAppLanguagePaywallMatrixShardTwo() throws {
-        try runAppLanguageMatrix(specs: LocaleSpec.shardTwo)
+    func testAppLanguagePaywallMatrixShardTwo() {
+        runAppLanguageMatrix(specs: LocaleSpec.shardTwo)
     }
 
     @MainActor
-    private func runSystemLocaleMatrix(specs: [LocaleSpec]) throws {
+    private func runSystemLocaleMatrix(specs: [LocaleSpec]) {
         for spec in specs {
-            try XCTContext.runActivity(named: "system \(spec.appLanguage)") { _ in
+            XCTContext.runActivity(named: "system \(spec.appLanguage)") { _ in
                 let app = makeApp(
                     language: spec.appLanguage,
                     locale: spec.localeIdentifier,
@@ -161,9 +161,9 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
     }
 
     @MainActor
-    private func runAppLanguageMatrix(specs: [LocaleSpec]) throws {
+    private func runAppLanguageMatrix(specs: [LocaleSpec]) {
         for spec in specs {
-            try XCTContext.runActivity(named: "app-language \(spec.appLanguage)") { _ in
+            XCTContext.runActivity(named: "app-language \(spec.appLanguage)") { _ in
                 let app = makeApp(
                     language: "en",
                     locale: "en_US",
@@ -173,8 +173,10 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 app.launch()
                 openSettingsTab(in: app)
 
-                let appLanguageRow = app.buttons["settings.app_language.row"]
-                XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+                let settingsScreen = settingsScreenElement(in: app)
+                XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
+                let appLanguageRow = identifiedElement("settings.app_language.row", in: app)
+                scrollToElement(appLanguageRow, in: settingsScreen)
                 appLanguageRow.tap()
 
                 let option = app.buttons["settings.app_language.option.\(spec.appLanguage)"]
@@ -206,6 +208,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
             "-AppleLanguages", "(\(language))",
             "-AppleLocale", locale,
             "-app.language", appLanguage,
+            "-appearance.enableExperimentalThemes", "NO",
+            "-appearance.themeOption", "botanicalJournal",
         ]
         return app
     }
@@ -217,8 +221,10 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
 
     @MainActor
     private func openPaywallFromSettings(in app: XCUIApplication) {
+        let settingsScreen = settingsScreenElement(in: app)
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
         let subscriptionRow = identifiedElement("settings.subscription.row", in: app)
-        XCTAssertTrue(subscriptionRow.waitForExistence(timeout: 10))
+        scrollToElement(subscriptionRow, in: settingsScreen)
         subscriptionRow.tap()
 
         XCTAssertTrue(identifiedElement("screen.paywall", in: app).waitForExistence(timeout: 8))
@@ -280,6 +286,48 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
     @MainActor
     private func identifiedElement(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", identifier)).firstMatch
+    }
+
+    @MainActor
+    private func settingsScreenElement(in app: XCUIApplication) -> XCUIElement {
+        let screen = identifiedElement("screen.settings", in: app)
+        if screen.exists {
+            return screen
+        }
+        return app.collectionViews["screen.settings"]
+    }
+
+    @MainActor
+    private func scrollToElement(_ element: XCUIElement, in container: XCUIElement, maxSwipes: Int = 8) {
+        if element.exists && element.isHittable && isInSafeTapZone(element, in: container) {
+            return
+        }
+
+        _ = element.waitForExistence(timeout: 1)
+
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable && isInSafeTapZone(element, in: container) {
+                return
+            }
+            container.swipeUp()
+        }
+
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable && isInSafeTapZone(element, in: container) {
+                return
+            }
+            container.swipeDown()
+        }
+
+        XCTAssertTrue(element.waitForExistence(timeout: 2))
+        XCTAssertTrue(element.isHittable)
+        XCTAssertTrue(isInSafeTapZone(element, in: container))
+    }
+
+    @MainActor
+    private func isInSafeTapZone(_ element: XCUIElement, in container: XCUIElement) -> Bool {
+        let bottomSafeInset: CGFloat = 80
+        return element.frame.maxY <= container.frame.maxY - bottomSafeInset
     }
 
     @MainActor

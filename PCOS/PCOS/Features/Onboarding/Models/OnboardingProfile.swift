@@ -130,10 +130,7 @@ enum SuggestedFirstAction: Sendable {
     case logSymptoms
 
     var guidedActionSkipTitle: String {
-        String(
-            localized: "Continue without first log",
-            comment: "Secondary guided action button label."
-        )
+        L10n.string("Skip for now", defaultValue: "Skip for now")
     }
 
     var guidedActionSkipHint: String {
@@ -187,8 +184,10 @@ final class OnboardingProfile {
         static let primaryGoal = "onboarding.primaryGoal"
         static let pcosExperience = "onboarding.pcosExperience"
         static let symptomFocusAreas = "onboarding.symptomFocusAreas"
+        static let preferredName = "onboarding.preferredName"
         static let hasPromptedForReview = "onboarding.hasPromptedForReview"
         static let dismissedHints = "onboarding.dismissedHints"
+        static let currentPhaseRaw = "onboarding.currentPhaseRaw"
     }
 
     private let defaults: UserDefaults
@@ -288,7 +287,50 @@ final class OnboardingProfile {
         }
     }
 
+    var preferredName: String {
+        get {
+            access(keyPath: \.preferredName)
+            let storedName = defaults.string(forKey: Keys.preferredName) ?? ""
+            return storedName == "__unset__" ? "" : storedName
+        }
+        set {
+            let trimmedName = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            withMutation(keyPath: \.preferredName) {
+                if trimmedName.isEmpty || trimmedName == "__unset__" {
+                    defaults.removeObject(forKey: Keys.preferredName)
+                } else {
+                    defaults.set(trimmedName, forKey: Keys.preferredName)
+                }
+            }
+        }
+    }
+
+    // MARK: - Flow Progress
+
+    /// Raw value of the onboarding phase the user last saw, so an interrupted
+    /// flow can resume mid-way. Cleared when onboarding completes or resets.
+    var currentPhaseRaw: String? {
+        get {
+            access(keyPath: \.currentPhaseRaw)
+            return defaults.string(forKey: Keys.currentPhaseRaw)
+        }
+        set {
+            withMutation(keyPath: \.currentPhaseRaw) {
+                if let newValue {
+                    defaults.set(newValue, forKey: Keys.currentPhaseRaw)
+                } else {
+                    defaults.removeObject(forKey: Keys.currentPhaseRaw)
+                }
+            }
+        }
+    }
+
     // MARK: - Derived State
+
+    var preferredDisplayName: String? {
+        let trimmedName = preferredName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? nil : trimmedName
+    }
 
     var preferredSymptomCategories: [SymptomCategory] {
         symptomFocusAreas.flatMap(\.relatedCategories)
@@ -372,13 +414,13 @@ final class OnboardingProfile {
     var resultsStat: String {
         switch pcosExperience {
         case .newlyDiagnosed:
-            String(localized: "68% of recently diagnosed users say tracking helped them feel more in control within 30 days.", comment: "Reassuring stat for newly diagnosed users on the results screen.")
+            String(localized: "Start with a few simple logs, then use patterns as conversation starters with your care team.", comment: "Reassuring onboarding message for newly diagnosed users.")
         case .experienced:
-            String(localized: "Women who track consistently report 40% better conversations with their doctors.", comment: "Reassuring stat for experienced users on the results screen.")
+            String(localized: "Bring cycle, symptom, meal, glucose, and supplement context together without turning it into a diagnosis.", comment: "Reassuring onboarding message for experienced users.")
         case .exploring:
-            String(localized: "3 in 4 women exploring PCOS say symptom tracking gave them clarity before their next appointment.", comment: "Reassuring stat for exploring users on the results screen.")
+            String(localized: "Track what you notice so your next appointment starts with clearer context.", comment: "Reassuring onboarding message for users exploring PCOS.")
         case nil:
-            String(localized: "Join 10,000+ women tracking their PCOS journey with CycleBalance.", comment: "Generic community stat on the results screen.")
+            String(localized: "Your tracker is set up around your goals, preferences, and first logs.", comment: "Generic reassuring onboarding message.")
         }
     }
 
@@ -519,7 +561,9 @@ final class OnboardingProfile {
             Keys.primaryGoal,
             Keys.pcosExperience,
             Keys.symptomFocusAreas,
+            Keys.preferredName,
             Keys.dismissedHints,
+            Keys.currentPhaseRaw,
         ]
         for key in keysToRemove {
             defaults.removeObject(forKey: key)

@@ -8,8 +8,19 @@ private let premiumGateSourceRelativePath = "../PCOS/Core/StoreKit/PremiumGate.s
 private let calendarSourceRelativePath = "../PCOS/Features/Cycle/Views/CalendarMonthView.swift"
 private let supplementHistorySourceRelativePath = "../PCOS/Features/Supplements/Views/SupplementHistoryView.swift"
 private let bloodSugarHistorySourceRelativePath = "../PCOS/Features/BloodSugar/Views/BloodSugarHistoryView.swift"
+private let todayViewSourceRelativePath = "../PCOS/Features/Cycle/Views/TodayView.swift"
+private let mealLogSourceRelativePath = "../PCOS/Features/Meals/Views/MealLogView.swift"
+private let mealScanFlowSourceRelativePath = "../PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+private let onboardingContainerSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"
+private let onboardingHowAppHelpsSourceRelativePath = "../PCOS/Features/Onboarding/Views/HowAppHelpsView.swift"
+private let onboardingQuestionnaireSourceRelativePath = "../PCOS/Features/Onboarding/Views/QuestionnaireView.swift"
+private let onboardingMealScanDemoSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingMealScanDemoView.swift"
+private let symptomGridItemSourceRelativePath = "../PCOS/Features/Symptoms/Views/SymptomGridItem.swift"
 private let settingsSourceRelativePath = "../PCOS/App/SettingsView.swift"
 private let settingsDebugToolsSourceRelativePath = "../PCOS/App/SettingsDebugToolsState.swift"
+private let fsaHSAResourcesSourceRelativePath = "../PCOS/App/FSAHSAResourcesView.swift"
+private let notificationManagerSourceRelativePath = "../PCOS/Core/Notifications/NotificationManager.swift"
+private let notificationSettingsSourceRelativePath = "../PCOS/Core/Notifications/NotificationSettingsView.swift"
 
 private let sharedSchemeDirectoryCandidates = [
     "../../PCOS.xcodeproj/xcshareddata/xcschemes",
@@ -111,6 +122,129 @@ struct InterfaceResilienceTests {
         #expect(source.contains(".lineLimit(1)"))
         #expect(source.contains(".minimumScaleFactor(0.8)"))
         #expect(!source.contains(".frame(width: 70, alignment: .leading)"))
+    }
+
+    @Test("Meal log exposes a unified add nutrition entry point with manual fallback")
+    func mealLogExposesUnifiedNutritionEntryPoint() throws {
+        let source = try loadSource(relativePath: mealLogSourceRelativePath)
+
+        #expect(source.contains("Add nutrition"))
+        #expect(source.contains("showingBarcodeImport = true"))
+        #expect(source.contains("showingMealScan = true"))
+        #expect(source.contains("Scan Meal with AI"))
+        #expect(source.contains("lunarPrimaryMealScanCard"))
+        #expect(source.contains("focusManualNutritionEntry()"))
+        #expect(source.contains("meal_log.manual_nutrition_button"))
+        #expect(!source.contains("if MealScanFeatureFlags.current.enableMealScanV2"))
+    }
+
+    @Test("Meal scan preview opens without root premium gate while real photos present contextual paywall")
+    func mealScanPreviewSeparatesSampleFromPremiumPhotoActions() throws {
+        let flowSource = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let onboardingSource = try loadSource(relativePath: onboardingMealScanDemoSourceRelativePath)
+        let contentSource = try loadSource(relativePath: contentViewSourceRelativePath)
+
+        #expect(!flowSource.contains(".premiumGated()"))
+        #expect(flowSource.contains("presentPremiumPaywall(reason: .mealScan)"))
+        #expect(flowSource.contains("Use sample meal"))
+        #expect(!onboardingSource.contains("MealScanFlowView("))
+        #expect(onboardingSource.contains("Sample meal estimate"))
+        #expect(!contentSource.contains("guard appState.allowsPremiumAccess else {\n            appState.presentPremiumPaywall()\n            return\n        }\n        showingMealScan = true"))
+    }
+
+    @Test("FSA letter preview uses readable selectable text instead of a disabled fixed editor")
+    func fsaLetterPreviewUsesReadableSelectableText() throws {
+        let source = try loadSource(relativePath: fsaHSAResourcesSourceRelativePath)
+
+        #expect(!source.contains("TextEditor(text: .constant(letterText))"))
+        #expect(source.contains("textSelection(.enabled)"))
+        #expect(source.contains("fixedSize(horizontal: false, vertical: true)"))
+        #expect(source.contains("Read Full Letter"))
+    }
+
+    @Test("Symptom cards use labeled intensity choices instead of unlabeled dots")
+    func symptomCardsUseLabeledIntensityChoices() throws {
+        let source = try loadSource(relativePath: symptomGridItemSourceRelativePath)
+
+        #expect(source.contains("SymptomIntensityOption"))
+        #expect(source.contains("None"))
+        #expect(source.contains("Mild"))
+        #expect(source.contains("Moderate"))
+        #expect(source.contains("Severe"))
+        #expect(!source.contains("SeverityPicker(severity: severity"))
+    }
+
+    @Test("Settings Your Space opens a daily private journal editor")
+    func settingsYourSpaceOpensDailyJournalEditor() throws {
+        let source = try loadSource(relativePath: settingsSourceRelativePath)
+
+        #expect(source.contains("DailyJournalEditorView"))
+        #expect(source.contains("showingPrivateJournal"))
+        #expect(source.contains("settings.lunar.private_notes.open"))
+        #expect(source.contains("saveDailyCheckIn("))
+    }
+
+    @Test("Tracking support card uses a clear moon icon without overlapping wave art")
+    func trackingSupportCardUsesClearMoonIcon() throws {
+        let source = try loadSource(relativePath: contentViewSourceRelativePath)
+
+        #expect(source.contains("tracking.lunar.support_card"))
+        #expect(source.contains("moon.stars.fill"))
+        #expect(!source.contains("LunarWaveMark()\n                .frame(width: 134, height: 58)"))
+    }
+
+    @Test("Cycle hero ring reflects cycle-day progress instead of a fixed decorative arc")
+    func cycleHeroRingReflectsCycleDayProgress() throws {
+        let source = try loadSource(relativePath: todayViewSourceRelativePath)
+
+        #expect(source.contains("LunarCycleHeroRing(progress: cycleHeroRingProgress)"))
+        #expect(source.contains("private var cycleHeroRingProgress: Double"))
+        #expect(source.contains("private var clampedProgress: Double"))
+        #expect(!source.contains(".trim(from: 0.08, to: 0.82)"))
+        #expect(!source.contains(".offset(x: 66, y: -72)"))
+    }
+
+    @Test("Meal scan reminders have a settings toggle and notification route payload")
+    func mealScanRemindersHaveSettingsToggleAndRoutePayload() throws {
+        let managerSource = try loadSource(relativePath: notificationManagerSourceRelativePath)
+        let settingsSource = try loadSource(relativePath: notificationSettingsSourceRelativePath)
+        let contentSource = try loadSource(relativePath: contentViewSourceRelativePath)
+
+        #expect(managerSource.contains("mealScanRemindersEnabled"))
+        #expect(managerSource.contains("scheduleMealScanReminder"))
+        #expect(managerSource.contains("AppNotificationRoute.mealScan.rawValue"))
+        #expect(settingsSource.contains("settings.notifications.meal_scan_toggle"))
+        #expect(contentSource.contains("pendingNotificationRoute"))
+        #expect(contentSource.contains("handleNotificationRoute"))
+    }
+
+    @Test("Positive actions show ranked recommendations while preserving all quick actions")
+    func positiveActionsShowRankedRecommendations() throws {
+        let source = try loadSource(relativePath: todayViewSourceRelativePath)
+
+        #expect(source.contains("recommendedPositiveActions"))
+        #expect(source.contains("PositiveActionRecommendationEngine.rankedRecommendations"))
+        #expect(source.contains("ForEach(recommendedPositiveActions.prefix(3))"))
+        #expect(source.contains("positive_action.recommendation."))
+        #expect(source.contains("ForEach(PositiveActionType.allCases)"))
+    }
+
+    @Test("Swipe navigation is bounded to onboarding and not global tab switching")
+    func swipeNavigationIsBoundedToOnboarding() throws {
+        let onboardingSource = try loadSource(relativePath: onboardingContainerSourceRelativePath)
+        let howAppHelpsSource = try loadSource(relativePath: onboardingHowAppHelpsSourceRelativePath)
+        let questionnaireSource = try loadSource(relativePath: onboardingQuestionnaireSourceRelativePath)
+        let contentSource = try loadSource(relativePath: contentViewSourceRelativePath)
+
+        #expect(onboardingSource.contains("boundedOnboardingSwipeGesture"))
+        #expect(onboardingSource.contains("DragGesture(minimumDistance:"))
+        #expect(onboardingSource.contains("phaseAllowsContainerSwipe"))
+        #expect(onboardingSource.contains("retreat()"))
+        #expect(howAppHelpsSource.contains("boundedFeaturePreviewSwipeGesture"))
+        #expect(questionnaireSource.contains("boundedQuestionnaireSwipeGesture"))
+        #expect(!contentSource.contains("DragGesture(minimumDistance:"))
+        #expect(!contentSource.contains("PageTabViewStyle"))
+        #expect(!contentSource.contains(".tabViewStyle(.page"))
     }
 
     @Test("Settings premium QA surfaces RevenueCat scheme warning")

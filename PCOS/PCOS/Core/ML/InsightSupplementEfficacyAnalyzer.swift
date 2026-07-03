@@ -7,7 +7,7 @@ struct SupplementEfficacyInsightAnalyzer {
 
     /// Emits quantitative-only supplement efficacy insights:
     /// 1) symptom severity deltas on taken vs missed days
-    /// 2) cycle length deltas in >80% adherence months vs lower-adherence months
+    /// 2) cycle length deltas in >80% adherence cycles vs lower-adherence cycles
     func analyze() throws -> [Insight] {
         let supplementDescriptor = FetchDescriptor<SupplementLog>(
             sortBy: [SortDescriptor(\.date, order: .forward)]
@@ -37,11 +37,26 @@ struct SupplementEfficacyInsightAnalyzer {
 
         var insights: [Insight] = []
 
-        let completedCycleLengthsByMonth: [YearMonth: [Int]] = Dictionary(
-            grouping: cycles.filter { !$0.isPredicted && ($0.manualCycleLengthOverrideDays != nil || $0.lengthDays != nil) },
-            by: { YearMonth(date: $0.startDate, calendar: calendar) }
-        ).mapValues { group in
-            group.compactMap { $0.manualCycleLengthOverrideDays ?? $0.lengthDays }
+        let completedCycles = cycles.compactMap { cycle -> CompletedSupplementCycle? in
+            guard !cycle.isPredicted,
+                  let cycleLength = cycle.manualCycleLengthOverrideDays ?? cycle.lengthDays,
+                  cycleLength > 0
+            else {
+                return nil
+            }
+
+            let startDate = calendar.startOfDay(for: cycle.startDate)
+            let endDate = cycle.endDate
+                .map { calendar.startOfDay(for: $0) }
+                ?? calendar.date(byAdding: .day, value: cycleLength, to: startDate)
+
+            guard let endDate else { return nil }
+
+            return CompletedSupplementCycle(
+                startDate: startDate,
+                endDate: endDate,
+                lengthDays: cycleLength
+            )
         }
 
         let byName = Dictionary(grouping: supplements, by: \.supplementName)
@@ -122,23 +137,25 @@ struct SupplementEfficacyInsightAnalyzer {
                 }
             }
 
-            let monthGroups = Dictionary(grouping: logs, by: { YearMonth(date: $0.date, calendar: calendar) })
-            let adherenceByMonth: [(month: YearMonth, adherencePercent: Double)] = monthGroups.map { month, entries in
-                let takenCount = entries.filter(\.taken).count
-                let adherence = (Double(takenCount) / Double(entries.count)) * 100
-                return (month, adherence)
+            let adherenceByCycle: [(lengthDays: Int, adherencePercent: Double)] = completedCycles.compactMap { cycle in
+                let cycleLogs = logs.filter { log in
+                    let logDate = calendar.startOfDay(for: log.date)
+                    return logDate >= cycle.startDate && logDate <= cycle.endDate
+                }
+
+                guard !cycleLogs.isEmpty else { return nil }
+
+                let takenCount = cycleLogs.filter(\.taken).count
+                let adherence = (Double(takenCount) / Double(cycleLogs.count)) * 100
+                return (cycle.lengthDays, adherence)
             }
-            .sorted { $0.month < $1.month }
 
-            let highAdherenceMonths = adherenceByMonth
+            let highAdherenceCycleLengths = adherenceByCycle
                 .filter { $0.adherencePercent >= 80 }
-                .map(\.month)
-            let lowerAdherenceMonths = adherenceByMonth
+                .map(\.lengthDays)
+            let lowerAdherenceCycleLengths = adherenceByCycle
                 .filter { $0.adherencePercent < 80 }
-                .map(\.month)
-
-            let highAdherenceCycleLengths = highAdherenceMonths.flatMap { completedCycleLengthsByMonth[$0] ?? [] }
-            let lowerAdherenceCycleLengths = lowerAdherenceMonths.flatMap { completedCycleLengthsByMonth[$0] ?? [] }
+                .map(\.lengthDays)
 
             guard highAdherenceCycleLengths.count >= 2, lowerAdherenceCycleLengths.count >= 2 else { continue }
 
@@ -207,19 +224,8 @@ struct SupplementEfficacyInsightAnalyzer {
     }
 }
 
-private struct YearMonth: Hashable, Comparable {
-    let year: Int
-    let month: Int
-
-    init(date: Date, calendar: Calendar) {
-        year = calendar.component(.year, from: date)
-        month = calendar.component(.month, from: date)
-    }
-
-    static func < (lhs: YearMonth, rhs: YearMonth) -> Bool {
-        if lhs.year != rhs.year {
-            return lhs.year < rhs.year
-        }
-        return lhs.month < rhs.month
-    }
+private struct CompletedSupplementCycle {
+    let startDate: Date
+    let endDate: Date
+    let lengthDays: Int
 }

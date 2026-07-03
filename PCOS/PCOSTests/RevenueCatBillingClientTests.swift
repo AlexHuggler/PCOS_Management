@@ -106,8 +106,8 @@ struct RevenueCatBillingClientTests {
         #expect(provider.configuredAPIKey == "appl_test_key")
         #expect(provider.lastOfferingID == "default")
         #expect(products.map(\.id) == [SubscriptionManager.monthlyProductID, SubscriptionManager.yearlyProductID])
-        #expect(products.first?.displayPrice == "$6.99")
-        #expect(products.last?.displayPrice == "$39.99")
+        #expect(products.first?.displayPrice == "$9.99")
+        #expect(products.last?.displayPrice == "$79.99")
         #expect(products.first?.subscriptionPeriod == BillingPeriod(unit: .month, value: 1))
         #expect(products.last?.subscriptionPeriod == BillingPeriod(unit: .year, value: 1))
     }
@@ -262,8 +262,8 @@ struct RevenueCatBillingClientTests {
                 packageType: .monthly,
                 storeProduct: makeStoreProduct(
                     localizedTitle: "CycleBalance Premium Monthly",
-                    price: 6.99,
-                    localizedPriceString: "$6.99",
+                    price: 9.99,
+                    localizedPriceString: "$9.99",
                     productIdentifier: SubscriptionManager.monthlyProductID,
                     subscriptionPeriod: .init(value: 1, unit: .month)
                 ),
@@ -279,8 +279,8 @@ struct RevenueCatBillingClientTests {
                     packageType: .annual,
                     storeProduct: makeStoreProduct(
                         localizedTitle: "CycleBalance Annual",
-                        price: 39.99,
-                        localizedPriceString: "$39.99",
+                        price: 79.99,
+                        localizedPriceString: "$79.99",
                         productIdentifier: SubscriptionManager.yearlyProductID,
                         subscriptionPeriod: .init(value: 1, unit: .year)
                     ),

@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum PremiumPaywallReason: String {
+    case general
+    case mealScan
+}
+
 enum AppTab: String, CaseIterable, Identifiable {
     case today
     case calendar
@@ -53,6 +58,8 @@ final class AppState {
     var selectedTab: AppTab = .today
     var isPremium: Bool = false
     var showPremiumPaywall = false
+    var premiumPaywallReason: PremiumPaywallReason = .general
+    var pendingNotificationRoute: AppNotificationRoute?
     let launchAppLanguage: AppLanguage
     var selectedAppLanguage: AppLanguage {
         didSet {
@@ -125,9 +132,23 @@ final class AppState {
         selectedTab = requestedTab
     }
 
-    func presentPremiumPaywall() {
+    func presentPremiumPaywall(reason: PremiumPaywallReason = .general) {
         guard showsSubscriptionUI, !allowsPremiumAccess else { return }
+        premiumPaywallReason = reason
         showPremiumPaywall = true
+    }
+
+    func handleNotificationRoute(_ route: AppNotificationRoute) {
+        switch route {
+        case .mealScan:
+            selectedTab = .track
+            pendingNotificationRoute = route
+        }
+    }
+
+    func consumeNotificationRoute(_ route: AppNotificationRoute) {
+        guard pendingNotificationRoute == route else { return }
+        pendingNotificationRoute = nil
     }
 
     private static func isTestFlightOverrideActive(

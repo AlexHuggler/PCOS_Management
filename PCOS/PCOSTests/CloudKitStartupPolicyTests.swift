@@ -82,16 +82,16 @@ struct CloudKitStartupPolicyTests {
         #expect(projectYAML.contains("CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements"))
     }
 
-    @Test("Debug entitlements file excludes CloudKit and HealthKit capabilities")
+    @Test("Debug entitlements enable HealthKit but exclude CloudKit capabilities")
     @MainActor
-    func debugEntitlementsExcludeCloudKitAndHealthKit() throws {
+    func debugEntitlementsEnableHealthKitAndExcludeCloudKit() throws {
         let projectRoot = try TestHelpers.projectRoot(from: #filePath)
         let debugEntitlementsURL = projectRoot.appendingPathComponent("PCOS/PCOS.debug.entitlements")
         let data = try Data(contentsOf: debugEntitlementsURL)
         let object = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
         let entitlements = try #require(object as? [String: Any])
 
-        #expect(entitlements["com.apple.developer.healthkit"] == nil)
+        #expect((entitlements["com.apple.developer.healthkit"] as? Bool) == true)
         #expect(entitlements["com.apple.developer.icloud-services"] == nil)
         #expect(entitlements["com.apple.developer.icloud-container-identifiers"] == nil)
     }
@@ -132,7 +132,9 @@ struct CloudKitStartupPolicyTests {
 
         let healthShareDescription = try #require(info["NSHealthShareUsageDescription"] as? String)
         let healthUpdateDescription = try #require(info["NSHealthUpdateUsageDescription"] as? String)
-        #expect(healthShareDescription.contains("reads your Apple Health data"))
+        #expect(healthShareDescription.contains("reads Apple Health data you allow"))
+        #expect(healthShareDescription.contains("cycle"))
+        #expect(healthShareDescription.contains("symptoms"))
         #expect(healthUpdateDescription.contains("does not write to Apple Health"))
         #expect(info["UIBackgroundModes"] == nil)
     }

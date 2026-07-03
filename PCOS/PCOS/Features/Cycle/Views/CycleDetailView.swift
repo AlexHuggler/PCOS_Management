@@ -10,12 +10,15 @@ struct CycleDetailView: View {
     @State private var selectedOvulationStatus: OvulationStatus = .unknown
     @State private var settingsError: String?
     @State private var activeTooltip: String?
+    @State private var showingPeriodEndSheet = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: AppTheme.spacing24) {
                 // Current cycle day counter
                 currentCycleCard
+
+                periodEndAction
 
                 // Prediction card
                 predictionCard
@@ -50,6 +53,21 @@ struct CycleDetailView: View {
             viewModel?.loadData()
         }
         .navigationTitle(L10n.string("Cycle Details", defaultValue: "Cycle Details"))
+        .sheet(isPresented: $showingPeriodEndSheet, onDismiss: {
+            viewModel?.loadData()
+        }) {
+            if let viewModel, let currentPeriodState = viewModel.currentPeriodState {
+                PeriodEndSheet(
+                    periodState: currentPeriodState,
+                    onSave: { endDate, referenceDate in
+                        try viewModel.markPeriodEnded(on: endDate, referenceDate: referenceDate)
+                    },
+                    onSaved: {
+                        viewModel.loadData()
+                    }
+                )
+            }
+        }
         .onAppear {
             if viewModel == nil {
                 let vm = CycleViewModel(modelContext: modelContext)
@@ -82,10 +100,37 @@ struct CycleDetailView: View {
                     .appFont(.subheadline)
                     .foregroundStyle(.tertiary)
             }
+
+            if let endedText = currentPeriodEndedText {
+                Text(endedText)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.sage)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppTheme.spacing24)
         .cardStyle(cornerRadius: 16)
+    }
+
+    @ViewBuilder
+    private var periodEndAction: some View {
+        if canShowPeriodEndAction {
+            Button {
+                showingPeriodEndSheet = true
+            } label: {
+                Label(periodEndButtonTitle, systemImage: "calendar.badge.checkmark")
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(AppTheme.accentColor))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("cycle_detail.period_end_button")
+        }
     }
 
     private var predictionCard: some View {
@@ -299,6 +344,30 @@ struct CycleDetailView: View {
             return completed
         }
         return completed.filter { $0.startDate >= earliest }
+    }
+
+    private var canShowPeriodEndAction: Bool {
+        guard let viewModel else { return false }
+        return viewModel.canMarkPeriodEnd && viewModel.currentPeriodState != nil
+    }
+
+    private var periodEndButtonTitle: String {
+        guard viewModel?.currentPeriodState?.isActive == false else {
+            return L10n.string("Mark Period End", defaultValue: "Mark Period End")
+        }
+        return L10n.string("Edit Period End Date", defaultValue: "Edit Period End Date")
+    }
+
+    private var currentPeriodEndedText: String? {
+        guard let state = viewModel?.currentPeriodState,
+              state.isActive == false,
+              let endedDate = state.periodEndedDate
+        else { return nil }
+        return L10n.format(
+            "Period ended %@",
+            defaultValue: "Period ended %@",
+            formatDate(endedDate)
+        )
     }
 
     private func hydratePredictionSettings(from viewModel: CycleViewModel) {

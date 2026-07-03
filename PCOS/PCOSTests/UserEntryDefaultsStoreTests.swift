@@ -63,4 +63,38 @@ struct UserEntryDefaultsStoreTests {
         #expect(spotting == ["mood changes", "Clotting"])
         #expect(heavy == ["Heavy clotting"])
     }
+
+    @Test("Flow intensity round-trips through the store")
+    func flowIntensityRoundTrip() {
+        let suiteName = "UserEntryDefaultsStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = UserEntryDefaultsStore(defaults: defaults)
+
+        #expect(store.lastFlowIntensity == nil)
+
+        store.lastFlowIntensity = .heavy
+        #expect(store.lastFlowIntensity == .heavy)
+
+        store.lastFlowIntensity = nil
+        #expect(store.lastFlowIntensity == nil)
+    }
+
+    @Test("Flow intensity keeps the legacy defaults key for existing users")
+    func flowIntensityLegacyKeyContinuity() {
+        let suiteName = "UserEntryDefaultsStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = UserEntryDefaultsStore(defaults: defaults)
+
+        store.lastFlowIntensity = .light
+        #expect(defaults.string(forKey: "cycle.lastFlowIntensity") == FlowIntensity.light.rawValue)
+
+        // Values written under the legacy key by older app versions must round-trip.
+        defaults.set(FlowIntensity.spotting.rawValue, forKey: "cycle.lastFlowIntensity")
+        #expect(store.lastFlowIntensity == .spotting)
+
+        store.lastFlowIntensity = nil
+        #expect(defaults.object(forKey: "cycle.lastFlowIntensity") == nil)
+    }
 }

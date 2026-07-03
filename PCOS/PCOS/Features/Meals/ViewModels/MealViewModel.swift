@@ -27,6 +27,17 @@ final class MealViewModel {
     var selectedTemplateID: String?
     var postMealSymptomSeverity: Int = 0
     var postMealSymptomNote: String = ""
+    var pendingNutritionImportSummary: NutritionImportDraftSummary?
+    var nutritionImportID: UUID?
+    var barcode: String?
+    var sourceLabel: String?
+    var calories: Double?
+    var fiberGrams: Double?
+    var sugarGrams: Double?
+    var servingText: String?
+
+    private var pendingNutritionCandidate: FoodProductCandidate?
+    private var pendingNutritionImportedAt: Date?
 
     // MARK: - Validation
 
@@ -128,6 +139,17 @@ final class MealViewModel {
         } else {
             nil
         }
+        let reviewedNutritionImport: NutritionImportRecord?
+        if let pendingNutritionCandidate {
+            let nutritionImport = pendingNutritionCandidate.makeNutritionImportRecord(
+                importedAt: pendingNutritionImportedAt ?? mealDate,
+                reviewStatus: .reviewed
+            )
+            modelContext.insert(nutritionImport)
+            reviewedNutritionImport = nutritionImport
+        } else {
+            reviewedNutritionImport = nil
+        }
 
         let entry = MealEntry(
             timestamp: mealDate,
@@ -142,7 +164,14 @@ final class MealViewModel {
             selectedTemplateID: selectedTemplateID,
             postMealSymptomSeverity: postMealSeverity,
             postMealSymptomNote: trimmedPostMealSymptomNote.isEmpty ? nil : trimmedPostMealSymptomNote,
-            postMealFeedbackTimestamp: feedbackTimestamp
+            postMealFeedbackTimestamp: feedbackTimestamp,
+            nutritionImportID: reviewedNutritionImport?.id ?? nutritionImportID,
+            barcode: barcode,
+            sourceLabel: sourceLabel,
+            calories: calories,
+            fiberGrams: fiberGrams,
+            sugarGrams: sugarGrams,
+            servingText: servingText
         )
 
         modelContext.insert(entry)
@@ -250,6 +279,7 @@ final class MealViewModel {
         selectedTemplateID = nil
         postMealSymptomSeverity = 0
         postMealSymptomNote = ""
+        clearPendingNutritionImport()
     }
 
     func applyMealDescriptionSuggestion(_ suggestion: String) {
@@ -262,6 +292,7 @@ final class MealViewModel {
         mealDescription = template.description
         glycemicImpact = template.glycemicImpact
         selectedTemplateID = template.id
+        clearPendingNutritionImport()
     }
 
     func applyRecentMeal(_ suggestion: RecentMealReuseSuggestion) {
@@ -273,6 +304,33 @@ final class MealViewModel {
         fatText = suggestion.fatGrams.map { Self.formattedMacro($0) } ?? ""
         notes = suggestion.notes ?? ""
         selectedTemplateID = nil
+        clearPendingNutritionImport()
+    }
+
+    func applyNutritionCandidate(_ candidate: FoodProductCandidate, importedAt: Date = Date()) {
+        mealDescription = candidate.productName
+        carbsText = candidate.carbsGrams.map { Self.formattedMacro($0) } ?? carbsText
+        proteinText = candidate.proteinGrams.map { Self.formattedMacro($0) } ?? proteinText
+        fatText = candidate.fatGrams.map { Self.formattedMacro($0) } ?? fatText
+        barcode = candidate.barcode
+        sourceLabel = candidate.sourceLabel
+        calories = candidate.calories
+        fiberGrams = candidate.fiberGrams
+        sugarGrams = candidate.sugarGrams
+        servingText = candidate.servingText
+        selectedTemplateID = nil
+        pendingNutritionCandidate = candidate
+        pendingNutritionImportedAt = importedAt
+        pendingNutritionImportSummary = NutritionImportDraftSummary(
+            sourceLabel: candidate.sourceLabel,
+            productName: candidate.productName,
+            brandName: candidate.brandName,
+            servingText: candidate.servingText,
+            completeness: candidate.completeness
+        )
+        if let fiber = candidate.fiberGrams, fiber >= 5 {
+            glycemicImpact = .medium
+        }
     }
 
     func isMealNoteSelected(_ suggestion: String) -> Bool {
@@ -290,6 +348,19 @@ final class MealViewModel {
             return String(Int(value))
         }
         return String(value)
+    }
+
+    private func clearPendingNutritionImport() {
+        pendingNutritionImportSummary = nil
+        nutritionImportID = nil
+        barcode = nil
+        sourceLabel = nil
+        calories = nil
+        fiberGrams = nil
+        sugarGrams = nil
+        servingText = nil
+        pendingNutritionCandidate = nil
+        pendingNutritionImportedAt = nil
     }
 
     private static func resolveExistingMealsForUpsert(

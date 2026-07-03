@@ -211,6 +211,220 @@ struct CycleLogServiceTests {
         #expect(try context.fetch(FetchDescriptor<CycleEntry>()).isEmpty)
     }
 
+    @Test("Active period is inferred from recent contiguous bleeding days")
+    func activePeriodIsInferredFromRecentBleedingRange() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = CycleLogService(modelContext: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let lastBleedingDate = calendar.date(byAdding: .day, value: 2, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        for offset in 0...2 {
+            let entry = CycleEntry(
+                date: calendar.date(byAdding: .day, value: offset, to: cycleStart)!,
+                flowIntensity: offset == 0 ? .heavy : .medium,
+                isPeriodDay: true,
+                cyclePhase: .menstrual
+            )
+            entry.cycle = cycle
+            context.insert(entry)
+        }
+        try context.save()
+
+        let entries = try context.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)]))
+        let state = try #require(
+            service.currentPeriodState(
+                existingCycles: [cycle],
+                entries: entries,
+                referenceDate: today
+            )
+        )
+
+        #expect(state.periodStartDate == cycleStart)
+        #expect(state.lastBleedingDate == lastBleedingDate)
+        #expect(state.suggestedEndDate == lastBleedingDate)
+        #expect(state.isActive)
+        #expect(state.periodEndedDate == nil)
+    }
+
+    @Test("Backdated period end creates no-period markers while keeping current cycle open")
+    func backdatedPeriodEndCreatesNoPeriodMarkersAndKeepsCycleOpen() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = CycleLogService(modelContext: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let selectedEnd = calendar.date(byAdding: .day, value: 2, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        for offset in 0...2 {
+            let entry = CycleEntry(
+                date: calendar.date(byAdding: .day, value: offset, to: cycleStart)!,
+                flowIntensity: .medium,
+                isPeriodDay: true,
+                cyclePhase: .menstrual
+            )
+            entry.cycle = cycle
+            context.insert(entry)
+        }
+        try context.save()
+
+        let result = try service.markPeriodEnded(
+            on: selectedEnd,
+            referenceDate: today,
+            existingCycles: [cycle]
+        )
+
+        let entries = try context.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)]))
+        let bleedingDates = entries.filter(\.isPeriodDay).map { calendar.startOfDay(for: $0.date) }
+        let noPeriodDates = entries.filter { !$0.isPeriodDay }.map { calendar.startOfDay(for: $0.date) }
+        let dayAfterEnd = calendar.date(byAdding: .day, value: 1, to: selectedEnd)!
+
+        #expect(cycle.endDate == nil)
+        #expect(cycle.lengthDays == nil)
+        #expect(bleedingDates == [cycleStart, calendar.date(byAdding: .day, value: 1, to: cycleStart)!, selectedEnd])
+        #expect(noPeriodDates.contains(dayAfterEnd))
+        #expect(noPeriodDates.contains(today))
+        #expect(result.undoSnapshot != nil)
+
+        let updatedState = try #require(
+            service.currentPeriodState(
+                existingCycles: [cycle],
+                entries: entries,
+                referenceDate: today
+            )
+        )
+        #expect(!updatedState.isActive)
+        #expect(updatedState.periodEndedDate == selectedEnd)
+    }
+
+    @Test("Earlier period end correction trims only later bleeding days in the active range")
+    func earlierPeriodEndCorrectionTrimsLaterBleedingDays() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = CycleLogService(modelContext: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let selectedEnd = calendar.date(byAdding: .day, value: 2, to: cycleStart)!
+        let trimmedDate = calendar.date(byAdding: .day, value: 3, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        for offset in 0...4 {
+            let entry = CycleEntry(
+                date: calendar.date(byAdding: .day, value: offset, to: cycleStart)!,
+                flowIntensity: .medium,
+                isPeriodDay: true,
+                cyclePhase: .menstrual,
+                notes: offset == 3 ? "Later bleeding note" : nil
+            )
+            entry.cycle = cycle
+            context.insert(entry)
+        }
+        try context.save()
+
+        _ = try service.markPeriodEnded(
+            on: selectedEnd,
+            referenceDate: today,
+            existingCycles: [cycle]
+        )
+
+        let entries = try context.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)]))
+        let trimmedEntry = try #require(entries.first { calendar.isDate($0.date, inSameDayAs: trimmedDate) })
+        #expect(trimmedEntry.flowIntensity == FlowIntensity.none)
+        #expect(trimmedEntry.isPeriodDay == false)
+        #expect(trimmedEntry.cyclePhase == nil)
+        #expect(trimmedEntry.notes == nil)
+        #expect(entries.filter(\.isPeriodDay).count == 3)
+    }
+
+    @Test("Later period end inserts missing bleeding days without overwriting existing notes")
+    func laterPeriodEndInsertsMissingBleedingDaysWithoutOverwritingExistingNotes() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = CycleLogService(modelContext: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let existingSecondDay = calendar.date(byAdding: .day, value: 1, to: cycleStart)!
+        let selectedEnd = calendar.date(byAdding: .day, value: 3, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        let firstEntry = CycleEntry(date: cycleStart, flowIntensity: .heavy, isPeriodDay: true, cyclePhase: .menstrual)
+        firstEntry.cycle = cycle
+        context.insert(firstEntry)
+        let secondEntry = CycleEntry(date: existingSecondDay, flowIntensity: .light, isPeriodDay: true, cyclePhase: .menstrual, notes: "Keep this")
+        secondEntry.cycle = cycle
+        context.insert(secondEntry)
+        try context.save()
+
+        _ = try service.markPeriodEnded(
+            on: selectedEnd,
+            referenceDate: today,
+            existingCycles: [cycle]
+        )
+
+        let entries = try context.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)]))
+        let existingEntry = try #require(entries.first { calendar.isDate($0.date, inSameDayAs: existingSecondDay) })
+        let insertedEndEntry = try #require(entries.first { calendar.isDate($0.date, inSameDayAs: selectedEnd) })
+
+        #expect(existingEntry.flowIntensity == .light)
+        #expect(existingEntry.notes == "Keep this")
+        #expect(insertedEndEntry.isPeriodDay)
+        #expect(insertedEndEntry.flowIntensity == .light)
+        #expect(entries.filter(\.isPeriodDay).count == 4)
+    }
+
+    @Test("Already ended period is inactive but keeps editable end date")
+    func alreadyEndedPeriodIsInactiveWithEditableEndDate() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = CycleLogService(modelContext: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let selectedEnd = calendar.date(byAdding: .day, value: 2, to: cycleStart)!
+        let noPeriodDate = calendar.date(byAdding: .day, value: 3, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        for offset in 0...2 {
+            let entry = CycleEntry(
+                date: calendar.date(byAdding: .day, value: offset, to: cycleStart)!,
+                flowIntensity: .medium,
+                isPeriodDay: true,
+                cyclePhase: .menstrual
+            )
+            entry.cycle = cycle
+            context.insert(entry)
+        }
+        let noPeriodEntry = CycleEntry(date: noPeriodDate, flowIntensity: FlowIntensity.none, isPeriodDay: false)
+        noPeriodEntry.cycle = cycle
+        context.insert(noPeriodEntry)
+        try context.save()
+
+        let entries = try context.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)]))
+        let state = try #require(
+            service.currentPeriodState(
+                existingCycles: [cycle],
+                entries: entries,
+                referenceDate: today
+            )
+        )
+
+        #expect(!state.isActive)
+        #expect(state.periodEndedDate == selectedEnd)
+        #expect(state.suggestedEndDate == selectedEnd)
+    }
+
     @Test("Range save upserts contiguous days without duplicating entries")
     func rangeSaveUpsertsContiguousDays() throws {
         let container = try TestHelpers.makeModelContainer()
@@ -294,6 +508,38 @@ struct CycleLogServiceTests {
         #expect(existingCycle.endDate != nil)
         let cycles = try context.fetch(FetchDescriptor<Cycle>())
         #expect(cycles.count == 2)
+    }
+
+    @Test("View model cycle day stays based on cycle start after marking period ended")
+    func viewModelCycleDayStaysBasedOnCycleStartAfterPeriodEnd() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let cycleStart = calendar.date(byAdding: .day, value: -8, to: today)!
+        let selectedEnd = calendar.date(byAdding: .day, value: 2, to: cycleStart)!
+        let cycle = Cycle(startDate: cycleStart)
+        context.insert(cycle)
+
+        for offset in 0...2 {
+            let entry = CycleEntry(
+                date: calendar.date(byAdding: .day, value: offset, to: cycleStart)!,
+                flowIntensity: .medium,
+                isPeriodDay: true,
+                cyclePhase: .menstrual
+            )
+            entry.cycle = cycle
+            context.insert(entry)
+        }
+        try context.save()
+
+        let viewModel = CycleViewModel(modelContext: context)
+        viewModel.loadData(referenceDate: today)
+        _ = try viewModel.markPeriodEnded(on: selectedEnd, referenceDate: today)
+
+        #expect(viewModel.currentCycleDayCount(on: today) == 9)
+        #expect(viewModel.currentPeriodState?.isActive == false)
+        #expect(viewModel.currentPeriodState?.periodEndedDate == selectedEnd)
     }
 }
 

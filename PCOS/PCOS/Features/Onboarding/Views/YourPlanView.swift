@@ -110,10 +110,7 @@ struct YourPlanView: View {
                 Button {
                     onSkip()
                 } label: {
-                    Text(String(
-                        localized: "Skip",
-                        comment: "Skip button on the personalized plan screen."
-                    ))
+                    Text(L10n.string("Skip for now", defaultValue: "Skip for now"))
                 }
                 .appFont(.subheadline)
                 .foregroundStyle(.secondary)

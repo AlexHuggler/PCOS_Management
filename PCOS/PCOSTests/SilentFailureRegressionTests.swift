@@ -604,6 +604,11 @@ private let forbiddenNetworkTokens = [
     "URLSession",
 ]
 
+private let approvedExternalLookupNetworkFiles: Set<String> = [
+    "GeminiMealScanRemote.swift",
+    "NutritionIntegrationServices.swift",
+]
+
 private func privacyBoundaryProjectRoot(from testFileURL: URL) throws -> URL {
     var candidateURL = testFileURL.deletingLastPathComponent()
     let fileManager = FileManager.default
@@ -706,7 +711,8 @@ struct PrivacyBoundaryRegressionTests {
                 violations.append((file: fileURL.path, token: token))
             }
 
-            for token in forbiddenNetworkTokens where source.contains(token) {
+            let allowsApprovedExternalLookup = approvedExternalLookupNetworkFiles.contains(fileURL.lastPathComponent)
+            for token in forbiddenNetworkTokens where source.contains(token) && !allowsApprovedExternalLookup {
                 violations.append((file: fileURL.path, token: token))
             }
         }

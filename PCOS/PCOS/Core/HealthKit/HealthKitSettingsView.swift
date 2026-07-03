@@ -17,57 +17,29 @@ struct HealthKitSettingsView: View {
     @State private var authorizationTriggered = false
     @State private var contributionSummaries: [HealthKitContributionSummary] = []
 
+    private var positiveTint: Color {
+        AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : AppTheme.sage
+    }
+
+    private var secondaryTint: Color {
+        AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorSecondaryAccentColor : AppTheme.accentColor
+    }
+
+    private var warningTint: Color {
+        AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorWarningAccentColor : AppTheme.coralAccent
+    }
+
     private var dataDisclosureItems: [HealthKitDataDisclosureItem] {
-        [
+        HealthKitDataTypeDescriptor.disclosureItems.map { descriptor in
             HealthKitDataDisclosureItem(
-                id: "bodyMass",
-                icon: "scalemass",
-                tint: AppTheme.sage,
-                title: localized("Body Mass"),
-                healthKitType: localized("HealthKit type: Body Mass"),
-                usage: localized("Used for daily weight and weight trends. Shown on Today when Apple Health has synced daily context.")
-            ),
-            HealthKitDataDisclosureItem(
-                id: "sleepAnalysis",
-                icon: "bed.double.fill",
-                tint: Color.blue,
-                title: localized("Sleep Analysis"),
-                healthKitType: localized("HealthKit type: Sleep Analysis"),
-                usage: localized("Used for sleep hours and sleep/recovery insights.")
-            ),
-            HealthKitDataDisclosureItem(
-                id: "activeEnergyBurned",
-                icon: "flame.fill",
-                tint: Color.orange,
-                title: localized("Active Energy Burned"),
-                healthKitType: localized("HealthKit type: Active Energy Burned"),
-                usage: localized("Used as activity context for daily logs and activity insights.")
-            ),
-            HealthKitDataDisclosureItem(
-                id: "bloodGlucose",
-                icon: "drop.fill",
-                tint: AppTheme.coralAccent,
-                title: localized("Blood Glucose"),
-                healthKitType: localized("HealthKit type: Blood Glucose"),
-                usage: localized("Used for blood sugar history and metabolic insight context. Imported readings appear in Blood Sugar History with an Apple Health label.")
-            ),
-            HealthKitDataDisclosureItem(
-                id: "stepCount",
-                icon: "figure.walk",
-                tint: Color.teal,
-                title: localized("Step Count"),
-                healthKitType: localized("HealthKit type: Step Count"),
-                usage: localized("Requested for activity context; not saved or used for insights.")
-            ),
-            HealthKitDataDisclosureItem(
-                id: "restingHeartRate",
-                icon: "heart.circle",
-                tint: AppTheme.coralAccent,
-                title: localized("Resting Heart Rate"),
-                healthKitType: localized("HealthKit type: Resting Heart Rate"),
-                usage: localized("Used for daily resting BPM and recovery context.")
-            ),
-        ]
+                id: descriptor.id,
+                icon: descriptor.systemImage,
+                tint: tint(for: descriptor.category),
+                title: localized(descriptor.title),
+                healthKitType: localized(descriptor.healthKitTypeDescription),
+                usage: localized(descriptor.usageDescription)
+            )
+        }
     }
 
     var body: some View {
@@ -86,9 +58,18 @@ struct HealthKitSettingsView: View {
             .padding(.top, AppTheme.spacing16)
             .padding(.bottom, AppTheme.spacing32)
         }
-        .background(AppTheme.groupedBackground.ignoresSafeArea())
+        .background {
+            if AppTheme.usesPremiumEditorStyling {
+                BotanicalScreenBackground(style: .quiet)
+            } else {
+                AppTheme.groupedBackground.ignoresSafeArea()
+            }
+        }
         .navigationTitle(localized("Apple Health"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : AppTheme.groupedBackground, for: .navigationBar)
+        .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
+        .tint(positiveTint)
         .task {
             await healthKitManager.refreshAuthorizationState()
             refreshContributionSummaries()
@@ -128,18 +109,18 @@ struct HealthKitSettingsView: View {
                 HStack(alignment: .top, spacing: AppTheme.spacing12) {
                     iconBadge(
                         systemName: "heart.text.square.fill",
-                        tint: healthKitManager.isConfigured ? AppTheme.sage : AppTheme.coralAccent,
+                        tint: healthKitManager.isConfigured ? positiveTint : warningTint,
                         size: 48
                     )
 
                     VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                         Text(connectionTitle)
                             .appFont(.headline, weight: .semibold)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(AppTheme.primaryText)
 
                         Text(connectionSubtitle)
                             .appFont(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppTheme.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -149,26 +130,26 @@ struct HealthKitSettingsView: View {
 
                 HStack(spacing: AppTheme.spacing8) {
                     if healthKitManager.isConfigured {
-                        statusPill(
-                            localized("Connected"),
-                            systemImage: "checkmark.circle.fill",
-                            tint: AppTheme.sage
-                        )
-                    }
-
                     statusPill(
-                        localized("Read-only"),
-                        systemImage: "eye.fill",
-                        tint: AppTheme.sage
-                    )
-
-                    statusPill(
-                        localized("On device"),
-                        systemImage: "iphone",
-                        tint: AppTheme.coralAccent
+                        localized("Connected"),
+                        systemImage: "checkmark.circle.fill",
+                        tint: positiveTint
                     )
                 }
+
+                statusPill(
+                    localized("Read-only"),
+                    systemImage: "eye.fill",
+                    tint: positiveTint
+                )
+
+                statusPill(
+                    localized("On device"),
+                    systemImage: "iphone",
+                    tint: secondaryTint
+                )
             }
+        }
         }
     }
 
@@ -178,10 +159,11 @@ struct HealthKitSettingsView: View {
                 VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                     Text(localized("Health Data Access"))
                         .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
 
-                    Text(localized("These data types are read only after you connect Apple Health."))
+                    Text(localized("These data types are read only after you connect Apple Health. Source summaries show which apps contributed data."))
                         .appFont(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.secondaryText)
                 }
 
                 VStack(spacing: 0) {
@@ -190,6 +172,7 @@ struct HealthKitSettingsView: View {
 
                         if item.id != dataDisclosureItems.last?.id {
                             Divider()
+                                .overlay(AppTheme.premiumEditorBorder.opacity(AppTheme.usesPremiumEditorStyling ? 0.42 : 0.16))
                                 .padding(.leading, 50)
                         }
                     }
@@ -201,20 +184,21 @@ struct HealthKitSettingsView: View {
     private var privacyCard: some View {
         healthKitCard {
             HStack(alignment: .top, spacing: AppTheme.spacing12) {
-                iconBadge(systemName: "lock.shield.fill", tint: AppTheme.sage, size: 40)
+                iconBadge(systemName: "lock.shield.fill", tint: positiveTint, size: 40)
 
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Text(localized("Health data stays private"))
                         .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
 
                     Text(localized("CycleBalance reads data only after you grant permission. Data stays on your device and helps enrich logs, trends, and insights."))
                         .appFont(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Label(localized("No writes to Apple Health"), systemImage: "hand.raised.fill")
                         .appFont(.caption, weight: .semibold)
-                        .foregroundStyle(AppTheme.sage)
+                        .foregroundStyle(positiveTint)
                 }
             }
         }
@@ -226,10 +210,11 @@ struct HealthKitSettingsView: View {
                 VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                     Text(localized("Apple Health Contributions"))
                         .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
 
                     Text(localized("See where Apple Health data is currently enriching CycleBalance. Counts reflect recent on-device records only."))
                         .appFont(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppTheme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -239,16 +224,17 @@ struct HealthKitSettingsView: View {
                             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                                 Text(localized(summary.title))
                                     .appFont(.subheadline, weight: .medium)
+                                    .foregroundStyle(AppTheme.primaryText)
                                 Text(localized(summary.sourceLabel))
                                     .appFont(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppTheme.secondaryText)
                             }
 
                             Spacer()
 
                             Text(summary.displayText)
                                 .appFont(.caption, weight: .semibold)
-                                .foregroundStyle(summary.sampleCount > 0 ? AppTheme.sage : .secondary)
+                                .foregroundStyle(summary.sampleCount > 0 ? positiveTint : AppTheme.secondaryText)
                         }
                         .padding(.vertical, AppTheme.spacing4)
                     }
@@ -270,7 +256,7 @@ struct HealthKitSettingsView: View {
                     statusPill(
                         localized("Connected"),
                         systemImage: "checkmark.circle.fill",
-                        tint: AppTheme.sage
+                        tint: positiveTint
                     )
                 }
 
@@ -290,15 +276,15 @@ struct HealthKitSettingsView: View {
                 if let error = healthKitManager.lastError {
                     HStack(alignment: .top, spacing: AppTheme.spacing8) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(AppTheme.coralAccent)
+                            .foregroundStyle(warningTint)
                         Text(error)
                             .appFont(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppTheme.secondaryText)
                     }
                     .padding(AppTheme.spacing12)
                     .background(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                            .fill(AppTheme.coralAccent.opacity(AppTheme.opacitySubtle))
+                            .fill(warningTint.opacity(AppTheme.opacitySubtle))
                     )
                 }
             }
@@ -332,15 +318,15 @@ struct HealthKitSettingsView: View {
         if healthKitManager.authorizationState == .unavailable {
             Image(systemName: "xmark.circle.fill")
                 .appFont(.title3)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppTheme.secondaryText)
         } else if healthKitManager.isConfigured {
             Image(systemName: "arrow.up.right.square")
                 .appFont(.subheadline, weight: .semibold)
-                .foregroundStyle(AppTheme.sage)
+                .foregroundStyle(positiveTint)
         } else {
             Image(systemName: "chevron.right")
                 .appFont(.caption, weight: .semibold)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppTheme.secondaryText.opacity(0.76))
                 .padding(.top, AppTheme.spacing4)
         }
     }
@@ -352,15 +338,16 @@ struct HealthKitSettingsView: View {
             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                 Text(item.title)
                     .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
 
                 Text(item.usage)
                     .appFont(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(item.healthKitType)
                     .appFont(.caption2, weight: .medium)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppTheme.secondaryText.opacity(0.72))
             }
 
             Spacer(minLength: 0)
@@ -395,17 +382,24 @@ struct HealthKitSettingsView: View {
     private func healthKitCard<Content: View>(
         @ViewBuilder content: () -> Content
     ) -> some View {
-        content()
+        let usesPremium = AppTheme.usesPremiumEditorStyling
+
+        return content()
             .padding(AppTheme.spacing16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusXL, style: .continuous)
-                    .fill(AppTheme.cardBackground)
-                    .shadow(color: Color.black.opacity(0.05), radius: 18, x: 0, y: 8)
+                    .fill(usesPremium ? AppTheme.premiumEditorSurface.opacity(0.82) : AppTheme.cardBackground)
+                    .shadow(
+                        color: usesPremium ? AppTheme.premiumEditorAccentColor.opacity(0.14) : Color.black.opacity(0.05),
+                        radius: usesPremium ? 22 : 18,
+                        x: 0,
+                        y: usesPremium ? 10 : 8
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusXL, style: .continuous)
-                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                    .stroke(usesPremium ? AnyShapeStyle(AppTheme.premiumEditorBorderGradient) : AnyShapeStyle(Color.primary.opacity(0.06)), lineWidth: usesPremium ? 0.9 : 1)
             )
     }
 
@@ -447,7 +441,7 @@ struct HealthKitSettingsView: View {
                 if healthKitManager.isSyncing {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(.white)
+                        .tint(AppTheme.premiumEditorCTAForeground)
                     Text(localized("Syncing..."))
                 } else {
                     Label(localized("Sync Now"), systemImage: "arrow.triangle.2.circlepath")
@@ -456,12 +450,13 @@ struct HealthKitSettingsView: View {
                 Spacer()
             }
             .appFont(.subheadline, weight: .semibold)
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorCTAForeground : .white)
             .padding(.horizontal, AppTheme.spacing16)
             .padding(.vertical, AppTheme.spacing12)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                    .fill(AppTheme.sage.opacity(healthKitManager.isSyncing ? 0.65 : 1))
+                    .fill(AppTheme.usesPremiumEditorStyling ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(AppTheme.sage))
+                    .opacity(healthKitManager.isSyncing ? 0.65 : 1)
             )
         }
         .buttonStyle(.plain)
@@ -472,6 +467,32 @@ struct HealthKitSettingsView: View {
 
     private func localized(_ key: String) -> String {
         L10n.string(key, defaultValue: key)
+    }
+
+    private func tint(for category: HealthKitDataTypeDescriptor.Category) -> Color {
+        if AppTheme.usesPremiumEditorStyling {
+            switch category {
+            case .body, .nutrition, .cycle, .reproductiveContext:
+                return positiveTint
+            case .activity, .sleep:
+                return secondaryTint
+            case .heart, .glucose, .symptoms:
+                return warningTint
+            }
+        }
+
+        switch category {
+        case .body, .nutrition:
+            return AppTheme.sage
+        case .activity:
+            return Color.orange
+        case .heart, .glucose, .symptoms:
+            return AppTheme.coralAccent
+        case .sleep:
+            return Color.blue
+        case .cycle, .reproductiveContext:
+            return AppTheme.accentColor
+        }
     }
 
     private func refreshContributionSummaries() {

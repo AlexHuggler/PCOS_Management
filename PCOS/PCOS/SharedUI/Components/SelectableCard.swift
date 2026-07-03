@@ -19,7 +19,7 @@ struct SelectableCard<Value: Hashable>: View {
                 BotanicalIconBadge(
                     systemImage: systemImage,
                     color: isSelected ? AppTheme.accentColor : AppTheme.sage,
-                    size: 44
+                    size: AppTheme.botanicalBadgeCompactSize
                 )
                 .opacity(isSelected ? 1 : 0.72)
 

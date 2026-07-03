@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct PCOSSupplement: Identifiable {
     let key: String
@@ -28,7 +29,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed umbrella review (2024)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/41757236/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "vitamin_d",
@@ -43,7 +44,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2017)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/28524342/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "omega_3",
@@ -58,7 +59,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2021)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/34237964/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "berberine",
@@ -73,7 +74,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2019)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/31915452/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "nac",
@@ -88,7 +89,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2024)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/39861414/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "zinc",
@@ -103,7 +104,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2024)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/41580698/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "magnesium",
@@ -118,7 +119,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2024)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/41580698/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "spearmint_tea",
@@ -133,7 +134,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed randomized trial (2010)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/19585478/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "folate",
@@ -148,7 +149,7 @@ enum PCOSSupplements {
                         sourceLabel: "USPSTF recommendation",
                         url: "https://uspreventiveservicestaskforce.org/uspstf/sites/default/files/2023-10/2023-annual-report-to-congress.pdf"
                     )
-                ]
+                ].compactMap { $0 }
             ),
             PCOSSupplement(
                 key: "chromium",
@@ -168,7 +169,7 @@ enum PCOSSupplements {
                         sourceLabel: "PubMed meta-analysis (2024)",
                         url: "https://pubmed.ncbi.nlm.nih.gov/41580698/"
                     )
-                ]
+                ].compactMap { $0 }
             ),
         ]
     }
@@ -178,11 +179,15 @@ enum PCOSSupplements {
         sourceLabel: String,
         url: String,
         relevanceNote: String? = nil
-    ) -> EvidenceReference {
-        EvidenceReference(
+    ) -> EvidenceReference? {
+        guard let url = URL(string: url) else {
+            Logger.supplements.error("PCOSSupplements: Dropping reference with invalid URL for \(title)")
+            return nil
+        }
+        return EvidenceReference(
             title: title,
             sourceLabel: localized(sourceLabel),
-            url: URL(string: url)!,
+            url: url,
             relevanceNote: relevanceNote.map(localized)
                 ?? localized("Direct study or review for this supplement in PCOS.")
         )

@@ -51,6 +51,7 @@ struct QuestionnaireView: View {
                 insertion: .move(edge: .trailing).combined(with: .opacity),
                 removal: .move(edge: .leading).combined(with: .opacity)
             ))
+            .simultaneousGesture(boundedQuestionnaireSwipeGesture)
 
             Spacer()
 
@@ -97,6 +98,24 @@ struct QuestionnaireView: View {
         .sensoryFeedback(.selection, trigger: questionIndex)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.onboarding.questionnaire")
+    }
+
+    private var boundedQuestionnaireSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 42, coordinateSpace: .local)
+            .onEnded { value in
+                let horizontalDistance = value.translation.width
+                let verticalDistance = abs(value.translation.height)
+                guard abs(horizontalDistance) > max(72, verticalDistance * 1.6) else {
+                    return
+                }
+
+                if horizontalDistance < 0 {
+                    guard canContinue else { return }
+                    advanceOrComplete()
+                } else {
+                    retreatQuestion()
+                }
+            }
     }
 
     // MARK: - Questions
@@ -219,6 +238,13 @@ struct QuestionnaireView: View {
     private func skipQuestionnaire() {
         profile.hasCompletedQuestionnaire = true
         onSkip()
+    }
+
+    private func retreatQuestion() {
+        guard questionIndex > 0 else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            questionIndex -= 1
+        }
     }
 }
 

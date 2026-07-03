@@ -135,6 +135,8 @@ struct InsightEvidenceCatalogTests {
         )
         #expect(sleepDisclosure.evidenceStrength == .mixedEvidence)
         #expect(sleepDisclosure.referenceDocket.contains { $0.url.host?.contains("medlineplus.gov") == true })
+        #expect(sleepDisclosure.referenceDocket.contains { $0.title.localizedCaseInsensitiveContains("heart rate variability") })
+        #expect(sleepDisclosure.referenceDocket.contains { $0.url.absoluteString.contains("39049099") })
     }
 
     @Test("Supplement insight matching resolves preset names without schema changes")

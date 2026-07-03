@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreML
 import CoreVideo
+import os
 
 protocol PhotoDensityAnalyzing {
     func analyze(photoData: Data, photoType: HairPhotoType) -> String?
@@ -73,6 +74,7 @@ struct PhotoDensityCoreMLPredictor: PhotoDensityCoreMLPredicting {
             guard let rawValue = extractRawScore(from: output) else { return nil }
             return normalizedScore(from: rawValue)
         } catch {
+            Logger.ui.error("Photo density Core ML prediction failed: \(error.localizedDescription)")
             return nil
         }
     }

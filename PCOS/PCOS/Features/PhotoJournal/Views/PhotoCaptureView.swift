@@ -46,22 +46,34 @@ struct PhotoCaptureView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: AppTheme.spacing16) {
-                    photoTypeSelector
-                    photoSection
-
-                    if let vm = viewModel {
-                        guideText(for: vm.selectedPhotoType)
-                    }
-
-                    notesSection
-                    dateSection
-                    saveButton
+            ZStack {
+                if AppTheme.usesPremiumEditorStyling {
+                    AppTheme.premiumEditorBackground
+                        .ignoresSafeArea()
                 }
-                .padding()
+
+                ScrollView {
+                    VStack(spacing: AppTheme.spacing16) {
+                        if AppTheme.usesPremiumEditorStyling {
+                            lunarCaptureHeader
+                        }
+
+                        photoTypeSelector
+                        photoSection
+
+                        if let vm = viewModel {
+                            guideText(for: vm.selectedPhotoType)
+                        }
+
+                        notesSection
+                        dateSection
+                        saveButton
+                    }
+                    .padding(AppTheme.spacing16)
+                    .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+                }
             }
-            .navigationTitle(L10n.string("Add Photo", defaultValue: "Add Photo"))
+            .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : L10n.string("Add Photo", defaultValue: "Add Photo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -73,7 +85,15 @@ struct PhotoCaptureView: View {
                         }
                     }
                 }
+                if AppTheme.usesPremiumEditorStyling {
+                    ToolbarItem(placement: .principal) {
+                        Text(L10n.string("Add Photo", defaultValue: "Add Photo"))
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                    }
+                }
             }
+            .lunarPhotoCaptureNavigationBackground()
             .interactiveDismissDisabled(hasUnsavedChanges)
             .alert(item: $activeAlert) { alert in
                 switch alert {
@@ -158,13 +178,46 @@ struct PhotoCaptureView: View {
             .onDisappear {
                 saveCoordinator.cancelPending()
             }
+            .accessibilityIdentifier("screen.photo_capture")
         }
+    }
+
+    private var lunarCaptureHeader: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text(L10n.string("Add a progress photo", defaultValue: "Add a progress photo"))
+                    .appFont(.largeTitle, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("photo_capture.lunar.header")
+
+                Text(L10n.string(
+                    "Use the same angle and lighting when you can. These photos stay private on your device.",
+                    defaultValue: "Use the same angle and lighting when you can. These photos stay private on your device."
+                ))
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: AppTheme.spacing8)
+
+            Image(systemName: "camera.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
+                .shadow(color: AppTheme.roseAccent.opacity(0.24), radius: 16, y: 8)
+        }
+        .padding(AppTheme.spacing16)
+        .lunarPhotoCaptureCard()
     }
 
     private var photoTypeSelector: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Photo Type")
                 .appFont(.headline)
+                .foregroundStyle(AppTheme.primaryText)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.spacing8) {
@@ -179,6 +232,9 @@ struct PhotoCaptureView: View {
                 }
             }
         }
+        .padding(AppTheme.usesPremiumEditorStyling ? AppTheme.spacing16 : 0)
+        .lunarPhotoCaptureCard(cornerRadius: AppTheme.cornerRadiusMedium)
+        .accessibilityIdentifier("photo_capture.lunar.type")
     }
 
     private var photoSection: some View {
@@ -206,7 +262,7 @@ struct PhotoCaptureView: View {
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.tertiarySystemFill))
+                        .fill(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground.opacity(0.72) : Color(.tertiarySystemFill))
                         .frame(height: 220)
                     PhotoPositioningOverlay(photoType: selectedPhotoType)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -218,6 +274,9 @@ struct PhotoCaptureView: View {
                 sourceButton(for: primarySource == .camera ? .library : .camera)
             }
         }
+        .padding(AppTheme.usesPremiumEditorStyling ? AppTheme.spacing16 : 0)
+        .lunarPhotoCaptureCard()
+        .accessibilityIdentifier("photo_capture.lunar.photo_section")
     }
 
     private func sourceButton(for source: PhotoCaptureSource) -> some View {
@@ -240,11 +299,16 @@ struct PhotoCaptureView: View {
                 ) {
                     Label(title, systemImage: "photo.on.rectangle.angled")
                         .appFont(.headline)
+                        .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.primaryText : AppTheme.accentColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.tertiarySystemFill))
+                                .fill(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorSurface.opacity(0.76) : Color(.tertiarySystemFill))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBorder.opacity(0.58) : Color.clear, lineWidth: 0.8)
                         )
                 }
                 .buttonStyle(.plain)
@@ -254,11 +318,12 @@ struct PhotoCaptureView: View {
                 } label: {
                     Label(title, systemImage: "camera")
                         .appFont(.headline)
+                        .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : AppTheme.accentColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.tertiarySystemFill))
+                                .fill(AppTheme.usesPremiumEditorStyling ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(Color(.tertiarySystemFill)))
                         )
                 }
                 .buttonStyle(.plain)
@@ -277,35 +342,53 @@ struct PhotoCaptureView: View {
 
         return HStack(spacing: AppTheme.spacing8) {
             Image(systemName: "info.circle")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : .secondary)
             Text(text)
                 .appFont(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppTheme.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(AppTheme.accentColor.opacity(0.08))
-        )
+        .lunarPhotoCaptureCard(cornerRadius: AppTheme.cornerRadiusMedium)
+        .accessibilityIdentifier("photo_capture.lunar.guide")
     }
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text(L10n.string("Notes", defaultValue: "Notes"))
                 .appFont(.headline)
+                .foregroundStyle(AppTheme.primaryText)
 
-            TextField("Add any observations...", text: Binding(
-                get: { viewModel?.notes ?? "" },
-                set: { viewModel?.notes = $0 }
-            ), axis: .vertical)
-            .lineLimit(3...6)
-            .textFieldStyle(.roundedBorder)
+            if AppTheme.usesPremiumEditorStyling {
+                TextField("Add any observations...", text: Binding(
+                    get: { viewModel?.notes ?? "" },
+                    set: { viewModel?.notes = $0 }
+                ), axis: .vertical)
+                .appFont(.body)
+                .foregroundStyle(AppTheme.primaryText)
+                .lineLimit(3...6)
+                .padding(AppTheme.spacing12)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                        .fill(AppTheme.premiumEditorSurface.opacity(0.76))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                        .stroke(AppTheme.premiumEditorBorder.opacity(0.58), lineWidth: 0.8)
+                )
+            } else {
+                TextField("Add any observations...", text: Binding(
+                    get: { viewModel?.notes ?? "" },
+                    set: { viewModel?.notes = $0 }
+                ), axis: .vertical)
+                .lineLimit(3...6)
+                .textFieldStyle(.roundedBorder)
+            }
 
             if let viewModel, !viewModel.photoNoteSuggestions.isEmpty {
                 Text("Quick notes")
                     .appFont(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.secondaryText)
 
                 FlowLayout(spacing: AppTheme.spacing8) {
                     ForEach(viewModel.photoNoteSuggestions, id: \.self) { suggestion in
@@ -334,12 +417,16 @@ struct PhotoCaptureView: View {
                 }
             }
         }
+        .padding(AppTheme.usesPremiumEditorStyling ? AppTheme.spacing16 : 0)
+        .lunarPhotoCaptureCard(cornerRadius: AppTheme.cornerRadiusMedium)
+        .accessibilityIdentifier("photo_capture.lunar.notes")
     }
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text("Date")
                 .appFont(.headline)
+                .foregroundStyle(AppTheme.primaryText)
 
             DatePicker(
                 "Photo Date",
@@ -351,8 +438,12 @@ struct PhotoCaptureView: View {
                 displayedComponents: [.date]
             )
             .labelsHidden()
+            .tint(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorAccentColor : AppTheme.accentColor)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.usesPremiumEditorStyling ? AppTheme.spacing16 : 0)
+        .lunarPhotoCaptureCard(cornerRadius: AppTheme.cornerRadiusMedium)
+        .accessibilityIdentifier("photo_capture.lunar.date")
     }
 
     private var saveButton: some View {
@@ -368,13 +459,14 @@ struct PhotoCaptureView: View {
                 .background(
                     Capsule()
                         .fill(hasPhoto
-                              ? AppTheme.coralAccent
-                              : Color.gray.opacity(0.3))
+                              ? (AppTheme.usesPremiumEditorStyling ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(AppTheme.coralAccent))
+                              : AnyShapeStyle(Color.gray.opacity(0.3)))
                 )
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.usesPremiumEditorStyling && hasPhoto ? AppTheme.premiumEditorCTAForeground : .white)
         }
         .disabled(!hasPhoto)
         .buttonStyle(.plain)
+        .accessibilityIdentifier("photo_capture.lunar.save_button")
     }
 
     private var hasUnsavedChanges: Bool {
@@ -423,7 +515,7 @@ struct PhotoCaptureView: View {
             saveCoordinator.showSuccessAndDismiss {
                 dismiss()
             }
-            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
+            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, moment: .photoProgressSaved, requestReview: requestReview)
         } catch {
             saveCoordinator.showErrorFeedback()
             activeAlert = .error(
@@ -442,6 +534,45 @@ struct PhotoCaptureView: View {
             notes: viewModel.notes,
             photoDate: viewModel.photoDate
         )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func lunarPhotoCaptureNavigationBackground() -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            toolbarBackground(AppTheme.premiumEditorBackground, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func lunarPhotoCaptureCard(cornerRadius: CGFloat = AppTheme.cornerRadiusLarge) -> some View {
+        if AppTheme.usesPremiumEditorStyling {
+            background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.premiumEditorRaisedSurface.opacity(0.92),
+                                AppTheme.premiumEditorSurface.opacity(0.78),
+                                AppTheme.premiumEditorBackground.opacity(0.9),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorderGradient, lineWidth: 0.85)
+            )
+            .shadow(color: AppTheme.cardShadowColor, radius: 18, y: 12)
+        } else {
+            self
+        }
     }
 }
 

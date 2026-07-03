@@ -19,6 +19,7 @@ enum InsightEngineStage: String {
     case dietImpactSymptoms = "symptoms for diet impact"
     case sleepActivity = "daily logs"
     case sleepActivitySymptoms = "symptoms for sleep and activity analysis"
+    case healthSignals = "HealthKit signals for recovery insights"
     case seasonalPatterns = "seasonal patterns"
     case seasonalPatternSymptoms = "symptoms for seasonal analysis"
     case predictiveCycles = "cycles for predictive forecasts"
@@ -52,6 +53,8 @@ enum InsightEngineStage: String {
             L10n.string("daily logs", defaultValue: "daily logs")
         case .sleepActivitySymptoms:
             L10n.string("symptoms for sleep and activity analysis", defaultValue: "symptoms for sleep and activity analysis")
+        case .healthSignals:
+            L10n.string("HealthKit signals for recovery insights", defaultValue: "HealthKit signals for recovery insights")
         case .seasonalPatterns:
             L10n.string("seasonal patterns", defaultValue: "seasonal patterns")
         case .seasonalPatternSymptoms:
@@ -137,6 +140,7 @@ struct InsightEngine: InsightGenerating {
 
         // Sleep/activity: active in all modes
         newInsights.append(contentsOf: try SleepActivityInsightAnalyzer(fetcher: fetcher).analyze())
+        newInsights.append(contentsOf: try HealthSignalInsightAnalyzer(fetcher: fetcher).analyze())
 
         // Seasonal patterns: active in all modes
         newInsights.append(contentsOf: try SeasonalPatternInsightAnalyzer(fetcher: fetcher).analyze())

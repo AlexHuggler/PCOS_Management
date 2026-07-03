@@ -9,6 +9,7 @@ struct FSAHSAResourcesView: View {
     @State private var recommendedItems: String
     @State private var notes = ""
     @State private var copied = false
+    @State private var showingFullLetter = false
 
     private let letterService: MedicalNecessityLetterGenerating = MedicalNecessityLetterService()
 
@@ -91,10 +92,25 @@ struct FSAHSAResourcesView: View {
             }
 
             Section {
-                TextEditor(text: .constant(letterText))
-                    .frame(minHeight: 280)
+                Text(letterText)
                     .font(.footnote.monospaced())
-                    .disabled(true)
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("fsa_hsa.letter_preview")
+
+                Button {
+                    showingFullLetter = true
+                } label: {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                        Text(localized("Read Full Letter", defaultValue: "Read Full Letter"))
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                }
 
                 Button {
                     UIPasteboard.general.string = letterText
@@ -119,12 +135,15 @@ struct FSAHSAResourcesView: View {
                     }
                 }
             } header: {
-                Text(localized("Letter of Medical Necessity (Editable Template)", defaultValue: "Letter of Medical Necessity (Editable Template)"))
+                Text(localized("Letter of Medical Necessity", defaultValue: "Letter of Medical Necessity"))
             }
         }
         .navigationTitle(localized("FSA/HSA Tools", defaultValue: "FSA/HSA Tools"))
         .navigationBarTitleDisplayMode(.inline)
         .sensoryFeedback(.success, trigger: copied)
+        .sheet(isPresented: $showingFullLetter) {
+            FSAHSAFullLetterView(letterText: letterText)
+        }
     }
 
     private var language: AppLanguage {
@@ -133,6 +152,35 @@ struct FSAHSAResourcesView: View {
 
     private func localized(_ key: String, defaultValue: String? = nil) -> String {
         L10n.string(key, defaultValue: defaultValue, language: language)
+    }
+}
+
+private struct FSAHSAFullLetterView: View {
+    @Environment(\.dismiss) private var dismiss
+    let letterText: String
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(letterText)
+                    .font(.footnote.monospaced())
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .accessibilityIdentifier("fsa_hsa.full_letter")
+            }
+            .navigationTitle(L10n.string("Letter of Medical Necessity", defaultValue: "Letter of Medical Necessity"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(L10n.string("Done", defaultValue: "Done")) {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

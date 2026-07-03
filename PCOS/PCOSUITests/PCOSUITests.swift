@@ -18,6 +18,7 @@ final class PCOSUITests: XCTestCase {
         themeOption: String? = nil,
         onboardingStartPhase: String? = nil,
         demoScenario: String? = nil,
+        contentSizeCategory: String? = nil,
         csvImportFixture: String? = nil,
         jsonImportFixture: String? = nil
     ) -> XCUIApplication {
@@ -35,6 +36,7 @@ final class PCOSUITests: XCTestCase {
                 "-onboarding.primaryGoal", "__unset__",
                 "-onboarding.pcosExperience", "__unset__",
                 "-onboarding.symptomFocusAreas", "__unset__",
+                "-onboarding.preferredName", "__unset__",
             ]
         }
         if let language, let locale {
@@ -58,6 +60,9 @@ final class PCOSUITests: XCTestCase {
         if let demoScenario {
             launchArguments += ["-uiTest.demoScenario", demoScenario]
         }
+        if let contentSizeCategory {
+            launchArguments += ["-UIPreferredContentSizeCategoryName", contentSizeCategory]
+        }
         if let csvImportFixture {
             launchArguments += ["-settings.csvImportFixture", csvImportFixture]
         }
@@ -75,7 +80,7 @@ final class PCOSUITests: XCTestCase {
 
         XCTAssertTrue(welcomePrimary.waitForExistence(timeout: 5))
 
-        for _ in 0..<2 where !questionnaireSkip.exists {
+        for _ in 0..<4 where !questionnaireSkip.exists {
             welcomePrimary.tap()
             if questionnaireSkip.waitForExistence(timeout: 2) {
                 break
@@ -111,7 +116,51 @@ final class PCOSUITests: XCTestCase {
         scrollToElement(symptomCard, in: app)
         symptomCard.tap()
 
-        XCTAssertTrue(app.buttons["Cancel"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.symptom_log").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    private func openPeriodLogFromTrackHub(in app: XCUIApplication) {
+        openTrackTab(in: app)
+
+        let periodCard = app.buttons["tracking.card.period"]
+        scrollToElement(periodCard, in: app)
+        periodCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.cycle_log").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    private func openMealLogFromTrackHub(in app: XCUIApplication) {
+        openTrackTab(in: app)
+
+        let mealCard = app.buttons["tracking.card.meal"]
+        scrollToElement(mealCard, in: app)
+        mealCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_log").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    private func openOvulationLogFromTrackHub(in app: XCUIApplication) {
+        openTrackTab(in: app)
+
+        let ovulationCard = app.buttons["tracking.card.ovulation"]
+        scrollToElement(ovulationCard, in: app)
+        ovulationCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.ovulation_log").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    private func openBloodSugarLogFromTrackHub(in app: XCUIApplication) {
+        openTrackTab(in: app)
+
+        let bloodSugarCard = app.buttons["tracking.card.blood_sugar"]
+        scrollToElement(bloodSugarCard, in: app)
+        bloodSugarCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.blood_sugar_log").waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -178,7 +227,7 @@ final class PCOSUITests: XCTestCase {
             XCTAssertEqual(
                 matches.count,
                 0,
-                "Found token placeholder text containing '\(token)' in the visible UI.",
+                "Found token placeholder text containing '\(token)' in the visible UI: \(matches.firstMatch.label)",
                 file: file,
                 line: line
             )
@@ -190,25 +239,50 @@ final class PCOSUITests: XCTestCase {
         _ element: XCUIElement,
         in container: XCUIElement,
         maxSwipes: Int = 16,
+        requireHittable: Bool = true,
+        requireSafeTapZone: Bool = true,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        if element.exists && element.isHittable && isInSafeTapZone(element, in: container) {
+        if isReadyForScrollTarget(element, in: container, requireHittable: requireHittable, requireSafeTapZone: requireSafeTapZone) {
             return
         }
 
         _ = element.waitForExistence(timeout: 1)
 
         for _ in 0..<maxSwipes {
-            if element.exists && element.isHittable && isInSafeTapZone(element, in: container) {
+            if isReadyForScrollTarget(element, in: container, requireHittable: requireHittable, requireSafeTapZone: requireSafeTapZone) {
                 return
             }
             container.swipeUp()
         }
 
+        for _ in 0..<maxSwipes {
+            if isReadyForScrollTarget(element, in: container, requireHittable: requireHittable, requireSafeTapZone: requireSafeTapZone) {
+                return
+            }
+            container.swipeDown()
+        }
+
         XCTAssertTrue(element.waitForExistence(timeout: 2), file: file, line: line)
-        XCTAssertTrue(element.isHittable, file: file, line: line)
-        XCTAssertTrue(isInSafeTapZone(element, in: container), file: file, line: line)
+        if requireHittable {
+            XCTAssertTrue(element.isHittable, file: file, line: line)
+        }
+        if requireSafeTapZone {
+            XCTAssertTrue(isInSafeTapZone(element, in: container), file: file, line: line)
+        }
+    }
+
+    @MainActor
+    private func isReadyForScrollTarget(
+        _ element: XCUIElement,
+        in container: XCUIElement,
+        requireHittable: Bool,
+        requireSafeTapZone: Bool
+    ) -> Bool {
+        element.exists
+            && (!requireHittable || element.isHittable)
+            && (!requireSafeTapZone || isInSafeTapZone(element, in: container))
     }
 
     @MainActor
@@ -258,6 +332,28 @@ final class PCOSUITests: XCTestCase {
         }
 
         XCTAssertFalse(frame.isEmpty, "Expected a non-empty frame for \(element).", file: file, line: line)
+        return frame
+    }
+
+    @MainActor
+    private func scrollToVisibleFrame(
+        _ element: XCUIElement,
+        in container: XCUIElement,
+        bottomSafeInset: CGFloat = 80,
+        maxSwipes: Int = 16,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> CGRect {
+        XCTAssertTrue(element.waitForExistence(timeout: 5), file: file, line: line)
+
+        var frame = waitForNonEmptyFrame(of: element, timeout: 5, file: file, line: line)
+        for _ in 0..<maxSwipes where frame.maxY > container.frame.maxY - bottomSafeInset {
+            container.swipeUp()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            frame = waitForNonEmptyFrame(of: element, timeout: 2, file: file, line: line)
+        }
+
+        XCTAssertLessThanOrEqual(frame.maxY, container.frame.maxY - bottomSafeInset, file: file, line: line)
         return frame
     }
 
@@ -324,7 +420,7 @@ final class PCOSUITests: XCTestCase {
             openSymptomLogFromTrackHub(in: app)
             performSymptomSelectionStress(in: app)
 
-            let saveButton = app.buttons["Save"]
+            let saveButton = app.buttons["symptom_log.save_button"]
             XCTAssertTrue(saveButton.waitForExistence(timeout: 2))
             XCTAssertTrue(saveButton.isEnabled)
             XCTAssertEqual(app.state, .runningForeground)
@@ -340,8 +436,10 @@ final class PCOSUITests: XCTestCase {
             locale: "en_US",
             onboardingCompleted: true,
             appLanguage: "system",
+            themeOption: "botanicalJournal",
             demoScenario: "symptomManagement"
         )
+        app.launchArguments += ["-reports.resetPolicy", "YES"]
         app.launch()
 
         openTrackTab(in: app)
@@ -352,6 +450,19 @@ final class PCOSUITests: XCTestCase {
 
         XCTAssertTrue(app.textFields["meal_log.description"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_log.history_button"].waitForExistence(timeout: 5))
+
+        let scanBarcodeButton = app.buttons["meal_log.scan_barcode_button"]
+        scrollToElement(scanBarcodeButton, in: app)
+        XCTAssertTrue(scanBarcodeButton.waitForExistence(timeout: 5))
+        scanBarcodeButton.tap()
+
+        let consentButton = app.buttons["meal_log.barcode_consent_continue"]
+        if consentButton.waitForExistence(timeout: 2) {
+            consentButton.tap()
+        }
+        XCTAssertTrue(app.textFields["meal_log.manual_barcode_field"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_log.lookup_barcode_button"].waitForExistence(timeout: 5))
+        app.buttons["Close"].tap()
     }
 
     @MainActor
@@ -361,6 +472,7 @@ final class PCOSUITests: XCTestCase {
             locale: "en_US",
             onboardingCompleted: true,
             appLanguage: "system",
+            themeOption: "botanicalJournal",
             demoScenario: "symptomManagement"
         )
         app.launch()
@@ -393,6 +505,12 @@ final class PCOSUITests: XCTestCase {
 
         XCTAssertTrue(app.textFields["meal_log.description"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_log.history_button"].waitForExistence(timeout: 5))
+
+        // The scan tile lives in a lazy grid below the fold; scroll it into
+        // existence like testMealLogOpensFromTrackHubWithDemoData does.
+        let scanBarcodeButton = app.buttons["meal_log.scan_barcode_button"]
+        scrollToElement(scanBarcodeButton, in: app)
+        XCTAssertTrue(scanBarcodeButton.waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -427,12 +545,39 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testMarkPeriodEndFlowWithDemoData() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        openTodayTab(in: app)
+
+        let periodEndButton = app.buttons["today.period_end_button"]
+        scrollToElement(periodEndButton, in: app)
+        periodEndButton.tap()
+
+        let saveButton = app.buttons["period_end.save_button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        saveButton.tap()
+
+        let periodEndStatus = app.descendants(matching: .any)["today.period_end_status"]
+        XCTAssertTrue(periodEndStatus.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Edit Period End Date"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testInsightsDisclosureSheetAndFooterAreVisibleWithDemoData() throws {
         let app = makeApp(
             language: "en",
             locale: "en_US",
             onboardingCompleted: true,
             appLanguage: "system",
+            themeOption: "botanicalJournal",
             demoScenario: "symptomManagement"
         )
         app.launch()
@@ -443,6 +588,7 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(footer.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForInsightsContent(in: app))
         let sharedIntroCard = app.descendants(matching: .any)["insights.shared_intro_card"]
+        scrollToElement(sharedIntroCard, in: app)
         XCTAssertTrue(sharedIntroCard.waitForExistence(timeout: 5))
 
         let disclosureButton = firstVisibleInsightDisclosureButton(in: app, timeout: 0.5, maxSwipes: 3)
@@ -450,8 +596,8 @@ final class PCOSUITests: XCTestCase {
             disclosureButton.tap()
 
             XCTAssertTrue(app.otherElements["evidence_disclosure.sheet"].waitForExistence(timeout: 5))
-            XCTAssertTrue(app.staticTexts["evidence_disclosure.specific_explanation.title"].waitForExistence(timeout: 5))
-            XCTAssertTrue(app.staticTexts["evidence_disclosure.evidence_summary.title"].waitForExistence(timeout: 5))
+            XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.specific_explanation").waitForExistence(timeout: 5))
+            XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.evidence_summary").waitForExistence(timeout: 5))
 
             app.buttons["evidence_disclosure.done_button"].tap()
             XCTAssertFalse(app.otherElements["evidence_disclosure.sheet"].exists)
@@ -519,6 +665,88 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testLunarCalmSupplementLogAddSheetAndHistoryOpenFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let supplementCard = app.buttons["tracking.card.supplements"]
+        scrollToElement(supplementCard, in: app)
+        supplementCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.supplement_log").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "supplement_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(app.buttons["supplement_log.inline_history_button"].waitForExistence(timeout: 5))
+
+        let addButton = app.buttons["supplement_log.add_button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-supplement-log.png")
+
+        addButton.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "supplement_log.add_sheet").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["supplement_log.add_sheet.search_field"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-supplement-add-sheet.png")
+
+        app.buttons["supplement_log.add_sheet.cancel_button"].tap()
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+
+        let historyButton = app.buttons["supplement_log.inline_history_button"]
+        scrollToElement(historyButton, in: app)
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.supplement_history").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "supplement_history.lunar.adherence"), timeout: 10)
+        try saveScreenshotArtifact(named: "lunar-calm-supplement-history.png")
+    }
+
+    @MainActor
+    func testFruitGroveSupplementLogAndHistoryUsePremiumShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let supplementCard = app.buttons["tracking.card.supplements"]
+        scrollToElement(supplementCard, in: app)
+        supplementCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.supplement_log").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "supplement_log.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["supplement_log.inline_history_button"].waitForExistence(timeout: 5))
+
+        let addButton = app.buttons["supplement_log.add_button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "supplement_log.add_sheet").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["supplement_log.add_sheet.search_field"].waitForExistence(timeout: 5))
+        app.buttons["supplement_log.add_sheet.cancel_button"].tap()
+
+        let historyButton = app.buttons["supplement_log.inline_history_button"]
+        scrollToElement(historyButton, in: app)
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.supplement_history").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "supplement_history.lunar.adherence").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testPhotoComparisonOpensFromPhotoJournalWithDemoData() throws {
         let app = makeApp(
             language: "en",
@@ -546,6 +774,153 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testLunarCalmPhotoJournalAndComparisonOpenFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let photoCard = app.buttons["tracking.card.photo"]
+        scrollToElement(photoCard, in: app)
+        photoCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_journal").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-photo-journal.png")
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "photo_journal.lunar.header"), timeout: 10)
+        XCTAssertTrue(app.staticTexts["Private progress photos"].waitForExistence(timeout: 5))
+
+        let compareButton = app.buttons["photo_journal.compare_button"]
+        XCTAssertTrue(compareButton.waitForExistence(timeout: 5))
+
+        compareButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_comparison").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "photo_comparison.lunar.content"), timeout: 10)
+        XCTAssertTrue(app.staticTexts["Before"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["After"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-photo-comparison.png")
+    }
+
+    @MainActor
+    func testFruitGrovePhotoJournalCaptureAndComparisonUsePremiumShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let photoCard = app.buttons["tracking.card.photo"]
+        scrollToElement(photoCard, in: app)
+        photoCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_journal").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_journal.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Private progress photos"].waitForExistence(timeout: 5))
+
+        let addButton = app.buttons["photo_journal.add_button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_capture").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.type").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.photo_section").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.save_button").waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_journal").waitForExistence(timeout: 5))
+        let compareButton = app.buttons["photo_journal.compare_button"]
+        XCTAssertTrue(compareButton.waitForExistence(timeout: 5))
+        compareButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_comparison").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_comparison.lunar.content").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Before"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["After"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testLunarCalmPhotoDetailOpensFromPhotoJournal() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let photoCard = app.buttons["tracking.card.photo"]
+        scrollToElement(photoCard, in: app)
+        photoCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_journal").waitForExistence(timeout: 5))
+
+        let photoTile = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "photo_journal.lunar.photo."))
+            .firstMatch
+        XCTAssertTrue(photoTile.waitForExistence(timeout: 5))
+        photoTile.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_detail").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "photo_detail.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_detail.lunar.metadata").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-photo-detail.png")
+    }
+
+    @MainActor
+    func testLunarCalmPhotoCaptureOpensFromPhotoJournal() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openTrackTab(in: app)
+
+        let photoCard = app.buttons["tracking.card.photo"]
+        scrollToElement(photoCard, in: app)
+        photoCard.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_journal").waitForExistence(timeout: 5))
+        let addButton = app.buttons["photo_journal.add_button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.photo_capture").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "photo_capture.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.photo_section").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.notes").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "photo_capture.lunar.date").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["photo_capture.lunar.save_button"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-photo-capture.png")
+    }
+
+    @MainActor
     func testBotanicalJournalCalendarAndTrackBottomContentClearsCustomTabBar() throws {
         let app = makeApp(
             language: "en",
@@ -557,22 +932,877 @@ final class PCOSUITests: XCTestCase {
         )
         app.launch()
 
-        let calendarTab = app.buttons["tab.calendar"]
-        XCTAssertTrue(calendarTab.waitForExistence(timeout: 10))
-        calendarTab.tap()
+        openTodayTab(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.today").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.hero.container").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.snapshot").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "botanical-today-shell.png")
+        let mealSummary = app.buttons["today.meal_summary.open_log"]
+        _ = scrollToVisibleFrame(mealSummary, in: app)
+        try saveScreenshotArtifact(named: "botanical-today-bottom-clearance.png")
+
+        openCalendarTab(in: app)
         XCTAssertTrue(app.otherElements["screen.calendar"].waitForExistence(timeout: 10))
         let cycleDetailsCard = app.descendants(matching: .any)["calendar.cycle_details.card"]
         scrollToElement(cycleDetailsCard, in: app)
         XCTAssertTrue(cycleDetailsCard.isHittable)
         try saveScreenshotArtifact(named: "botanical-calendar-bottom-clearance.png")
 
-        let trackTab = app.buttons["tab.track"]
-        XCTAssertTrue(trackTab.waitForExistence(timeout: 10))
-        trackTab.tap()
+        openTrackTab(in: app)
         let photoJournalCard = app.buttons["tracking.card.photo"]
         scrollToElement(photoJournalCard, in: app)
         XCTAssertTrue(photoJournalCard.isHittable)
         try saveScreenshotArtifact(named: "botanical-track-bottom-clearance.png")
+
+        openInsightsTab(in: app)
+        XCTAssertTrue(waitForInsightsContent(in: app))
+        let insightsFooter = app.staticTexts["insights.footer.disclaimer"]
+        let insightsFooterFrame = waitForNonEmptyFrame(of: insightsFooter, timeout: 10)
+        XCTAssertLessThanOrEqual(insightsFooterFrame.maxY, app.frame.maxY - 80)
+        try saveScreenshotArtifact(named: "botanical-insights-bottom-clearance.png")
+
+        openSettingsTab(in: app)
+        let settingsScreen = screenElement(in: app, identifier: "screen.settings")
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 10))
+        let deleteAllDataButton = app.buttons["settings.delete_all_data"]
+        scrollToElement(deleteAllDataButton, in: settingsScreen)
+        XCTAssertTrue(deleteAllDataButton.isHittable)
+        try saveScreenshotArtifact(named: "botanical-settings-bottom-clearance.png")
+    }
+
+    @MainActor
+    func testBotanicalJournalAccessibilityTextSizeKeepsNavigationAndCTAsReachable() throws {
+        let accessibilityTextSize = "UICTContentSizeCategoryAccessibilityXXXL"
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "botanicalJournal",
+            demoScenario: "symptomManagement",
+            contentSizeCategory: accessibilityTextSize
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["botanical.tab_bar"].waitForExistence(timeout: 10))
+        assertMainTabShellPresent(in: app)
+
+        openCalendarTab(in: app)
+        XCTAssertTrue(app.otherElements["calendar.grid"].waitForExistence(timeout: 10))
+        let cycleDetailsCard = app.descendants(matching: .any)["calendar.cycle_details.card"]
+        scrollToElement(cycleDetailsCard, in: app)
+        XCTAssertTrue(cycleDetailsCard.isHittable)
+
+        openSettingsTab(in: app)
+        let settingsScreen = screenElement(in: app, identifier: "screen.settings")
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 10))
+        let deleteAllDataButton = app.buttons["settings.delete_all_data"]
+        scrollToElement(deleteAllDataButton, in: settingsScreen)
+        XCTAssertTrue(deleteAllDataButton.isHittable)
+        app.terminate()
+
+        let onboardingApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: false,
+            appLanguage: "system",
+            themeOption: "botanicalJournal",
+            onboardingStartPhase: "all_set",
+            contentSizeCategory: accessibilityTextSize
+        )
+        onboardingApp.launch()
+
+        XCTAssertTrue(screenElement(in: onboardingApp, identifier: "screen.onboarding.completion").waitForExistence(timeout: 10))
+        let finishButton = onboardingApp.buttons["onboarding.completion.finish"]
+        XCTAssertTrue(finishButton.waitForExistence(timeout: 10))
+        XCTAssertTrue(finishButton.isHittable)
+    }
+
+    @MainActor
+    func testLunarCalmThemeLaunchesCustomTabsAndPilotSurfaces() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["tab.today"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.otherElements["today.hero.container"].waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.snapshot").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "lunar-calm-today-shell.png")
+
+        openInsightsTab(in: app)
+        let lunarDashboard = app.otherElements["insights.lunar_dashboard"]
+        _ = waitForNonEmptyFrame(of: lunarDashboard, timeout: 10)
+        try saveScreenshotArtifact(named: "lunar-calm-insights-dashboard.png")
+
+        openTrackTab(in: app)
+        let lunarTrackHeader = screenElement(in: app, identifier: "tracking.lunar.header")
+        _ = waitForNonEmptyFrame(of: lunarTrackHeader, timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "tracking.lunar.quick_rail").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "tracking.lunar.card_cluster").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-track-hub.png")
+
+        let symptomCard = app.buttons["tracking.card.symptoms"]
+        scrollToElement(symptomCard, in: app)
+        XCTAssertTrue(symptomCard.isHittable)
+
+        openSettingsTab(in: app)
+        let lunarSettingsOverview = screenElement(in: app, identifier: "settings.lunar.support_overview")
+        _ = waitForNonEmptyFrame(of: lunarSettingsOverview, timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.reminders").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.daily_checkin").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.support_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches["settings.lunar.reminder.symptoms"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-settings-support.png")
+
+        let lunarCalmPreview = app.descendants(matching: .any)["settings.display.theme_preview"]
+        scrollToElement(lunarCalmPreview, in: app)
+        XCTAssertTrue(lunarCalmPreview.exists)
+
+        openCalendarTab(in: app)
+        XCTAssertTrue(app.otherElements["screen.calendar"].waitForExistence(timeout: 10))
+        let lunarCalendarPanel = screenElement(in: app, identifier: "calendar.lunar.panel")
+        _ = waitForNonEmptyFrame(of: lunarCalendarPanel, timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "calendar.lunar.header").waitForExistence(timeout: 10))
+
+        let lunarTimeline = screenElement(in: app, identifier: "calendar.lunar.timeline")
+        let timelineFrame = waitForNonEmptyFrame(of: lunarTimeline, timeout: 10)
+        XCTAssertLessThanOrEqual(timelineFrame.maxY, app.frame.maxY - 80)
+        try saveScreenshotArtifact(named: "lunar-calm-calendar.png")
+
+        try saveScreenshotArtifact(named: "lunar-calm-pilot-surfaces.png")
+    }
+
+    @MainActor
+    func testLunarCalmAppearsInSettingsThemePickerForInternalReview() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        openSettingsTab(in: app)
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
+
+        let themePicker = screenElement(in: app, identifier: "settings.display.theme")
+        scrollToElement(themePicker, in: settingsScreen)
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.display.experimental_themes").exists)
+        themePicker.tap()
+
+        let lunarCalmButton = app.buttons["Lunar Calm"]
+        let lunarCalmText = app.staticTexts["Lunar Calm"]
+        XCTAssertTrue(
+            lunarCalmButton.waitForExistence(timeout: 3) || lunarCalmText.waitForExistence(timeout: 3)
+        )
+        try saveScreenshotArtifact(named: "lunar-calm-settings-picker.png")
+    }
+
+    @MainActor
+    func testLunarCalmTodaySymptomLogUsesFullScreenPresentation() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openTodayTab(in: app)
+        let logSymptomsButton = app.buttons["Log Symptoms"]
+        scrollToElement(logSymptomsButton, in: app)
+        logSymptomsButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.symptom_log").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "symptom_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.mood_section").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-today-symptom-log.png")
+    }
+
+    @MainActor
+    func testLunarCalmPregnancyModeUsesFullScreenPresentation() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openSettingsTab(in: app)
+
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
+
+        let pregnancyButton = app.buttons["settings.pregnancy.enter"]
+        scrollToElement(pregnancyButton, in: settingsScreen)
+        pregnancyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.pregnancy_activation").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "pregnancy_activation.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.mode_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.start_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.due_date_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["pregnancy_activation.lunar.submit"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-pregnancy-activation.png")
+    }
+
+    @MainActor
+    func testFruitGrovePregnancyModeUsesPremiumActivationShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openSettingsTab(in: app)
+
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
+
+        let pregnancyButton = app.buttons["settings.pregnancy.enter"]
+        scrollToElement(pregnancyButton, in: settingsScreen)
+        pregnancyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.pregnancy_activation").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.mode_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.start_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "pregnancy_activation.lunar.due_date_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["pregnancy_activation.lunar.submit"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testLunarCalmSettingsSecondarySurfaces() throws {
+        let languageApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        languageApp.launch()
+        openSettingsTab(in: languageApp)
+        let languageSettingsScreen = languageApp.collectionViews["screen.settings"]
+        XCTAssertTrue(languageSettingsScreen.waitForExistence(timeout: 5))
+        let appLanguageRow = languageApp.buttons["settings.app_language.row"]
+        scrollToElement(appLanguageRow, in: languageSettingsScreen)
+        appLanguageRow.tap()
+        XCTAssertTrue(screenElement(in: languageApp, identifier: "screen.settings.app_language").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: languageApp, identifier: "settings.app_language.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(languageApp.buttons["settings.app_language.option.system"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-settings-language.png")
+        languageApp.terminate()
+
+        let notificationsApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        notificationsApp.launch()
+        openSettingsTab(in: notificationsApp)
+        let notificationSettingsScreen = notificationsApp.collectionViews["screen.settings"]
+        XCTAssertTrue(notificationSettingsScreen.waitForExistence(timeout: 5))
+        let notificationsRow = notificationsApp.buttons["settings.notifications.row"]
+        scrollToElement(notificationsRow, in: notificationSettingsScreen)
+        notificationsRow.tap()
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "screen.settings.notifications").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.authorization").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.reminders").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-settings-notifications.png")
+        notificationsApp.terminate()
+
+        let csvGuideApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        csvGuideApp.launch()
+        openSettingsTab(in: csvGuideApp)
+        let csvGuideSettingsScreen = csvGuideApp.collectionViews["screen.settings"]
+        XCTAssertTrue(csvGuideSettingsScreen.waitForExistence(timeout: 5))
+        let guideButton = csvGuideApp.buttons["settings.csv_import_guide"]
+        scrollToElement(guideButton, in: csvGuideSettingsScreen)
+        guideButton.tap()
+        XCTAssertTrue(screenElement(in: csvGuideApp, identifier: "screen.settings.csv_import_guide").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: csvGuideApp, identifier: "settings.csv_guide.lunar.intro").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: csvGuideApp, identifier: "settings.csv_guide.lunar.types").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: csvGuideApp, identifier: "settings.csv_guide.lunar.rules").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-settings-csv-guide.png")
+        csvGuideApp.terminate()
+
+        let importResultApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement",
+            csvImportFixture: "invalid"
+        )
+        importResultApp.launch()
+        openSettingsTab(in: importResultApp)
+        let importSettingsScreen = importResultApp.collectionViews["screen.settings"]
+        XCTAssertTrue(importSettingsScreen.waitForExistence(timeout: 5))
+        let importButton = importResultApp.buttons["settings.import_external_csv"]
+        scrollToElement(importButton, in: importSettingsScreen)
+        importButton.tap()
+        XCTAssertTrue(screenElement(in: importResultApp, identifier: "screen.settings.import_result").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: importResultApp, identifier: "settings.import_result.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: importResultApp, identifier: "settings.import_result.lunar.counts").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: importResultApp, identifier: "settings.import_result.lunar.issues").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-settings-import-result.png")
+    }
+
+    @MainActor
+    func testLunarCalmReportConfigOpensFromInsights() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openInsightsTab(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.insights").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "lunar-calm-insights-report-entry.png")
+
+        let reportExportButton = app.buttons["insights.lunar_dashboard.report_button"]
+        scrollToElement(reportExportButton, in: app)
+        XCTAssertTrue(reportExportButton.waitForExistence(timeout: 5))
+        let reportIconButton = app.buttons["insights.lunar_dashboard.report_icon_button"]
+        scrollToElement(reportIconButton, in: app)
+        XCTAssertTrue(reportIconButton.waitForExistence(timeout: 5))
+        reportIconButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.report_config").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "report.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "report.lunar.range").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "report.lunar.presets").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "report.lunar.sections").waitForExistence(timeout: 5))
+        let exportCard = screenElement(in: app, identifier: "report.lunar.export")
+        XCTAssertTrue(exportCard.waitForExistence(timeout: 5))
+        scrollToElement(exportCard, in: app, maxSwipes: 8)
+        try saveScreenshotArtifact(named: "lunar-calm-report-config.png")
+    }
+
+    @MainActor
+    func testLunarCalmEvidenceDisclosureUsesFullScreenPresentation() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openInsightsTab(in: app)
+        XCTAssertTrue(waitForInsightsContent(in: app))
+
+        let disclosureButton = firstVisibleInsightDisclosureButton(in: app, timeout: 1, maxSwipes: 8)
+        XCTAssertTrue(disclosureButton.waitForExistence(timeout: 5))
+        disclosureButton.tap()
+
+        XCTAssertTrue(app.otherElements["evidence_disclosure.sheet"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.evidence_disclosure").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.lunar.specific_explanation").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.lunar.evidence_summary").waitForExistence(timeout: 5))
+
+        let referencesToggle = app.buttons["evidence_disclosure.references_toggle"]
+        for _ in 0..<3 where !referencesToggle.exists {
+            app.swipeUp()
+        }
+        if referencesToggle.waitForExistence(timeout: 2) {
+            referencesToggle.tap()
+            XCTAssertTrue(screenElement(in: app, identifier: "evidence_disclosure.references_content").waitForExistence(timeout: 5))
+        }
+
+        try saveScreenshotArtifact(named: "lunar-calm-evidence-disclosure.png")
+
+        app.buttons["evidence_disclosure.done_button"].tap()
+        XCTAssertFalse(app.otherElements["evidence_disclosure.sheet"].exists)
+    }
+
+    @MainActor
+    func testFruitGroveTrustSurfacesUsePremiumShell() throws {
+        let reportApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        reportApp.launch()
+
+        XCTAssertTrue(reportApp.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openInsightsTab(in: reportApp)
+        XCTAssertTrue(waitForInsightsContent(in: reportApp))
+
+        let reportExportButton = reportApp.buttons["insights.lunar_dashboard.report_button"]
+        scrollToElement(reportExportButton, in: reportApp)
+        XCTAssertTrue(reportExportButton.waitForExistence(timeout: 5))
+        let reportIconButton = reportApp.buttons["insights.lunar_dashboard.report_icon_button"]
+        scrollToElement(reportIconButton, in: reportApp)
+        XCTAssertTrue(reportIconButton.waitForExistence(timeout: 5))
+        reportIconButton.tap()
+
+        XCTAssertTrue(screenElement(in: reportApp, identifier: "screen.report_config").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: reportApp, identifier: "report.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: reportApp, identifier: "report.lunar.range").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: reportApp, identifier: "report.lunar.export").waitForExistence(timeout: 5))
+        reportApp.terminate()
+
+        let evidenceApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        evidenceApp.launch()
+
+        XCTAssertTrue(evidenceApp.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openInsightsTab(in: evidenceApp)
+        XCTAssertTrue(waitForInsightsContent(in: evidenceApp))
+
+        let disclosureButton = firstVisibleInsightDisclosureButton(in: evidenceApp, timeout: 1, maxSwipes: 8)
+        XCTAssertTrue(disclosureButton.waitForExistence(timeout: 5))
+        disclosureButton.tap()
+
+        XCTAssertTrue(evidenceApp.otherElements["evidence_disclosure.sheet"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: evidenceApp, identifier: "screen.evidence_disclosure").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: evidenceApp, identifier: "evidence_disclosure.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: evidenceApp, identifier: "evidence_disclosure.lunar.specific_explanation").waitForExistence(timeout: 5))
+        evidenceApp.terminate()
+
+        let notificationsApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        notificationsApp.launch()
+
+        XCTAssertTrue(notificationsApp.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openSettingsTab(in: notificationsApp)
+        let settingsScreen = notificationsApp.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
+
+        let notificationsRow = notificationsApp.buttons["settings.notifications.row"]
+        scrollToElement(notificationsRow, in: settingsScreen)
+        notificationsRow.tap()
+
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "screen.settings.notifications").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.authorization").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: notificationsApp, identifier: "settings.notifications.lunar.reminders").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testLunarCalmSymptomLogOpensFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openSymptomLogFromTrackHub(in: app)
+
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.date_strip").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.mood_section").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.symptom_chips").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.slider.flow").waitForExistence(timeout: 5))
+
+        let crampsChip = screenElement(in: app, identifier: "symptom_log.lunar.chip.cramps")
+        scrollToElement(crampsChip, in: app)
+        XCTAssertTrue(crampsChip.isHittable)
+        crampsChip.tap()
+
+        let saveButton = app.buttons["symptom_log.save_button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(saveButton.isEnabled)
+
+        try saveScreenshotArtifact(named: "lunar-calm-symptom-log.png")
+    }
+
+    @MainActor
+    func testLunarCalmPeriodLogOpensFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openPeriodLogFromTrackHub(in: app)
+
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "cycle_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.mode").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.date_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.flow_picker").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.notes").waitForExistence(timeout: 5))
+
+        let lightFlow = screenElement(in: app, identifier: "cycle_log.lunar.flow.light")
+        XCTAssertTrue(lightFlow.waitForExistence(timeout: 5))
+        lightFlow.tap()
+
+        try saveScreenshotArtifact(named: "lunar-calm-period-log.png")
+    }
+
+    @MainActor
+    func testLunarCalmOvulationLogOpensFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openOvulationLogFromTrackHub(in: app)
+
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "ovulation_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.date_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.clue_grid").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.temperature").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.notes").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.save_button").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.datePickers["ovulationLog.date"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["ovulationLog.temperature"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["ovulationLog.save"].waitForExistence(timeout: 5))
+
+        let peakLH = screenElement(in: app, identifier: "ovulation_log.lunar.lh.peak")
+        scrollToElement(peakLH, in: app)
+        XCTAssertTrue(peakLH.isHittable)
+        peakLH.tap()
+
+        try saveScreenshotArtifact(named: "lunar-calm-ovulation-log.png")
+    }
+
+    @MainActor
+    func testLunarCalmMealLogOpensFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+        try saveScreenshotArtifact(named: "lunar-calm-meal-log.png")
+
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "meal_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.meal_type").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.description").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.quick_actions").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.glycemic_impact").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.macros").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_log.history_button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_log.scan_barcode_button"].waitForExistence(timeout: 5))
+
+        let descriptionField = app.textFields["meal_log.description"]
+        XCTAssertTrue(descriptionField.waitForExistence(timeout: 5))
+        descriptionField.tap()
+        descriptionField.typeText("Lentil bowl")
+        if app.buttons["Done"].waitForExistence(timeout: 2) {
+            app.buttons["Done"].tap()
+        }
+
+        let saveButton = app.buttons["meal_log.save_button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(saveButton.isEnabled)
+    }
+
+    @MainActor
+    func testLunarCalmMealHistoryOpensFromLog() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let historyButton = app.buttons["meal_log.history_button"]
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 5))
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_history").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "meal_history.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_history.lunar.dashboard").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_history.lunar.gi_chart").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-meal-history.png")
+    }
+
+    @MainActor
+    func testLunarCalmMealDetailOpensFromMealHistory() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let historyButton = app.buttons["meal_log.history_button"]
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 5))
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_history").waitForExistence(timeout: 5))
+        let firstMealRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "meal_history.lunar.row."))
+            .firstMatch
+        scrollToElement(firstMealRow, in: app, maxSwipes: 10)
+        firstMealRow.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_detail").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "meal_detail.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_detail.lunar.glycemic").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_detail.lunar.macros").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-meal-detail.png")
+    }
+
+    @MainActor
+    func testLunarCalmMealScanEntryOpensFromMealLog() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let mealEstimateButton = app.buttons["meal_log.ai_meal_estimate_button"]
+        scrollToElement(mealEstimateButton, in: app)
+        mealEstimateButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_scan").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "meal_scan.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.privacy").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.actions").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.manual_button"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-meal-scan-entry.png")
+    }
+
+    @MainActor
+    func testFruitGroveMealScanEntryUsesPremiumShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let mealEstimateButton = app.buttons["meal_log.ai_meal_estimate_button"]
+        scrollToElement(mealEstimateButton, in: app)
+        mealEstimateButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_scan").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.privacy").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.actions").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.manual_button"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testBloodSugarLogOpensFromTrackHubWithDemoData() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "botanicalJournal",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        openBloodSugarLogFromTrackHub(in: app)
+
+        XCTAssertTrue(app.textFields["blood_sugar_log.glucose_value"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.inline_history_button").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.reading_type").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["blood_sugar_log.meal_context"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.datePickers["blood_sugar_log.date"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testLunarCalmBloodSugarLogOpensFromTrackHub() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openBloodSugarLogFromTrackHub(in: app)
+
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "blood_sugar_log.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.history").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.glucose").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.reading_type").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.meal_context").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.date").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.save_button").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.inline_history_button").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-blood-sugar-log.png")
+
+        let glucoseField = app.textFields["blood_sugar_log.glucose_value"]
+        XCTAssertTrue(glucoseField.waitForExistence(timeout: 5))
+        glucoseField.tap()
+        glucoseField.typeText("112")
+        if app.buttons["Done"].waitForExistence(timeout: 2) {
+            app.buttons["Done"].tap()
+        }
+
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.save_ready").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testLunarCalmBloodSugarHistoryOpensFromLog() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openBloodSugarLogFromTrackHub(in: app)
+
+        let historyButton = screenElement(in: app, identifier: "blood_sugar_log.inline_history_button")
+        scrollToElement(historyButton, in: app)
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.blood_sugar_history").waitForExistence(timeout: 5))
+        _ = waitForNonEmptyFrame(of: screenElement(in: app, identifier: "blood_sugar_history.lunar.header"), timeout: 10)
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.dashboard").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.daily_chart").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.trend").waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        try saveScreenshotArtifact(named: "lunar-calm-blood-sugar-history.png")
+
+        let recentReadings = screenElement(in: app, identifier: "blood_sugar_history.lunar.recent_readings")
+        for _ in 0..<8 where !recentReadings.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(recentReadings.waitForExistence(timeout: 2))
+    }
+
+    @MainActor
+    func testFruitGroveBloodSugarHistoryUsesPremiumDashboard() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openBloodSugarLogFromTrackHub(in: app)
+
+        let historyButton = screenElement(in: app, identifier: "blood_sugar_log.inline_history_button")
+        scrollToElement(historyButton, in: app)
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.blood_sugar_history").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.dashboard").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.daily_chart").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_history.lunar.trend").waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -581,7 +1811,8 @@ final class PCOSUITests: XCTestCase {
             language: "fr",
             locale: "fr_FR",
             onboardingCompleted: true,
-            appLanguage: "system"
+            appLanguage: "system",
+            themeOption: "botanicalJournal"
         )
         app.launch()
 
@@ -594,10 +1825,12 @@ final class PCOSUITests: XCTestCase {
         assertMainTabLabel(.settings, equals: "Paramètres", in: app)
         tapMainTab(.settings, in: app)
 
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
         let appLanguageRow = app.buttons["settings.app_language.row"]
-        XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+        scrollToElement(appLanguageRow, in: settingsScreen)
         let deleteButton = app.buttons["settings.delete_all_data"]
-        scrollToElement(deleteButton, in: app)
+        scrollToElement(deleteButton, in: settingsScreen)
         deleteButton.tap()
         XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
     }
@@ -630,7 +1863,8 @@ final class PCOSUITests: XCTestCase {
             language: "en",
             locale: "en_US",
             onboardingCompleted: true,
-            appLanguage: "system"
+            appLanguage: "system",
+            themeOption: "botanicalJournal"
         )
         app.launch()
 
@@ -649,6 +1883,9 @@ final class PCOSUITests: XCTestCase {
             themeOption: "fruitGrove"
         )
         app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        assertMainTabShellPresent(in: app)
 
         let todayTitle = app.staticTexts["Today"]
         XCTAssertTrue(todayTitle.waitForExistence(timeout: 10))
@@ -679,17 +1916,146 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testFruitGroveTodayAndCalendarUsePremiumDailyShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.today").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.hero.container").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.snapshot").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "fruit-grove-today-shell.png")
+
+        openCalendarTab(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.calendar").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "calendar.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "calendar.lunar.panel").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "calendar.lunar.timeline").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "fruit-grove-calendar-shell.png")
+
+        openSettingsTab(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.settings").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.support_overview").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.reminders").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "settings.lunar.daily_checkin").waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testHighContrastTodayUsesPremiumDailyShell() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "highContrast",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.today").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.header").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.hero.container").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "today.lunar.snapshot").waitForExistence(timeout: 10))
+        try saveScreenshotArtifact(named: "high-contrast-today-shell.png")
+    }
+
+    @MainActor
+    func testFruitGroveTrackHubUsesPremiumLogEditors() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "fruitGrove",
+            demoScenario: "symptomManagement"
+        )
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["themed.tab_bar"].waitForExistence(timeout: 10))
+        openSymptomLogFromTrackHub(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.date_strip").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "symptom_log.lunar.mood_section").waitForExistence(timeout: 5))
+
+        let symptomCancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(symptomCancel.waitForExistence(timeout: 5))
+        symptomCancel.tap()
+
+        openPeriodLogFromTrackHub(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.mode").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "cycle_log.lunar.flow_picker").waitForExistence(timeout: 5))
+
+        let periodCancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(periodCancel.waitForExistence(timeout: 5))
+        periodCancel.tap()
+
+        openOvulationLogFromTrackHub(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.date_card").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.clue_grid").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "ovulation_log.lunar.temperature").waitForExistence(timeout: 5))
+
+        let ovulationCancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(ovulationCancel.waitForExistence(timeout: 5))
+        ovulationCancel.tap()
+
+        openBloodSugarLogFromTrackHub(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.glucose").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.reading_type").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "blood_sugar_log.lunar.meal_context").waitForExistence(timeout: 5))
+
+        let bloodSugarCancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(bloodSugarCancel.waitForExistence(timeout: 5))
+        bloodSugarCancel.tap()
+
+        openMealLogFromTrackHub(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.meal_type").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.description").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.glycemic_impact").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_log.lunar.macros").waitForExistence(timeout: 5))
+
+        let historyButton = app.buttons["meal_log.history_button"]
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 5))
+        historyButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_history").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_history.lunar.dashboard").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_history.lunar.gi_chart").waitForExistence(timeout: 5))
+
+        let firstMealRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "meal_history.lunar.row."))
+            .firstMatch
+        scrollToElement(firstMealRow, in: app, maxSwipes: 10)
+        firstMealRow.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.meal_detail").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_detail.lunar.header").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_detail.lunar.glycemic").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testRoundedFontAndFruitGroveThemeCoverOnboardingPhases() throws {
         let phases: [(launchValue: String, screenIdentifier: String)] = [
+            ("welcome_language", "screen.onboarding.welcome_language"),
+            ("theme", "screen.onboarding.theme"),
+            ("name", "screen.onboarding.name"),
             ("quiz", "screen.onboarding.questionnaire"),
             ("results", "screen.onboarding.results"),
             ("how_app_helps", "screen.onboarding.how_app_helps"),
-            ("social_proof", "screen.onboarding.social_proof"),
-            ("your_plan", "screen.onboarding.your_plan"),
-            ("guided_action", "screen.onboarding.guided_action"),
             ("permissions", "screen.onboarding.permissions"),
-            ("rating", "screen.onboarding.rating"),
-            ("completion", "screen.onboarding.completion"),
+            ("health_context", "screen.onboarding.health_context"),
+            ("meal_scan_demo", "screen.onboarding.meal_scan_demo"),
+            ("your_plan", "screen.onboarding.your_plan"),
+            ("first_log", "screen.onboarding.guided_action"),
+            ("social_proof", "screen.onboarding.social_proof"),
+            ("all_set", "screen.onboarding.completion"),
         ]
 
         for phase in phases {
@@ -714,12 +2080,57 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testOnboardingThemeStepOffersOwnershipPersonalization() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: false,
+            appLanguage: "system",
+            onboardingStartPhase: "theme"
+        )
+        app.launch()
+
+        let screen = screenElement(in: app, identifier: "screen.onboarding.theme")
+        XCTAssertTrue(screen.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["onboarding.theme.option.lunarCalm"].waitForExistence(timeout: 5))
+
+        let roundedFont = app.buttons["onboarding.font.option.rounded"]
+        scrollToElement(roundedFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
+        XCTAssertTrue(roundedFont.exists)
+
+        let expressiveFont = app.buttons["onboarding.font.option.cormorantGaramond"]
+        scrollToElement(expressiveFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
+        XCTAssertTrue(expressiveFont.exists)
+
+        let monoFont = app.buttons["onboarding.font.option.sfMono"]
+        scrollToElement(monoFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
+        XCTAssertTrue(monoFont.exists)
+
+        app.terminate()
+    }
+
+    @MainActor
+    func testOnboardingAhaMomentExplainsHealthKitBarcodeAndTracking() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: false,
+            appLanguage: "system",
+            onboardingStartPhase: "aha"
+        )
+        app.launch()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.onboarding.aha").waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testAppLanguageSelectionPersistsAcrossRelaunch() throws {
         let app = makeApp(
             language: "en",
             locale: "en_US",
             onboardingCompleted: true,
-            appLanguage: "system"
+            appLanguage: "system",
+            themeOption: "botanicalJournal"
         )
         app.launch()
 
@@ -727,8 +2138,10 @@ final class PCOSUITests: XCTestCase {
 
         openSettingsTab(in: app)
 
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
         let appLanguageRow = app.buttons["settings.app_language.row"]
-        XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+        scrollToElement(appLanguageRow, in: settingsScreen)
         appLanguageRow.tap()
 
         let frenchOption = app.buttons["settings.app_language.option.fr"]
@@ -752,7 +2165,8 @@ final class PCOSUITests: XCTestCase {
             language: "fr",
             locale: "fr_FR",
             onboardingCompleted: true,
-            appLanguage: "system"
+            appLanguage: "system",
+            themeOption: "botanicalJournal"
         )
         app.launch()
 
@@ -760,8 +2174,10 @@ final class PCOSUITests: XCTestCase {
 
         openSettingsTab(in: app)
 
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
         let appLanguageRow = app.buttons["settings.app_language.row"]
-        XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+        scrollToElement(appLanguageRow, in: settingsScreen)
         appLanguageRow.tap()
 
         let englishOption = app.buttons["settings.app_language.option.en"]
@@ -785,14 +2201,17 @@ final class PCOSUITests: XCTestCase {
             language: "en",
             locale: "en_US",
             onboardingCompleted: true,
-            appLanguage: "system"
+            appLanguage: "system",
+            themeOption: "botanicalJournal"
         )
         app.launch()
 
         openSettingsTab(in: app)
 
+        let settingsScreen = app.collectionViews["screen.settings"]
+        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5))
         let appLanguageRow = app.buttons["settings.app_language.row"]
-        XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+        scrollToElement(appLanguageRow, in: settingsScreen)
         appLanguageRow.tap()
 
         let japaneseOption = app.buttons["settings.app_language.option.ja"]

@@ -75,6 +75,29 @@ struct OnboardingProfileTests {
         #expect(profile.symptomFocusAreas.isEmpty)
     }
 
+    @Test("preferredName trims whitespace and resets")
+    @MainActor
+    func preferredNameTrimsAndResets() {
+        let profile = makeProfile()
+        profile.resetOnboarding()
+
+        profile.preferredName = "  Aisha  "
+        #expect(profile.preferredName == "Aisha")
+        #expect(profile.preferredDisplayName == "Aisha")
+
+        profile.preferredName = "   "
+        #expect(profile.preferredName.isEmpty)
+        #expect(profile.preferredDisplayName == nil)
+
+        profile.preferredName = "__unset__"
+        #expect(profile.preferredName.isEmpty)
+        #expect(profile.preferredDisplayName == nil)
+
+        profile.preferredName = "Mina"
+        profile.resetOnboarding()
+        #expect(profile.preferredDisplayName == nil)
+    }
+
     // MARK: - Derived State
 
     @Test("preferredSymptomCategories is empty when no focus areas selected")
@@ -257,6 +280,52 @@ struct OnboardingProfileTests {
         profile.resetOnboarding()
     }
 
+    @Test("onboarding flow surfaces HealthKit reveal and meal scan preview before plan")
+    @MainActor
+    func onboardingFlowSurfacesImmediateValueBeforePlan() throws {
+        let root = try TestHelpers.projectRoot(from: #filePath)
+        let source = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"))
+        let completionSource = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/OnboardingCompletionView.swift"))
+
+        #expect(source.contains("OnboardingHealthContextRevealView"))
+        #expect(source.contains("OnboardingMealScanDemoView"))
+        #expect(source.contains("nextPhase(after:"))
+        #expect(!source.contains("candidate == .mealScanDemo && !MealScanFeatureFlags.current.enableMealScanV2"))
+        #expect(source.contains("OnboardingLanguageWelcomeView"))
+        #expect(source.contains("OnboardingThemeSelectionView"))
+        #expect(source.contains("OnboardingNameCaptureView"))
+        #expect(source.contains("Welcome to CycleBalance. We're glad you're here."))
+        #expect(source.contains("Which language would you like to use?"))
+        #expect(source.contains("Background, theme, and font"))
+        #expect(source.contains("ForEach(FontOption.allCases)"))
+        #expect(source.contains(#""onboarding.font.option.\(font.rawValue)""#))
+        #expect(completionSource.contains("NotificationManager"))
+        #expect(completionSource.contains("scheduleSymptomLoggingReminder()"))
+        #expect(completionSource.contains("onboarding.completion.reminder"))
+        #expect(!source.contains("case .aha"))
+        #expect(!source.contains("case .rating"))
+        #expect(!source.contains("RatingPromptView("))
+        #expect(!FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/RatingPromptView.swift").path
+        ))
+
+        let languageIndex = try #require(source.range(of: "case .welcomeLanguage")?.lowerBound)
+        let themeIndex = try #require(source.range(of: "case .theme")?.lowerBound)
+        let nameIndex = try #require(source.range(of: "case .name")?.lowerBound)
+        let quizIndex = try #require(source.range(of: "case .quiz")?.lowerBound)
+        let permissionsIndex = try #require(source.range(of: "case .permissions")?.lowerBound)
+        let healthRevealIndex = try #require(source.range(of: "case .healthContext")?.lowerBound)
+        let mealDemoIndex = try #require(source.range(of: "case .mealScanDemo")?.lowerBound)
+        let planIndex = try #require(source.range(of: "case .yourPlan")?.lowerBound)
+
+        #expect(languageIndex < themeIndex)
+        #expect(themeIndex < nameIndex)
+        #expect(nameIndex < quizIndex)
+        #expect(permissionsIndex < healthRevealIndex)
+        #expect(healthRevealIndex < mealDemoIndex)
+        #expect(mealDemoIndex < planIndex)
+    }
+
     // MARK: - Guided Action Completion
 
     @Test("dismissed log sheet without a new record stays incomplete")
@@ -277,9 +346,9 @@ struct OnboardingProfileTests {
     @Test("guided action skip copy accurately describes continuing setup")
     func guidedActionSkipCopy() {
         #expect(
-            SuggestedFirstAction.logPeriod.guidedActionSkipTitle == String(
-                localized: "Continue without first log",
-                comment: "Secondary guided action button label."
+            SuggestedFirstAction.logPeriod.guidedActionSkipTitle == L10n.string(
+                "Skip for now",
+                defaultValue: "Skip for now"
             )
         )
         #expect(
@@ -288,6 +357,49 @@ struct OnboardingProfileTests {
                 comment: "Accessibility hint for the guided action skip button."
             )
         )
+    }
+
+    // MARK: - Persisted Phase
+
+    @Test("currentPhaseRaw is nil by default")
+    @MainActor
+    func currentPhaseRawDefaultsToNil() {
+        let profile = makeProfile()
+        #expect(profile.currentPhaseRaw == nil)
+    }
+
+    @Test("currentPhaseRaw persists and retrieves raw phase values")
+    @MainActor
+    func currentPhaseRawPersistence() {
+        let profile = makeProfile()
+
+        profile.currentPhaseRaw = "quiz"
+        #expect(profile.currentPhaseRaw == "quiz")
+
+        profile.currentPhaseRaw = "health_context"
+        #expect(profile.currentPhaseRaw == "health_context")
+    }
+
+    @Test("currentPhaseRaw clears when set to nil")
+    @MainActor
+    func currentPhaseRawClearsOnNil() {
+        let profile = makeProfile()
+
+        profile.currentPhaseRaw = "social_proof"
+        #expect(profile.currentPhaseRaw == "social_proof")
+
+        profile.currentPhaseRaw = nil
+        #expect(profile.currentPhaseRaw == nil)
+    }
+
+    @Test("resetOnboarding clears currentPhaseRaw")
+    @MainActor
+    func resetClearsCurrentPhaseRaw() {
+        let profile = makeProfile()
+
+        profile.currentPhaseRaw = "your_plan"
+        profile.resetOnboarding()
+        #expect(profile.currentPhaseRaw == nil)
     }
 
     // MARK: - Reset
@@ -304,6 +416,7 @@ struct OnboardingProfileTests {
         profile.primaryGoal = .trackCycles
         profile.pcosExperience = .experienced
         profile.symptomFocusAreas = [.moodEnergy, .skinHair]
+        profile.preferredName = "Aisha"
         profile.dismissHint(OnboardingProfile.hintCalendarTab)
 
         // Reset
@@ -316,6 +429,7 @@ struct OnboardingProfileTests {
         #expect(profile.primaryGoal == nil)
         #expect(profile.pcosExperience == nil)
         #expect(profile.symptomFocusAreas.isEmpty)
+        #expect(profile.preferredDisplayName == nil)
         #expect(profile.shouldShowHint(OnboardingProfile.hintCalendarTab))
     }
 }

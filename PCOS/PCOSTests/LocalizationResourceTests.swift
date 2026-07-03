@@ -97,6 +97,10 @@ struct LocalizationResourceTests {
     private let representativeLocalizableKeys = [
         "Spotting",
         "Premium active",
+        "Good afternoon",
+        "Good evening",
+        "Insight for you",
+        "Skip for now",
         "Period May Be Coming",
         "Taken",
         "increase",
@@ -343,10 +347,10 @@ struct LocalizationResourceTests {
         "You already know your body. Let's make your data work harder.",
         "Tracking is a powerful first step toward answers.",
         "Your personalized tracking starts now.",
-        "68% of recently diagnosed users say tracking helped them feel more in control within 30 days.",
-        "Women who track consistently report 40% better conversations with their doctors.",
-        "3 in 4 women exploring PCOS say symptom tracking gave them clarity before their next appointment.",
-        "Join 10,000+ women tracking their PCOS journey with CycleBalance.",
+        "Start with a few simple logs, then use patterns as conversation starters with your care team.",
+        "Bring cycle, symptom, meal, glucose, and supplement context together without turning it into a diagnosis.",
+        "Track what you notice so your next appointment starts with clearer context.",
+        "Your tracker is set up around your goals, preferences, and first logs.",
         "Perfect for spotting patterns in your mood and energy levels.",
         "Ideal for tracking how pain and cramps relate to your cycle.",
         "Great for tracking how your skin and hair change across your cycle.",
@@ -386,21 +390,44 @@ struct LocalizationResourceTests {
         "Take photos for your hair & skin journal to track changes over time.",
         "See skin and hair changes side by side over months.",
         "Apple Health",
-        "Sync weight, sleep, steps, blood glucose, activity, and heart rate for richer insights.",
-        "Get deeper insights when health data is connected.",
+        "Read nutrition, glucose, weight, sleep, steps, activity, and heart rate for richer insights.",
+        "See which source apps contributed data and reduce manual entry.",
+        "Your first aha moment",
+        "CycleBalance connects what you log, what Apple Health can read, and what you review before saving.",
+        "Aha preview",
+        "Example: if a scanned snack is mostly carbs, pair it with protein or fiber when testing your glucose response.",
+        "Apple Health fills in context",
+        "Read-only imports can add nutrition, glucose, sleep, activity, steps, weight, and resting heart rate when you choose those permissions. Source summaries show which apps contributed data.",
+        "Where: Settings > Apple Health",
+        "A barcode can start a meal draft",
+        "Scan or type a UPC, look it up with Open Food Facts, then review serving, calories, macros, fiber, and sugar before anything is saved.",
+        "Where: Track > Meals > Scan barcode",
+        "Track the full PCOS picture",
+        "Log cycles, symptoms, meals, glucose, supplements, ovulation clues, photo journal changes, and doctor-ready reports from Track, Today, and Insights.",
+        "Where: Track, Today, and Insights",
+        "You can log and review",
+        "Cycles",
+        "Symptoms",
+        "Meals",
+        "Glucose",
+        "Supplements",
+        "Ovulation",
+        "Photo journal",
+        "Reports",
+        "Show me how to use it",
         "Skip for now",
         "Support our mission",
         "We're a small team dedicated to giving women with PCOS actionable insights from their data, to manage and improve their lives. A rating on the App Store helps others find us.",
         "Leave a Quick Review",
         "Maybe later",
-        "I finally understand why I feel different on certain days. This app connected the dots.",
-        "Recently Diagnosed",
-        "After 3 months of logging, I brought my data to my doctor and we adjusted my treatment plan together.",
-        "Symptom Tracking",
-        "I was skeptical, but seeing my symptom patterns mapped to my cycle was a game-changer.",
-        "Pattern Recognition",
-        "What women are saying",
-        "Built and tested with 200+ women in our beta community",
+        "Local health records",
+        "Your cycle, symptom, meal, glucose, supplement, and photo logs are stored on your device by default.",
+        "Review before saving",
+        "Meal and barcode results stay editable so nothing becomes a saved log until you choose it.",
+        "Care-team ready",
+        "Exportable reports help you bring organized context to appointments without replacing medical care.",
+        "Built around your data, not hype",
+        "Designed for PCOS-aware tracking, irregular cycles, and reviewable health context.",
         "Built to give women with PCOS the insights they deserve.",
     ]
     private let pregnancyPostpartumKeys = [
@@ -891,15 +918,15 @@ struct LocalizationResourceTests {
         let monthly = BillingProduct(
             id: monthlyProductID,
             displayName: "CycleBalance Premium Monthly",
-            displayPrice: "$6.99",
-            price: Decimal(string: "6.99")!,
+            displayPrice: "$9.99",
+            price: Decimal(string: "9.99")!,
             subscriptionPeriod: BillingPeriod(unit: .month, value: 1)
         )
         let yearly = BillingProduct(
             id: yearlyProductID,
             displayName: "CycleBalance Premium Yearly",
-            displayPrice: "$39.99",
-            price: Decimal(string: "39.99")!,
+            displayPrice: "$79.99",
+            price: Decimal(string: "79.99")!,
             subscriptionPeriod: BillingPeriod(unit: .year, value: 1)
         )
 
@@ -907,16 +934,16 @@ struct LocalizationResourceTests {
             monthly.paywallDisplayName(language: .ko, base: bundle) == "CycleBalance 프리미엄 월간"
         )
         #expect(
-            monthly.displayPriceWithPeriod(language: .ko, base: bundle) == "$6.99 / 1개월"
+            monthly.displayPriceWithPeriod(language: .ko, base: bundle) == "$9.99 / 1개월"
         )
         #expect(
-            yearly.displayPriceWithPeriod(language: .fr, base: bundle) == "$39.99 / 1 an"
+            yearly.displayPriceWithPeriod(language: .fr, base: bundle) == "$79.99 / 1 an"
         )
         #expect(
-            yearly.displayPriceWithPeriod(language: .de, base: bundle) == "$39.99 / 1 Jahr"
+            yearly.displayPriceWithPeriod(language: .de, base: bundle) == "$79.99 / 1 Jahr"
         )
         #expect(
-            monthly.displayPriceWithPeriod(language: .en, base: bundle) == "$6.99 / 1 month"
+            monthly.displayPriceWithPeriod(language: .en, base: bundle) == "$9.99 / 1 month"
         )
         #expect(
             monthly.paywallDisplayName(
@@ -930,7 +957,7 @@ struct LocalizationResourceTests {
                 language: .system,
                 base: bundle,
                 preferredLanguages: ["ja_JP"]
-            ) == "$6.99 / 1 か月"
+            ) == "$9.99 / 1 か月"
         )
     }
 

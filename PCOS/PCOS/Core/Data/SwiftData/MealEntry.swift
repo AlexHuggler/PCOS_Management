@@ -22,6 +22,19 @@ final class MealEntry {
     var postMealSymptomSeverity: Int?
     var postMealSymptomNote: String?
     var postMealFeedbackTimestamp: Date?
+    var nutritionImportID: UUID?
+    var barcode: String?
+    var sourceLabel: String?
+    var calories: Double?
+    var fiberGrams: Double?
+    var sugarGrams: Double?
+    var servingText: String?
+    var mealSource: String?
+    var photoLocalPath: String?
+    var confidenceScore: Double?
+    var userConfirmed: Bool = false
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         id: UUID = UUID(),
@@ -37,7 +50,20 @@ final class MealEntry {
         selectedTemplateID: String? = nil,
         postMealSymptomSeverity: Int? = nil,
         postMealSymptomNote: String? = nil,
-        postMealFeedbackTimestamp: Date? = nil
+        postMealFeedbackTimestamp: Date? = nil,
+        nutritionImportID: UUID? = nil,
+        barcode: String? = nil,
+        sourceLabel: String? = nil,
+        calories: Double? = nil,
+        fiberGrams: Double? = nil,
+        sugarGrams: Double? = nil,
+        servingText: String? = nil,
+        mealSource: String? = nil,
+        photoLocalPath: String? = nil,
+        confidenceScore: Double? = nil,
+        userConfirmed: Bool = false,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -53,5 +79,18 @@ final class MealEntry {
         self.postMealSymptomSeverity = postMealSymptomSeverity
         self.postMealSymptomNote = postMealSymptomNote
         self.postMealFeedbackTimestamp = postMealFeedbackTimestamp
+        self.nutritionImportID = nutritionImportID
+        self.barcode = barcode
+        self.sourceLabel = sourceLabel
+        self.calories = calories
+        self.fiberGrams = fiberGrams
+        self.sugarGrams = sugarGrams
+        self.servingText = servingText
+        self.mealSource = mealSource
+        self.photoLocalPath = photoLocalPath
+        self.confidenceScore = confidenceScore
+        self.userConfirmed = userConfirmed
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }

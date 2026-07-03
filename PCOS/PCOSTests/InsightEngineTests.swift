@@ -21,6 +21,7 @@ struct InsightEngineTests {
             SupplementLog.self,
             MealEntry.self,
             DailyLog.self,
+            HealthKitImportedSampleRecord.self,
             BloodSugarReading.self,
         ])
         let config = ModelConfiguration(
@@ -86,6 +87,28 @@ struct InsightEngineTests {
             deduplicationWindowDays: 7,
             insightExpirationDays: 90
         )
+    }
+
+    @discardableResult
+    private static func insertHealthKitSignal(
+        context: ModelContext,
+        date: Date,
+        identifier: String,
+        sourceName: String,
+        value: Double,
+        unit: String
+    ) -> HealthKitImportedSampleRecord {
+        let record = HealthKitImportedSampleRecord(
+            sampleUUID: "\(identifier)-\(sourceName)-\(Int(date.timeIntervalSince1970))",
+            healthKitIdentifier: identifier,
+            sourceName: sourceName,
+            startDate: date,
+            valueDouble: value,
+            valueUnit: unit,
+            derivedRecordKind: .sourceOnly
+        )
+        context.insert(record)
+        return record
     }
 
     // MARK: - Empty Data
@@ -308,11 +331,13 @@ struct InsightEngineTests {
         let context = container.mainContext
         let calendar = Calendar.current
         let now = Date()
+        let elevatedMonthDate = try #require(calendar.date(byAdding: .day, value: -45, to: now))
+        let elevatedMonth = calendar.component(.month, from: elevatedMonthDate)
 
         for dayOffset in 0..<140 {
             let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
             let month = calendar.component(.month, from: date)
-            let severity = month == 1 ? 4 : 2
+            let severity = month == elevatedMonth ? 4 : 2
             Self.insertSymptom(context: context, date: date, type: .fatigue, severity: severity)
         }
         try context.save()
@@ -395,6 +420,153 @@ struct InsightEngineTests {
         #expect(insights.contains { $0.title == String(localized: "Cycle length forecast range", comment: "Insight title for the predicted cycle-length range.") })
     }
 
+    @Test("Health signal insight explains the pattern, likely contributor, options, and best first step")
+    func healthSignalInsightUsesLevelFourRecommendationShape() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+
+        for dayOffset in stride(from: 20, through: 0, by: -1) {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            let recent = dayOffset < 7
+            context.insert(
+                DailyLog(
+                    date: date,
+                    sleepHours: recent ? 5.8 : 7.4,
+                    activeMinutes: recent ? 18 : 42,
+                    restingHeartRateBPM: recent ? 70 : 62,
+                    stressLevel: recent ? 4 : 2,
+                    energyLevel: recent ? 2 : 4,
+                    waterOz: recent ? 42 : 68,
+                    painLevel0To10: recent ? 4 : 1
+                )
+            )
+            Self.insertSymptom(
+                context: context,
+                date: date,
+                type: recent ? .fatigue : .cramps,
+                severity: recent ? 4 : 1
+            )
+            if recent {
+                Self.insertHealthKitSignal(
+                    context: context,
+                    date: date,
+                    identifier: "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+                    sourceName: "Oura",
+                    value: 32 - Double(dayOffset),
+                    unit: "ms"
+                )
+                Self.insertHealthKitSignal(
+                    context: context,
+                    date: date,
+                    identifier: "HKQuantityTypeIdentifierRestingHeartRate",
+                    sourceName: "Apple Watch",
+                    value: 70,
+                    unit: "bpm"
+                )
+            }
+        }
+
+        try context.save()
+
+        let insights = try InsightEngine(modelContext: context).generateInsights()
+        let recoveryInsight = try #require(
+            insights.first {
+                $0.title == L10n.string(
+                    "Recovery signals may be adding strain",
+                    defaultValue: "Recovery signals may be adding strain"
+                )
+            }
+        )
+
+        #expect(recoveryInsight.content.contains("Pattern:"))
+        #expect(recoveryInsight.content.contains("Likely contributor:"))
+        #expect(recoveryInsight.content.contains("Possible next steps:"))
+        #expect(recoveryInsight.content.contains("Best first step:"))
+        #expect(recoveryInsight.scientificContent?.contains("Apple Watch") == true)
+        #expect(recoveryInsight.scientificContent?.contains("Oura") == true)
+        #expect(recoveryInsight.recommendedActions.first?.localizedCaseInsensitiveContains("sleep") == true)
+    }
+
+    @Test("Health signal insight avoids diagnostic or treatment claims")
+    func healthSignalInsightUsesNonDiagnosticLanguage() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+
+        for dayOffset in stride(from: 20, through: 0, by: -1) {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            let recent = dayOffset < 7
+            context.insert(
+                DailyLog(
+                    date: date,
+                    sleepHours: recent ? 5.5 : 7.3,
+                    activeMinutes: recent ? 12 : 45,
+                    restingHeartRateBPM: recent ? 73 : 63,
+                    stressLevel: recent ? 4 : 2,
+                    energyLevel: recent ? 2 : 4,
+                    painLevel0To10: recent ? 5 : 1
+                )
+            )
+            Self.insertSymptom(context: context, date: date, type: .fatigue, severity: recent ? 4 : 1)
+        }
+
+        try context.save()
+
+        let recoveryInsight = try #require(
+            try InsightEngine(modelContext: context).generateInsights().first {
+                $0.title == L10n.string(
+                    "Recovery signals may be adding strain",
+                    defaultValue: "Recovery signals may be adding strain"
+                )
+            }
+        )
+        let searchableText = [
+            recoveryInsight.title,
+            recoveryInsight.content,
+            recoveryInsight.scientificContent ?? ""
+        ].joined(separator: " ").lowercased()
+
+        #expect(!searchableText.contains("diagnose"))
+        #expect(!searchableText.contains("treat"))
+        #expect(!searchableText.contains("cure"))
+        #expect(!searchableText.contains("guarantee"))
+    }
+
+    @Test("Health signal insight stays quiet until the recent window has enough data")
+    func healthSignalInsightRequiresEnoughRecentLogs() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+
+        for dayOffset in stride(from: 9, through: 0, by: -1) {
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
+            context.insert(
+                DailyLog(
+                    date: date,
+                    sleepHours: 5.5,
+                    activeMinutes: 12,
+                    restingHeartRateBPM: 72,
+                    energyLevel: 2
+                )
+            )
+        }
+        try context.save()
+
+        let insights = try InsightEngine(modelContext: context).generateInsights()
+        #expect(
+            !insights.contains {
+                $0.title == L10n.string(
+                    "Recovery signals may be adding strain",
+                    defaultValue: "Recovery signals may be adding strain"
+                )
+            }
+        )
+    }
+
     @Test("Diet analyzer emits lag-window breakout correlation with quantitative confidence")
     func dietLagWindowBreakoutInsightIsQuantitative() throws {
         let container = try Self.makeContainer()
@@ -453,7 +625,9 @@ struct InsightEngineTests {
             let container = try Self.makeContainer()
             let context = container.mainContext
             let calendar = Calendar.current
-            let now = Date()
+            let now = try #require(
+                calendar.date(from: DateComponents(year: 2026, month: 5, day: 31, hour: 12))
+            )
 
             let monthAnchors = (1...4).compactMap { calendar.date(byAdding: .month, value: -$0, to: now) }
                 .sorted()

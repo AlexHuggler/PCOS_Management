@@ -28,12 +28,15 @@ struct ChartContainer<Content: View>: View {
 
 #Preview {
     ChartContainer(title: "Blood Sugar Trend", subtitle: "Last 30 days") {
-        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
-            .fill(Color(.tertiarySystemFill))
-            .overlay {
-                Text("Chart Placeholder")
-                    .foregroundStyle(.secondary)
+        HStack(alignment: .bottom, spacing: AppTheme.spacing8) {
+            ForEach(Array([0.45, 0.7, 0.55, 0.9, 0.6, 0.8, 0.5].enumerated()), id: \.offset) { _, value in
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall)
+                    .fill(Color.accentColor.opacity(0.7))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 160 * value)
             }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
     .padding()
 }

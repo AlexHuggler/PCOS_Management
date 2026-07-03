@@ -133,7 +133,8 @@ private extension CycleQueryService {
                 ? normalized(sortedCycles[sortedCycles.index(after: index)].startDate)
                 : nil
 
-            if normalizedDate >= cycleStart && (nextCycleStart == nil || normalizedDate < nextCycleStart!) {
+            let isBeforeNextCycle = nextCycleStart.map { normalizedDate < $0 } ?? true
+            if normalizedDate >= cycleStart && isBeforeNextCycle {
                 return cycle
             }
         }

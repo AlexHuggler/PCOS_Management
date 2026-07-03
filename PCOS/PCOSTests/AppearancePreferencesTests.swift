@@ -32,15 +32,16 @@ struct AppearancePreferencesTests {
         }
     }
 
-    @Test("Fresh installs default to Botanical Journal with SF Pro body text")
-    func freshInstallDefaultsToBotanicalJournal() {
+    @Test("Fresh installs default to Lunar Calm with SF Pro body text")
+    func freshInstallDefaultsToLunarCalm() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let preferences = AppearancePreferences(defaults: defaults)
 
-        #expect(preferences.themeOption == .botanicalJournal)
+        #expect(preferences.themeOption == .lunarCalm)
         #expect(preferences.fontOption == .systemDefault)
+        #expect(preferences.availableThemeOptions.first == .lunarCalm)
     }
 
     @Test("Changing appearance options refreshes the render key")
@@ -58,17 +59,61 @@ struct AppearancePreferencesTests {
         #expect(preferences.renderKey != secondRenderKey)
     }
 
-    @Test("Launch themes include an accessible high-contrast option")
+    @Test("Launch themes include Lunar Calm first and an accessible high-contrast option")
     func highContrastThemeExists() {
-        #expect(ThemeOption.allCases.count == 8)
-        #expect(ThemeOption.allCases.first == .botanicalJournal)
+        #expect(ThemeOption.allCases.count == 9)
+        #expect(ThemeOption.allCases.first == .lunarCalm)
         #expect(ThemeOption.allCases.contains(.botanicalJournal))
+        #expect(ThemeOption.allCases.contains(.lunarCalm))
         #expect(ThemeOption.allCases.contains(.highContrast))
         #expect(ThemeOption.allCases.contains(.botanicalMist))
         #expect(ThemeOption.allCases.contains(.blushMoonrise))
         #expect(ThemeOption.allCases.contains(.fruitGrove))
         #expect(ThemeOption.highContrast.isHighContrast)
         #expect(FontOption.allCases == [.systemDefault, .rounded, .didot, .newYork, .cormorantGaramond, .sfMono, .baskerville])
+    }
+
+    @Test("Lunar Calm is a public default theme choice")
+    func lunarCalmIsPublicDefaultThemeChoice() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let preferences = AppearancePreferences(defaults: defaults)
+
+        #expect(preferences.availableThemeOptions.first == .lunarCalm)
+        #expect(preferences.availableThemeOptions.contains(.lunarCalm))
+        #expect(!preferences.experimentalThemeControlVisible)
+        #expect(preferences.availableThemeOptions.contains(.botanicalJournal))
+        #expect(preferences.availableThemeOptions.contains(.highContrast))
+    }
+
+    @Test("Internal theme lab control can still be enabled")
+    func internalThemeLabControlCanStillBeEnabled() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        defaults.set(true, forKey: "appearance.enableExperimentalThemes")
+        let preferences = AppearancePreferences(defaults: defaults)
+
+        #expect(preferences.availableThemeOptions.contains(.lunarCalm))
+        #expect(preferences.experimentalThemeControlVisible)
+    }
+
+    @Test("Simulator review builds expose the internal theme lab outside tests")
+    func simulatorReviewBuildsExposeInternalThemeLabOutsideTests() throws {
+        let source = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppearancePreferences.swift"), encoding: .utf8)
+
+        #expect(source.contains("isInternalReviewRuntime"))
+        #expect(source.contains("#if targetEnvironment(simulator)"))
+        #expect(source.contains("XCTestConfigurationFilePath"))
+        #expect(source.contains("return true"))
+    }
+
+    @Test("Lunar Calm requests dark appearance while stable themes stay light")
+    func lunarCalmRequestsDarkAppearance() {
+        #expect(ThemeOption.botanicalJournal.preferredColorScheme == .light)
+        #expect(ThemeOption.highContrast.preferredColorScheme == .light)
+        #expect(ThemeOption.lunarCalm.preferredColorScheme == .dark)
     }
 
     @Test("Stored legacy font raw values remain compatible")
@@ -112,7 +157,7 @@ struct AppearancePreferencesTests {
 
     @Test("Image-inspired theme palettes expose valid RGB values")
     func imageInspiredThemePalettesExposeValidRGBValues() {
-        for themeOption in [ThemeOption.botanicalJournal, .botanicalMist, .blushMoonrise, .fruitGrove] {
+        for themeOption in [ThemeOption.botanicalJournal, .botanicalMist, .blushMoonrise, .fruitGrove, .lunarCalm] {
             let values = rgbValues(in: themeOption.palette)
 
             #expect(values.count == 39)
@@ -135,10 +180,69 @@ struct AppearancePreferencesTests {
         #expect(AppTheme.botanicalGoldRGB.matches(hex: 0xE6B75F))
     }
 
+    @Test("Lunar Calm palette matches the moonlit concept direction")
+    func lunarCalmPaletteMatchesConceptDirection() {
+        let palette = ThemeOption.lunarCalm.palette
+
+        #expect(palette.accent.matches(hex: 0x68E0D4))
+        #expect(palette.sage.matches(hex: 0xB8A7F5))
+        #expect(palette.coral.matches(hex: 0xFFAAA0))
+        #expect(palette.warmNeutralLight.matches(hex: 0x05060D))
+        #expect(palette.warmNeutralDark.matches(hex: 0x05060D))
+        #expect(AppTheme.lunarCalmPeachRGB.matches(hex: 0xFFD4A3))
+        #expect(AppTheme.lunarCalmSurfaceRGB.matches(hex: 0x151621))
+    }
+
+    @Test("Lunar Calm home hero ring matches the luminous cycle reference")
+    func lunarCalmHomeHeroRingMatchesReferenceStyle() throws {
+        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
+        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
+
+        #expect(appThemeSource.contains("struct CycleHeroRingPalette"))
+        #expect(appThemeSource.contains("static var cycleHeroRingPalette: CycleHeroRingPalette"))
+        #expect(appThemeSource.contains("static var lunarCalmCycleTrackGradient"))
+        #expect(todaySource.contains("AppTheme.cycleHeroRingPalette"))
+        #expect(todaySource.contains("private let arcStart = 0.12"))
+        #expect(todaySource.contains("private let accentGap = 0.05"))
+        #expect(todaySource.contains("private let maxArcEnd = 0.78"))
+        #expect(todaySource.contains("let lineWidth = max(size * 0.048, 12)"))
+        #expect(todaySource.contains("let progressLineWidth = lineWidth + 0.8"))
+        #expect(todaySource.contains("let glowDiameter = max(size * 0.052, 14)"))
+        #expect(todaySource.contains("let sparkleSize = max(size * 0.036, 9)"))
+        #expect(todaySource.contains(#"Image(systemName: "sparkle")"#))
+        #expect(todaySource.contains("private var activeArcEnd"))
+    }
+
+    @Test("Stable themes share premium home shell while presentations stay modal-only")
+    func stableThemesSharePremiumHomeShellWhilePresentationsStayModalOnly() throws {
+        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
+        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
+        let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
+        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
+        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
+
+        #expect(appThemeSource.contains("static var usesImmersiveHomeShell: Bool {\n        usesCustomTabBar\n    }"))
+        #expect(appThemeSource.contains("static var usesImmersivePresentation: Bool {\n        isLunarCalm\n    }"))
+        for source in [contentSource, todaySource, calendarSource, insightsSource, settingsSource] {
+            #expect(source.contains("AppTheme.usesImmersiveHomeShell"))
+        }
+        #expect(!appThemeSource.contains("static var usesImmersivePresentation: Bool {\n        usesImmersiveHomeShell\n    }"))
+        #expect(todaySource.contains("LunarCycleHeroRing(progress: cycleHeroRingProgress)"))
+        #expect(todaySource.contains("frame(maxWidth: 218)"))
+        #expect(todaySource.contains("minimumScaleFactor"))
+        #expect(contentSource.contains("AppTheme.botanicalCreamRGB.color.opacity(0.86)"))
+        #expect(contentSource.contains("AppTheme.botanicalCreamRGB.color.opacity(0.99)"))
+        #expect(contentSource.contains("AppTheme.botanicalCreamAltRGB.color.opacity(0.98)"))
+        #expect(todaySource.contains("AppTheme.botanicalScrollableBottomPadding"))
+    }
+
     @Test("Botanical Journal keeps body text SF Pro while headings resolve to serif")
     func botanicalJournalTypographyPolicy() {
         #expect(AppTheme.resolvedBodyFontOption(themeOption: .botanicalJournal, selectedFontOption: .baskerville) == .systemDefault)
         #expect(AppTheme.resolvedHeadingFontOption(themeOption: .botanicalJournal, selectedFontOption: .systemDefault).rawValue == "cormorantGaramond")
+        #expect(AppTheme.resolvedBodyFontOption(themeOption: .lunarCalm, selectedFontOption: .baskerville) == .systemDefault)
+        #expect(AppTheme.resolvedHeadingFontOption(themeOption: .lunarCalm, selectedFontOption: .systemDefault).rawValue == "cormorantGaramond")
         #expect(AppTheme.resolvedBodyFontOption(themeOption: .sage, selectedFontOption: .baskerville) == .baskerville)
         #expect(AppTheme.resolvedHeadingFontOption(themeOption: .sage, selectedFontOption: .baskerville) == .baskerville)
 
@@ -295,18 +399,165 @@ struct AppearancePreferencesTests {
         }
     }
 
-    @Test("Botanical custom tab bar leaves scrollable bottom content unobscured")
-    func botanicalCustomTabBarLeavesScrollableBottomContentUnobscured() throws {
+    @Test("Custom themed tab bars leave scrollable bottom content unobscured")
+    func customThemedTabBarsLeaveScrollableBottomContentUnobscured() throws {
         let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
         let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
         let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
+        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
+        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
 
+        #expect(appThemeSource.contains("static var usesCustomTabBar: Bool"))
         #expect(appThemeSource.contains("static var botanicalScrollableBottomPadding: CGFloat"))
-        #expect(appThemeSource.contains("isBotanicalJournal ? 126 : 0"))
+        #expect(appThemeSource.contains("static let botanicalCustomTabBarBottomClearance"))
+        #expect(appThemeSource.contains("usesCustomTabBar ? botanicalCustomTabBarBottomClearance : 0"))
         #expect(calendarSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
         #expect(calendarSource.contains(#".accessibilityIdentifier("calendar.cycle_details.card")"#))
         #expect(contentSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
         #expect(contentSource.contains(#"accessibilityIdentifier: "tracking.card.photo""#))
+        #expect(todaySource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
+        #expect(insightsSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
+        #expect(settingsSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
+    }
+
+    @Test("Botanical sizing uses named tokens instead of raw tab bar dimensions")
+    func botanicalSizingUsesNamedTokens() throws {
+        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
+        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
+
+        #expect(appThemeSource.contains("static let botanicalTabIconFrame"))
+        #expect(appThemeSource.contains("static let botanicalTabMinHeight"))
+        #expect(appThemeSource.contains("static let botanicalBadgeDefaultSize"))
+        #expect(contentSource.contains("AppTheme.botanicalTabIconFrame"))
+        #expect(contentSource.contains("AppTheme.botanicalTabMinHeight"))
+        #expect(todaySource.contains("AppTheme.botanicalScrollableBottomPadding"))
+        #expect(!todaySource.contains("AppTheme.isBotanicalJournal ? 126"))
+        #expect(!contentSource.contains(".frame(width: 28, height: 22)"))
+    }
+
+    @Test("Stable themes share premium palette chrome instead of native defaults")
+    func stableThemesSharePremiumPaletteChrome() throws {
+        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
+        let chromeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppChromeTypography.swift"), encoding: .utf8)
+        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+
+        #expect(appThemeSource.contains("static var usesCustomTabBar: Bool {\n        true"))
+        #expect(appThemeSource.contains("static var usesImmersiveHomeShell: Bool"))
+        #expect(appThemeSource.contains("static var usesImmersivePresentation: Bool"))
+        #expect(appThemeSource.contains("static var usesPremiumEditorStyling: Bool"))
+        #expect(appThemeSource.contains("static var themeAccentGradient"))
+        #expect(appThemeSource.contains("static var themeBorderGradient"))
+        #expect(appThemeSource.contains("else if AppTheme.isEditorialTheme"))
+        #expect(chromeSource.contains("UIColor(AppTheme.accentColor)"))
+        #expect(chromeSource.contains("UIColor(AppTheme.warmNeutral)"))
+        #expect(contentSource.contains(#""themed.tab_bar""#))
+    }
+
+    @Test("Premium home chrome and modal presentations use separate shell tokens")
+    func premiumHomeChromeAndModalPresentationsUseSeparateShellTokens() throws {
+        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
+        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
+        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
+        let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
+        let mealHistorySource = try String(contentsOf: try appSourceURL("Features/Meals/Views/MealHistoryView.swift"), encoding: .utf8)
+        let photoGallerySource = try String(contentsOf: try appSourceURL("Features/PhotoJournal/Views/PhotoGalleryView.swift"), encoding: .utf8)
+
+        for source in [contentSource, settingsSource, insightsSource, todaySource, calendarSource] {
+            #expect(source.contains("AppTheme.usesImmersiveHomeShell"))
+        }
+        for source in [contentSource, settingsSource, insightsSource, todaySource, mealHistorySource, photoGallerySource] {
+            #expect(source.contains("AppTheme.usesImmersivePresentation"))
+        }
+        #expect(!settingsSource.contains("AppTheme.isLunarCalm"))
+        #expect(!insightsSource.contains("AppTheme.isLunarCalm"))
+        #expect(!todaySource.contains("AppTheme.isLunarCalm"))
+        #expect(!calendarSource.contains("AppTheme.isLunarCalm"))
+    }
+
+    @Test("Premium editor styling is shared by core data-entry logs")
+    func premiumEditorStylingIsSharedByCoreDataEntryLogs() throws {
+        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
+        let cycleLogSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CycleLogView.swift"), encoding: .utf8)
+        let symptomLogSource = try String(contentsOf: try appSourceURL("Features/Symptoms/Views/SymptomLogView.swift"), encoding: .utf8)
+        let ovulationLogSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/OvulationLogView.swift"), encoding: .utf8)
+        let bloodSugarLogSource = try String(contentsOf: try appSourceURL("Features/BloodSugar/Views/BloodSugarLogView.swift"), encoding: .utf8)
+        let bloodSugarHistorySource = try String(contentsOf: try appSourceURL("Features/BloodSugar/Views/BloodSugarHistoryView.swift"), encoding: .utf8)
+        let mealLogSource = try String(contentsOf: try appSourceURL("Features/Meals/Views/MealLogView.swift"), encoding: .utf8)
+        let mealHistorySource = try String(contentsOf: try appSourceURL("Features/Meals/Views/MealHistoryView.swift"), encoding: .utf8)
+        let mealDetailSource = try String(contentsOf: try appSourceURL("Features/Meals/Views/MealDetailView.swift"), encoding: .utf8)
+        let mealScanSource = try String(contentsOf: try appSourceURL("Features/Meals/MealScan/Views/MealScanFlowView.swift"), encoding: .utf8)
+        let supplementLogSource = try String(contentsOf: try appSourceURL("Features/Supplements/Views/SupplementLogView.swift"), encoding: .utf8)
+        let supplementHistorySource = try String(contentsOf: try appSourceURL("Features/Supplements/Views/SupplementHistoryView.swift"), encoding: .utf8)
+        let photoGallerySource = try String(contentsOf: try appSourceURL("Features/PhotoJournal/Views/PhotoGalleryView.swift"), encoding: .utf8)
+        let photoCaptureSource = try String(contentsOf: try appSourceURL("Features/PhotoJournal/Views/PhotoCaptureView.swift"), encoding: .utf8)
+        let photoComparisonSource = try String(contentsOf: try appSourceURL("Features/PhotoJournal/Views/PhotoComparisonView.swift"), encoding: .utf8)
+        let pregnancyActivationSource = try String(contentsOf: try appSourceURL("Features/Pregnancy/PregnancyActivationView.swift"), encoding: .utf8)
+        let pregnancyEndSource = try String(contentsOf: try appSourceURL("Features/Pregnancy/PregnancyEndView.swift"), encoding: .utf8)
+        let pregnancyDashboardSource = try String(contentsOf: try appSourceURL("Features/Pregnancy/PregnancyDashboardCard.swift"), encoding: .utf8)
+        let pregnancyCalendarSource = try String(contentsOf: try appSourceURL("Features/Pregnancy/PregnancyCalendarOverlay.swift"), encoding: .utf8)
+        let reportConfigSource = try String(contentsOf: try appSourceURL("Features/Reports/Views/ReportConfigView.swift"), encoding: .utf8)
+        let evidenceDisclosureSource = try String(contentsOf: try appSourceURL("SharedUI/Components/EvidenceDisclosureSheet.swift"), encoding: .utf8)
+        let notificationSettingsSource = try String(contentsOf: try appSourceURL("Core/Notifications/NotificationSettingsView.swift"), encoding: .utf8)
+        let healthKitSettingsSource = try String(contentsOf: try appSourceURL("Core/HealthKit/HealthKitSettingsView.swift"), encoding: .utf8)
+
+        #expect(appThemeSource.contains("static var premiumEditorAccentGradient"))
+        #expect(appThemeSource.contains("static var premiumEditorBackground"))
+        #expect(cycleLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(cycleLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(symptomLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(symptomLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(ovulationLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(ovulationLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(bloodSugarLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(bloodSugarLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(bloodSugarHistorySource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(bloodSugarHistorySource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!bloodSugarHistorySource.contains("AppTheme.isLunarCalm"))
+        #expect(mealLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(mealLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(mealHistorySource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(mealHistorySource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(mealDetailSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(mealDetailSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(mealScanSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(mealScanSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(supplementLogSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(supplementLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!supplementLogSource.contains("AppTheme.isLunarCalm"))
+        #expect(supplementHistorySource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(supplementHistorySource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!supplementHistorySource.contains("AppTheme.isLunarCalm"))
+        #expect(photoGallerySource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(photoGallerySource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!photoGallerySource.contains("AppTheme.isLunarCalm"))
+        #expect(photoCaptureSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(photoCaptureSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!photoCaptureSource.contains("AppTheme.isLunarCalm"))
+        #expect(photoComparisonSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(photoComparisonSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!photoComparisonSource.contains("AppTheme.isLunarCalm"))
+        #expect(pregnancyActivationSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(pregnancyActivationSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!pregnancyActivationSource.contains("AppTheme.isLunarCalm"))
+        #expect(pregnancyEndSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(pregnancyEndSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!pregnancyEndSource.contains("AppTheme.isLunarCalm"))
+        #expect(pregnancyDashboardSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(pregnancyDashboardSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!pregnancyDashboardSource.contains("AppTheme.isLunarCalm"))
+        #expect(pregnancyCalendarSource.contains("AppTheme.usesPremiumEditorStyling"))
+        #expect(pregnancyCalendarSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(!pregnancyCalendarSource.contains("AppTheme.isLunarCalm"))
+
+        for source in [reportConfigSource, evidenceDisclosureSource, notificationSettingsSource, healthKitSettingsSource] {
+            #expect(source.contains("AppTheme.usesPremiumEditorStyling"))
+            #expect(source.contains("AppTheme.premiumEditorAccentGradient"))
+            #expect(source.contains("AppTheme.premiumEditorCTAForeground"))
+            #expect(!source.contains("AppTheme.isLunarCalm"))
+        }
     }
 
     @Test("Typography resolver returns fonts for common text styles")
@@ -376,17 +627,35 @@ struct AppearancePreferencesTests {
             arguments: [
                 "UITestMode",
                 "-appearance.fontOption", FontOption.didot.rawValue,
-                "-appearance.themeOption", ThemeOption.fruitGrove.rawValue,
+                "-appearance.themeOption", ThemeOption.lunarCalm.rawValue,
             ],
             appearancePreferences: preferences
         )
 
         #expect(preferences.fontOption == .didot)
-        #expect(preferences.themeOption == .fruitGrove)
+        #expect(preferences.themeOption == .lunarCalm)
 
         let reloadedPreferences = AppearancePreferences(defaults: defaults)
         #expect(reloadedPreferences.fontOption == .didot)
-        #expect(reloadedPreferences.themeOption == .fruitGrove)
+        #expect(reloadedPreferences.themeOption == .lunarCalm)
+    }
+
+    @Test("Manual launch override keeps Lunar Calm public without enabling experimental controls")
+    func manualLaunchOverrideKeepsLunarCalmPublicWithoutEnablingExperimentalControls() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let preferences = AppearancePreferences(defaults: defaults)
+        CycleBalanceApp.applyAppearanceLaunchOverridesIfNeeded(
+            arguments: [
+                "-appearance.themeOption", ThemeOption.lunarCalm.rawValue,
+            ],
+            appearancePreferences: preferences
+        )
+
+        #expect(preferences.themeOption == .lunarCalm)
+        #expect(!preferences.experimentalThemesEnabled)
+        #expect(preferences.availableThemeOptions.contains(.lunarCalm))
     }
 
     @Test("Onboarding text uses app typography instead of direct font modifiers")
@@ -401,7 +670,6 @@ struct AppearancePreferencesTests {
 
         let allowedIconFontLines: Set<String> = [
             "GuidedActionView.swift:.font(.system(size: iconSize))",
-            "RatingPromptView.swift:.font(.system(size: iconSize))",
             "ResultsView.swift:.font(.system(size: iconSize))",
             "HowAppHelpsView.swift:.font(.system(size: 48))",
             "OnboardingCompletionView.swift:.font(.system(size: iconSize))",

@@ -1,10 +1,37 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import UIKit
+@preconcurrency import UserNotifications
 import os
 #if canImport(AdServices)
 import AdServices
 #endif
+
+final class AppNotificationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        guard let rawRoute = response.notification.request.content.userInfo["route"] as? String,
+              let route = AppNotificationRoute(rawValue: rawRoute)
+        else {
+            return
+        }
+
+        await MainActor.run {
+            NotificationCenter.default.post(name: .appNotificationRouteReceived, object: route)
+        }
+    }
+}
 
 @main
 struct CycleBalanceApp: App {
@@ -15,6 +42,8 @@ struct CycleBalanceApp: App {
     private static let uiTestDemoScenarioKey = "uiTest.demoScenario"
     private static let uiTestFontOptionKey = "appearance.fontOption"
     private static let uiTestThemeOptionKey = "appearance.themeOption"
+    private static let uiTestExperimentalThemesKey = "appearance.enableExperimentalThemes"
+    private static let uiTestReportPolicyResetKey = "reports.resetPolicy"
     private static let uiTestOnboardingBooleanKeys = [
         "onboarding.hasCompletedWelcome",
         "onboarding.hasCompletedQuestionnaire",
@@ -29,9 +58,12 @@ struct CycleBalanceApp: App {
 #endif
 
     var sharedModelContainer: ModelContainer = Self.makeSharedModelContainer()
+    @State private var appearancePreferences = AppearancePreferences.shared
+    @UIApplicationDelegateAdaptor(AppNotificationDelegate.self) private var notificationDelegate
 
     init() {
         Self.applyUITestLaunchOverrides()
+        Self.applyAppearanceLaunchOverridesIfNeeded()
         Self.applyStoredAppLanguageOverrideIfNeeded()
         AppChromeTypography.apply()
         AppleAdsAttributionService.shared.captureLatestTokenIfAvailable()
@@ -41,7 +73,7 @@ struct CycleBalanceApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(.light)
+                .preferredColorScheme(appearancePreferences.preferredColorScheme)
         }
         .modelContainer(sharedModelContainer)
     }
@@ -58,6 +90,12 @@ extension CycleBalanceApp {
             BloodSugarReading.self,
             SupplementLog.self,
             MealEntry.self,
+            MealScanFoodItem.self,
+            MealScanNutritionSummary.self,
+            MealScanMetadata.self,
+            MealScanResultCacheRecord.self,
+            NutritionImportRecord.self,
+            HealthKitImportedSampleRecord.self,
             HairPhotoEntry.self,
             DailyLog.self,
             PregnancyRecord.self,
@@ -105,8 +143,8 @@ extension CycleBalanceApp {
             )
         }
 #else
+        let localConfiguration = makeLocalReleaseConfiguration(schema: schema)
         do {
-            let localConfiguration = makeLocalReleaseConfiguration(schema: schema)
             let container = try ModelContainer(for: schema, configurations: [localConfiguration])
             recordStartupMode("local_only")
             Logger.database.notice("Using local-only SwiftData store in Release.")
@@ -114,7 +152,25 @@ extension CycleBalanceApp {
         } catch {
             let localError = String(describing: error)
             Logger.database.fault("Local-only ModelContainer init failed in Release: \(localError, privacy: .public)")
-            fatalError("Could not create local-only ModelContainer in Release: \(localError)")
+
+            // A store that fails to open (failed migration, corruption) would
+            // otherwise crash-loop at every launch. Move the unreadable store
+            // files into a backup folder and start fresh instead.
+            do {
+                try StoreRecovery.backupAndResetStoreFiles(at: localConfiguration.url)
+                let retryConfiguration = makeLocalReleaseConfiguration(schema: schema)
+                let container = try ModelContainer(for: schema, configurations: [retryConfiguration])
+                recordStartupMode("local_only_after_reset")
+                Logger.database.notice("Recovered local-only store after backing up unreadable store files.")
+                return container
+            } catch {
+                let retryError = String(describing: error)
+                Logger.database.fault("Local-only store recovery failed after reset: \(retryError, privacy: .public)")
+                fatalError(
+                    "Could not create local-only ModelContainer in Release. "
+                        + "Initial error: \(localError). Post-reset error: \(retryError)."
+                )
+            }
         }
 #endif
     }
@@ -277,9 +333,30 @@ extension CycleBalanceApp {
             }
         }
 
+        if let rawPreferredName = launchArgumentValue(for: "onboarding.preferredName", in: arguments) {
+            if rawPreferredName == "__unset__" {
+                defaults.removeObject(forKey: "onboarding.preferredName")
+            } else {
+                defaults.set(
+                    rawPreferredName.trimmingCharacters(in: .whitespacesAndNewlines),
+                    forKey: "onboarding.preferredName"
+                )
+            }
+        }
+
         if let rawAppLanguage = launchArgumentValue(for: AppLanguage.defaultsKey, in: arguments) {
             let appLanguage = AppLanguage(rawValue: rawAppLanguage) ?? .system
             appLanguage.persist(defaults: defaults)
+        }
+
+        if let rawResetReportPolicy = launchArgumentValue(for: uiTestReportPolicyResetKey, in: arguments),
+           boolValue(from: rawResetReportPolicy) == true {
+            [
+                "reports.freeExportConsumed",
+                "reports.openedReport",
+                "reports.exportedReport",
+                "reports.dismissedInsightsBanner",
+            ].forEach(defaults.removeObject)
         }
 
         applyUITestAppearanceOverrideIfNeeded(
@@ -393,6 +470,29 @@ extension CycleBalanceApp {
         return arguments[valueIndex]
     }
 
+    static func applyAppearanceLaunchOverridesIfNeeded(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        appearancePreferences: AppearancePreferences = .shared
+    ) {
+        if let rawExperimentalThemes = launchArgumentValue(for: uiTestExperimentalThemesKey, in: arguments),
+           let experimentalThemesEnabled = boolValue(from: rawExperimentalThemes) {
+            appearancePreferences.setExperimentalThemesEnabled(experimentalThemesEnabled)
+        }
+
+        if let rawThemeOption = launchArgumentValue(for: uiTestThemeOptionKey, in: arguments),
+           let themeOption = ThemeOption(rawValue: rawThemeOption) {
+            if themeOption.isExperimental {
+                appearancePreferences.setExperimentalThemesEnabled(true)
+            }
+            appearancePreferences.setThemeOption(themeOption)
+        }
+
+        if let rawFontOption = launchArgumentValue(for: uiTestFontOptionKey, in: arguments),
+           let fontOption = FontOption(rawValue: rawFontOption) {
+            appearancePreferences.setFontOption(fontOption)
+        }
+    }
+
     static func applyUITestAppearanceOverrideIfNeeded(
         arguments: [String],
         appearancePreferences: AppearancePreferences
@@ -401,15 +501,10 @@ extension CycleBalanceApp {
             return
         }
 
-        if let rawThemeOption = launchArgumentValue(for: uiTestThemeOptionKey, in: arguments),
-           let themeOption = ThemeOption(rawValue: rawThemeOption) {
-            appearancePreferences.setThemeOption(themeOption)
-        }
-
-        if let rawFontOption = launchArgumentValue(for: uiTestFontOptionKey, in: arguments),
-           let fontOption = FontOption(rawValue: rawFontOption) {
-            appearancePreferences.setFontOption(fontOption)
-        }
+        applyAppearanceLaunchOverridesIfNeeded(
+            arguments: arguments,
+            appearancePreferences: appearancePreferences
+        )
     }
 
     private static func boolValue(from rawValue: String) -> Bool? {

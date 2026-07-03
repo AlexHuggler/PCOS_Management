@@ -108,6 +108,20 @@ struct SettingsDataExportService {
         }
 
         do {
+            let nutritionDescriptor = FetchDescriptor<NutritionImportRecord>(sortBy: [SortDescriptor(\.startDate)])
+            let imports = try modelContext.fetch(nutritionDescriptor)
+            for nutritionImport in imports {
+                let dateStr = Self.isoFormatter.string(from: nutritionImport.startDate)
+                let product = nutritionImport.displayProductName.replacingOccurrences(of: ",", with: ";")
+                let value = nutritionImport.calories.map { "\($0.formatted()) kcal" } ?? nutritionImport.sourceKind.displayName
+                let notes = nutritionImport.notes?.replacingOccurrences(of: ",", with: ";") ?? nutritionImport.sourceLabel
+                csv += "\(localizedRowType(.nutritionImport)),\(dateStr),\(product),\(value),\(notes)\n"
+            }
+        } catch {
+            Logger.database.error("Failed to export nutrition imports: \(error.localizedDescription)")
+        }
+
+        do {
             let pregnancyDescriptor = FetchDescriptor<PregnancyRecord>(sortBy: [SortDescriptor(\.startDate)])
             let pregnancies = try modelContext.fetch(pregnancyDescriptor)
             for pregnancy in pregnancies {
@@ -134,6 +148,7 @@ struct SettingsDataExportService {
         case bloodSugar
         case supplement
         case meal
+        case nutritionImport
         case pregnancy
     }
 
@@ -151,6 +166,8 @@ struct SettingsDataExportService {
             String(localized: "Supplement", comment: "CSV export row type value.")
         case .meal:
             String(localized: "Meal", comment: "CSV export row type value.")
+        case .nutritionImport:
+            String(localized: "Nutrition Import", comment: "CSV export row type value.")
         case .pregnancy:
             String(localized: "Pregnancy", comment: "CSV export row type value.")
         }

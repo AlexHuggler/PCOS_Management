@@ -74,10 +74,13 @@ struct TodayView: View {
     @State private var todaysSupplementLogs: [SupplementLog] = []
     @State private var todaysMeals: [MealEntry] = []
     @State private var todaysDailyLog: DailyLog?
+    @State private var topAhaMoment: AhaMoment?
     @State private var pregnancyViewModel: PregnancyViewModel?
     @State private var quickLogAlert: QuickLogAlert?
     @State private var heroState: TodayHeroState = .welcome
     @State private var hasResolvedInitialHeroState = false
+    @State private var showingPeriodEndSheet = false
+    @State private var showingPredictionInfo = false
 
     var body: some View {
         NavigationStack {
@@ -86,11 +89,27 @@ struct TodayView: View {
 
                 ScrollView {
                     VStack(spacing: AppTheme.spacing16) {
+                        if AppTheme.usesImmersiveHomeShell {
+                            lunarTodayHeader
+                        }
+
                         // Cycle status card
                         cycleStatusCard
 
                         // Logging streak
                         streakBadge
+
+                        if !AppTheme.usesImmersiveHomeShell, let topAhaMoment {
+                            AhaMomentCard(moment: topAhaMoment)
+                        }
+
+                        if AppTheme.usesImmersiveHomeShell {
+                            lunarTodaySnapshotCard
+
+                            if let topAhaMoment {
+                                ImmersiveInsightCard(moment: topAhaMoment)
+                            }
+                        }
 
                         // Quick period log inline
                         if appState.lifecycleMode != .pregnant {
@@ -120,8 +139,8 @@ struct TodayView: View {
                         predictionSection
                     }
                     .padding()
-                    // Keep the last summary cards fully tappable above the tab bar.
-                    .padding(.bottom, AppTheme.spacing32 * 2)
+                    // Keep the last summary cards fully tappable above the custom tab bar.
+                    .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
                 }
                 .refreshable {
                     await Task.yield()
@@ -139,15 +158,16 @@ struct TodayView: View {
                             dismissActiveHint()
                         }
                         .padding(.horizontal, AppTheme.spacing24)
-                        .padding(.bottom, AppTheme.isBotanicalJournal ? 126 : AppTheme.spacing32)
+                        .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
                     }
                 }
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("screen.today")
             .navigationTitle(
-                L10n.string("Today", defaultValue: "Today")
+                AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Today", defaultValue: "Today")
             )
+            .navigationBarTitleDisplayMode(AppTheme.usesImmersiveHomeShell ? .inline : .automatic)
             .sensoryFeedback(.selection, trigger: quickLogFlow)
             .sensoryFeedback(.selection, trigger: showingLogPeriod)
             .sensoryFeedback(.selection, trigger: showingLogSymptoms)
@@ -176,14 +196,33 @@ struct TodayView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingLogPeriod, onDismiss: {
+            .todayLunarPresentation(isPresented: $showingLogPeriod, onDismiss: {
                 viewModel?.loadData()
                 refreshStreak()
                 refreshSummaryData()
             }) {
                 CycleLogView()
             }
-            .sheet(isPresented: $showingLogSymptoms, onDismiss: {
+            .todayLunarPresentation(isPresented: $showingPeriodEndSheet, onDismiss: {
+                viewModel?.loadData()
+                refreshStreak()
+                refreshSummaryData()
+            }) {
+                if let viewModel, let currentPeriodState = viewModel.currentPeriodState {
+                    PeriodEndSheet(
+                        periodState: currentPeriodState,
+                        onSave: { endDate, referenceDate in
+                            try viewModel.markPeriodEnded(on: endDate, referenceDate: referenceDate)
+                        },
+                        onSaved: {
+                            viewModel.loadData()
+                            refreshStreak()
+                            refreshSummaryData()
+                        }
+                    )
+                }
+            }
+            .todayLunarPresentation(isPresented: $showingLogSymptoms, onDismiss: {
                 viewModel?.loadData()
                 refreshTodaysSymptoms()
                 refreshStreak()
@@ -191,20 +230,24 @@ struct TodayView: View {
             }) {
                 SymptomLogView()
             }
-            .sheet(isPresented: $showingLogBloodSugar, onDismiss: {
+            .todayLunarPresentation(isPresented: $showingLogBloodSugar, onDismiss: {
                 refreshSummaryData()
             }) {
                 BloodSugarLogView()
             }
-            .sheet(isPresented: $showingLogSupplements, onDismiss: {
+            .todayLunarPresentation(isPresented: $showingLogSupplements, onDismiss: {
                 refreshSummaryData()
             }) {
                 SupplementLogView()
             }
-            .sheet(isPresented: $showingLogMeal, onDismiss: {
+            .todayLunarPresentation(isPresented: $showingLogMeal, onDismiss: {
                 refreshSummaryData()
             }) {
                 MealLogView(entryPoint: .today)
+            }
+            .sheet(isPresented: $showingPredictionInfo) {
+                PredictionEstimateInfoSheet(detailText: viewModel?.predictionSecondaryText)
+                    .presentationDetents([.medium])
             }
             .onChange(of: showingLogMeal) { _, isPresented in
                 Logger.meals.info("TodayView meal log sheet state changed: \(isPresented, privacy: .public)")
@@ -273,6 +316,13 @@ struct TodayView: View {
             Logger.database.error("Failed to fetch today's daily log: \(error.localizedDescription)")
             todaysDailyLog = nil
         }
+        do {
+            topAhaMoment = try AhaMomentService(modelContext: modelContext)
+                .topMoment(isPremium: appState.allowsPremiumAccess)
+        } catch {
+            Logger.database.error("Failed to refresh aha moment: \(error.localizedDescription)")
+            topAhaMoment = nil
+        }
     }
 
     // MARK: - Subviews
@@ -293,17 +343,97 @@ struct TodayView: View {
     }
 
     private var cycleHeroCard: some View {
-        VStack(spacing: AppTheme.spacing12) {
-            BotanicalOrnamentalDivider(width: 220)
-            renderCycleHeroContent(for: heroState)
-            BotanicalOrnamentalDivider(width: 180)
+        Group {
+            if AppTheme.usesImmersiveHomeShell {
+                cycleHeroContent
+                    .padding(.horizontal, AppTheme.spacing4)
+                    .padding(.vertical, AppTheme.spacing12)
+            } else {
+                cycleHeroContent
+                    .padding(.vertical, AppTheme.spacing32)
+                    .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+            }
         }
         .id(heroState.renderIdentity)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, AppTheme.spacing32)
-        .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+        .frame(minHeight: AppTheme.usesImmersiveHomeShell ? 312 : nil)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.hero.container")
+    }
+
+    @ViewBuilder
+    private var cycleHeroContent: some View {
+        if AppTheme.usesImmersiveHomeShell {
+            GeometryReader { proxy in
+                let ringDiameter = min(max(proxy.size.width - 56, 238), 296)
+                ZStack {
+                    LunarCycleHeroRing(progress: cycleHeroRingProgress)
+                        .frame(width: ringDiameter, height: ringDiameter)
+                        .accessibilityHidden(true)
+
+                    renderLunarCycleHeroContent(for: heroState)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 304)
+        } else {
+            VStack(spacing: AppTheme.spacing12) {
+                BotanicalOrnamentalDivider(width: 220)
+                renderCycleHeroContent(for: heroState)
+                BotanicalOrnamentalDivider(width: 180)
+            }
+        }
+    }
+
+    private var cycleHeroRingProgress: Double {
+        guard case .currentCycle(let dayCount) = heroState else {
+            return 0.12
+        }
+
+        let expectedCycleLength = viewModel?.currentManualCycleLengthOverride
+            ?? viewModel?.statistics.map { Int($0.averageLength.rounded()) }
+            ?? 28
+        let clampedExpectedCycleLength = min(max(expectedCycleLength, 15), 120)
+        return Double(dayCount) / Double(clampedExpectedCycleLength)
+    }
+
+    private var lunarTodayHeader: some View {
+        HStack(alignment: .center, spacing: AppTheme.spacing12) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(lunarGreetingTitle)
+                    .appHeadingFont(.title2, weight: .regular)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+
+                Text(L10n.string("You're not alone in this.", defaultValue: "You're not alone in this."))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: AppTheme.spacing12)
+
+            ZStack {
+                Circle()
+                    .fill(AppTheme.premiumEditorAccentGradient)
+                Image(systemName: "moon.stars.fill")
+                    .appFont(.headline)
+                    .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+            }
+            .frame(width: 40, height: 40)
+            .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.26), radius: 14, y: 6)
+            .accessibilityHidden(true)
+        }
+        .padding(.horizontal, AppTheme.spacing4)
+        .accessibilityIdentifier("today.lunar.header")
+    }
+
+    private var lunarGreetingTitle: String {
+        TodayGreeting.title(
+            hour: Calendar.current.component(.hour, from: Date()),
+            name: appState.onboardingProfile.preferredDisplayName
+        )
     }
 
     @ViewBuilder
@@ -358,6 +488,289 @@ struct TodayView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    @ViewBuilder
+    private func renderLunarCycleHeroContent(for heroState: TodayHeroState) -> some View {
+        switch heroState {
+        case .welcome:
+            VStack(spacing: AppTheme.spacing8) {
+                Text(L10n.string("Cycle day", defaultValue: "Cycle day"))
+                    .appFont(.caption, weight: .semibold)
+                    .textCase(.uppercase)
+                    .foregroundStyle(AppTheme.secondaryText)
+
+                Text(L10n.string("Start", defaultValue: "Start"))
+                    .appHeadingFont(.largeTitle, weight: .regular)
+                    .foregroundStyle(AppTheme.premiumEditorAccentGradient)
+                    .accessibilityIdentifier("today.hero.welcome_title")
+
+                Text(personalizedWelcomeText)
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: 210)
+
+        case .currentCycle(let dayCount):
+            VStack(spacing: AppTheme.spacing8) {
+                Text(L10n.string("Cycle day", defaultValue: "Cycle day"))
+                    .appFont(.caption, weight: .semibold)
+                    .textCase(.uppercase)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.86)
+
+                Text("\(dayCount)")
+                    .appHeadingFont(.largeTitle, weight: .regular)
+                    .font(AppTheme.headingFont(.largeTitle, weight: .regular))
+                    .scaleEffect(1.46)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.62)
+                    .padding(.vertical, AppTheme.spacing4)
+                    .accessibilityIdentifier("today.hero.current_cycle_label")
+
+                if let phase = viewModel?.currentApproximatePhase {
+                    Text(
+                        L10n.format(
+                            "%@ Phase",
+                            defaultValue: "%@ Phase",
+                            phase.displayName
+                        )
+                    )
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                }
+
+                VStack(spacing: AppTheme.spacing4) {
+                    Text(L10n.string("Next period", defaultValue: "Next period"))
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .lineLimit(1)
+
+                    Text(viewModel?.predictionCountdownText() ?? lunarPredictionHeadline)
+                        .appHeadingFont(.title2, weight: .regular)
+                        .foregroundStyle(AppTheme.premiumEditorAccentGradient)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.76)
+
+                    if let secondary = lunarPredictionDetailText {
+                        HStack(spacing: AppTheme.spacing4) {
+                            Text(secondary)
+                                .appFont(.caption)
+                                .foregroundStyle(AppTheme.secondaryText)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.82)
+
+                            if viewModel?.hasActionablePrediction == true {
+                                Button {
+                                    showingPredictionInfo = true
+                                } label: {
+                                    Image(systemName: "info.circle")
+                                        .appFont(.caption)
+                                        .foregroundStyle(AppTheme.secondaryText)
+                                }
+                                .buttonStyle(.plain)
+                                .contentShape(Rectangle())
+                                .accessibilityLabel(
+                                    L10n.string("About this estimate", defaultValue: "About this estimate")
+                                )
+                                .accessibilityIdentifier("today.hero.prediction_info")
+                            }
+                        }
+                    }
+                }
+                .padding(.top, AppTheme.spacing4)
+
+                Button {
+                    openLogger(.period)
+                } label: {
+                    HStack(spacing: AppTheme.spacing4) {
+                        Text(L10n.string("Edit period dates", defaultValue: "Edit period dates"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+                        Image(systemName: "pencil")
+                            .imageScale(.small)
+                    }
+                    .appFont(.caption, weight: .semibold)
+                    .padding(.horizontal, AppTheme.spacing12)
+                    .padding(.vertical, AppTheme.spacing8)
+                    .background(Capsule().fill(AppTheme.premiumEditorRaisedSurface.opacity(0.92)))
+                    .overlay(
+                        Capsule()
+                            .stroke(AppTheme.premiumEditorBorder.opacity(0.72), lineWidth: 0.8)
+                    )
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(AppTheme.primaryText)
+            }
+            .frame(maxWidth: 218)
+            .offset(y: 2)
+        }
+    }
+
+    private var lunarPredictionHeadline: String {
+        guard let predictionText = viewModel?.predictionPrimaryText else {
+            return L10n.string("building with your logs", defaultValue: "building with your logs")
+        }
+
+        if predictionText.localizedCaseInsensitiveContains("harder to estimate") {
+            return L10n.string("Hard to estimate", defaultValue: "Hard to estimate")
+        }
+
+        let prefix = L10n.string(
+            "Your period may arrive between ",
+            defaultValue: "Your period may arrive between "
+        )
+        if predictionText.hasPrefix(prefix) {
+            return String(predictionText.dropFirst(prefix.count))
+        }
+
+        return predictionText
+    }
+
+    private var lunarPredictionDetailText: String? {
+        guard viewModel?.predictionPrimaryText != nil else {
+            return L10n.string("Log a cycle to begin prediction.", defaultValue: "Log a cycle to begin prediction.")
+        }
+
+        if viewModel?.hasActionablePrediction == true {
+            return viewModel?.predictionMidpointText ?? viewModel?.predictionSecondaryText
+        }
+
+        return L10n.string(
+            "Keep logging to narrow your future window.",
+            defaultValue: "Keep logging to narrow your future window."
+        )
+    }
+
+    private var lunarTodaySnapshotCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            HStack {
+                Text(L10n.string("Today's snapshot", defaultValue: "Today's snapshot"))
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Spacer()
+                Button {
+                    openLogger(.symptoms)
+                } label: {
+                    HStack(spacing: AppTheme.spacing4) {
+                        Text(L10n.string("View all", defaultValue: "View all"))
+                        Image(systemName: "arrow.right")
+                    }
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.secondaryText)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.string("View all symptoms", defaultValue: "View all symptoms"))
+            }
+
+            HStack(spacing: 0) {
+                ForEach(lunarSnapshotItems) { item in
+                    LunarTodaySnapshotItemView(item: item)
+                    if item.id != lunarSnapshotItems.last?.id {
+                        Divider()
+                            .overlay(AppTheme.premiumEditorBorder.opacity(0.46))
+                            .padding(.vertical, AppTheme.spacing8)
+                    }
+                }
+            }
+        }
+        .padding(AppTheme.spacing16)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("today.lunar.snapshot")
+    }
+
+    private var lunarSnapshotItems: [LunarTodaySnapshotItem] {
+        [
+            LunarTodaySnapshotItem(
+                title: lunarTopSymptom.title,
+                value: lunarTopSymptom.value,
+                systemImage: "camera.macro",
+                color: AppTheme.premiumEditorWarningAccentColor
+            ),
+            LunarTodaySnapshotItem(
+                title: L10n.string("Mood", defaultValue: "Mood"),
+                value: lunarMoodText,
+                systemImage: "cloud.sun.fill",
+                color: AppTheme.premiumEditorAccentColor
+            ),
+            LunarTodaySnapshotItem(
+                title: L10n.string("Energy", defaultValue: "Energy"),
+                value: lunarEnergyText,
+                systemImage: "bolt.fill",
+                color: AppTheme.premiumEditorSecondaryAccentColor
+            ),
+            LunarTodaySnapshotItem(
+                title: L10n.string("Sleep", defaultValue: "Sleep"),
+                value: lunarSleepText,
+                systemImage: "moon.fill",
+                color: AppTheme.lavenderAccent
+            ),
+        ]
+    }
+
+    private var lunarTopSymptom: (title: String, value: String) {
+        guard let topSymptom = todaysSymptoms.max(by: { $0.severity < $1.severity }) else {
+            return (
+                title: L10n.string("Symptoms", defaultValue: "Symptoms"),
+                value: L10n.string("None yet", defaultValue: "None yet")
+            )
+        }
+
+        return (
+            title: topSymptom.symptomType.displayName,
+            value: SeverityPicker.label(for: topSymptom.severity)
+        )
+    }
+
+    private var lunarMoodText: String {
+        if todaysSymptoms.contains(where: { $0.symptomType.category == .mood }) {
+            return L10n.string("Tender", defaultValue: "Tender")
+        }
+        return L10n.string("Calm", defaultValue: "Calm")
+    }
+
+    private var lunarEnergyText: String {
+        guard let energy = todaysDailyLog?.energyLevel else {
+            return L10n.string("Medium", defaultValue: "Medium")
+        }
+        if energy >= 4 {
+            return L10n.string("High", defaultValue: "High")
+        } else if energy <= 2 {
+            return L10n.string("Low", defaultValue: "Low")
+        }
+        return L10n.string("Medium", defaultValue: "Medium")
+    }
+
+    private var lunarSleepText: String {
+        guard let sleepHours = todaysDailyLog?.sleepHours else {
+            return L10n.string("No log", defaultValue: "No log")
+        }
+
+        let totalMinutes = max(0, Int((sleepHours * 60).rounded()))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        guard minutes > 0 else {
+            return L10n.format("%lldh", defaultValue: "%lldh", Int64(hours))
+        }
+        return L10n.format("%lldh %lldm", defaultValue: "%lldh %lldm", Int64(hours), Int64(minutes))
     }
 
     @ViewBuilder
@@ -502,7 +915,7 @@ struct TodayView: View {
                     defaultValue: "Your first period estimate is here! It'll get more accurate as you log more cycles."
                 )
             )
-            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
+            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, moment: .logSaved, requestReview: requestReview)
         }
     }
 
@@ -598,6 +1011,43 @@ struct TodayView: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
 
+            if canShowPeriodEndAction {
+                Button {
+                    showingPeriodEndSheet = true
+                } label: {
+                    HStack(spacing: AppTheme.spacing8) {
+                        Image(systemName: "calendar.badge.checkmark")
+                        Text(periodEndButtonTitle)
+                            .appFont(.subheadline, weight: .semibold)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                    }
+                    .padding(.horizontal, AppTheme.spacing12)
+                    .padding(.vertical, AppTheme.spacing8)
+                    .background(
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                            .fill(AppTheme.accentColor.opacity(0.12))
+                    )
+                    .foregroundStyle(AppTheme.accentColor)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("today.period_end_button")
+            }
+
+            if let currentPeriodEndedText {
+                HStack(spacing: AppTheme.spacing8) {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text(currentPeriodEndedText)
+                        .appFont(.caption, weight: .medium)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                }
+                .foregroundStyle(AppTheme.sage)
+                .accessibilityIdentifier("today.period_end_status")
+            }
+
             // Undo banner with countdown
             if let flow = quickLogFlow {
                 HStack {
@@ -650,6 +1100,40 @@ struct TodayView: View {
         .animation(.easeInOut(duration: 0.25), value: quickLogFlow)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.quick_period_log")
+    }
+
+    private var canShowPeriodEndAction: Bool {
+        guard let viewModel else { return false }
+        return viewModel.canMarkPeriodEnd && viewModel.currentPeriodState != nil
+    }
+
+    private var periodEndButtonTitle: String {
+        guard viewModel?.currentPeriodState?.isActive == false else {
+            return L10n.string("Mark Period End", defaultValue: "Mark Period End")
+        }
+        return L10n.string("Edit Period End Date", defaultValue: "Edit Period End Date")
+    }
+
+    private var currentPeriodEndedText: String? {
+        guard let state = viewModel?.currentPeriodState,
+              state.isActive == false,
+              let periodEndedDate = state.periodEndedDate
+        else { return nil }
+
+        return L10n.format(
+            "Period ended %@",
+            defaultValue: "Period ended %@",
+            formattedPeriodEndDate(periodEndedDate)
+        )
+    }
+
+    private func formattedPeriodEndDate(_ date: Date) -> String {
+        date.formatted(
+            Date.FormatStyle()
+                .locale(L10n.locale())
+                .month(.abbreviated)
+                .day(.defaultDigits)
+        )
     }
 
     private func quickLogPeriod(intensity: FlowIntensity) {
@@ -741,7 +1225,7 @@ struct TodayView: View {
 
             lastQuickLogUndoSnapshot = result.undoSnapshot
             quickLogErrorMessage = nil
-            UserDefaults.standard.set(intensity.rawValue, forKey: "cycle.lastFlowIntensity")
+            UserEntryDefaultsStore.shared.lastFlowIntensity = intensity
             quickLogFlow = intensity
             showQuickLogSaved.toggle()
             refreshStreak()
@@ -770,6 +1254,21 @@ struct TodayView: View {
         }
     }
 
+    private var recommendedPositiveActions: [PositiveActionRecommendation] {
+        PositiveActionRecommendationEngine.rankedRecommendations(
+            cycleDay: positiveActionCycleDay,
+            symptoms: todaysSymptoms,
+            completedActions: todaysDailyLog?.positiveActions ?? []
+        )
+    }
+
+    private var positiveActionCycleDay: Int? {
+        guard case .currentCycle(let dayCount) = heroState else {
+            return nil
+        }
+        return dayCount
+    }
+
     private var positiveActionsSection: some View {
         let completedActions = todaysDailyLog?.sortedPositiveActions ?? []
 
@@ -796,6 +1295,62 @@ struct TodayView: View {
                 .appFont(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if !recommendedPositiveActions.isEmpty {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(L10n.string("Recommended for today", defaultValue: "Recommended for today"))
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.secondaryText)
+
+                    ForEach(recommendedPositiveActions.prefix(3)) { recommendation in
+                        Button {
+                            togglePositiveAction(recommendation.action)
+                        } label: {
+                            HStack(alignment: .top, spacing: AppTheme.spacing8) {
+                                Image(systemName: recommendation.action.systemImage)
+                                    .appFont(.caption, weight: .semibold)
+                                    .foregroundStyle(AppTheme.sage)
+                                    .frame(width: 24, height: 24)
+                                    .background(Circle().fill(AppTheme.sage.opacity(0.14)))
+                                    .accessibilityHidden(true)
+
+                                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                    Text(recommendation.action.displayName)
+                                        .appFont(.caption, weight: .semibold)
+                                        .foregroundStyle(AppTheme.primaryText)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+
+                                    Text(recommendation.reason)
+                                        .appFont(.caption2)
+                                        .foregroundStyle(AppTheme.secondaryText)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+
+                                Spacer(minLength: AppTheme.spacing8)
+
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundStyle(AppTheme.sage)
+                                    .accessibilityHidden(true)
+                            }
+                            .padding(AppTheme.spacing8)
+                            .background(
+                                RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                                    .fill(AppTheme.sage.opacity(0.08))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                                    .stroke(AppTheme.sage.opacity(0.18), lineWidth: 0.8)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(recommendation.action.displayName)
+                        .accessibilityHint(recommendation.reason)
+                        .accessibilityIdentifier("positive_action.recommendation.\(recommendation.action.rawValue)")
+                    }
+                }
+            }
 
             FlowLayout(spacing: AppTheme.spacing8) {
                 ForEach(PositiveActionType.allCases) { action in
@@ -1188,6 +1743,236 @@ struct TodayView: View {
     }
 }
 
+private extension View {
+    @ViewBuilder
+    func todayLunarPresentation<Content: View>(
+        isPresented: Binding<Bool>,
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        if AppTheme.usesImmersivePresentation {
+            fullScreenCover(
+                isPresented: isPresented,
+                onDismiss: onDismiss,
+                content: content
+            )
+        } else {
+            sheet(
+                isPresented: isPresented,
+                onDismiss: onDismiss,
+                content: content
+            )
+        }
+    }
+}
+
+private struct PredictionEstimateInfoSheet: View {
+    let detailText: String?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            AppTheme.premiumEditorBackground.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                HStack(alignment: .top) {
+                    Text(L10n.string("About this estimate", defaultValue: "About this estimate"))
+                        .appHeadingFont(.title3, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+
+                    Spacer()
+
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .appFont(.title3)
+                            .foregroundStyle(AppTheme.secondaryText)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.string("Close", defaultValue: "Close"))
+                }
+
+                if let detailText {
+                    Text(detailText)
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Text(
+                    L10n.string(
+                        "Cycle predictions are ranges, not exact dates. Cycle length can shift from month to month — especially with PCOS — so CycleBalance shows a window and refines it as you log more periods.",
+                        defaultValue: "Cycle predictions are ranges, not exact dates. Cycle length can shift from month to month — especially with PCOS — so CycleBalance shows a window and refines it as you log more periods."
+                    )
+                )
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer()
+            }
+            .padding(AppTheme.spacing24)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("today.prediction_info_sheet")
+    }
+}
+
+private struct LunarTodaySnapshotItem: Identifiable {
+    let title: String
+    let value: String
+    let systemImage: String
+    let color: Color
+
+    var id: String {
+        "\(title)-\(value)-\(systemImage)"
+    }
+}
+
+private struct LunarTodaySnapshotItemView: View {
+    let item: LunarTodaySnapshotItem
+
+    var body: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            ZStack {
+                Circle()
+                    .fill(AppTheme.premiumEditorSurface.opacity(0.92))
+                Image(systemName: item.systemImage)
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(item.color)
+            }
+            .frame(width: 42, height: 42)
+
+            Text(item.title)
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+
+            Text(item.value)
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct LunarCycleHeroRing: View {
+    let progress: Double
+
+    private let arcStart = 0.12
+    private let arcSpan = 0.98
+    private let maxArcEnd = 0.78
+    private let accentGap = 0.05
+    private let gapStart = 0.39
+    private let rotationDegrees = 180.0
+
+    private var clampedProgress: Double {
+        min(max(progress, 0.08), 1)
+    }
+
+    private var activeArcEnd: Double {
+        min(arcStart + arcSpan * clampedProgress, maxArcEnd)
+    }
+
+    private var gapEnd: Double {
+        gapStart + accentGap
+    }
+
+    private var glowTrim: Double {
+        activeArcEnd > gapEnd ? gapStart + accentGap * 0.42 : activeArcEnd
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = min(proxy.size.width, proxy.size.height)
+            let palette = AppTheme.cycleHeroRingPalette
+            let lineWidth = max(size * 0.048, 12)
+            let progressLineWidth = lineWidth + 0.8
+            let glowDiameter = max(size * 0.052, 14)
+            let sparkleSize = max(size * 0.036, 9)
+            let center = CGPoint(x: size / 2, y: size / 2)
+            let radius = (size - progressLineWidth) / 2
+            let glowPoint = point(on: center, radius: radius, trim: glowTrim)
+            let firstArcEnd = min(activeArcEnd, gapStart)
+
+            ZStack {
+                Circle()
+                    .stroke(
+                        palette.trackGradient,
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                    )
+                    .opacity(0.82)
+
+                Circle()
+                    .stroke(palette.innerShadowColor, lineWidth: 0.8)
+                    .padding(lineWidth * 1.26)
+
+                if firstArcEnd > arcStart {
+                    Circle()
+                        .trim(from: arcStart, to: firstArcEnd)
+                        .stroke(
+                            palette.upperArcGradient,
+                            style: StrokeStyle(lineWidth: progressLineWidth, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(rotationDegrees))
+                        .shadow(color: palette.activeShadowColor, radius: 13, y: 3)
+                        .shadow(color: palette.innerShadowColor.opacity(0.22), radius: 18, y: 6)
+                }
+
+                if activeArcEnd > gapEnd {
+                    Circle()
+                        .trim(from: gapEnd, to: activeArcEnd)
+                        .stroke(
+                            palette.lowerArcGradient,
+                            style: StrokeStyle(lineWidth: progressLineWidth, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(rotationDegrees))
+                        .shadow(color: palette.lowerShadowColor, radius: 13, y: 4)
+                        .shadow(color: palette.innerShadowColor.opacity(0.2), radius: 17, y: 6)
+                }
+
+                ringGlow(palette: palette, diameter: glowDiameter, point: glowPoint)
+
+                Image(systemName: "sparkle")
+                    .font(.system(size: sparkleSize, weight: .regular))
+                    .foregroundStyle(palette.sparkleColor)
+                    .shadow(color: palette.sparkleColor.opacity(0.68), radius: 5)
+                    .position(glowPoint)
+            }
+            .frame(width: size, height: size)
+            .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+        }
+    }
+
+    @ViewBuilder
+    private func ringGlow(palette: CycleHeroRingPalette, diameter: CGFloat, point: CGPoint) -> some View {
+        if palette.usesGlowBlend {
+            Circle()
+                .fill(palette.glowGradient)
+                .frame(width: diameter, height: diameter)
+                .position(point)
+                .blendMode(.plusLighter)
+        } else {
+            Circle()
+                .fill(palette.glowGradient)
+                .frame(width: diameter, height: diameter)
+                .position(point)
+        }
+    }
+
+    private func point(on center: CGPoint, radius: CGFloat, trim: Double) -> CGPoint {
+        let angle = (trim * 360 + rotationDegrees) * .pi / 180
+        return CGPoint(
+            x: center.x + cos(angle) * radius,
+            y: center.y + sin(angle) * radius
+        )
+    }
+}
+
 // MARK: - Quick Action Button
 
 struct QuickActionButton: View {
@@ -1217,21 +2002,37 @@ struct QuickActionButton: View {
             .padding(.vertical, AppTheme.spacing12)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
-                    .fill(
-                        AppTheme.isBotanicalJournal
-                            ? AppTheme.botanicalCreamAltRGB.color.opacity(0.74)
-                            : color.opacity(AppTheme.opacityLight)
-                    )
+                    .fill(backgroundFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
-                    .strokeBorder(color.opacity(AppTheme.isBotanicalJournal ? 0.18 : 0), lineWidth: 0.8)
+                    .strokeBorder(color.opacity(borderOpacity), lineWidth: 0.8)
             )
             .foregroundStyle(color)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityAddTraits(.isButton)
+    }
+
+    private var backgroundFill: Color {
+        if AppTheme.isBotanicalJournal {
+            AppTheme.botanicalCreamAltRGB.color.opacity(0.74)
+        } else if AppTheme.usesImmersiveHomeShell {
+            AppTheme.premiumEditorRaisedSurface.opacity(0.74)
+        } else {
+            color.opacity(AppTheme.opacityLight)
+        }
+    }
+
+    private var borderOpacity: Double {
+        if AppTheme.isBotanicalJournal {
+            0.18
+        } else if AppTheme.usesImmersiveHomeShell {
+            0.34
+        } else {
+            0
+        }
     }
 }
 

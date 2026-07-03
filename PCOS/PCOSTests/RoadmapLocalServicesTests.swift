@@ -126,4 +126,20 @@ struct RoadmapLocalServicesTests {
 
         #expect(try store.loadProfilePhoto() == nil)
     }
+
+    @Test("local profile photo store init succeeds and stores under the injected directory")
+    func localProfilePhotoStoreStoresUnderInjectedDirectory() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ProfilePhotoStoreInitTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = LocalProfilePhotoStore(baseDirectory: directory)
+
+        #expect(store.photoURL.path.hasPrefix(directory.path))
+
+        let savedURL = try store.saveProfilePhoto(Data([0xAB]))
+
+        #expect(savedURL.path.hasPrefix(directory.path))
+        #expect(try store.loadProfilePhoto() == Data([0xAB]))
+    }
 }

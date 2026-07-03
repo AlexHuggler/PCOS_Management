@@ -1,0 +1,19 @@
+{
+  "cookedRice": 0.85,
+  "pasta": 0.65,
+  "chicken": 0.95,
+  "beef": 0.95,
+  "fish": 0.9,
+  "eggs": 1.03,
+  "yogurt": 1.03,
+  "oatmeal": 0.8,
+  "bread": 0.27,
+  "fruit": 0.65,
+  "vegetables": 0.55,
+  "salad": 0.25,
+  "beans": 0.75,
+  "soup": 1.0,
+  "sauce": 1.05,
+  "oilDressing": 0.9,
+  "mixedDish": 0.8
+}

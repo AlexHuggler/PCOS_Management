@@ -13,13 +13,19 @@
 - `PCOSTests` in-memory SwiftData schema includes `PregnancyRecord`, so localization and app-language tests do not crash on fetch.
 - Locale-matrix UI coverage validates localized onboarding phases, localized tab shell labels, and localized paywall presentation.
 
-## Manual App Store Connect Follow-Up
+## App Store Connect Status
 
+- Build `1.0.3` (`16`) was archived, exported, validated, uploaded, attached to iOS version `1.0.3`, and submitted for App Review on June 23, 2026. App Store Connect read-back: app version `WAITING_FOR_REVIEW`, build `VALID`, export compliance `usesNonExemptEncryption = false`, release `AFTER_APPROVAL`, review submission `WAITING_FOR_REVIEW`. The exported IPA is at `Artifacts/Exports/CycleBalance-1.0.3-b16/PCOS.ipa`.
+- Apple did not block the June 23, 2026 API submission for the developer license agreement; keep monitoring Agreements, Tax, and Banking for any account-level prompts before approval/release.
+- Re-check the live `cyclebalance.app` legal/policy pages during review; the local website repo has been aligned, but the live privacy/terms pages still need to be verified after deployment.
 - Confirm the app record uses the final localized app name, subtitle, keywords, and promotional text for each storefront you plan to ship.
-- Complete the App Privacy questionnaire with the current runtime behavior and any third-party SDK disclosures.
-- Upload the current privacy policy URL, support URL, and marketing URL if required.
+- Review the ASO and custom product page plan in `docs/app_store_optimization_review_2026-06-22.md` before changing live title, subtitle, keyword, screenshot, or custom product page metadata.
+- The App Privacy questionnaire was sufficient for the June 23, 2026 submission. Keep using the first-pass answer sheet in `docs/app_store_connect_first_pass_2026-06-22.md` before future privacy-affecting build changes.
+- Do not enable cloud AI meal photo estimates in a submitted build until App Privacy, privacy policy, terms, screenshots, and App Review notes disclose user-initiated photo analysis through the CycleBalance proxy/Gemini, and the proxy has App Attest with a configured verifier, RevenueCat entitlement/trial checks, Firestore quotas, monthly budget thresholds, and the remote kill switch enabled.
+- Upload the current privacy policy URL (`https://cyclebalance.app/privacy`), support URL (`https://cyclebalance.app/support`), and marketing URL (`https://cyclebalance.app/`) if required.
+- Finish entering the remaining custom product pages from `/Users/alexhuggler/Desktop/AI Work/PCOS/App Images/AppStore Images/Custom Product Pages/app_store_connect_handoff_2026-06-22.md`; do not submit those custom product pages until after the build review is ready.
 - Prepare localized screenshots for iPhone form factors that match the supported in-app locales.
-- Add reviewer notes covering HealthKit read-only behavior, optional permissions, and any demo/test credentials if needed.
+- App Review notes were updated in App Store Connect on June 22, 2026 to cover read-only HealthKit behavior, local-first storage, optional barcode lookup, RevenueCat purchase handling, Apple Ads attribution diagnostics, high-value-moment review prompts, and review-before-save nutrition estimates. Version `1.0.3` release notes were updated across the existing seven App Store locales before submission.
 - Verify App Store Connect subscription localizations and RevenueCat offering/package metadata stay in sync with the in-app paywall copy and pricing plan names.
 - Capture locale-specific paywall screenshots that match the final subscription naming and legal-link layout for each shipped localization.
 - Confirm age rating, content rights, export compliance, and Sign in with Apple requirements are accurate for this build.

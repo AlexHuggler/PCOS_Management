@@ -29,17 +29,12 @@ struct HowAppHelpsView: View {
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
+                .simultaneousGesture(boundedFeaturePreviewSwipeGesture)
 
             // Continue + Skip
             VStack(spacing: AppTheme.spacing12) {
                 Button {
-                    if !isLastPreview {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentIndex += 1
-                        }
-                    } else {
-                        onContinue()
-                    }
+                    advancePreviewOrContinue()
                 } label: {
                     Text(
                         isLastPreview
@@ -61,7 +56,7 @@ struct HowAppHelpsView: View {
                 Button {
                     onSkip()
                 } label: {
-                    Text(String(localized: "Skip", comment: "Secondary button label on the feature preview screen."))
+                    Text(L10n.string("Skip for now", defaultValue: "Skip for now"))
                 }
                 .appFont(.subheadline)
                 .foregroundStyle(.secondary)
@@ -72,6 +67,45 @@ struct HowAppHelpsView: View {
         }
         .background(BotanicalScreenBackground(style: .dense))
         .accessibilityIdentifier("screen.onboarding.how_app_helps")
+    }
+
+    private var boundedFeaturePreviewSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 42, coordinateSpace: .local)
+            .onEnded { value in
+                let horizontalDistance = value.translation.width
+                let verticalDistance = abs(value.translation.height)
+                guard abs(horizontalDistance) > max(72, verticalDistance * 1.6) else {
+                    return
+                }
+
+                if horizontalDistance < 0 {
+                    advancePreviewOnly()
+                } else {
+                    retreatPreview()
+                }
+            }
+    }
+
+    private func advancePreviewOrContinue() {
+        if !isLastPreview {
+            advancePreviewOnly()
+        } else {
+            onContinue()
+        }
+    }
+
+    private func advancePreviewOnly() {
+        guard !isLastPreview else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentIndex += 1
+        }
+    }
+
+    private func retreatPreview() {
+        guard currentIndex > 0 else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentIndex -= 1
+        }
     }
 
     // MARK: - Preview Content

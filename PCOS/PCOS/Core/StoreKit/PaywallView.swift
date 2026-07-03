@@ -1,12 +1,9 @@
 import Foundation
-import StoreKit
 import SwiftUI
 
 struct PaywallView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.requestReview) private var requestReview
 
     @State private var subscriptionManager = SubscriptionManager.shared
     @State private var billingProducts: [BillingProduct] = []
@@ -15,9 +12,6 @@ struct PaywallView: View {
     @State private var isRestoringPurchases = false
     @State private var loadErrorMessage: String?
     @State private var alertErrorMessage: String?
-
-    private static let privacyPolicyURL = URL(string: "https://cyclebalance.app/privacy")!
-    private static let termsOfServiceURL = URL(string: "https://cyclebalance.app/terms")!
 
     private var paywallLanguage: AppLanguage {
         appState.selectedAppLanguage
@@ -126,7 +120,7 @@ struct PaywallView: View {
         } else {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-                    PaywallSparkleHeader(language: paywallLanguage)
+                    PaywallSparkleHeader(language: paywallLanguage, reason: appState.premiumPaywallReason)
 
                     if isLocalStoreKit {
                         PaywallLocalModeBadge(language: paywallLanguage)
@@ -155,8 +149,8 @@ struct PaywallView: View {
                         isRestoring: isRestoringPurchases,
                         isDisabled: isBusy,
                         restoreAction: restorePurchases,
-                        privacyPolicyURL: Self.privacyPolicyURL,
-                        termsOfServiceURL: Self.termsOfServiceURL
+                        privacyPolicyURL: AppLinks.privacyPolicy,
+                        termsOfServiceURL: AppLinks.termsOfService
                     )
                 }
                 .padding(.horizontal, AppTheme.spacing16)
@@ -220,7 +214,6 @@ struct PaywallView: View {
 
         if subscriptionManager.isPremium {
             closePaywall()
-            ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
         } else if let statusMessage = subscriptionManager.statusMessage {
             alertErrorMessage = statusMessage
         }
@@ -383,16 +376,30 @@ private enum PaywallCopy {
         string("Try Again", defaultValue: "Try Again", language: language)
     }
 
-    static func heroTitle(for language: AppLanguage) -> String {
-        string("Unlock Premium", defaultValue: "Unlock Premium", language: language)
+    static func heroTitle(for language: AppLanguage, reason: PremiumPaywallReason) -> String {
+        switch reason {
+        case .mealScan:
+            string("Unlock AI meal estimates", defaultValue: "Unlock AI meal estimates", language: language)
+        case .general:
+            string("Unlock Premium", defaultValue: "Unlock Premium", language: language)
+        }
     }
 
-    static func heroSubtitle(for language: AppLanguage) -> String {
-        string(
-            "Get the full CycleBalance experience",
-            defaultValue: "Get the full CycleBalance experience",
-            language: language
-        )
+    static func heroSubtitle(for language: AppLanguage, reason: PremiumPaywallReason) -> String {
+        switch reason {
+        case .mealScan:
+            string(
+                "Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts.",
+                defaultValue: "Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts.",
+                language: language
+            )
+        case .general:
+            string(
+                "Get the full CycleBalance experience",
+                defaultValue: "Get the full CycleBalance experience",
+                language: language
+            )
+        }
     }
 
     static func features(for language: AppLanguage) -> [PaywallFeature] {
@@ -674,8 +681,8 @@ private struct PaywallFooterLinks: View {
     let isRestoring: Bool
     let isDisabled: Bool
     let restoreAction: () -> Void
-    let privacyPolicyURL: URL
-    let termsOfServiceURL: URL
+    let privacyPolicyURL: URL?
+    let termsOfServiceURL: URL?
 
     var body: some View {
         HStack(spacing: AppTheme.spacing8) {
@@ -691,23 +698,27 @@ private struct PaywallFooterLinks: View {
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("paywall.restore")
 
-            Text("\u{00B7}")
-                .foregroundStyle(.secondary.opacity(0.5))
+            if let url = privacyPolicyURL {
+                Text("\u{00B7}")
+                    .foregroundStyle(.secondary.opacity(0.5))
 
-            Link(destination: privacyPolicyURL) {
-                Text(PaywallCopy.privacyPolicy(for: language))
+                Link(destination: url) {
+                    Text(PaywallCopy.privacyPolicy(for: language))
+                }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("paywall.privacy_policy")
             }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("paywall.privacy_policy")
 
-            Text("\u{00B7}")
-                .foregroundStyle(.secondary.opacity(0.5))
+            if let url = termsOfServiceURL {
+                Text("\u{00B7}")
+                    .foregroundStyle(.secondary.opacity(0.5))
 
-            Link(destination: termsOfServiceURL) {
-                Text(PaywallCopy.termsOfService(for: language))
+                Link(destination: url) {
+                    Text(PaywallCopy.termsOfService(for: language))
+                }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("paywall.terms_of_service")
             }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("paywall.terms_of_service")
         }
         .appFont(.caption, weight: .medium)
         .foregroundStyle(.secondary)
@@ -769,6 +780,7 @@ private struct FourPointedStar: Shape {
 
 private struct PaywallSparkleHeader: View {
     let language: AppLanguage
+    let reason: PremiumPaywallReason
     @State private var isPulsing = false
 
     var body: some View {
@@ -793,12 +805,12 @@ private struct PaywallSparkleHeader: View {
             .frame(width: 50, height: 50)
             .padding(.top, AppTheme.spacing8)
 
-            Text(PaywallCopy.heroTitle(for: language))
+            Text(PaywallCopy.heroTitle(for: language, reason: reason))
                 .appFont(.title2, weight: .bold)
                 .foregroundStyle(.primary)
                 .accessibilityIdentifier("paywall.hero.title")
 
-            Text(PaywallCopy.heroSubtitle(for: language))
+            Text(PaywallCopy.heroSubtitle(for: language, reason: reason))
                 .appFont(.subheadline)
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("paywall.hero.subtitle")

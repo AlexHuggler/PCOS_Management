@@ -131,6 +131,10 @@ struct SettingsDataImportService {
         return summary
     }
 
+    func importBackupData(_ data: Data) throws -> ImportSummary {
+        try importJSONBackup(data: data)
+    }
+
     func replaceAll(
         with backup: SettingsDataBackupFile
     ) throws -> ImportSummary {
@@ -339,6 +343,11 @@ private extension SettingsDataImportService {
         let insights = try decodeArray(recordsObject["insights"], collection: "insights", issues: &issues, decode: parseInsightRecord)
         let pregnancyRecords = try decodeArray(recordsObject["pregnancyRecords"], collection: "pregnancyRecords", issues: &issues, decode: parsePregnancyRecord)
         let ovulationObservations = try decodeArray(recordsObject["ovulationObservations"], collection: "ovulationObservations", issues: &issues, decode: parseOvulationObservationRecord)
+        let nutritionImports = try decodeArray(recordsObject["nutritionImports"], collection: "nutritionImports", issues: &issues, decode: parseNutritionImportRecord)
+        let mealScanFoodItems = try decodeArray(recordsObject["mealScanFoodItems"], collection: "mealScanFoodItems", issues: &issues, decode: parseMealScanFoodItemRecord)
+        let mealScanNutritionSummaries = try decodeArray(recordsObject["mealScanNutritionSummaries"], collection: "mealScanNutritionSummaries", issues: &issues, decode: parseMealScanNutritionSummaryRecord)
+        let mealScanMetadata = try decodeArray(recordsObject["mealScanMetadata"], collection: "mealScanMetadata", issues: &issues, decode: parseMealScanMetadataRecord)
+        let healthKitImportedSamples = try decodeArray(recordsObject["healthKitImportedSamples"], collection: "healthKitImportedSamples", issues: &issues, decode: parseHealthKitImportedSampleRecord)
 
         let filtered = filterInvalidReferences(
             cycles: cycles,
@@ -358,7 +367,12 @@ private extension SettingsDataImportService {
             dailyLogs: dailyLogs.map(\.value),
             insights: insights.map(\.value),
             pregnancyRecords: pregnancyRecords.map(\.value),
-            ovulationObservations: ovulationObservations.map(\.value)
+            ovulationObservations: ovulationObservations.map(\.value),
+            nutritionImports: nutritionImports.map(\.value),
+            mealScanFoodItems: mealScanFoodItems.map(\.value),
+            mealScanNutritionSummaries: mealScanNutritionSummaries.map(\.value),
+            mealScanMetadata: mealScanMetadata.map(\.value),
+            healthKitImportedSamples: healthKitImportedSamples.map(\.value)
         )
 
         return ParsedJSONBackup(
@@ -548,9 +562,10 @@ private extension SettingsDataImportService {
     }
 
     func parseMealRecord(_ object: JSONObject, location: String) throws -> MealEntryRecord {
-        MealEntryRecord(
+        let timestamp = try requiredDate(field: "timestamp", in: object, location: location)
+        return MealEntryRecord(
             id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
-            timestamp: try requiredDate(field: "timestamp", in: object, location: location),
+            timestamp: timestamp,
             mealType: try requiredEnum(field: "mealType", in: object, location: location, as: MealType.self),
             mealDescription: try requiredString(field: "mealDescription", in: object, location: location),
             glycemicImpact: try requiredEnum(field: "glycemicImpact", in: object, location: location, as: GlycemicImpact.self),
@@ -562,7 +577,20 @@ private extension SettingsDataImportService {
             selectedTemplateID: try optionalString(field: "selectedTemplateID", in: object, location: location),
             postMealSymptomSeverity: try optionalInt(field: "postMealSymptomSeverity", in: object, location: location),
             postMealSymptomNote: try optionalString(field: "postMealSymptomNote", in: object, location: location),
-            postMealFeedbackTimestamp: try optionalDate(field: "postMealFeedbackTimestamp", in: object, location: location)
+            postMealFeedbackTimestamp: try optionalDate(field: "postMealFeedbackTimestamp", in: object, location: location),
+            nutritionImportID: try optionalUUID(field: "nutritionImportID", in: object, location: location),
+            barcode: try optionalString(field: "barcode", in: object, location: location),
+            sourceLabel: try optionalString(field: "sourceLabel", in: object, location: location),
+            calories: try optionalDouble(field: "calories", in: object, location: location),
+            fiberGrams: try optionalDouble(field: "fiberGrams", in: object, location: location),
+            sugarGrams: try optionalDouble(field: "sugarGrams", in: object, location: location),
+            servingText: try optionalString(field: "servingText", in: object, location: location),
+            mealSource: try optionalString(field: "mealSource", in: object, location: location),
+            photoLocalPath: try optionalString(field: "photoLocalPath", in: object, location: location),
+            confidenceScore: try optionalDouble(field: "confidenceScore", in: object, location: location),
+            userConfirmed: try optionalBool(field: "userConfirmed", in: object, location: location) ?? false,
+            createdAt: try optionalDate(field: "createdAt", in: object, location: location) ?? timestamp,
+            updatedAt: try optionalDate(field: "updatedAt", in: object, location: location) ?? timestamp
         )
     }
 
@@ -641,6 +669,141 @@ private extension SettingsDataImportService {
             lhTestResult: try optionalEnum(field: "lhTestResult", in: object, location: location, as: LHTestResult.self),
             notes: try optionalString(field: "notes", in: object, location: location),
             createdAt: try optionalDate(field: "createdAt", in: object, location: location) ?? date
+        )
+    }
+
+    func parseNutritionImportRecord(_ object: JSONObject, location: String) throws -> NutritionImportRecordDTO {
+        let startDate = try requiredDate(field: "startDate", in: object, location: location)
+        let importedAt = try optionalDate(field: "importedAt", in: object, location: location) ?? startDate
+        let reviewStatus = try optionalEnum(
+            field: "reviewStatus",
+            in: object,
+            location: location,
+            as: NutritionImportReviewStatus.self
+        ) ?? .needsReview
+        return NutritionImportRecordDTO(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            sourceKind: try optionalEnum(
+                field: "sourceKind",
+                in: object,
+                location: location,
+                as: NutritionImportSourceKind.self
+            ) ?? .manualReview,
+            sourceName: try optionalString(field: "sourceName", in: object, location: location),
+            externalIdentifier: try optionalString(field: "externalIdentifier", in: object, location: location),
+            startDate: startDate,
+            endDate: try optionalDate(field: "endDate", in: object, location: location),
+            barcode: try optionalString(field: "barcode", in: object, location: location),
+            productName: try optionalString(field: "productName", in: object, location: location),
+            brandName: try optionalString(field: "brandName", in: object, location: location),
+            servingText: try optionalString(field: "servingText", in: object, location: location),
+            calories: try optionalDouble(field: "calories", in: object, location: location),
+            carbsGrams: try optionalDouble(field: "carbsGrams", in: object, location: location),
+            proteinGrams: try optionalDouble(field: "proteinGrams", in: object, location: location),
+            fatGrams: try optionalDouble(field: "fatGrams", in: object, location: location),
+            fiberGrams: try optionalDouble(field: "fiberGrams", in: object, location: location),
+            sugarGrams: try optionalDouble(field: "sugarGrams", in: object, location: location),
+            waterOz: try optionalDouble(field: "waterOz", in: object, location: location),
+            sodiumMg: try optionalDouble(field: "sodiumMg", in: object, location: location),
+            saturatedFatGrams: try optionalDouble(field: "saturatedFatGrams", in: object, location: location),
+            cholesterolMg: try optionalDouble(field: "cholesterolMg", in: object, location: location),
+            potassiumMg: try optionalDouble(field: "potassiumMg", in: object, location: location),
+            calciumMg: try optionalDouble(field: "calciumMg", in: object, location: location),
+            ironMg: try optionalDouble(field: "ironMg", in: object, location: location),
+            confidence: try optionalDouble(field: "confidence", in: object, location: location) ?? 0,
+            completeness: try optionalDouble(field: "completeness", in: object, location: location) ?? 0,
+            importedAt: importedAt,
+            reviewStatus: reviewStatus,
+            userReviewed: try optionalBool(field: "userReviewed", in: object, location: location) ?? (reviewStatus == .reviewed),
+            notes: try optionalString(field: "notes", in: object, location: location)
+        )
+    }
+
+    func parseHealthKitImportedSampleRecord(_ object: JSONObject, location: String) throws -> HealthKitImportedSampleRecordDTO {
+        let startDate = try requiredDate(field: "startDate", in: object, location: location)
+        return HealthKitImportedSampleRecordDTO(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            sampleUUID: try requiredString(field: "sampleUUID", in: object, location: location),
+            healthKitIdentifier: try requiredString(field: "healthKitIdentifier", in: object, location: location),
+            sourceName: try optionalString(field: "sourceName", in: object, location: location) ?? "Apple Health",
+            sourceBundleIdentifier: try optionalString(field: "sourceBundleIdentifier", in: object, location: location),
+            startDate: startDate,
+            endDate: try optionalDate(field: "endDate", in: object, location: location),
+            valueDouble: try optionalDouble(field: "valueDouble", in: object, location: location),
+            valueUnit: try optionalString(field: "valueUnit", in: object, location: location),
+            categoryValue: try optionalInt(field: "categoryValue", in: object, location: location),
+            derivedRecordKind: try optionalEnum(field: "derivedRecordKind", in: object, location: location, as: HealthKitDerivedRecordKind.self) ?? .sourceOnly,
+            derivedRecordID: try optionalUUID(field: "derivedRecordID", in: object, location: location),
+            importedAt: try optionalDate(field: "importedAt", in: object, location: location) ?? startDate,
+            notes: try optionalString(field: "notes", in: object, location: location)
+        )
+    }
+
+    func parseMealScanFoodItemRecord(_ object: JSONObject, location: String) throws -> MealScanFoodItemRecord {
+        let createdAt = try optionalDate(field: "createdAt", in: object, location: location) ?? Date()
+        return MealScanFoodItemRecord(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            mealId: try requiredUUID(field: "mealId", in: object, location: location),
+            displayName: try requiredString(field: "displayName", in: object, location: location),
+            canonicalFoodId: try optionalString(field: "canonicalFoodId", in: object, location: location),
+            nutritionSource: try optionalEnum(field: "nutritionSource", in: object, location: location, as: NutritionDataSource.self) ?? .appFixture,
+            estimatedGrams: try optionalDouble(field: "estimatedGrams", in: object, location: location) ?? 0,
+            estimatedVolumeMl: try optionalDouble(field: "estimatedVolumeMl", in: object, location: location),
+            servingDescription: try optionalString(field: "servingDescription", in: object, location: location),
+            caloriesKcal: try optionalDouble(field: "caloriesKcal", in: object, location: location) ?? 0,
+            proteinGrams: try optionalDouble(field: "proteinGrams", in: object, location: location) ?? 0,
+            carbsGrams: try optionalDouble(field: "carbsGrams", in: object, location: location) ?? 0,
+            netCarbsGrams: try optionalDouble(field: "netCarbsGrams", in: object, location: location) ?? 0,
+            fatGrams: try optionalDouble(field: "fatGrams", in: object, location: location) ?? 0,
+            fiberGrams: try optionalDouble(field: "fiberGrams", in: object, location: location) ?? 0,
+            sugarGrams: try optionalDouble(field: "sugarGrams", in: object, location: location) ?? 0,
+            sodiumMg: try optionalDouble(field: "sodiumMg", in: object, location: location) ?? 0,
+            saturatedFatGrams: try optionalDouble(field: "saturatedFatGrams", in: object, location: location) ?? 0,
+            confidenceScore: try optionalDouble(field: "confidenceScore", in: object, location: location) ?? 0,
+            detectionSource: try optionalString(field: "detectionSource", in: object, location: location),
+            portionEstimationMethod: try optionalEnum(field: "portionEstimationMethod", in: object, location: location, as: PortionEstimationMethod.self) ?? .manualUserInput,
+            wasUserEdited: try optionalBool(field: "wasUserEdited", in: object, location: location) ?? false,
+            warning: try optionalString(field: "warning", in: object, location: location),
+            createdAt: createdAt,
+            updatedAt: try optionalDate(field: "updatedAt", in: object, location: location) ?? createdAt
+        )
+    }
+
+    func parseMealScanNutritionSummaryRecord(_ object: JSONObject, location: String) throws -> MealScanNutritionSummaryRecord {
+        let createdAt = try optionalDate(field: "createdAt", in: object, location: location) ?? Date()
+        return MealScanNutritionSummaryRecord(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            mealId: try requiredUUID(field: "mealId", in: object, location: location),
+            caloriesKcal: try optionalDouble(field: "caloriesKcal", in: object, location: location) ?? 0,
+            proteinGrams: try optionalDouble(field: "proteinGrams", in: object, location: location) ?? 0,
+            carbsGrams: try optionalDouble(field: "carbsGrams", in: object, location: location) ?? 0,
+            netCarbsGrams: try optionalDouble(field: "netCarbsGrams", in: object, location: location) ?? 0,
+            fatGrams: try optionalDouble(field: "fatGrams", in: object, location: location) ?? 0,
+            fiberGrams: try optionalDouble(field: "fiberGrams", in: object, location: location) ?? 0,
+            sugarGrams: try optionalDouble(field: "sugarGrams", in: object, location: location) ?? 0,
+            sodiumMg: try optionalDouble(field: "sodiumMg", in: object, location: location) ?? 0,
+            saturatedFatGrams: try optionalDouble(field: "saturatedFatGrams", in: object, location: location) ?? 0,
+            confidenceScore: try optionalDouble(field: "confidenceScore", in: object, location: location) ?? 0,
+            estimatedGlycemicImpact: try optionalEnum(field: "estimatedGlycemicImpact", in: object, location: location, as: GlycemicImpactLevel.self) ?? .unknown,
+            nutritionSourceSummary: try optionalString(field: "nutritionSourceSummary", in: object, location: location) ?? "local fixture",
+            createdAt: createdAt,
+            updatedAt: try optionalDate(field: "updatedAt", in: object, location: location) ?? createdAt
+        )
+    }
+
+    func parseMealScanMetadataRecord(_ object: JSONObject, location: String) throws -> MealScanMetadataRecord {
+        let createdAt = try optionalDate(field: "createdAt", in: object, location: location) ?? Date()
+        return MealScanMetadataRecord(
+            id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
+            mealId: try requiredUUID(field: "mealId", in: object, location: location),
+            originalPredictionJSON: try optionalString(field: "originalPredictionJSON", in: object, location: location) ?? "{}",
+            finalUserConfirmedJSON: try optionalString(field: "finalUserConfirmedJSON", in: object, location: location) ?? "{}",
+            modelVersion: try optionalString(field: "modelVersion", in: object, location: location) ?? "unknown",
+            pipelineVersion: try optionalString(field: "pipelineVersion", in: object, location: location) ?? "unknown",
+            userConfirmed: try optionalBool(field: "userConfirmed", in: object, location: location) ?? false,
+            hasUserEdits: try optionalBool(field: "hasUserEdits", in: object, location: location) ?? false,
+            createdAt: createdAt,
+            updatedAt: try optionalDate(field: "updatedAt", in: object, location: location) ?? createdAt
         )
     }
 
@@ -966,6 +1129,11 @@ private extension SettingsDataImportService {
         try modelContext.delete(model: BloodSugarReading.self)
         try modelContext.delete(model: SupplementLog.self)
         try modelContext.delete(model: MealEntry.self)
+        try modelContext.delete(model: MealScanFoodItem.self)
+        try modelContext.delete(model: MealScanNutritionSummary.self)
+        try modelContext.delete(model: MealScanMetadata.self)
+        try modelContext.delete(model: NutritionImportRecord.self)
+        try modelContext.delete(model: HealthKitImportedSampleRecord.self)
         try modelContext.delete(model: HairPhotoEntry.self)
         try modelContext.delete(model: DailyLog.self)
         try modelContext.delete(model: PregnancyRecord.self)
@@ -1076,7 +1244,20 @@ private extension SettingsDataImportService {
                     selectedTemplateID: record.selectedTemplateID,
                     postMealSymptomSeverity: record.postMealSymptomSeverity,
                     postMealSymptomNote: record.postMealSymptomNote,
-                    postMealFeedbackTimestamp: record.postMealFeedbackTimestamp
+                    postMealFeedbackTimestamp: record.postMealFeedbackTimestamp,
+                    nutritionImportID: record.nutritionImportID,
+                    barcode: record.barcode,
+                    sourceLabel: record.sourceLabel,
+                    calories: record.calories,
+                    fiberGrams: record.fiberGrams,
+                    sugarGrams: record.sugarGrams,
+                    servingText: record.servingText,
+                    mealSource: record.mealSource,
+                    photoLocalPath: record.photoLocalPath,
+                    confidenceScore: record.confidenceScore,
+                    userConfirmed: record.userConfirmed,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt
                 )
             )
         }
@@ -1154,6 +1335,138 @@ private extension SettingsDataImportService {
                     lhTestResult: record.lhTestResult,
                     notes: record.notes,
                     createdAt: record.createdAt
+                )
+            )
+        }
+
+        for record in records.nutritionImports {
+            modelContext.insert(
+                NutritionImportRecord(
+                    id: record.id,
+                    sourceKind: record.sourceKind,
+                    sourceName: record.sourceName,
+                    externalIdentifier: record.externalIdentifier,
+                    startDate: record.startDate,
+                    endDate: record.endDate,
+                    barcode: record.barcode,
+                    productName: record.productName,
+                    brandName: record.brandName,
+                    servingText: record.servingText,
+                    calories: record.calories,
+                    carbsGrams: record.carbsGrams,
+                    proteinGrams: record.proteinGrams,
+                    fatGrams: record.fatGrams,
+                    fiberGrams: record.fiberGrams,
+                    sugarGrams: record.sugarGrams,
+                    waterOz: record.waterOz,
+                    sodiumMg: record.sodiumMg,
+                    saturatedFatGrams: record.saturatedFatGrams,
+                    cholesterolMg: record.cholesterolMg,
+                    potassiumMg: record.potassiumMg,
+                    calciumMg: record.calciumMg,
+                    ironMg: record.ironMg,
+                    confidence: record.confidence,
+                    completeness: record.completeness,
+                    importedAt: record.importedAt,
+                    reviewStatus: record.reviewStatus,
+                    userReviewed: record.userReviewed,
+                    notes: record.notes
+                )
+            )
+        }
+
+        for record in records.mealScanFoodItems {
+            modelContext.insert(
+                MealScanFoodItem(
+                    id: record.id,
+                    mealId: record.mealId,
+                    displayName: record.displayName,
+                    canonicalFoodId: record.canonicalFoodId,
+                    nutritionSource: record.nutritionSource,
+                    estimatedGrams: record.estimatedGrams,
+                    estimatedVolumeMl: record.estimatedVolumeMl,
+                    servingDescription: record.servingDescription,
+                    nutrition: NutritionSnapshot(
+                        caloriesKcal: record.caloriesKcal,
+                        proteinGrams: record.proteinGrams,
+                        carbsGrams: record.carbsGrams,
+                        netCarbsGrams: record.netCarbsGrams,
+                        fatGrams: record.fatGrams,
+                        fiberGrams: record.fiberGrams,
+                        sugarGrams: record.sugarGrams,
+                        sodiumMg: record.sodiumMg,
+                        saturatedFatGrams: record.saturatedFatGrams
+                    ),
+                    confidenceScore: record.confidenceScore,
+                    detectionSource: record.detectionSource,
+                    portionEstimationMethod: record.portionEstimationMethod,
+                    wasUserEdited: record.wasUserEdited,
+                    warning: record.warning,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt
+                )
+            )
+        }
+
+        for record in records.mealScanNutritionSummaries {
+            modelContext.insert(
+                MealScanNutritionSummary(
+                    id: record.id,
+                    mealId: record.mealId,
+                    nutrition: NutritionSnapshot(
+                        caloriesKcal: record.caloriesKcal,
+                        proteinGrams: record.proteinGrams,
+                        carbsGrams: record.carbsGrams,
+                        netCarbsGrams: record.netCarbsGrams,
+                        fatGrams: record.fatGrams,
+                        fiberGrams: record.fiberGrams,
+                        sugarGrams: record.sugarGrams,
+                        sodiumMg: record.sodiumMg,
+                        saturatedFatGrams: record.saturatedFatGrams
+                    ),
+                    confidenceScore: record.confidenceScore,
+                    estimatedGlycemicImpact: record.estimatedGlycemicImpact,
+                    nutritionSourceSummary: record.nutritionSourceSummary,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt
+                )
+            )
+        }
+
+        for record in records.mealScanMetadata {
+            modelContext.insert(
+                MealScanMetadata(
+                    id: record.id,
+                    mealId: record.mealId,
+                    originalPredictionJSON: record.originalPredictionJSON,
+                    finalUserConfirmedJSON: record.finalUserConfirmedJSON,
+                    modelVersion: record.modelVersion,
+                    pipelineVersion: record.pipelineVersion,
+                    userConfirmed: record.userConfirmed,
+                    hasUserEdits: record.hasUserEdits,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt
+                )
+            )
+        }
+
+        for record in records.healthKitImportedSamples {
+            modelContext.insert(
+                HealthKitImportedSampleRecord(
+                    id: record.id,
+                    sampleUUID: record.sampleUUID,
+                    healthKitIdentifier: record.healthKitIdentifier,
+                    sourceName: record.sourceName,
+                    sourceBundleIdentifier: record.sourceBundleIdentifier,
+                    startDate: record.startDate,
+                    endDate: record.endDate,
+                    valueDouble: record.valueDouble,
+                    valueUnit: record.valueUnit,
+                    categoryValue: record.categoryValue,
+                    derivedRecordKind: record.derivedRecordKind,
+                    derivedRecordID: record.derivedRecordID,
+                    importedAt: record.importedAt,
+                    notes: record.notes
                 )
             )
         }

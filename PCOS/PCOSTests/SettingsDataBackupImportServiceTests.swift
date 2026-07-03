@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import HealthKit
 import SwiftData
 @testable import PCOS
 
@@ -162,8 +163,8 @@ struct SettingsDataBackupImportServiceTests {
         #expect(importedReadings.first?.readingType == .afterMeal)
     }
 
-    @Test("JSON backup schema v3 preserves ovulation observations")
-    func jsonBackupSchemaV3PreservesOvulationObservations() throws {
+    @Test("JSON backup schema v4 preserves ovulation observations")
+    func jsonBackupSchemaV4PreservesOvulationObservations() throws {
         let sourceContainer = try TestHelpers.makeModelContainer()
         let sourceContext = sourceContainer.mainContext
 
@@ -188,7 +189,7 @@ struct SettingsDataBackupImportServiceTests {
         let backup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: backupData)
         let record = try #require(backup.records.ovulationObservations.first)
 
-        #expect(backup.schemaVersion == 3)
+        #expect(backup.schemaVersion == SettingsDataBackupFile.currentSchemaVersion)
         #expect(backup.records.counts.ovulationObservations == 1)
         #expect(record.id == observationID)
         #expect(record.date == observationDate)
@@ -210,6 +211,129 @@ struct SettingsDataBackupImportServiceTests {
         #expect(imported.first?.basalBodyTemperatureCelsius == 36.72)
         #expect(imported.first?.cervicalMucus == .eggWhite)
         #expect(imported.first?.lhTestResult == .peak)
+    }
+
+    @Test("JSON backup preserves nutrition imports and meal source metadata")
+    func jsonBackupPreservesNutritionImportsAndMealSourceMetadata() throws {
+        let sourceContainer = try TestHelpers.makeModelContainer()
+        let sourceContext = sourceContainer.mainContext
+
+        let importID = UUID()
+        let mealDate = Date(timeIntervalSince1970: 1_779_331_200)
+        sourceContext.insert(
+            NutritionImportRecord(
+                id: importID,
+                sourceKind: .barcodeOpenFoodFacts,
+                sourceName: "Open Food Facts",
+                externalIdentifier: "737628064502",
+                startDate: mealDate,
+                barcode: "737628064502",
+                productName: "Black Bean Snack",
+                brandName: "Cycle Pantry",
+                servingText: "1 bar (45 g)",
+                calories: 180,
+                carbsGrams: 24,
+                proteinGrams: 8,
+                fatGrams: 6,
+                fiberGrams: 5,
+                sugarGrams: 7,
+                confidence: 0.82,
+                completeness: 0.92,
+                importedAt: mealDate,
+                reviewStatus: .reviewed,
+                userReviewed: true
+            )
+        )
+        sourceContext.insert(
+            MealEntry(
+                timestamp: mealDate,
+                mealType: .snack,
+                mealDescription: "Black Bean Snack",
+                glycemicImpact: .medium,
+                carbsGrams: 24,
+                proteinGrams: 8,
+                fatGrams: 6,
+                nutritionImportID: importID,
+                barcode: "737628064502",
+                sourceLabel: "Open Food Facts",
+                calories: 180,
+                fiberGrams: 5,
+                sugarGrams: 7,
+                servingText: "1 bar (45 g)"
+            )
+        )
+        try sourceContext.save()
+
+        let backupData = try SettingsDataBackupService(modelContext: sourceContext).generateJSONBackupData()
+        let backup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: backupData)
+        let nutritionRecord = try #require(backup.records.nutritionImports.first)
+        let mealRecord = try #require(backup.records.meals.first)
+
+        #expect(backup.schemaVersion == SettingsDataBackupFile.currentSchemaVersion)
+        #expect(backup.records.counts.nutritionImports == 1)
+        #expect(nutritionRecord.id == importID)
+        #expect(nutritionRecord.sourceKind == .barcodeOpenFoodFacts)
+        #expect(nutritionRecord.barcode == "737628064502")
+        #expect(nutritionRecord.productName == "Black Bean Snack")
+        #expect(nutritionRecord.fiberGrams == 5)
+        #expect(nutritionRecord.reviewStatus == .reviewed)
+        #expect(mealRecord.nutritionImportID == importID)
+        #expect(mealRecord.calories == 180)
+        #expect(mealRecord.servingText == "1 bar (45 g)")
+
+        let destinationContainer = try TestHelpers.makeModelContainer()
+        let importService = SettingsDataImportService(modelContext: destinationContainer.mainContext)
+        let summary = try importService.importJSONBackup(data: backupData)
+        let importedNutrition = try destinationContainer.mainContext.fetch(FetchDescriptor<NutritionImportRecord>())
+        let importedMeals = try destinationContainer.mainContext.fetch(FetchDescriptor<MealEntry>())
+
+        #expect(summary.changeCounts.inserted == 2)
+        #expect(summary.counts.nutritionImports == 1)
+        #expect(importedNutrition.first?.id == importID)
+        #expect(importedNutrition.first?.sourceKind == .barcodeOpenFoodFacts)
+        #expect(importedMeals.first?.nutritionImportID == importID)
+        #expect(importedMeals.first?.sourceLabel == "Open Food Facts")
+    }
+
+    @Test("JSON backup preserves HealthKit imported sample provenance")
+    func jsonBackupPreservesHealthKitImportedSampleProvenance() throws {
+        let sourceContainer = try TestHelpers.makeModelContainer()
+        let sourceContext = sourceContainer.mainContext
+        let sampleDate = Date(timeIntervalSince1970: 1_700_300_000)
+        sourceContext.insert(
+            HealthKitImportedSampleRecord(
+                sampleUUID: "flo-cycle-sample-1",
+                healthKitIdentifier: HKCategoryTypeIdentifier.menstrualFlow.rawValue,
+                sourceName: "Flo",
+                sourceBundleIdentifier: "org.flo",
+                startDate: sampleDate,
+                endDate: sampleDate.addingTimeInterval(60),
+                categoryValue: HKCategoryValueMenstrualFlow.light.rawValue,
+                derivedRecordKind: .cycleEntry,
+                derivedRecordID: UUID(),
+                importedAt: sampleDate,
+                notes: "From Flo via Apple Health."
+            )
+        )
+        try sourceContext.save()
+
+        let backupData = try SettingsDataBackupService(modelContext: sourceContext).generateJSONBackupData()
+        let backup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: backupData)
+        let backedUpRecord = try #require(backup.records.healthKitImportedSamples.first)
+
+        #expect(backup.records.counts.healthKitImportedSamples == 1)
+        #expect(backedUpRecord.sourceName == "Flo")
+        #expect(backedUpRecord.derivedRecordKind == .cycleEntry)
+
+        let destinationContainer = try TestHelpers.makeModelContainer()
+        let importService = SettingsDataImportService(modelContext: destinationContainer.mainContext)
+        let summary = try importService.importJSONBackup(data: backupData)
+        let importedRecords = try destinationContainer.mainContext.fetch(FetchDescriptor<HealthKitImportedSampleRecord>())
+
+        #expect(summary.counts.healthKitImportedSamples == 1)
+        #expect(importedRecords.count == 1)
+        #expect(importedRecords.first?.sampleUUID == "flo-cycle-sample-1")
+        #expect(importedRecords.first?.sourceLabel == "Flo")
     }
 
     @Test("checked-in demo backup fixture imports successfully")

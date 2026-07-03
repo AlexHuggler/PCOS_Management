@@ -41,6 +41,7 @@ struct SettingsExternalDataCSVServiceTests {
             "meal",
             "daily_log",
             "ovulation_observation",
+            "nutrition_import",
         ])
 
         #expect(definitions[.period]?.requiredFields == [.recordType, .date, .flowIntensity])
@@ -65,6 +66,27 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(definitions[.ovulationObservation]?.requiredFields == [.recordType, .date])
         #expect(definitions[.ovulationObservation]?.optionalFields == [.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult, .notes])
 
+        #expect(definitions[.nutritionImport]?.requiredFields == [.recordType, .timestamp, .sourceKind])
+        #expect(definitions[.nutritionImport]?.optionalFields == [
+            .sourceName,
+            .externalIdentifier,
+            .barcode,
+            .productName,
+            .brand,
+            .servingText,
+            .calories,
+            .carbsGrams,
+            .proteinGrams,
+            .fatGrams,
+            .fiberGrams,
+            .sugarGrams,
+            .waterOz,
+            .confidence,
+            .completeness,
+            .reviewStatus,
+            .notes,
+        ])
+
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .recordType) == SettingsExternalCSVSchema.RecordType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .flowIntensity) == FlowIntensity.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .symptomType) == SymptomType.allCases.map(\.rawValue))
@@ -73,6 +95,8 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .glycemicImpact) == GlycemicImpact.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .cervicalMucus) == CervicalMucusType.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .lhTestResult) == LHTestResult.allCases.map(\.rawValue))
+        #expect(SettingsExternalCSVSchema.acceptedValues(for: .sourceKind) == NutritionImportSourceKind.allCases.map(\.rawValue))
+        #expect(SettingsExternalCSVSchema.acceptedValues(for: .reviewStatus) == NutritionImportReviewStatus.allCases.map(\.rawValue))
         #expect(SettingsExternalCSVSchema.acceptedValues(for: .taken) == ["true", "false"])
     }
 
@@ -87,7 +111,7 @@ struct SettingsExternalDataCSVServiceTests {
         let summary = try service.importCSV(data: fixtureData)
 
         #expect(summary.channel == .externalCSV)
-        #expect(summary.changeCounts.inserted == 7)
+        #expect(summary.changeCounts.inserted == 8)
         #expect(summary.changeCounts.updated == 0)
         #expect(summary.changeCounts.skipped == 0)
         #expect(summary.changeCounts.rejected == 0)
@@ -99,6 +123,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(summary.counts.meals == 1)
         #expect(summary.counts.dailyLogs == 1)
         #expect(summary.counts.ovulationObservations == 1)
+        #expect(summary.counts.nutritionImports == 1)
         #expect(try context.fetch(FetchDescriptor<Cycle>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<CycleEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 1)
@@ -107,6 +132,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<OvulationObservation>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<NutritionImportRecord>()).count == 1)
     }
 
     @Test("importCSV inserts one row for each supported record type")
@@ -174,12 +200,32 @@ struct SettingsExternalDataCSVServiceTests {
                 "lh_test_result": "peak",
                 "notes": "Imported ovulation signal",
             ],
+            [
+                "record_type": "nutrition_import",
+                "timestamp": "2026-03-10T12:31:00Z",
+                "source_kind": "barcode_open_food_facts",
+                "source_name": "Open Food Facts",
+                "external_identifier": "737628064502",
+                "barcode": "737628064502",
+                "product_name": "Black Bean Snack",
+                "brand": "Cycle Pantry",
+                "serving_text": "1 bar (45 g)",
+                "calories": "180",
+                "carbs_grams": "24",
+                "protein_grams": "8",
+                "fat_grams": "6",
+                "fiber_grams": "5",
+                "sugar_grams": "7",
+                "confidence": "0.82",
+                "completeness": "0.92",
+                "review_status": "needs_review",
+            ],
         ])
 
         let summary = try service.importCSV(data: data)
 
         #expect(summary.channel == .externalCSV)
-        #expect(summary.changeCounts.inserted == 7)
+        #expect(summary.changeCounts.inserted == 8)
         #expect(summary.changeCounts.updated == 0)
         #expect(summary.changeCounts.skipped == 0)
         #expect(summary.changeCounts.rejected == 0)
@@ -190,6 +236,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(summary.counts.meals == 1)
         #expect(summary.counts.dailyLogs == 1)
         #expect(summary.counts.ovulationObservations == 1)
+        #expect(summary.counts.nutritionImports == 1)
 
         #expect(try context.fetch(FetchDescriptor<Cycle>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<CycleEntry>()).count == 1)
@@ -199,6 +246,11 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<OvulationObservation>()).count == 1)
+        let imports = try context.fetch(FetchDescriptor<NutritionImportRecord>())
+        #expect(imports.count == 1)
+        #expect(imports.first?.sourceKind == .barcodeOpenFoodFacts)
+        #expect(imports.first?.barcode == "737628064502")
+        #expect(imports.first?.fiberGrams == 5)
     }
 
     @Test("pre-v3 external CSV header remains importable")

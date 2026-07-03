@@ -13,6 +13,7 @@ struct CalendarMonthView: View {
     @State private var showingLogSheet = false
     @State private var showingDayLogSheet = false
     @State private var showingMonthPicker = false
+    @State private var showingPeriodEndSheet = false
     @State private var selectedDayDate: Date?
     @State private var pregnancyViewModel: PregnancyViewModel?
 
@@ -43,29 +44,38 @@ struct CalendarMonthView: View {
                 BotanicalScreenBackground(style: .dashboard)
 
                 ScrollView {
-                    VStack(spacing: AppTheme.spacing16) {
-                        BotanicalPosterHeader(
-                            title: monthYearString,
-                            subtitle: L10n.string(
-                                "Notice your cycle rhythm across moons, symptoms, and flow patterns.",
-                                defaultValue: "Notice your cycle rhythm across moons, symptoms, and flow patterns."
-                            ),
-                            emblemAssetName: "botanical-calendar-illustration",
-                            dividerStyle: .moon
-                        )
-                        .padding(.top, AppTheme.spacing8)
+                    VStack(spacing: AppTheme.usesImmersiveHomeShell ? AppTheme.spacing12 : AppTheme.spacing16) {
+                        if AppTheme.usesImmersiveHomeShell {
+                            lunarCalendarHeader
+                            lunarCalendarPanel
+                            lunarCycleTimelineCard
+                            lunarCalendarInsightCard
+                        } else {
+                            BotanicalPosterHeader(
+                                title: monthYearString,
+                                subtitle: L10n.string(
+                                    "Notice your cycle rhythm across moons, symptoms, and flow patterns.",
+                                    defaultValue: "Notice your cycle rhythm across moons, symptoms, and flow patterns."
+                                ),
+                                emblemAssetName: "botanical-calendar-illustration",
+                                dividerStyle: .moon
+                            )
+                            .padding(.top, AppTheme.spacing8)
 
-                        // Month navigation header
-                        monthHeader
+                            // Month navigation header
+                            monthHeader
 
-                        // Days of week header
-                        daysOfWeekHeader
+                            // Days of week header
+                            daysOfWeekHeader
 
-                        // Calendar grid
-                        calendarGrid
+                            // Calendar grid
+                            calendarGrid
 
-                        // Cycle info section
-                        cycleInfoSection
+                            // Cycle info section
+                            cycleInfoSection
+                        }
+
+                        periodEndCTA
                     }
                     .padding()
                     .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
@@ -80,15 +90,16 @@ struct CalendarMonthView: View {
                 loadMonthEntries()
             }
             .navigationTitle(
-                L10n.string(
+                AppTheme.usesImmersiveHomeShell ? "" : L10n.string(
                     "Calendar",
                     defaultValue: "Calendar",
                     language: appState.selectedAppLanguage
                 )
             )
+            .navigationBarTitleDisplayMode(AppTheme.usesImmersiveHomeShell ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    if appState.lifecycleMode != .pregnant {
+                    if !AppTheme.usesImmersiveHomeShell, appState.lifecycleMode != .pregnant {
                         Button {
                             showingLogSheet = true
                         } label: {
@@ -108,6 +119,24 @@ struct CalendarMonthView: View {
                 loadMonthEntries()
             }) {
                 CycleLogView(initialDate: selectedDayDate)
+            }
+            .sheet(isPresented: $showingPeriodEndSheet, onDismiss: {
+                viewModel?.loadData()
+                loadMonthEntries()
+            }) {
+                if let viewModel, let currentPeriodState = viewModel.currentPeriodState {
+                    PeriodEndSheet(
+                        periodState: currentPeriodState,
+                        initialDate: selectedDayDate,
+                        onSave: { endDate, referenceDate in
+                            try viewModel.markPeriodEnded(on: endDate, referenceDate: referenceDate)
+                        },
+                        onSaved: {
+                            viewModel.loadData()
+                            loadMonthEntries()
+                        }
+                    )
+                }
             }
             .onAppear {
                 if viewModel == nil {
@@ -130,7 +159,42 @@ struct CalendarMonthView: View {
 
     // MARK: - Subviews
 
-    private var monthHeader: some View {
+    private var lunarCalendarHeader: some View {
+        HStack(alignment: .center, spacing: AppTheme.spacing12) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                HStack(spacing: AppTheme.spacing8) {
+                    Text(L10n.string("Calendar", defaultValue: "Calendar"))
+                        .appHeadingFont(.title, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
+                    Image(systemName: "sparkle")
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorSecondaryAccentColor)
+                }
+
+                Text(L10n.string("Track your past & predict what's next.", defaultValue: "Track your past & predict what's next."))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: AppTheme.spacing12)
+
+            ZStack {
+                Circle()
+                    .fill(AppTheme.premiumEditorAccentGradient)
+                Image(systemName: "moon.stars.fill")
+                    .appFont(.headline)
+                    .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+            }
+            .frame(width: 40, height: 40)
+            .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.26), radius: 14, y: 6)
+            .accessibilityHidden(true)
+        }
+        .padding(.horizontal, AppTheme.spacing4)
+        .accessibilityIdentifier("calendar.lunar.header")
+    }
+
+    private var monthHeaderControls: some View {
         HStack {
             Button {
                 moveMonth(by: -1)
@@ -187,8 +251,6 @@ struct CalendarMonthView: View {
                 L10n.string("Next month", defaultValue: "Next month")
             )
         }
-        .padding(.horizontal)
-        .cardStyle(cornerRadius: AppTheme.defaultCardCornerRadius)
         .sensoryFeedback(.selection, trigger: displayedMonth)
         .sensoryFeedback(.selection, trigger: showingDayLogSheet)
         .sheet(isPresented: $showingMonthPicker) {
@@ -199,6 +261,12 @@ struct CalendarMonthView: View {
             )
             .presentationDetents([.medium])
         }
+    }
+
+    private var monthHeader: some View {
+        monthHeaderControls
+            .padding(.horizontal)
+            .cardStyle(cornerRadius: AppTheme.defaultCardCornerRadius)
     }
 
     private var daysOfWeekHeader: some View {
@@ -216,7 +284,7 @@ struct CalendarMonthView: View {
         .accessibilityIdentifier("calendar.weekdays")
     }
 
-    private var calendarGrid: some View {
+    private var calendarGridContent: some View {
         LazyVGrid(columns: columns, spacing: AppTheme.spacing4) {
             ForEach(calendarGridCells, id: \.self) { cell in
                 switch cell {
@@ -260,9 +328,198 @@ struct CalendarMonthView: View {
                 }
             }
         }
+        .accessibilityIdentifier("calendar.grid")
+    }
+
+    private var calendarGrid: some View {
+        calendarGridContent
         .padding(AppTheme.isBotanicalJournal ? AppTheme.spacing12 : 0)
         .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
-        .accessibilityIdentifier("calendar.grid")
+    }
+
+    private var lunarCalendarPanel: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            monthHeaderControls
+            daysOfWeekHeader
+            calendarGridContent
+            lunarCalendarLegend
+        }
+        .padding(AppTheme.spacing12)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.62), lineWidth: 0.8)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("calendar.lunar.panel")
+    }
+
+    private var lunarCalendarLegend: some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.adaptive(minimum: 128), spacing: AppTheme.spacing8, alignment: .leading),
+            ],
+            alignment: .leading,
+            spacing: AppTheme.spacing8
+        ) {
+            ForEach(lunarLegendItems) { item in
+                HStack(spacing: AppTheme.spacing8) {
+                    Circle()
+                        .fill(item.color)
+                        .frame(width: 10, height: 10)
+                    Text(item.title)
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(.top, AppTheme.spacing4)
+    }
+
+    private var lunarLegendItems: [LunarCalendarLegendItem] {
+        [
+            LunarCalendarLegendItem(
+                title: L10n.string("Period", defaultValue: "Period"),
+                color: AppTheme.premiumEditorWarningAccentColor
+            ),
+            LunarCalendarLegendItem(
+                title: L10n.string("Predicted period", defaultValue: "Predicted period"),
+                color: AppTheme.lavenderAccent
+            ),
+            LunarCalendarLegendItem(
+                title: L10n.string("Fertile window", defaultValue: "Fertile window"),
+                color: AppTheme.accentColor
+            ),
+            LunarCalendarLegendItem(
+                title: L10n.string("Ovulation", defaultValue: "Ovulation"),
+                color: AppTheme.premiumEditorAccentColor
+            ),
+        ]
+    }
+
+    private var lunarCycleTimelineCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            HStack {
+                Text(L10n.string("Your cycle timeline", defaultValue: "Your cycle timeline"))
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+
+                Spacer()
+
+                NavigationLink {
+                    CycleDetailView()
+                } label: {
+                    HStack(spacing: AppTheme.spacing4) {
+                        Text(L10n.string("View all", defaultValue: "View all"))
+                        Image(systemName: "arrow.right")
+                    }
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.secondaryText)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if lunarTimelineRows.isEmpty {
+                Text(L10n.string("Log period dates to build your rhythm over time.", defaultValue: "Log period dates to build your rhythm over time."))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                VStack(spacing: AppTheme.spacing12) {
+                    ForEach(lunarTimelineRows) { row in
+                        HStack(alignment: .center, spacing: AppTheme.spacing12) {
+                            Circle()
+                                .fill(row.color)
+                                .frame(width: 10, height: 10)
+
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text(row.rangeText)
+                                    .appFont(.subheadline, weight: .semibold)
+                                    .foregroundStyle(AppTheme.primaryText)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.82)
+                                Text(row.subtitle)
+                                    .appFont(.caption)
+                                    .foregroundStyle(AppTheme.secondaryText)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer(minLength: AppTheme.spacing8)
+
+                            Text(row.durationText)
+                                .appFont(.subheadline, weight: .semibold)
+                                .foregroundStyle(AppTheme.premiumEditorSecondaryAccentColor)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.78)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(AppTheme.spacing12)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.68))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.58), lineWidth: 0.8)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("calendar.cycle_details.card")
+        .background(alignment: .topLeading) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityIdentifier("calendar.lunar.timeline")
+        }
+    }
+
+    private var lunarCalendarInsightCard: some View {
+        HStack(alignment: .center, spacing: AppTheme.spacing12) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                Text(L10n.string("Irregular cycles are normal with PCOS", defaultValue: "Irregular cycles are normal with PCOS"))
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(L10n.string("Your cycles can vary. We adapt to you.", defaultValue: "Your cycles can vary. We adapt to you."))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: AppTheme.spacing8)
+
+            HStack(alignment: .bottom, spacing: AppTheme.spacing8) {
+                ForEach(Array(lunarMiniBars.enumerated()), id: \.offset) { _, height in
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(AppTheme.premiumEditorAccentGradient)
+                        .frame(width: 9, height: height)
+                }
+            }
+            .frame(width: 64, height: 56, alignment: .bottomTrailing)
+            .accessibilityHidden(true)
+        }
+        .padding(AppTheme.spacing12)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.66))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.56), lineWidth: 0.8)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("calendar.lunar.insight")
     }
 
     private var cycleInfoSection: some View {
@@ -336,7 +593,158 @@ struct CalendarMonthView: View {
         .accessibilityIdentifier("calendar.cycle_details.card")
     }
 
+    @ViewBuilder
+    private var periodEndCTA: some View {
+        if canShowPeriodEndAction {
+            Button {
+                showingPeriodEndSheet = true
+            } label: {
+                HStack(spacing: AppTheme.spacing12) {
+                    Image(systemName: "calendar.badge.checkmark")
+                        .foregroundStyle(AppTheme.accentColor)
+
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        Text(periodEndButtonTitle)
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "Update the last day you had bleeding.",
+                            defaultValue: "Update the last day you had bleeding."
+                        ))
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.defaultCardCornerRadius, style: .continuous)
+                        .fill(AppTheme.accentColor.opacity(0.1))
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("calendar.period_end_button")
+        }
+    }
+
     // MARK: - Helpers
+
+    private var lunarTimelineRows: [LunarCalendarTimelineRow] {
+        let periodRows = lunarPeriodTimelineRows
+        if !periodRows.isEmpty {
+            return periodRows
+        }
+        return lunarFallbackCycleRows
+    }
+
+    private var lunarPeriodTimelineRows: [LunarCalendarTimelineRow] {
+        let periodDays = entries.keys
+            .filter { entries[$0]?.isPeriodDay == true }
+            .sorted()
+        guard !periodDays.isEmpty else { return [] }
+
+        var groupedDays: [[Int]] = []
+        var currentGroup: [Int] = []
+
+        for day in periodDays {
+            if let previous = currentGroup.last, day == previous + 1 {
+                currentGroup.append(day)
+            } else {
+                if !currentGroup.isEmpty {
+                    groupedDays.append(currentGroup)
+                }
+                currentGroup = [day]
+            }
+        }
+
+        if !currentGroup.isEmpty {
+            groupedDays.append(currentGroup)
+        }
+
+        let colors = lunarTimelineColors
+        return groupedDays.reversed().prefix(5).enumerated().compactMap { index, days in
+            guard let firstDay = days.first,
+                  let lastDay = days.last,
+                  let startDate = dateForDay(firstDay),
+                  let endDate = dateForDay(lastDay) else {
+                return nil
+            }
+
+            let rangeText = firstDay == lastDay
+                ? shortMonthDayString(for: startDate)
+                : L10n.format(
+                    "%@ - %@",
+                    defaultValue: "%@ - %@",
+                    shortMonthDayString(for: startDate),
+                    shortMonthDayString(for: endDate)
+                )
+
+            return LunarCalendarTimelineRow(
+                rangeText: rangeText,
+                subtitle: L10n.string("Period", defaultValue: "Period"),
+                durationText: L10n.format("%lld days", defaultValue: "%lld days", Int64(days.count)),
+                color: colors[index % colors.count]
+            )
+        }
+    }
+
+    private var lunarFallbackCycleRows: [LunarCalendarTimelineRow] {
+        let colors = lunarTimelineColors
+        return (viewModel?.cycles ?? [])
+            .sorted { $0.startDate > $1.startDate }
+            .prefix(5)
+            .enumerated()
+            .map { index, cycle in
+                let endDate = cycle.endDate ?? Date()
+                let dayCount = cycle.lengthDays
+                    ?? max(calendar.dateComponents([.day], from: cycle.startDate, to: endDate).day.map { $0 + 1 } ?? 1, 1)
+                let rangeText = L10n.format(
+                    "%@ - %@",
+                    defaultValue: "%@ - %@",
+                    shortMonthDayString(for: cycle.startDate),
+                    shortMonthDayString(for: endDate)
+                )
+
+                return LunarCalendarTimelineRow(
+                    rangeText: rangeText,
+                    subtitle: L10n.string("Cycle", defaultValue: "Cycle"),
+                    durationText: L10n.format("%lld days", defaultValue: "%lld days", Int64(dayCount)),
+                    color: colors[index % colors.count]
+                )
+            }
+    }
+
+    private var lunarTimelineColors: [Color] {
+        [
+            AppTheme.premiumEditorWarningAccentColor,
+            AppTheme.lavenderAccent,
+            AppTheme.premiumEditorAccentColor,
+            AppTheme.premiumEditorSecondaryAccentColor,
+            AppTheme.accentColor,
+        ]
+    }
+
+    private var lunarMiniBars: [CGFloat] {
+        let lengths = (viewModel?.cycles ?? [])
+            .compactMap(\.lengthDays)
+            .suffix(5)
+            .map(CGFloat.init)
+        guard !lengths.isEmpty else {
+            return [22, 34, 26, 42, 50]
+        }
+
+        let minLength = lengths.min() ?? 0
+        let maxLength = lengths.max() ?? minLength
+        let span = max(maxLength - minLength, 1)
+        return lengths.map { 18 + (($0 - minLength) / span) * 38 }
+    }
 
     private var year: Int { calendar.component(.year, from: displayedMonth) }
     private var month: Int { calendar.component(.month, from: displayedMonth) }
@@ -347,6 +755,15 @@ struct CalendarMonthView: View {
                 .locale(L10n.locale(for: appState.selectedAppLanguage))
                 .month(.wide)
                 .year()
+        )
+    }
+
+    private func shortMonthDayString(for date: Date) -> String {
+        date.formatted(
+            Date.FormatStyle()
+                .locale(L10n.locale(for: appState.selectedAppLanguage))
+                .month(.abbreviated)
+                .day(.defaultDigits)
         )
     }
 
@@ -382,6 +799,18 @@ struct CalendarMonthView: View {
         return calendar.component(.year, from: today) == year
             && calendar.component(.month, from: today) == month
             && calendar.component(.day, from: today) == day
+    }
+
+    private var canShowPeriodEndAction: Bool {
+        guard let viewModel else { return false }
+        return viewModel.canMarkPeriodEnd && viewModel.currentPeriodState != nil
+    }
+
+    private var periodEndButtonTitle: String {
+        guard viewModel?.currentPeriodState?.isActive == false else {
+            return L10n.string("Mark Period End", defaultValue: "Mark Period End")
+        }
+        return L10n.string("Edit Period End Date", defaultValue: "Edit Period End Date")
     }
 
     private func moveMonth(by value: Int) {
@@ -485,6 +914,24 @@ struct CalendarMonthView: View {
     }
 }
 
+private struct LunarCalendarLegendItem: Identifiable {
+    let title: String
+    let color: Color
+
+    var id: String { title }
+}
+
+private struct LunarCalendarTimelineRow: Identifiable {
+    let rangeText: String
+    let subtitle: String
+    let durationText: String
+    let color: Color
+
+    var id: String {
+        "\(rangeText)-\(subtitle)-\(durationText)"
+    }
+}
+
 // MARK: - Calendar Day Cell
 
 struct CalendarDayCell: View {
@@ -500,7 +947,10 @@ struct CalendarDayCell: View {
     var body: some View {
         ZStack {
             // Background
-            if let entry, entry.isPeriodDay {
+            if let lunarBackgroundFill {
+                Circle()
+                    .fill(lunarBackgroundFill)
+            } else if let entry, entry.isPeriodDay {
                 Circle()
                     .fill(colorForFlow(entry.flowIntensity))
             } else if isFertileWindow {
@@ -510,25 +960,25 @@ struct CalendarDayCell: View {
 
             if isPredicted {
                 Circle()
-                    .strokeBorder(AppTheme.coralAccent.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                    .strokeBorder(predictedStrokeColor, style: StrokeStyle(lineWidth: AppTheme.usesImmersiveHomeShell ? 1.4 : 2, dash: [4, 3]))
             }
 
             if isOvulationDay {
                 Circle()
-                    .strokeBorder(AppTheme.accentColor, lineWidth: 2.5)
+                    .strokeBorder(AppTheme.usesImmersiveHomeShell ? AppTheme.premiumEditorAccentColor : AppTheme.accentColor, lineWidth: AppTheme.usesImmersiveHomeShell ? 2 : 2.5)
             } else if isToday {
                 Circle()
-                    .strokeBorder(AppTheme.accentColor, lineWidth: 2)
+                    .strokeBorder(AppTheme.usesImmersiveHomeShell ? AppTheme.premiumEditorAccentColor : AppTheme.accentColor, lineWidth: 2)
             }
 
             VStack(spacing: 0) {
                 Text("\(day)")
                     .appFont(.subheadline, weight: isToday ? .bold : .regular)
-                    .foregroundStyle(entry?.isPeriodDay == true ? .white : isPredicted ? AppTheme.coralAccent : .primary)
+                    .foregroundStyle(dayTextColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
-                if let entry, entry.isPeriodDay, let intensity = entry.flowIntensity {
+                if !AppTheme.usesImmersiveHomeShell, let entry, entry.isPeriodDay, let intensity = entry.flowIntensity {
                     Text(intensity.shortLabel)
                         .appFont(.caption2, weight: .bold)
                         .lineLimit(1)
@@ -545,9 +995,38 @@ struct CalendarDayCell: View {
                 }
             }
         }
-        .frame(minHeight: 44)
+        .frame(minHeight: AppTheme.usesImmersiveHomeShell ? 40 : 44)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var lunarBackgroundFill: Color? {
+        guard AppTheme.usesImmersiveHomeShell else { return nil }
+        if entry?.isPeriodDay == true {
+            return AppTheme.premiumEditorWarningAccentColor.opacity(0.72)
+        } else if isPredicted {
+            return AppTheme.lavenderAccent.opacity(0.58)
+        } else if isFertileWindow {
+            return AppTheme.accentColor.opacity(0.28)
+        }
+        return nil
+    }
+
+    private var predictedStrokeColor: Color {
+        AppTheme.usesImmersiveHomeShell
+            ? AppTheme.premiumEditorSecondaryAccentColor.opacity(0.76)
+            : AppTheme.coralAccent.opacity(0.5)
+    }
+
+    private var dayTextColor: Color {
+        if entry?.isPeriodDay == true {
+            return .white
+        } else if AppTheme.usesImmersiveHomeShell, isPredicted {
+            return AppTheme.premiumEditorCTAForeground
+        } else if isPredicted {
+            return AppTheme.coralAccent
+        }
+        return AppTheme.primaryText
     }
 
     private var accessibilityDescription: String {

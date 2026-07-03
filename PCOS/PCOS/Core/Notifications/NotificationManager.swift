@@ -1,6 +1,14 @@
 @preconcurrency import UserNotifications
 import os
 
+enum AppNotificationRoute: String, Sendable {
+    case mealScan
+}
+
+extension Notification.Name {
+    static let appNotificationRouteReceived = Notification.Name("app.notification.routeReceived")
+}
+
 @Observable
 @MainActor
 final class NotificationManager {
@@ -24,6 +32,11 @@ final class NotificationManager {
     var supplementRemindersEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "notifications.supplementReminders") }
         set { UserDefaults.standard.set(newValue, forKey: "notifications.supplementReminders") }
+    }
+
+    var mealScanRemindersEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications.mealScanReminders") }
+        set { UserDefaults.standard.set(newValue, forKey: "notifications.mealScanReminders") }
     }
 
     var symptomReminderTime: Date {
@@ -214,6 +227,55 @@ final class NotificationManager {
                 logger.info("Supplement reminder scheduled for \(name)")
             }
         }
+    }
+
+    // MARK: - AI Meal Scan Reminder
+
+    /// Schedules a repeating meal check-in that routes back to the meal scanner.
+    func scheduleMealScanReminder(time: Date = NotificationManager.defaultMealScanReminderTime()) {
+        guard mealScanRemindersEnabled else {
+            logger.debug("Meal scan reminders disabled, skipping schedule")
+            return
+        }
+
+        cancelReminders(withPrefix: "mealScan.")
+
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            localized: "Ready to log your meal?",
+            comment: "AI meal scan reminder notification title."
+        )
+        content.body = String(
+            localized: "Scan a meal with AI or add nutrition manually when it is fresh in your mind.",
+            comment: "AI meal scan reminder notification body."
+        )
+        content.sound = .default
+        content.userInfo = ["route": AppNotificationRoute.mealScan.rawValue]
+
+        let calendar = Calendar.current
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: timeComponents, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: "mealScan.daily",
+            content: content,
+            trigger: trigger
+        )
+
+        center.add(request) { [logger] error in
+            if let error {
+                logger.error("Failed to schedule meal scan reminder: \(error.localizedDescription)")
+            } else {
+                logger.info("Meal scan reminder scheduled at \(timeComponents.hour ?? 0):\(timeComponents.minute ?? 0)")
+            }
+        }
+    }
+
+    static func defaultMealScanReminderTime(calendar: Calendar = .current) -> Date {
+        var components = DateComponents()
+        components.hour = 12
+        components.minute = 30
+        return calendar.date(from: components) ?? Date()
     }
 
     // MARK: - Cancellation

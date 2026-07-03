@@ -369,7 +369,9 @@ private extension DemoDataBuilder {
                     selectedTemplateID: mealTemplateID(for: pattern.0, index: index),
                     postMealSymptomSeverity: feedbackSeverity,
                     postMealSymptomNote: feedbackNote,
-                    postMealFeedbackTimestamp: feedbackSeverity == nil ? nil : addingHours(2, to: timestamp)
+                    postMealFeedbackTimestamp: feedbackSeverity == nil ? nil : addingHours(2, to: timestamp),
+                    createdAt: timestamp,
+                    updatedAt: timestamp
                 )
             )
         }

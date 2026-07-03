@@ -5,13 +5,13 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance は、カメラを使用して毛の成長/脱毛の進行状況の写真を撮影し、追跡します。";
+"NSCameraUsageDescription" = "CycleBalance は、AI による食事推定のための食事写真、食品バーコードのスキャン、発毛/脱毛の進行状況の写真撮影にカメラを使用します。";
 
 /* Privacy - Health Share Usage Description */
-"NSHealthShareUsageDescription" = "CycleBalance は、Apple Health データを読み取り、健康傾向と毎日の概要を入力します。";
+"NSHealthShareUsageDescription" = "CycleBalance は、許可された Apple Health データ（栄養、血糖、周期、症状、睡眠、活動、心拍、身体情報など）を読み取り、端末内の記録とインサイトに反映します。";
 
 /* Privacy - Health Update Usage Description */
-"NSHealthUpdateUsageDescription" = "CycleBalance は Apple Health データを読み取り、健康傾向と毎日の概要を入力します。アプリは Apple Health に書き込みません。";
+"NSHealthUpdateUsageDescription" = "CycleBalance は、許可された Apple Health データ（栄養、血糖、周期、症状、睡眠、活動、心拍、身体情報など）を読み取り、端末内の記録とインサイトに反映します。アプリは Apple Health に書き込みません。";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance は、写真ライブラリを使用して、発毛/脱毛の進行状況の写真を保存し、比較します。";
+"NSPhotoLibraryUsageDescription" = "CycleBalance は、AI による食事推定のための食事写真の読み込みと、発毛/脱毛の進行状況の写真の保存または比較に写真ライブラリを使用します。";

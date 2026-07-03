@@ -12,6 +12,7 @@ struct InsightsView: View {
     @State private var showingLogPeriod = false
     @State private var showingLogSymptoms = false
     @State private var showingReportSheet = false
+    @State private var topAhaMoment: AhaMoment?
 
     private var audiencePreferences: InsightAudiencePreferences {
         InsightAudiencePreferences(profile: appState.onboardingProfile)
@@ -59,11 +60,20 @@ struct InsightsView: View {
         reportAccessPolicy.shouldShowInsightsBanner(completedCycles: viewModel?.completedCycleCount ?? 0)
     }
 
+    private var completedCycleCount: Int {
+        viewModel?.completedCycleCount ?? 0
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: AppTheme.spacing12) {
                 if let insightErrorMessage, !insightErrorMessage.isEmpty {
                     insightErrorBanner(insightErrorMessage, retryAction: retryInsights)
+                }
+
+                if !AppTheme.usesImmersiveHomeShell, let topAhaMoment {
+                    AhaMomentCard(moment: topAhaMoment)
+                        .padding(.horizontal, AppTheme.spacing16)
                 }
 
                 Group {
@@ -84,32 +94,37 @@ struct InsightsView: View {
                 }
                 .onChange(of: visibleInsights.count) { oldCount, newCount in
                     if oldCount == 0, newCount > 0 {
-                        ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, requestReview: requestReview)
+                        ReviewPromptService.requestReviewIfEligible(modelContext: modelContext, moment: .firstInsight, requestReview: requestReview)
                     }
                 }
             }
-            .navigationTitle(L10n.string("Insights", defaultValue: "Insights", language: currentLanguage))
+            .navigationTitle(AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Insights", defaultValue: "Insights", language: currentLanguage))
+            .navigationBarTitleDisplayMode(AppTheme.usesImmersiveHomeShell ? .inline : .automatic)
             .accessibilityIdentifier("screen.insights")
-            .sheet(isPresented: $showingLogPeriod) {
+            .lunarInsightsPresentation(isPresented: $showingLogPeriod) {
                 CycleLogView()
             }
-            .sheet(isPresented: $showingLogSymptoms) {
+            .lunarInsightsPresentation(isPresented: $showingLogSymptoms) {
                 SymptomLogView()
             }
-            .sheet(isPresented: $showingReportSheet) {
+            .lunarInsightsPresentation(isPresented: $showingReportSheet) {
                 ReportConfigView()
             }
-            .sheet(item: $activeDisclosure) { disclosure in
+            .lunarInsightsItemPresentation(item: $activeDisclosure) { disclosure in
                 EvidenceDisclosureSheet(content: disclosure, language: currentLanguage)
             }
             .sensoryFeedback(.selection, trigger: showingLogPeriod)
             .sensoryFeedback(.selection, trigger: showingLogSymptoms)
             .refreshable {
                 await viewModel?.refreshInsights()
+                refreshAhaMoment()
             }
             .background(BotanicalScreenBackground(style: .quiet))
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                insightsFooter
+                VStack(spacing: 0) {
+                    insightsFooter
+                }
+                .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
             }
             .onAppear {
                 if viewModel == nil {
@@ -117,6 +132,7 @@ struct InsightsView: View {
                 }
                 Task {
                     await viewModel?.loadInsights()
+                    refreshAhaMoment()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: InsightRefreshCoordinator.notificationName)) { _ in
@@ -179,6 +195,16 @@ struct InsightsView: View {
     private func retryInsights() {
         Task {
             await viewModel?.refreshInsights()
+            refreshAhaMoment()
+        }
+    }
+
+    private func refreshAhaMoment() {
+        do {
+            topAhaMoment = try AhaMomentService(modelContext: modelContext)
+                .topMoment(isPremium: appState.allowsPremiumAccess)
+        } catch {
+            topAhaMoment = nil
         }
     }
 
@@ -205,12 +231,28 @@ struct InsightsView: View {
 
     private var insightsList: some View {
         List {
-            BotanicalPosterHeader(
-                title: L10n.string("Patterns are not random", defaultValue: "Patterns are not random", language: currentLanguage),
-                subtitle: L10n.string("Your logs can reveal gentle signals in cycle timing, mood, cravings, energy, and symptoms.", defaultValue: "Your logs can reveal gentle signals in cycle timing, mood, cravings, energy, and symptoms.", language: currentLanguage),
-                emblemAssetName: "botanical-calendar-illustration",
-                dividerStyle: .ornamental
-            )
+            Group {
+                if AppTheme.usesImmersiveHomeShell {
+                    LunarInsightsOverviewDashboard(
+                        insights: visibleInsights,
+                        completedCycleCount: completedCycleCount,
+                        language: currentLanguage,
+                        onOpenReport: {
+                            showingReportSheet = true
+                        },
+                        onOpenDisclosure: { insight in
+                            activeDisclosure = InsightEvidenceCatalog.disclosure(for: insight, language: currentLanguage)
+                        }
+                    )
+                } else {
+                    BotanicalPosterHeader(
+                        title: L10n.string("Patterns are not random", defaultValue: "Patterns are not random", language: currentLanguage),
+                        subtitle: L10n.string("Your logs can reveal gentle signals in cycle timing, mood, cravings, energy, and symptoms.", defaultValue: "Your logs can reveal gentle signals in cycle timing, mood, cravings, energy, and symptoms.", language: currentLanguage),
+                        emblemAssetName: "botanical-calendar-illustration",
+                        dividerStyle: .ornamental
+                    )
+                }
+            }
             .listRowInsets(EdgeInsets(top: 10, leading: 0, bottom: 8, trailing: 0))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
@@ -249,6 +291,7 @@ struct InsightsView: View {
                     InsightCard(insight: insight, index: index, language: currentLanguage) {
                         activeDisclosure = InsightEvidenceCatalog.disclosure(for: insight, language: currentLanguage)
                     }
+                    .modifier(LunarInsightListRowModifier())
                 }
             }
 
@@ -285,8 +328,14 @@ struct InsightsView: View {
         .padding(.horizontal, AppTheme.spacing16)
         .padding(.vertical, AppTheme.spacing12)
         .frame(maxWidth: .infinity)
-        .background(AppTheme.botanicalCreamAltRGB.color.opacity(AppTheme.isBotanicalJournal ? 0.88 : 1))
+        .background(insightsFooterBackground)
         .accessibilityIdentifier("insights.footer.disclaimer")
+    }
+
+    private var insightsFooterBackground: some ShapeStyle {
+        AppTheme.usesImmersiveHomeShell
+            ? AppTheme.premiumEditorBackground.opacity(0.94)
+            : AppTheme.botanicalCreamAltRGB.color.opacity(AppTheme.isBotanicalJournal ? 0.88 : 1)
     }
 
     private var logPeriodButton: some View {
@@ -417,6 +466,842 @@ private struct InsightsSharedIntroRow: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(accessibilityIdentifier)
     }
+}
+
+private enum LunarInsightSegment: String, CaseIterable, Identifiable {
+    case overview
+    case cycles
+    case symptoms
+    case mood
+
+    var id: String { rawValue }
+
+    func title(language: AppLanguage) -> String {
+        switch self {
+        case .overview:
+            L10n.string("Overview", defaultValue: "Overview", language: language)
+        case .cycles:
+            L10n.string("Cycles", defaultValue: "Cycles", language: language)
+        case .symptoms:
+            L10n.string("Symptoms", defaultValue: "Symptoms", language: language)
+        case .mood:
+            L10n.string("Mood", defaultValue: "Mood", language: language)
+        }
+    }
+}
+
+private struct LunarInsightsOverviewDashboard: View {
+    let insights: [Insight]
+    let completedCycleCount: Int
+    let language: AppLanguage
+    let onOpenReport: () -> Void
+    let onOpenDisclosure: (Insight) -> Void
+
+    @State private var selectedSegment = LunarInsightSegment.overview
+
+    private var averageConfidencePercent: Int {
+        guard !insights.isEmpty else { return 0 }
+        let average = insights.reduce(0.0) { $0 + $1.confidence } / Double(insights.count)
+        return Int((average * 100).rounded())
+    }
+
+    private var activeSignalCount: Int {
+        Set(insights.map(\.insightType)).count
+    }
+
+    private var totalDataPoints: Int {
+        insights.reduce(0) { $0 + $1.dataPointsUsed }
+    }
+
+    private var strongestInsight: Insight? {
+        insights.max { lhs, rhs in
+            lhs.confidence < rhs.confidence
+        }
+    }
+
+    private var relatedPatternNames: [String] {
+        var seen = Set<String>()
+        var symptoms: [String] = []
+
+        for insight in insights {
+            for symptom in insight.relatedSymptoms {
+                let trimmed = symptom.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty, seen.insert(trimmed).inserted else { continue }
+                symptoms.append(trimmed)
+            }
+        }
+
+        if !symptoms.isEmpty {
+            return Array(symptoms.prefix(4))
+        }
+
+        return Array(insights.map { $0.insightType.displayName }.prefix(4))
+    }
+
+    private var trendValues: [Double] {
+        let values = insights
+            .prefix(6)
+            .map { min(max($0.confidence, 0.22), 0.96) }
+            .reversed()
+
+        let resolved = Array(values)
+        guard resolved.count >= 3 else {
+            return [0.46, 0.72, 0.54, 0.82, 0.58, 0.76]
+        }
+        return resolved
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                    Text(L10n.string("Insights", defaultValue: "Insights", language: language))
+                        .appHeadingFont(.largeTitle, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .accessibilityIdentifier("insights.lunar_dashboard.title")
+
+                    Text(
+                        L10n.string(
+                            "Find patterns that matter",
+                            defaultValue: "Find patterns that matter",
+                            language: language
+                        )
+                    )
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.secondaryText)
+                }
+
+                Spacer(minLength: AppTheme.spacing12)
+
+                Button(action: onOpenReport) {
+                    Image(systemName: "doc.richtext")
+                        .appFont(.title3, weight: .medium)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .frame(width: 48, height: 48)
+                        .background(Circle().fill(AppTheme.premiumEditorRaisedSurface.opacity(0.9)))
+                        .overlay(Circle().stroke(AppTheme.premiumEditorBorder.opacity(0.82), lineWidth: 0.8))
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .accessibilityLabel(L10n.string("Export PDF", defaultValue: "Export PDF", language: language))
+                .accessibilityIdentifier("insights.lunar_dashboard.report_icon_button")
+            }
+            .padding(.top, AppTheme.spacing8)
+
+            LunarInsightSegmentedControl(
+                selectedSegment: $selectedSegment,
+                language: language
+            )
+
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .fill(AppTheme.premiumEditorAccentGradient)
+
+                HStack(spacing: AppTheme.spacing8) {
+                    Image(systemName: "doc.richtext")
+                    Text(L10n.string("Export PDF", defaultValue: "Export PDF", language: language))
+                    Spacer(minLength: AppTheme.spacing8)
+                    Image(systemName: "arrow.right")
+                }
+                .appFont(.subheadline, weight: .semibold)
+                .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                .padding(.horizontal, AppTheme.spacing16)
+                .padding(.vertical, AppTheme.spacing12)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous))
+            .shadow(color: AppTheme.cardShadowColor.opacity(0.9), radius: 14, y: 8)
+            .onTapGesture(perform: onOpenReport)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(L10n.string("Export PDF", defaultValue: "Export PDF", language: language))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { onOpenReport() }
+            .accessibilityIdentifier("insights.lunar_dashboard.report_button")
+
+            LunarInsightMetricCard(
+                selectedSegment: selectedSegment,
+                averageConfidencePercent: averageConfidencePercent,
+                activeSignalCount: activeSignalCount,
+                completedCycleCount: completedCycleCount,
+                totalDataPoints: totalDataPoints,
+                strongestInsight: strongestInsight,
+                trendValues: trendValues,
+                language: language,
+                onOpenDisclosure: onOpenDisclosure
+            )
+
+            LunarInsightPhaseCard(
+                activeSignalCount: activeSignalCount,
+                strongestInsight: strongestInsight,
+                language: language
+            )
+
+            LunarInsightTopPatternsCard(
+                patternNames: relatedPatternNames,
+                activeSignalCount: activeSignalCount,
+                language: language
+            )
+        }
+        .padding(.horizontal, AppTheme.spacing16)
+        .padding(.vertical, AppTheme.spacing8)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("insights.lunar_dashboard")
+    }
+}
+
+private struct LunarInsightSegmentedControl: View {
+    @Binding var selectedSegment: LunarInsightSegment
+    let language: AppLanguage
+
+    var body: some View {
+        HStack(spacing: AppTheme.spacing4) {
+            ForEach(LunarInsightSegment.allCases) { segment in
+                Button {
+                    selectedSegment = segment
+                } label: {
+                    Text(segment.title(language: language))
+                        .appFont(.caption, weight: selectedSegment == segment ? .semibold : .regular)
+                        .foregroundStyle(
+                            selectedSegment == segment
+                                ? AppTheme.primaryText
+                                : AppTheme.secondaryText
+                        )
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppTheme.spacing8)
+                        .background {
+                            if selectedSegment == segment {
+                                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
+                                    .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.94))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
+                                            .strokeBorder(AppTheme.premiumEditorBorderGradient, lineWidth: 0.9)
+                                    )
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("insights.lunar_dashboard.segment.\(segment.rawValue)")
+            }
+        }
+        .padding(AppTheme.spacing4)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                .fill(AppTheme.premiumEditorSurface.opacity(0.82))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.52), lineWidth: 0.8)
+        )
+        .animation(.easeInOut(duration: 0.2), value: selectedSegment)
+        .accessibilityIdentifier("insights.lunar_dashboard.segments")
+    }
+}
+
+private struct LunarInsightMetricCard: View {
+    let selectedSegment: LunarInsightSegment
+    let averageConfidencePercent: Int
+    let activeSignalCount: Int
+    let completedCycleCount: Int
+    let totalDataPoints: Int
+    let strongestInsight: Insight?
+    let trendValues: [Double]
+    let language: AppLanguage
+    let onOpenDisclosure: (Insight) -> Void
+
+    private var metricTitle: String {
+        switch selectedSegment {
+        case .overview:
+            L10n.string("Pattern strength", defaultValue: "Pattern strength", language: language)
+        case .cycles:
+            L10n.string("Cycle signal", defaultValue: "Cycle signal", language: language)
+        case .symptoms:
+            L10n.string("Symptom links", defaultValue: "Symptom links", language: language)
+        case .mood:
+            L10n.string("Wellbeing rhythm", defaultValue: "Wellbeing rhythm", language: language)
+        }
+    }
+
+    private var metricValue: String {
+        switch selectedSegment {
+        case .overview:
+            averageConfidencePercent > 0 ? "\(averageConfidencePercent)%" : "--"
+        case .cycles:
+            "\(max(completedCycleCount, 0))"
+        case .symptoms:
+            "\(max(activeSignalCount, 0))"
+        case .mood:
+            strongestInsight == nil ? "--" : "\(max(totalDataPoints, 0))"
+        }
+    }
+
+    private var metricUnit: String {
+        switch selectedSegment {
+        case .overview:
+            L10n.string("average", defaultValue: "average", language: language)
+        case .cycles:
+            L10n.string("cycles", defaultValue: "cycles", language: language)
+        case .symptoms:
+            L10n.string("signals", defaultValue: "signals", language: language)
+        case .mood:
+            L10n.string("logs", defaultValue: "logs", language: language)
+        }
+    }
+
+    private var metricNote: String {
+        switch selectedSegment {
+        case .overview:
+            L10n.string(
+                "Your strongest patterns update as you keep logging.",
+                defaultValue: "Your strongest patterns update as you keep logging.",
+                language: language
+            )
+        case .cycles:
+            L10n.string(
+                "Cycle timing becomes clearer after more complete cycles.",
+                defaultValue: "Cycle timing becomes clearer after more complete cycles.",
+                language: language
+            )
+        case .symptoms:
+            L10n.string(
+                "Repeated symptom context helps separate noise from signal.",
+                defaultValue: "Repeated symptom context helps separate noise from signal.",
+                language: language
+            )
+        case .mood:
+            L10n.string(
+                "Mood and energy trends stay gentle until enough logs repeat.",
+                defaultValue: "Mood and energy trends stay gentle until enough logs repeat.",
+                language: language
+            )
+        }
+    }
+
+    var body: some View {
+        LunarInsightGlassCard(accessibilityIdentifier: "insights.lunar_dashboard.metric_card") {
+            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        Text(metricTitle)
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+
+                        HStack(alignment: .firstTextBaseline, spacing: AppTheme.spacing4) {
+                            Text(metricValue)
+                                .appHeadingFont(.largeTitle, weight: .regular)
+                                .foregroundStyle(AppTheme.premiumEditorAccentGradient)
+                                .contentTransition(.numericText())
+                                .accessibilityIdentifier("insights.lunar_dashboard.metric_value")
+
+                            Text(metricUnit)
+                                .appFont(.subheadline)
+                                .foregroundStyle(AppTheme.secondaryText)
+                        }
+                    }
+
+                    Spacer(minLength: AppTheme.spacing8)
+
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        Text(deltaLabel)
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                        Text(L10n.string("current signal", defaultValue: "current signal", language: language))
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                    }
+                    .padding(.horizontal, AppTheme.spacing12)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                            .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.82))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                            .stroke(AppTheme.premiumEditorBorder.opacity(0.64), lineWidth: 0.8)
+                    )
+                    .accessibilityIdentifier("insights.lunar_dashboard.metric_badge")
+                }
+
+                LunarInsightTrendChart(values: trendValues)
+                    .frame(height: 112)
+
+                Text(metricNote)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+
+                if let strongestInsight {
+                    Button {
+                        onOpenDisclosure(strongestInsight)
+                    } label: {
+                        Label(
+                            L10n.string("Learn more", defaultValue: "Learn more", language: language),
+                            systemImage: "info.circle"
+                        )
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("insights.lunar_dashboard.learn_more_button")
+                }
+            }
+        }
+    }
+
+    private var deltaLabel: String {
+        guard let strongestInsight else {
+            return L10n.string("Growing", defaultValue: "Growing", language: language)
+        }
+
+        let percent = Int((strongestInsight.confidence * 100).rounded())
+        return "\(percent)%"
+    }
+}
+
+private struct LunarInsightTrendChart: View {
+    let values: [Double]
+
+    private let labels = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"]
+
+    var body: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomLeading) {
+                    VStack(spacing: 0) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            Divider()
+                                .overlay(AppTheme.premiumEditorBorder.opacity(0.38))
+                            Spacer(minLength: 0)
+                        }
+                    }
+
+                    LunarInsightTrendArea(values: values)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppTheme.premiumEditorAccentColor.opacity(0.22),
+                                    AppTheme.lavenderAccent.opacity(0.08),
+                                    AppTheme.premiumEditorBackground.opacity(0.01),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                    LunarInsightTrendLine(values: values)
+                        .stroke(
+                            AppTheme.premiumEditorAccentGradient,
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                        )
+                        .shadow(color: AppTheme.premiumEditorAccentColor.opacity(0.24), radius: 8, y: 2)
+
+                    ForEach(Array(normalizedPoints(in: proxy.size).enumerated()), id: \.offset) { index, point in
+                        Circle()
+                            .fill(pointColor(index: index))
+                            .frame(width: 9, height: 9)
+                            .overlay(Circle().stroke(AppTheme.primaryText.opacity(0.58), lineWidth: 1))
+                            .position(point)
+                    }
+                }
+            }
+
+            HStack {
+                ForEach(labels, id: \.self) { label in
+                    Text(label)
+                        .appFont(.caption2)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Insight trend chart")
+        .accessibilityIdentifier("insights.lunar_dashboard.trend_chart")
+    }
+
+    private func normalizedPoints(in size: CGSize) -> [CGPoint] {
+        let resolvedValues = values.isEmpty ? [0.46, 0.72, 0.54, 0.82, 0.58, 0.76] : values
+        guard resolvedValues.count > 1 else { return [] }
+
+        let maxValue = max(resolvedValues.max() ?? 1, 0.01)
+        let minValue = min(resolvedValues.min() ?? 0, maxValue - 0.01)
+        let range = max(maxValue - minValue, 0.01)
+        let step = size.width / CGFloat(resolvedValues.count - 1)
+
+        return resolvedValues.enumerated().map { index, value in
+            let normalized = (value - minValue) / range
+            let y = size.height - CGFloat(normalized) * (size.height * 0.72) - size.height * 0.14
+            return CGPoint(x: CGFloat(index) * step, y: y)
+        }
+    }
+
+    private func pointColor(index: Int) -> Color {
+        let colors = [
+            AppTheme.premiumEditorAccentColor,
+            AppTheme.accentColor,
+            AppTheme.lavenderAccent,
+            AppTheme.premiumEditorWarningAccentColor,
+            AppTheme.premiumEditorSecondaryAccentColor,
+        ]
+        return colors[index % colors.count]
+    }
+}
+
+private struct LunarInsightTrendLine: Shape {
+    let values: [Double]
+
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            let points = normalizedPoints(in: rect, values: values)
+            guard let first = points.first else { return }
+            path.move(to: first)
+
+            for index in points.indices.dropFirst() {
+                let previous = points[index - 1]
+                let current = points[index]
+                let controlX = (previous.x + current.x) / 2
+                path.addCurve(
+                    to: current,
+                    control1: CGPoint(x: controlX, y: previous.y),
+                    control2: CGPoint(x: controlX, y: current.y)
+                )
+            }
+        }
+    }
+}
+
+private struct LunarInsightTrendArea: Shape {
+    let values: [Double]
+
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            let points = normalizedPoints(in: rect, values: values)
+            guard let first = points.first, let last = points.last else { return }
+            path.move(to: CGPoint(x: first.x, y: rect.maxY))
+            path.addLine(to: first)
+
+            for index in points.indices.dropFirst() {
+                let previous = points[index - 1]
+                let current = points[index]
+                let controlX = (previous.x + current.x) / 2
+                path.addCurve(
+                    to: current,
+                    control1: CGPoint(x: controlX, y: previous.y),
+                    control2: CGPoint(x: controlX, y: current.y)
+                )
+            }
+
+            path.addLine(to: CGPoint(x: last.x, y: rect.maxY))
+            path.closeSubpath()
+        }
+    }
+}
+
+private struct LunarInsightPhaseCard: View {
+    let activeSignalCount: Int
+    let strongestInsight: Insight?
+    let language: AppLanguage
+
+    private var barValues: [Double] {
+        let strongest = strongestInsight?.confidence ?? 0.68
+        return [0.54, 0.62, strongest, 0.76]
+    }
+
+    var body: some View {
+        LunarInsightGlassCard(accessibilityIdentifier: "insights.lunar_dashboard.phase_card") {
+            HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    HStack(spacing: AppTheme.spacing4) {
+                        Text(
+                            L10n.string(
+                                "Mood by cycle phase",
+                                defaultValue: "Mood by cycle phase",
+                                language: language
+                            )
+                        )
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+
+                        Image(systemName: "info.circle")
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                    }
+
+                    LunarInsightBarChart(values: barValues)
+                        .frame(height: 116)
+                }
+
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(
+                        L10n.string(
+                            "You have the clearest signal in",
+                            defaultValue: "You have the clearest signal in",
+                            language: language
+                        )
+                    )
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+
+                    Text(strongestInsight?.insightType.displayName ?? L10n.string("Cycle Pattern", defaultValue: "Cycle Pattern", language: language))
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+
+                    Text(
+                        L10n.string(
+                            "More logs make this view more personal.",
+                            defaultValue: "More logs make this view more personal.",
+                            language: language
+                        )
+                    )
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                }
+                .frame(maxWidth: 132, alignment: .leading)
+            }
+        }
+    }
+}
+
+private struct LunarInsightBarChart: View {
+    let values: [Double]
+
+    private let symbols = ["camera.macro", "cloud.fill", "circle.lefthalf.filled", "moon.fill"]
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: AppTheme.spacing12) {
+            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                VStack(spacing: AppTheme.spacing8) {
+                    GeometryReader { proxy in
+                        VStack {
+                            Spacer(minLength: 0)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .fill(barGradient(index: index))
+                                .frame(height: max(18, proxy.size.height * CGFloat(value)))
+                        }
+                    }
+
+                    Image(systemName: symbols[index % symbols.count])
+                        .appFont(.caption)
+                        .foregroundStyle(symbolColor(index: index))
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Cycle phase bar chart")
+        .accessibilityIdentifier("insights.lunar_dashboard.phase_bars")
+    }
+
+    private func barGradient(index: Int) -> LinearGradient {
+        let color = symbolColor(index: index)
+        return LinearGradient(
+            colors: [
+                color.opacity(0.96),
+                AppTheme.accentColor.opacity(0.72),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private func symbolColor(index: Int) -> Color {
+        let colors = [
+            AppTheme.premiumEditorSecondaryAccentColor,
+            AppTheme.lavenderAccent,
+            AppTheme.secondaryText,
+            AppTheme.premiumEditorAccentColor,
+        ]
+        return colors[index % colors.count]
+    }
+}
+
+private struct LunarInsightTopPatternsCard: View {
+    let patternNames: [String]
+    let activeSignalCount: Int
+    let language: AppLanguage
+
+    private var rows: [String] {
+        if patternNames.isEmpty {
+            return [
+                L10n.string("Cycle timing", defaultValue: "Cycle timing", language: language),
+                L10n.string("Energy changes", defaultValue: "Energy changes", language: language),
+                L10n.string("Symptom clusters", defaultValue: "Symptom clusters", language: language),
+            ]
+        }
+        return patternNames
+    }
+
+    var body: some View {
+        LunarInsightGlassCard(accessibilityIdentifier: "insights.lunar_dashboard.patterns_card") {
+            HStack(alignment: .top, spacing: AppTheme.spacing12) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(L10n.string("Top patterns", defaultValue: "Top patterns", language: language))
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+
+                    ForEach(Array(rows.prefix(4).enumerated()), id: \.offset) { index, row in
+                        LunarPatternRow(
+                            title: row,
+                            percent: patternPercent(index: index),
+                            color: patternColor(index: index)
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(L10n.string("This cycle", defaultValue: "This cycle", language: language))
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+
+                    Text(
+                        L10n.string(
+                            "These are the signals worth watching first.",
+                            defaultValue: "These are the signals worth watching first.",
+                            language: language
+                        )
+                    )
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+
+                    Text(L10n.string("View all", defaultValue: "View all", language: language))
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                }
+                .frame(maxWidth: 124, alignment: .leading)
+            }
+        }
+    }
+
+    private func patternPercent(index: Int) -> Int {
+        max(28, 72 - index * max(8, activeSignalCount + 6))
+    }
+
+    private func patternColor(index: Int) -> Color {
+        let colors = [
+            AppTheme.premiumEditorWarningAccentColor,
+            AppTheme.premiumEditorSecondaryAccentColor,
+            AppTheme.premiumEditorAccentColor,
+            AppTheme.lavenderAccent,
+        ]
+        return colors[index % colors.count]
+    }
+}
+
+private struct LunarPatternRow: View {
+    let title: String
+    let percent: Int
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: AppTheme.spacing8) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+
+            Text(title)
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(AppTheme.premiumEditorBorder.opacity(0.56))
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [AppTheme.premiumEditorSecondaryAccentColor, AppTheme.lavenderAccent],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: proxy.size.width * CGFloat(percent) / 100)
+                }
+            }
+            .frame(height: 6)
+
+            Text("\(percent)%")
+                .appFont(.caption2, weight: .semibold)
+                .foregroundStyle(AppTheme.secondaryText)
+                .frame(width: 34, alignment: .trailing)
+        }
+    }
+}
+
+private struct LunarInsightGlassCard<Content: View>: View {
+    let accessibilityIdentifier: String
+    let content: Content
+
+    init(
+        accessibilityIdentifier: String,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.accessibilityIdentifier = accessibilityIdentifier
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .padding(AppTheme.spacing16)
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.premiumEditorRaisedSurface.opacity(0.86),
+                                AppTheme.premiumEditorSurface.opacity(0.78),
+                                AppTheme.premiumEditorBackground.opacity(0.9),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.largeCardCornerRadius, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorder.opacity(0.68), lineWidth: 0.8)
+            )
+            .shadow(color: AppTheme.cardShadowColor, radius: 18, y: 12)
+            .accessibilityIdentifier(accessibilityIdentifier)
+    }
+}
+
+private struct LunarInsightListRowModifier: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if AppTheme.usesImmersiveHomeShell {
+            content
+                .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        } else {
+            content
+        }
+    }
+}
+
+private func normalizedPoints(in rect: CGRect, values: [Double]) -> [CGPoint] {
+    let resolvedValues = values.isEmpty ? [0.46, 0.72, 0.54, 0.82, 0.58, 0.76] : values
+    guard resolvedValues.count > 1 else { return [] }
+
+    let maxValue = max(resolvedValues.max() ?? 1, 0.01)
+    let minValue = min(resolvedValues.min() ?? 0, maxValue - 0.01)
+    let range = max(maxValue - minValue, 0.01)
+    let step = rect.width / CGFloat(resolvedValues.count - 1)
+
+    return resolvedValues.enumerated().map { index, value in
+        let normalized = (value - minValue) / range
+        let y = rect.maxY - CGFloat(normalized) * (rect.height * 0.72) - rect.height * 0.14
+        return CGPoint(x: rect.minX + CGFloat(index) * step, y: y)
+    }
+}
+
+private func normalizedPoints(in size: CGSize, values: [Double]) -> [CGPoint] {
+    normalizedPoints(in: CGRect(origin: .zero, size: size), values: values)
 }
 
 struct InsightCard: View {
@@ -680,21 +1565,52 @@ private struct InsightsReportBannerCard: View {
             .foregroundStyle(.secondary)
 
             Button(action: onOpenReport) {
-                Label(
-                    L10n.string("Export PDF", defaultValue: "Export PDF", language: language),
-                    systemImage: "square.and.arrow.up"
-                )
-                .appFont(.subheadline, weight: .semibold)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppTheme.spacing12)
-                .background(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium).fill(AppTheme.coralAccent))
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
+                        .fill(AppTheme.coralAccent)
+
+                    Label(
+                        L10n.string("Export PDF", defaultValue: "Export PDF", language: language),
+                        systemImage: "square.and.arrow.up"
+                    )
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppTheme.spacing12)
+                }
+                .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("insights.report_banner.export")
         }
         .cardStyle()
         .accessibilityIdentifier("insights.report_banner")
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func lunarInsightsPresentation<Destination: View>(
+        isPresented: Binding<Bool>,
+        @ViewBuilder destination: @escaping () -> Destination
+    ) -> some View {
+        if AppTheme.usesImmersivePresentation {
+            fullScreenCover(isPresented: isPresented, content: destination)
+        } else {
+            sheet(isPresented: isPresented, content: destination)
+        }
+    }
+
+    @ViewBuilder
+    func lunarInsightsItemPresentation<Item: Identifiable, Destination: View>(
+        item: Binding<Item?>,
+        @ViewBuilder destination: @escaping (Item) -> Destination
+    ) -> some View {
+        if AppTheme.usesImmersivePresentation {
+            fullScreenCover(item: item, content: destination)
+        } else {
+            sheet(item: item, content: destination)
+        }
     }
 }
 

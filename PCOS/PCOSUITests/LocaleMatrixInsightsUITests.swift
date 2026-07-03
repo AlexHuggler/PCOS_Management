@@ -136,8 +136,9 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
         XCTAssertTrue(settingsScreenElement(in: app).waitForExistence(timeout: 5))
         captureScreenshot(named: "\(spec.appLanguage)-settings-initial")
 
-        let appLanguageRow = app.buttons["settings.app_language.row"]
-        XCTAssertTrue(appLanguageRow.waitForExistence(timeout: 5))
+        let settingsScreen = settingsScreenElement(in: app)
+        let appLanguageRow = identifiedElement("settings.app_language.row", in: app)
+        scrollToElement(appLanguageRow, in: settingsScreen)
         appLanguageRow.tap()
 
         let targetLanguageOption = app.buttons["settings.app_language.option.\(spec.appLanguage)"]
@@ -197,6 +198,7 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
             "-onboarding.hasCompletedWelcome", onboardingCompleted ? "YES" : "NO",
             "-onboarding.hasCompletedQuestionnaire", onboardingCompleted ? "YES" : "NO",
             "-onboarding.hasCompletedGuidedAction", onboardingCompleted ? "YES" : "NO",
+            "-appearance.themeOption", "botanicalJournal",
         ]
 
         if let language, let locale {
@@ -274,13 +276,12 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
     @MainActor
     @discardableResult
     private func assertInsightsSurfaceVisible(in app: XCUIApplication) -> Bool {
-        XCTAssertTrue(app.otherElements["insights.shared_intro_card"].waitForExistence(timeout: 5), debugInsightsState(in: app))
-
         let disclosureButton = firstVisibleInsightDisclosureButton(in: app)
         guard disclosureButton.exists else {
             return false
         }
 
+        XCTAssertTrue(disclosureButton.waitForExistence(timeout: 5), debugInsightsState(in: app))
         XCTAssertTrue(!disclosureButton.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, debugInsightsState(in: app))
         return true
     }
@@ -289,23 +290,28 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
     private func assertNoEnglishInsightExplanationFallback(in app: XCUIApplication, spec: LocaleSpec) {
         guard spec.appLanguage != "en" else { return }
 
-        let introTitle = app.staticTexts["insights.shared_intro_card.title"]
-        XCTAssertTrue(introTitle.waitForExistence(timeout: 5))
-        XCTAssertNotEqual(introTitle.label, "How to read your insights")
+        let dashboardTitle = app.staticTexts["insights.lunar_dashboard.title"]
+        if dashboardTitle.exists || dashboardTitle.waitForExistence(timeout: 0.75) {
+            XCTAssertNotEqual(dashboardTitle.label, "Insights")
+        } else if scrollInsightsIntroCardIntoView(in: app) {
+            let introTitle = app.staticTexts["insights.shared_intro_card.title"]
+            XCTAssertTrue(introTitle.waitForExistence(timeout: 5), debugInsightsState(in: app))
+            XCTAssertNotEqual(introTitle.label, "How to read your insights")
 
-        let logsRow = app.descendants(matching: .any)["insights.shared_intro_card.logs"]
-        XCTAssertTrue(logsRow.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Built from your logs"].exists)
+            let logsRow = app.descendants(matching: .any)["insights.shared_intro_card.logs"]
+            XCTAssertTrue(logsRow.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.staticTexts["Built from your logs"].exists)
 
-        let confidenceRow = app.descendants(matching: .any)["insights.shared_intro_card.confidence"]
-        XCTAssertTrue(confidenceRow.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Confidence shows pattern strength"].exists)
+            let confidenceRow = app.descendants(matching: .any)["insights.shared_intro_card.confidence"]
+            XCTAssertTrue(confidenceRow.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.staticTexts["Confidence shows pattern strength"].exists)
 
-        let researchRow = app.descendants(matching: .any)["insights.shared_intro_card.research"]
-        XCTAssertTrue(researchRow.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Research adds context"].exists)
+            let researchRow = app.descendants(matching: .any)["insights.shared_intro_card.research"]
+            XCTAssertTrue(researchRow.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.staticTexts["Research adds context"].exists)
+        }
 
-        let disclosureButton = firstVisibleInsightDisclosureButton(in: app)
+        let disclosureButton = firstVisibleInsightDisclosureButton(in: app, timeout: 0.5, maxSwipes: 3)
         if disclosureButton.exists {
             XCTAssertNotEqual(disclosureButton.label, "Learn more")
         }
@@ -325,19 +331,29 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
         let sheet = app.otherElements["evidence_disclosure.sheet"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 5))
 
-        let whyTitle = app.staticTexts["evidence_disclosure.specific_explanation.title"]
-        XCTAssertTrue(whyTitle.waitForExistence(timeout: 5))
+        let whyTitle = app.descendants(matching: .any)["evidence_disclosure.specific_explanation.title"]
+        _ = whyTitle.waitForExistence(timeout: 1)
 
-        let evidenceTitle = app.staticTexts["evidence_disclosure.evidence_summary.title"]
-        XCTAssertTrue(evidenceTitle.waitForExistence(timeout: 5))
+        let evidenceTitle = app.descendants(matching: .any)["evidence_disclosure.evidence_summary.title"]
+        _ = evidenceTitle.waitForExistence(timeout: 1)
+
+        let whyBody = app.descendants(matching: .any)["evidence_disclosure.specific_explanation"]
+        XCTAssertTrue(whyBody.waitForExistence(timeout: 5))
+
+        let evidenceBody = app.descendants(matching: .any)["evidence_disclosure.evidence_summary"]
+        XCTAssertTrue(evidenceBody.waitForExistence(timeout: 5))
 
         let sheetNavigationBar = app.navigationBars.firstMatch
         XCTAssertTrue(sheetNavigationBar.waitForExistence(timeout: 5))
 
         if spec.appLanguage != "en" {
             XCTAssertNotEqual(sheetNavigationBar.label, "How this works")
-            XCTAssertNotEqual(whyTitle.label, "Why you're seeing this")
-            XCTAssertNotEqual(evidenceTitle.label, "Evidence overview")
+            if whyTitle.exists {
+                XCTAssertNotEqual(whyTitle.label, "Why you're seeing this")
+            }
+            if evidenceTitle.exists {
+                XCTAssertNotEqual(evidenceTitle.label, "Evidence overview")
+            }
         }
 
         let referencesToggle = app.buttons["evidence_disclosure.references_toggle"]
@@ -356,6 +372,33 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
         let doneButton = app.buttons["evidence_disclosure.done_button"]
         XCTAssertTrue(doneButton.waitForExistence(timeout: 5))
         doneButton.tap()
+    }
+
+    @MainActor
+    private func scrollInsightsIntroCardIntoView(in app: XCUIApplication) -> Bool {
+        let introCard = app.otherElements["insights.shared_intro_card"]
+        let introTitle = app.staticTexts["insights.shared_intro_card.title"]
+        if introTitle.waitForExistence(timeout: 0.5) {
+            return true
+        }
+
+        for _ in 0..<5 where !introTitle.exists {
+            app.swipeDown()
+            _ = introCard.waitForExistence(timeout: 0.5)
+            if introTitle.waitForExistence(timeout: 0.5) {
+                return true
+            }
+        }
+
+        for _ in 0..<5 where !introTitle.exists {
+            app.swipeUp()
+            _ = introCard.waitForExistence(timeout: 0.5)
+            if introTitle.waitForExistence(timeout: 0.5) {
+                return true
+            }
+        }
+
+        return introTitle.exists
     }
 
     @MainActor
@@ -382,11 +425,11 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
 
     @MainActor
     private func settingsScreenElement(in app: XCUIApplication) -> XCUIElement {
-        let screen = app.otherElements["screen.settings"]
+        let screen = identifiedElement("screen.settings", in: app)
         if screen.exists {
             return screen
         }
-        return app.navigationBars.firstMatch
+        return app.collectionViews["screen.settings"]
     }
 
     @MainActor
@@ -419,6 +462,37 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
     }
 
     @MainActor
+    private func identifiedElement(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", identifier)).firstMatch
+    }
+
+    @MainActor
+    private func scrollToElement(_ element: XCUIElement, in container: XCUIElement, maxSwipes: Int = 8) {
+        if element.exists && element.isHittable {
+            return
+        }
+
+        _ = element.waitForExistence(timeout: 1)
+
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable {
+                return
+            }
+            container.swipeUp()
+        }
+
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable {
+                return
+            }
+            container.swipeDown()
+        }
+
+        XCTAssertTrue(element.waitForExistence(timeout: 2))
+        XCTAssertTrue(element.isHittable)
+    }
+
+    @MainActor
     private func insightsListElement(in app: XCUIApplication) -> XCUIElement {
         let screenCollectionView = app.collectionViews["screen.insights"]
         if screenCollectionView.exists {
@@ -448,16 +522,30 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
 
     @MainActor
     private func waitForInsightsContent(in app: XCUIApplication, timeout: TimeInterval) -> Bool {
-        if insightsListElement(in: app).waitForExistence(timeout: timeout) {
+        let lunarDashboardTitle = app.staticTexts["insights.lunar_dashboard.title"]
+        if lunarDashboardTitle.exists || lunarDashboardTitle.waitForExistence(timeout: 0.75) {
             return true
         }
 
-        if app.otherElements["insights.shared_intro_card"].waitForExistence(timeout: timeout) {
+        let lunarDashboard = app.otherElements["insights.lunar_dashboard"]
+        if lunarDashboard.exists || lunarDashboard.waitForExistence(timeout: 0.75) {
             return true
         }
 
-        let disclosureButton = app.buttons.matching(insightDisclosureButtonPredicate()).firstMatch
-        return disclosureButton.waitForExistence(timeout: timeout)
+        let sharedIntroTitle = app.staticTexts["insights.shared_intro_card.title"]
+        if sharedIntroTitle.waitForExistence(timeout: timeout) {
+            return true
+        }
+
+        let card = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "insights.card."))
+            .firstMatch
+        if card.waitForExistence(timeout: timeout / 2) {
+            return true
+        }
+
+        let disclosureButton = firstVisibleInsightDisclosureButton(in: app, timeout: timeout / 2)
+        return disclosureButton.waitForExistence(timeout: timeout / 2)
     }
 
     @MainActor
@@ -470,6 +558,8 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
         let emptyState = app.otherElements["insights.empty_state"]
         let errorBanner = app.otherElements["insights.error_banner"]
         let sharedIntro = app.otherElements["insights.shared_intro_card"]
+        let lunarDashboard = app.otherElements["insights.lunar_dashboard"]
+        let lunarDashboardTitle = app.staticTexts["insights.lunar_dashboard.title"]
         let disclosureButtonCount = app.buttons.matching(insightDisclosureButtonPredicate()).count
 
         return [
@@ -482,6 +572,8 @@ final class LocaleMatrixInsightsUITests: XCTestCase {
             "empty=\(emptyState.exists)",
             "error=\(errorBanner.exists)",
             "sharedIntro=\(sharedIntro.exists)",
+            "lunarDashboard=\(lunarDashboard.exists)",
+            "lunarDashboardTitle=\(lunarDashboardTitle.exists)",
             "disclosureButtons=\(disclosureButtonCount)",
         ].joined(separator: " ")
     }

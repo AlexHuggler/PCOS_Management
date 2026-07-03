@@ -86,4 +86,42 @@ struct StreakServiceTests {
         let service = StreakService(modelContext: context)
         #expect(service.currentStreak() == 2)
     }
+
+    @Test("Entry only yesterday still counts as a streak of 1")
+    func entryOnlyYesterdaySkipsToday() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+
+        // No entry today — the skip-today rule keeps yesterday's streak alive.
+        let entry = SymptomEntry(
+            date: calendar.date(byAdding: .day, value: -1, to: Date())!,
+            type: .fatigue,
+            severity: 2
+        )
+        context.insert(entry)
+        try context.save()
+
+        let service = StreakService(modelContext: context)
+        #expect(service.currentStreak() == 1)
+    }
+
+    @Test("Streak is capped at 366 days")
+    func streakCappedAt366() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+
+        // Entries every day for more than 366 days — the streak is
+        // deliberately capped at 366 to bound the lookback window.
+        for offset in 0...370 {
+            let date = calendar.date(byAdding: .day, value: -offset, to: Date())!
+            let entry = CycleEntry(date: date, flowIntensity: .light, isPeriodDay: false)
+            context.insert(entry)
+        }
+        try context.save()
+
+        let service = StreakService(modelContext: context)
+        #expect(service.currentStreak() == 366)
+    }
 }

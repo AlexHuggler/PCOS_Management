@@ -1,83 +1,75 @@
 import SwiftUI
 
-// MARK: - Testimonial Model
+// MARK: - Assurance Model
 
-private struct Testimonial: Identifiable {
+private struct OnboardingAssurance: Identifiable {
     let id = UUID()
-    let quote: String
-    let name: String
-    let tag: String
+    let icon: String
+    let title: String
+    let message: String
 }
 
-private let testimonials: [Testimonial] = [
-    Testimonial(
-        quote: String(localized: "I finally understand why I feel different on certain days. This app connected the dots.", comment: "Testimonial quote from Sarah on the social proof screen."),
-        name: "Sarah",
-        tag: String(localized: "Recently Diagnosed", comment: "Testimonial author tag.")
+private let onboardingAssurances: [OnboardingAssurance] = [
+    OnboardingAssurance(
+        icon: "lock.shield.fill",
+        title: String(localized: "Local health records", comment: "Assurance card title on the onboarding screen."),
+        message: String(localized: "Your cycle, symptom, meal, glucose, supplement, and photo logs are stored on your device by default.", comment: "Assurance card body on the onboarding screen.")
     ),
-    Testimonial(
-        quote: String(localized: "After 3 months of logging, I brought my data to my doctor and we adjusted my treatment plan together.", comment: "Testimonial quote from Mia on the social proof screen."),
-        name: "Mia",
-        tag: String(localized: "Symptom Tracking", comment: "Testimonial author tag.")
+    OnboardingAssurance(
+        icon: "checkmark.seal.fill",
+        title: String(localized: "Review before saving", comment: "Assurance card title on the onboarding screen."),
+        message: String(localized: "Meal and barcode results stay editable so nothing becomes a saved log until you choose it.", comment: "Assurance card body on the onboarding screen.")
     ),
-    Testimonial(
-        quote: String(localized: "I was skeptical, but seeing my symptom patterns mapped to my cycle was a game-changer.", comment: "Testimonial quote from Jade on the social proof screen."),
-        name: "Jade",
-        tag: String(localized: "Pattern Recognition", comment: "Testimonial author tag.")
+    OnboardingAssurance(
+        icon: "doc.text.fill",
+        title: String(localized: "Care-team ready", comment: "Assurance card title on the onboarding screen."),
+        message: String(localized: "Exportable reports help you bring organized context to appointments without replacing medical care.", comment: "Assurance card body on the onboarding screen.")
     ),
 ]
 
 // MARK: - Social Proof View
 
-/// Social proof screen showing testimonials and community stats during onboarding.
+/// Onboarding assurance screen that summarizes review-safe product principles.
 struct SocialProofView: View {
     let onContinue: () -> Void
-    let onSkip: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: AppTheme.spacing24) {
                     // MARK: Section Header
-                    Text(String(localized: "What women are saying", comment: "Social proof section header on the onboarding screen."))
+                    Text(String(localized: "Built around your data, not hype", comment: "Assurance section header on the onboarding screen."))
                         .appHeadingFont(.title2, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, AppTheme.spacing24)
 
-                    // MARK: Testimonial Cards
-                    ForEach(testimonials) { testimonial in
+                    // MARK: Assurance Cards
+                    ForEach(onboardingAssurances) { assurance in
                         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-                            Image(systemName: "quote.opening")
+                            Image(systemName: assurance.icon)
                                 .appFont(.title3)
                                 .foregroundStyle(AppTheme.accentColor.opacity(AppTheme.opacityStrong))
                                 .accessibilityHidden(true)
 
-                            Text(testimonial.quote)
+                            Text(assurance.title)
+                                .appFont(.headline, weight: .semibold)
+
+                            Text(assurance.message)
                                 .appFont(.body)
-                                .italic()
-
-                            HStack {
-                                Text(testimonial.name)
-                                    .appFont(.body, weight: .semibold)
-                                Text(verbatim: "· ")
-                                Text(testimonial.tag)
-                                    .appFont(.caption)
-                                    .foregroundStyle(.secondary)
-
-                            }
+                                .foregroundStyle(.secondary)
                         }
                         .cardStyle()
                         .padding(.horizontal, AppTheme.spacing24)
                     }
 
-                    // MARK: Beta Community
+                    // MARK: Product Principle
                     HStack(spacing: AppTheme.spacing12) {
-                        Image(systemName: "person.2.fill")
+                        Image(systemName: "sparkles")
                             .appFont(.title3)
                             .foregroundStyle(AppTheme.accentColor)
                             .accessibilityHidden(true)
-                        Text(String(localized: "Built and tested with 200+ women in our beta community", comment: "Beta community stat on social proof screen."))
+                        Text(String(localized: "Designed for PCOS-aware tracking, irregular cycles, and reviewable health context.", comment: "Product principle on onboarding assurance screen."))
                             .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -110,33 +102,22 @@ struct SocialProofView: View {
                 }
             }
 
-            // MARK: Bottom Buttons
-            VStack(spacing: AppTheme.spacing12) {
-                Button {
-                    onContinue()
-                } label: {
-                    Text(String(localized: "Continue", comment: "Social proof continue button label."))
-                        .appFont(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, AppTheme.spacing12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(AppTheme.accentColor)
-                        )
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("onboarding.social_proof.continue")
-
-                Button {
-                    onSkip()
-                } label: {
-                    Text(String(localized: "Skip", comment: "Social proof skip button label."))
-                }
-                .appFont(.subheadline)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("onboarding.social_proof.skip")
+            // MARK: Bottom Button
+            Button {
+                onContinue()
+            } label: {
+                Text(String(localized: "Continue", comment: "Social proof continue button label."))
+                    .appFont(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppTheme.spacing12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(AppTheme.accentColor)
+                    )
+                    .foregroundStyle(.white)
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("onboarding.social_proof.continue")
             .padding(.horizontal, AppTheme.spacing24)
             .padding(.bottom, AppTheme.spacing32)
         }
@@ -148,5 +129,5 @@ struct SocialProofView: View {
 }
 
 #Preview {
-    SocialProofView(onContinue: {}, onSkip: {})
+    SocialProofView(onContinue: {})
 }

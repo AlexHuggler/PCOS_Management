@@ -5,13 +5,13 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance은 추적을 위해 카메라를 사용하여 모발 성장/탈모 진행 사진을 캡처합니다.";
+"NSCameraUsageDescription" = "CycleBalance은 AI 식사 추정을 위한 식사 사진 촬영, 식품 바코드 스캔, 모발 성장/탈모 진행 사진 기록에 카메라를 사용합니다.";
 
 /* Privacy - Health Share Usage Description */
-"NSHealthShareUsageDescription" = "CycleBalance은(는) Apple Health 데이터를 읽어 웰빙 추세와 일일 요약을 채웁니다.";
+"NSHealthShareUsageDescription" = "CycleBalance은(는) 사용자가 허용한 Apple Health 데이터(영양, 혈당, 주기, 증상, 수면, 활동, 심장 및 신체 정보 등)를 읽어 기기 내 기록과 인사이트를 채웁니다.";
 
 /* Privacy - Health Update Usage Description */
-"NSHealthUpdateUsageDescription" = "CycleBalance은(는) Apple Health 데이터를 읽어 웰빙 추세와 일일 요약을 채웁니다. 앱은 Apple Health에 쓰지 않습니다.";
+"NSHealthUpdateUsageDescription" = "CycleBalance은(는) 사용자가 허용한 Apple Health 데이터(영양, 혈당, 주기, 증상, 수면, 활동, 심장 및 신체 정보 등)를 읽어 기기 내 기록과 인사이트를 채웁니다. 앱은 Apple Health에 쓰지 않습니다.";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance은(는) 사진 라이브러리를 사용하여 모발 성장/탈모 진행 사진을 저장하고 비교합니다.";
+"NSPhotoLibraryUsageDescription" = "CycleBalance은(는) AI 식사 추정을 위한 식사 사진 가져오기와 모발 성장/탈모 진행 사진 저장 또는 비교에 사진 라이브러리를 사용합니다.";
