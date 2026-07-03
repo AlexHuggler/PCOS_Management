@@ -356,7 +356,8 @@ struct TodayView: View {
             } else {
                 cycleHeroContent
                     .padding(.vertical, AppTheme.spacing32)
-                    .cardStyle(cornerRadius: AppTheme.largeCardCornerRadius)
+                    .padding(AppTheme.spacing20)
+                    .premiumCardDecoration(cornerRadius: AppTheme.largeCardCornerRadius)
             }
         }
         .id(heroState.renderIdentity)
@@ -850,7 +851,8 @@ struct TodayView: View {
                             defaultValue: "Today's Symptoms"
                         )
                     )
-                        .appFont(.headline)
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
 
                     FlowLayout(spacing: AppTheme.spacing8) {
                         ForEach(todaysSymptoms) { symptom in
@@ -862,7 +864,8 @@ struct TodayView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .cardStyle()
+                .padding(AppTheme.spacing20)
+                .premiumCardDecoration()
             }
         }
     }
@@ -1106,7 +1109,8 @@ struct TodayView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .cardStyle()
+        .padding(AppTheme.spacing20)
+        .premiumCardDecoration()
         .sensoryFeedback(.success, trigger: showQuickLogSaved)
         .animation(.easeInOut(duration: 0.25), value: quickLogFlow)
         .accessibilityElement(children: .contain)
@@ -1288,7 +1292,8 @@ struct TodayView: View {
                 Image(systemName: "checkmark.seal.fill")
                     .foregroundStyle(AppTheme.sage)
                 Text(L10n.string("Positive actions", defaultValue: "Positive actions"))
-                    .appFont(.headline)
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
                 Spacer()
             }
 
@@ -1393,7 +1398,8 @@ struct TodayView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
+        .padding(AppTheme.spacing20)
+        .premiumCardDecoration()
         .accessibilityIdentifier("today.positive_actions")
     }
 
@@ -1405,7 +1411,8 @@ struct TodayView: View {
                     Image(systemName: "heart.text.square.fill")
                         .foregroundStyle(AppTheme.coralAccent)
                     Text(L10n.string("Apple Health context", defaultValue: "Apple Health context"))
-                        .appFont(.headline)
+                        .appFont(.headline, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
                     Spacer()
                 }
 
@@ -1454,7 +1461,8 @@ struct TodayView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .cardStyle()
+            .padding(AppTheme.spacing20)
+            .premiumCardDecoration()
             .accessibilityIdentifier("today.health_context")
         }
     }
@@ -1503,7 +1511,8 @@ struct TodayView: View {
                     )
                     VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                         Text(L10n.string("Blood Sugar", defaultValue: "Blood Sugar"))
-                            .appFont(.headline)
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(
@@ -1529,8 +1538,9 @@ struct TodayView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(AppTheme.spacing20)
                 .contentShape(Rectangle())
-                .cardStyle()
+                .premiumCardDecoration()
             }
             .buttonStyle(.plain)
         }
@@ -1552,7 +1562,8 @@ struct TodayView: View {
                     )
                     VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                         Text(L10n.string("Supplements", defaultValue: "Supplements"))
-                            .appFont(.headline)
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(
@@ -1571,8 +1582,9 @@ struct TodayView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(AppTheme.spacing20)
                 .contentShape(Rectangle())
-                .cardStyle()
+                .premiumCardDecoration()
             }
             .buttonStyle(.plain)
         }
@@ -1593,7 +1605,8 @@ struct TodayView: View {
                     )
                     VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                         Text(L10n.string("Meals", defaultValue: "Meals"))
-                            .appFont(.headline)
+                            .appFont(.headline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(
@@ -1612,8 +1625,9 @@ struct TodayView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(AppTheme.spacing20)
                 .contentShape(Rectangle())
-                .cardStyle()
+                .premiumCardDecoration()
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("today.meal_summary.open_log")
@@ -1628,11 +1642,12 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label {
                         Text(L10n.string("Cycle Recovery", defaultValue: "Cycle Recovery"))
+                            .foregroundStyle(AppTheme.primaryText)
                     } icon: {
                         Image(systemName: "sparkles")
+                            .foregroundStyle(AppTheme.accentColor)
                     }
-                    .appFont(.headline)
-                    .foregroundStyle(AppTheme.accentColor)
+                    .appFont(.headline, weight: .semibold)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     Text(postpartumText)
@@ -1641,7 +1656,8 @@ struct TodayView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .cardStyle()
+                .padding(AppTheme.spacing20)
+                .premiumCardDecoration()
             } else if !AppTheme.usesImmersiveHomeShell, let predictionText = viewModel?.predictionPrimaryText {
                 let sectionTitle = viewModel?.hasActionablePrediction == true
                     ? L10n.string("Period Estimate", defaultValue: "Period Estimate")
@@ -1649,11 +1665,12 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label {
                         Text(sectionTitle)
+                            .foregroundStyle(AppTheme.primaryText)
                     } icon: {
                         Image(systemName: "sparkles")
+                            .foregroundStyle(AppTheme.coralAccent)
                     }
-                        .appFont(.headline)
-                        .foregroundStyle(AppTheme.coralAccent)
+                        .appFont(.headline, weight: .semibold)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(predictionText)
@@ -1669,7 +1686,8 @@ struct TodayView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .cardStyle()
+                .padding(AppTheme.spacing20)
+                .premiumCardDecoration()
             }
         }
     }
@@ -2033,11 +2051,17 @@ private struct LunarCycleHeroRing: View {
             sweepDone = true
         case .subtle:
             sweepDone = false
-            withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
-            // Odd repeat count ends the presentation expanded, matching the
-            // model value, so there is no snap before the settle ease-out.
-            withAnimation(.easeInOut(duration: 0.75).repeatCount(3, autoreverses: true).delay(1.1)) {
-                bloomBreathing = true
+            Task { @MainActor in
+                // Yield a frame so the reset above commits on its own tick;
+                // otherwise the same-tick false -> true change coalesces on
+                // re-appearance and the replay sweep doesn't animate.
+                await Task.yield()
+                withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
+                // Odd repeat count ends the presentation expanded, matching the
+                // model value, so there is no snap before the settle ease-out.
+                withAnimation(.easeInOut(duration: 0.75).repeatCount(3, autoreverses: true).delay(1.1)) {
+                    bloomBreathing = true
+                }
             }
             // Settle back to rest after the breaths (sweep 1.1 + 3 x 0.75 = 3.35).
             settleTask = Task { @MainActor in
@@ -2047,12 +2071,16 @@ private struct LunarCycleHeroRing: View {
             }
         case .alive:
             sweepDone = false
-            withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
-            withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(1.1)) {
-                bloomBreathing = true
-            }
-            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
-                aliveShimmer = true
+            Task { @MainActor in
+                // Same frame yield as .subtle so the replay sweep animates.
+                await Task.yield()
+                withAnimation(.easeOut(duration: 1.1)) { sweepDone = true }
+                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(1.1)) {
+                    bloomBreathing = true
+                }
+                withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
+                    aliveShimmer = true
+                }
             }
         }
     }
