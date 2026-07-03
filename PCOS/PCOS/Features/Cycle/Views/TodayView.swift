@@ -786,8 +786,8 @@ struct TodayView: View {
         if streakDays > 1 {
             HStack(spacing: AppTheme.spacing8) {
                 Image(systemName: "flame.fill")
-                    .foregroundStyle(.orange)
-                    .symbolEffect(.bounce, value: streakDays >= 7)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.softGoldAccent)
                 Text(
                     L10n.inflected(
                         LocalizedStringResource(
@@ -796,10 +796,14 @@ struct TodayView: View {
                         )
                     )
                 )
-                    .appFont(.subheadline, weight: .medium)
+                    .appFont(.caption, weight: .medium)
+                    .foregroundStyle(AppTheme.secondaryText)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, AppTheme.spacing12)
             .padding(.vertical, AppTheme.spacing8)
+            .background(Capsule().fill(AppTheme.premiumEditorRaisedSurface.opacity(0.6)))
+            .overlay(Capsule().stroke(AppTheme.premiumEditorBorder.opacity(0.5), lineWidth: 0.8))
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -1639,7 +1643,7 @@ struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .cardStyle()
-            } else if let predictionText = viewModel?.predictionPrimaryText {
+            } else if !AppTheme.usesImmersiveHomeShell, let predictionText = viewModel?.predictionPrimaryText {
                 let sectionTitle = viewModel?.hasActionablePrediction == true
                     ? L10n.string("Period Estimate", defaultValue: "Period Estimate")
                     : L10n.string("Estimate Update", defaultValue: "Estimate Update")
