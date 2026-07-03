@@ -4,8 +4,8 @@ import Foundation
 /// arc whose gradient fades in from nothing at the tail (cycle day 1) and
 /// gathers full color at the leading tip (today). Positions are fractions of
 /// the full circle; colors are indices into the theme's silk palette.
-struct SilkCometRingModel: Equatable {
-    struct Stop: Equatable {
+struct SilkCometRingModel: Equatable, Sendable {
+    struct Stop: Equatable, Sendable {
         let position: Double
         let opacity: Double
         let colorIndex: Int
@@ -29,9 +29,11 @@ struct SilkCometRingModel: Equatable {
     ]
 
     init(progress: Double, isWelcome: Bool = false, tailFloorOpacity: Double = 0) {
+        // NaN escapes min/max clamping and would poison Gradient stop locations.
+        let safeProgress = progress.isNaN ? 0 : progress
         let end = isWelcome
             ? Self.welcomeArcEnd
-            : min(max(progress, Self.minimumArcEnd), Self.maximumArcEnd)
+            : min(max(safeProgress, Self.minimumArcEnd), Self.maximumArcEnd)
 
         arcEnd = end
         showsTip = !isWelcome

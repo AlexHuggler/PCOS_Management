@@ -21,7 +21,7 @@ struct SilkCometRingModelTests {
         #expect(model.stops.last?.position == 0.5)
         // Positions ascend strictly.
         let positions = model.stops.map(\.position)
-        #expect(positions == positions.sorted())
+        #expect(zip(positions, positions.dropFirst()).allSatisfy { $0 < $1 })
     }
 
     @Test("Zero fade: tail opacity is exactly zero, tip is full")
@@ -44,5 +44,18 @@ struct SilkCometRingModelTests {
         #expect(model.arcEnd == SilkCometRingModel.welcomeArcEnd)
         #expect(model.showsTip == false)
         #expect(SilkCometRingModel(progress: 0.4).showsTip == true)
+    }
+
+    @Test("Welcome arc honors the tail floor")
+    func welcomeHonorsFloor() {
+        let model = SilkCometRingModel(progress: 0, isWelcome: true, tailFloorOpacity: 0.35)
+        #expect(model.arcEnd == SilkCometRingModel.welcomeArcEnd)
+        #expect(model.stops.allSatisfy { $0.opacity >= 0.35 })
+    }
+
+    @Test("NaN progress clamps to the minimum arc")
+    func nanProgressClamps() {
+        let model = SilkCometRingModel(progress: .nan, isWelcome: false)
+        #expect(model.arcEnd == SilkCometRingModel.minimumArcEnd)
     }
 }
