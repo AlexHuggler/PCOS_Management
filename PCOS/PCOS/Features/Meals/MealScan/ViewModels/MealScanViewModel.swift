@@ -1,4 +1,5 @@
 import Foundation
+import os
 import SwiftData
 import UIKit
 
@@ -9,6 +10,7 @@ final class MealScanViewModel {
         case entry
         case camera
         case processing
+        case repeatSuggestion
         case review
         case manualFallback
         case saved
@@ -20,7 +22,14 @@ final class MealScanViewModel {
     private let calculator = MealNutritionCalculator()
     private let metabolicProfileService = MealMetabolicProfileService()
     private let featureFlags: MealScanFeatureFlags
-    private let remoteMealScanService: GeminiRemoteMealScanService?
+    private let remoteMealScanService: (any RemoteMealScanServing)?
+    private let imageNormalizer: any MealScanImageNormalizing
+    private let repeatMealFingerprinter: any MealImageFingerprinting
+    private let repeatMealCache: (any MealScanRepeatCaching)?
+    private let mealLogRepository: any MealLogRepository
+    private var pendingNormalizedImage: NormalizedMealScanImage?
+    private var pendingFingerprint: MealImageFingerprint?
+    private var repeatSourceRecordID: UUID?
 
     var phase: Phase = .entry
     var mealType: MealType
@@ -36,6 +45,7 @@ final class MealScanViewModel {
     var selectedImage: UIImage?
     var selectedImageData: Data?
     var lastScanResult: MealScanResult?
+    var repeatMealSuggestion: RepeatMealSuggestion?
 
     var canAddManualFood: Bool { true }
 
@@ -43,20 +53,40 @@ final class MealScanViewModel {
         mealType: MealType,
         modelContext: ModelContext,
         pipeline: MealScanPipeline? = nil,
-        remoteMealScanService: GeminiRemoteMealScanService? = nil,
-        featureFlags: MealScanFeatureFlags = .current
+        remoteMealScanService: (any RemoteMealScanServing)? = nil,
+        featureFlags: MealScanFeatureFlags = .current,
+        imageNormalizer: any MealScanImageNormalizing = MealScanImageNormalizer(),
+        repeatMealFingerprinter: any MealImageFingerprinting = VisionRepeatMealImageFingerprinter(),
+        repeatMealCache: (any MealScanRepeatCaching)? = nil,
+        mealLogRepository: (any MealLogRepository)? = nil
     ) {
         self.mealType = mealType
         self.modelContext = modelContext
         self.featureFlags = featureFlags
         self.nutritionRepository = LocalFoodNutritionRepository(records: SampleNutritionFixtures.records)
         self.pipeline = pipeline ?? (featureFlags.enableMockMealScanData ? .mock() : .production(registry: MealScanModelRegistry(foodClassifierModelName: nil, foodSegmentationModelName: nil, depthModelName: nil, modelVersion: "unconfigured")))
+        self.imageNormalizer = imageNormalizer
+        self.repeatMealFingerprinter = repeatMealFingerprinter
+        self.mealLogRepository = mealLogRepository ?? SwiftDataMealLogRepository(modelContext: modelContext)
         self.remoteMealScanService = remoteMealScanService ?? Self.makeRemoteMealScanService(
             modelContext: modelContext,
             nutritionRepository: nutritionRepository,
             calculator: calculator,
             featureFlags: featureFlags
         )
+        if let repeatMealCache {
+            self.repeatMealCache = repeatMealCache
+        } else if featureFlags.enableRepeatMealSuggestions {
+            self.repeatMealCache = MealScanRepeatCache(
+                modelContext: modelContext,
+                fingerprinter: repeatMealFingerprinter,
+                similarityPolicy: featureFlags.enableSimilarMealSuggestions
+                    ? MealRepeatSimilarityPolicy.loadApproved()
+                    : .disabled
+            )
+        } else {
+            self.repeatMealCache = nil
+        }
     }
 
     func startScan() {
@@ -65,7 +95,7 @@ final class MealScanViewModel {
 
     func scanWithFallback(image: UIImage) async {
         do {
-            try await scan(image: image)
+            try await prepareSelectedImage(image)
         } catch {
             errorMessage = "No food was confidently detected. You can retake the photo or add the meal manually."
             phase = .manualFallback
@@ -73,13 +103,103 @@ final class MealScanViewModel {
     }
 
     func scan(image: UIImage) async throws {
+        try await prepareSelectedImage(image)
+    }
+
+    func prepareSelectedImage(_ image: UIImage) async throws {
         selectedImage = image
-        selectedImageData = image.jpegData(compressionQuality: 0.82)
+        errorMessage = nil
+        repeatMealSuggestion = nil
+        repeatSourceRecordID = nil
+        phase = .processing
+        let normalizedImage = try imageNormalizer.normalizeJPEGData(from: image)
+        pendingNormalizedImage = normalizedImage
+        selectedImageData = normalizedImage.jpegData
+        pendingFingerprint = nil
+
+        if featureFlags.enableRepeatMealSuggestions,
+           let repeatMealCache {
+            do {
+                let fingerprint = try await repeatMealFingerprinter.makeFingerprint(
+                    for: normalizedImage.jpegData
+                )
+                pendingFingerprint = fingerprint
+                if let suggestion = await repeatMealCache.suggestion(
+                    for: fingerprint,
+                    now: Date()
+                ) {
+                    repeatMealSuggestion = suggestion
+                    phase = .repeatSuggestion
+                    return
+                }
+            } catch {
+                Logger.meals.error("Repeat meal fingerprinting failed; continuing with a fresh scan.")
+            }
+        }
+
+        try await scanPendingImageAsNew()
+    }
+
+    func usePreviousMeal() {
+        guard let suggestion = repeatMealSuggestion else { return }
+        let snapshot = suggestion.snapshot
+        let reusedItems = snapshot.makeDraftItemsForReuse()
+        let profile = metabolicProfileService.profile(
+            for: snapshot.nutrition,
+            confidence: snapshot.confidence,
+            hiddenIngredientEstimate: snapshot.hiddenIngredientEstimate,
+            visibleWarnings: snapshot.warnings
+        )
+        let result = MealScanResult(
+            id: UUID(),
+            mealName: snapshot.mealName,
+            mealType: snapshot.mealType,
+            detectedItems: reusedItems,
+            nutrition: snapshot.nutrition,
+            metabolicProfile: profile,
+            confidence: snapshot.confidence,
+            warnings: snapshot.warnings,
+            originalPredictionJSON: MealScanJSON.encodeOriginal(
+                mealName: snapshot.mealName,
+                items: reusedItems,
+                nutrition: snapshot.nutrition,
+                confidence: snapshot.confidence,
+                warnings: snapshot.warnings
+            ),
+            modelVersion: snapshot.source.modelVersion,
+            pipelineVersion: snapshot.source.pipelineVersion
+        )
+
+        mealType = snapshot.mealType
+        hiddenIngredientEstimate = snapshot.hiddenIngredientEstimate
+        hasUserEdits = false
+        repeatSourceRecordID = suggestion.recordID
+        apply(result: result)
+        do {
+            try repeatMealCache?.markReused(recordID: suggestion.recordID, now: Date())
+        } catch {
+            Logger.meals.error("Repeat meal usage update failed; continuing with reviewed nutrition.")
+        }
+        repeatMealSuggestion = nil
+        phase = .review
+    }
+
+    func scanPendingImageAsNew() async throws {
+        guard let image = selectedImage,
+              let normalizedImage = pendingNormalizedImage else {
+            throw MealScanViewModelError.missingPendingImage
+        }
+
+        repeatMealSuggestion = nil
+        repeatSourceRecordID = nil
         phase = .processing
         let result: MealScanResult
         if let remoteMealScanService {
             do {
-                result = try await remoteMealScanService.scan(image: image, mealType: mealType)
+                result = try await remoteMealScanService.scan(
+                    normalizedImage: normalizedImage,
+                    mealType: mealType
+                )
             } catch let error as GeminiMealScanProxyError where error.shouldShowManualFallbackWithoutLocalEstimate {
                 errorMessage = error.errorDescription
                 phase = .manualFallback
@@ -223,18 +343,54 @@ final class MealScanViewModel {
                 confidence: confidence,
                 warnings: warnings
             ),
-            photoData: selectedImageData
+            photoData: selectedImageData,
+            repeatSourceRecordID: repeatSourceRecordID
         )
     }
 
     func save() async throws {
-        try await SwiftDataMealLogRepository(modelContext: modelContext).saveMealScan(confirmedMeal())
+        let confirmedMeal = confirmedMeal()
+        try await mealLogRepository.saveMealScan(confirmedMeal)
+
+        if featureFlags.enableRepeatMealSuggestions,
+           let repeatMealCache,
+           let pendingFingerprint {
+            let result = confirmedMeal.scanResult
+            let snapshot = RepeatMealDraftSnapshot(
+                mealName: result.mealName,
+                mealType: result.mealType,
+                items: result.detectedItems,
+                nutrition: result.nutrition,
+                confidence: result.confidence,
+                warnings: result.warnings,
+                hiddenIngredientEstimate: hiddenIngredientEstimate,
+                source: RepeatMealSourceMetadata(
+                    modelVersion: result.modelVersion,
+                    pipelineVersion: result.pipelineVersion
+                )
+            )
+            do {
+                try repeatMealCache.save(
+                    snapshot: snapshot,
+                    sourceMealID: confirmedMeal.id,
+                    sourceMealLoggedAt: confirmedMeal.loggedAt,
+                    fingerprint: pendingFingerprint,
+                    now: Date()
+                )
+            } catch {
+                Logger.meals.error("Repeat meal cache save failed; reviewed meal remains saved.")
+            }
+        }
         phase = .saved
     }
 
     func retake() {
         selectedImage = nil
         selectedImageData = nil
+        pendingNormalizedImage = nil
+        pendingFingerprint = nil
+        repeatMealSuggestion = nil
+        repeatSourceRecordID = nil
         errorMessage = nil
         phase = .camera
     }
@@ -284,7 +440,7 @@ final class MealScanViewModel {
         nutritionRepository: LocalFoodNutritionRepository,
         calculator: MealNutritionCalculator,
         featureFlags: MealScanFeatureFlags
-    ) -> GeminiRemoteMealScanService? {
+    ) -> (any RemoteMealScanServing)? {
         guard featureFlags.enableGeminiMealScan,
               let configuration = GeminiRemoteMealScanConfiguration.from(
                 revenueCatAppUserID: SubscriptionManager.shared.revenueCatAppUserID
@@ -304,6 +460,10 @@ final class MealScanViewModel {
             appCheckTokenProvider: FirebaseMealScanAppCheckTokenProvider()
         )
     }
+}
+
+private enum MealScanViewModelError: Error {
+    case missingPendingImage
 }
 
 private extension GeminiMealScanProxyError {

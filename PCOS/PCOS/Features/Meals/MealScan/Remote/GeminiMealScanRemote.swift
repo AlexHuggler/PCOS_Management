@@ -411,7 +411,15 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
 }
 
 @MainActor
-final class GeminiRemoteMealScanService {
+protocol RemoteMealScanServing: AnyObject {
+    func scan(
+        normalizedImage: NormalizedMealScanImage,
+        mealType: MealType
+    ) async throws -> MealScanResult
+}
+
+@MainActor
+final class GeminiRemoteMealScanService: RemoteMealScanServing {
     private let remoteEstimator: any RemoteMealScanEstimating
     private let resultCache: MealScanResultCache?
     private let imageNormalizer: any MealScanImageNormalizing
@@ -442,11 +450,18 @@ final class GeminiRemoteMealScanService {
 
     func scan(image: UIImage, mealType: MealType) async throws -> MealScanResult {
         let normalized = try imageNormalizer.normalizeJPEGData(from: image)
+        return try await scan(normalizedImage: normalized, mealType: mealType)
+    }
+
+    func scan(
+        normalizedImage: NormalizedMealScanImage,
+        mealType: MealType
+    ) async throws -> MealScanResult {
         let cacheKey = MealScanResultCache.cacheKey(
             modelID: configuration.modelID,
             schemaVersion: configuration.schemaVersion,
             promptVersion: configuration.promptVersion,
-            normalizedImageData: normalized.jpegData,
+            normalizedImageData: normalizedImage.jpegData,
             localeIdentifier: configuration.localeIdentifier,
             appBuild: configuration.appBuild
         )
@@ -468,8 +483,8 @@ final class GeminiRemoteMealScanService {
 
         let estimate = try await remoteEstimator.estimateMeal(
             request: RemoteMealScanRequest(
-                normalizedImageJPEGData: normalized.jpegData,
-                sourceImageHash: normalized.sourceImageHash,
+                normalizedImageJPEGData: normalizedImage.jpegData,
+                sourceImageHash: normalizedImage.sourceImageHash,
                 mealType: mealType,
                 localeIdentifier: configuration.localeIdentifier,
                 modelID: configuration.modelID,
@@ -496,7 +511,7 @@ final class GeminiRemoteMealScanService {
             schemaVersion: configuration.schemaVersion,
             promptVersion: configuration.promptVersion,
             confidenceScore: result.confidence.score,
-            sourceImageHash: normalized.sourceImageHash
+            sourceImageHash: normalizedImage.sourceImageHash
         )
         return result
     }

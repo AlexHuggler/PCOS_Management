@@ -12,6 +12,8 @@ struct MealScanFeatureFlags: Equatable, Sendable {
     var enableGeminiMealScanDebugDirect: Bool
     var enableGeminiFallbackModel: Bool
     var enableMealScanResultCache: Bool
+    var enableRepeatMealSuggestions: Bool
+    var enableSimilarMealSuggestions: Bool
 
     static var current: MealScanFeatureFlags {
         MealScanFeatureFlags(
@@ -25,7 +27,9 @@ struct MealScanFeatureFlags: Equatable, Sendable {
             enableGeminiMealScan: boolValue(key: "mealScan.enableGeminiMealScan", launchArgument: "enableGeminiMealScan", debugDefault: false, releaseDefault: false),
             enableGeminiMealScanDebugDirect: boolValue(key: "mealScan.enableGeminiMealScanDebugDirect", launchArgument: "enableGeminiMealScanDebugDirect", debugDefault: false, releaseDefault: false),
             enableGeminiFallbackModel: boolValue(key: "mealScan.enableGeminiFallbackModel", launchArgument: "enableGeminiFallbackModel", debugDefault: false, releaseDefault: false),
-            enableMealScanResultCache: boolValue(key: "mealScan.enableMealScanResultCache", launchArgument: "enableMealScanResultCache", debugDefault: true, releaseDefault: true)
+            enableMealScanResultCache: boolValue(key: "mealScan.enableMealScanResultCache", launchArgument: "enableMealScanResultCache", debugDefault: true, releaseDefault: true),
+            enableRepeatMealSuggestions: boolValue(key: "mealScan.enableRepeatMealSuggestions", launchArgument: "enableRepeatMealSuggestions", debugDefault: false, releaseDefault: true),
+            enableSimilarMealSuggestions: boolValue(key: "mealScan.enableSimilarMealSuggestions", launchArgument: "enableSimilarMealSuggestions", debugDefault: false, releaseDefault: false)
         )
     }
 
@@ -40,7 +44,9 @@ struct MealScanFeatureFlags: Equatable, Sendable {
         enableGeminiMealScan: false,
         enableGeminiMealScanDebugDirect: false,
         enableGeminiFallbackModel: false,
-        enableMealScanResultCache: true
+        enableMealScanResultCache: true,
+        enableRepeatMealSuggestions: false,
+        enableSimilarMealSuggestions: false
     )
 
     private static func boolValue(

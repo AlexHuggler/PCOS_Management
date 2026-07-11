@@ -185,6 +185,63 @@ struct GeminiMealScanTests {
         #expect(second.modelVersion.contains("cache"))
     }
 
+    @Test("normalized remote scan uses supplied bytes and hash without renormalizing")
+    func normalizedRemoteScanUsesSuppliedImage() async throws {
+        let suppliedImage = NormalizedMealScanImage(
+            jpegData: Data("caller-normalized-image".utf8),
+            sourceImageHash: "caller-supplied-hash",
+            width: 320,
+            height: 240
+        )
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let imageNormalizer = RecordingMealScanImageNormalizer()
+        let service: any RemoteMealScanServing = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: imageNormalizer,
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault
+        )
+
+        _ = try await service.scan(normalizedImage: suppliedImage, mealType: .dinner)
+
+        let request = try #require(remote.receivedRequests.first)
+        #expect(request.normalizedImageJPEGData == suppliedImage.jpegData)
+        #expect(request.sourceImageHash == suppliedImage.sourceImageHash)
+        #expect(request.mealType == .dinner)
+        #expect(imageNormalizer.callCount == 0)
+    }
+
+    @Test("normalized remote scan obtains App Check only after a cache miss")
+    func normalizedRemoteScanObtainsAppCheckOnlyAfterCacheMiss() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let normalizedImage = NormalizedMealScanImage(
+            jpegData: Data("caller-normalized-image".utf8),
+            sourceImageHash: "caller-supplied-hash",
+            width: 320,
+            height: 240
+        )
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let appCheckTokenProvider = RecordingLimitedUseAppCheckTokenProvider()
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: MealScanResultCache(modelContext: container.mainContext),
+            imageNormalizer: RecordingMealScanImageNormalizer(),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            appCheckTokenProvider: appCheckTokenProvider
+        )
+
+        _ = try await service.scan(normalizedImage: normalizedImage, mealType: .lunch)
+        _ = try await service.scan(normalizedImage: normalizedImage, mealType: .lunch)
+
+        #expect(remote.callCount == 1)
+        #expect(remote.receivedFirebaseAppCheckTokens == ["limited-use-token-1"])
+        #expect(appCheckTokenProvider.limitedUseTokenCallCount == 1)
+    }
+
     @Test("each uncached remote scan obtains one limited-use App Check token")
     func uncachedRemoteScansObtainOneLimitedUseAppCheckTokenEach() async throws {
         let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
@@ -365,6 +422,7 @@ struct GeminiMealScanTests {
 private final class CountingRemoteMealScanEstimator: RemoteMealScanEstimating {
     private let responseJSON: String
     var callCount = 0
+    var receivedRequests: [RemoteMealScanRequest] = []
     var receivedFirebaseAppCheckTokens: [String?] = []
 
     init(responseJSON: String) {
@@ -373,11 +431,26 @@ private final class CountingRemoteMealScanEstimator: RemoteMealScanEstimating {
 
     func estimateMeal(request: RemoteMealScanRequest) async throws -> RemoteMealScanEstimate {
         callCount += 1
+        receivedRequests.append(request)
         receivedFirebaseAppCheckTokens.append(request.firebaseAppCheckToken)
         return RemoteMealScanEstimate(
             response: try GeminiMealScanResponseParser().parseResponseJSON(responseJSON),
             originalResponseJSON: responseJSON,
             modelID: request.modelID
+        )
+    }
+}
+
+private final class RecordingMealScanImageNormalizer: MealScanImageNormalizing, @unchecked Sendable {
+    private(set) var callCount = 0
+
+    func normalizeJPEGData(from image: UIImage) throws -> NormalizedMealScanImage {
+        callCount += 1
+        return NormalizedMealScanImage(
+            jpegData: Data("unexpected-renormalized-image".utf8),
+            sourceImageHash: "unexpected-renormalized-hash",
+            width: 1,
+            height: 1
         )
     }
 }

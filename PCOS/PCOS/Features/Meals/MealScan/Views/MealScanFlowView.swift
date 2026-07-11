@@ -21,6 +21,8 @@ struct MealScanFlowView: View {
                         MealCameraView(viewModel: viewModel)
                     case .processing:
                         MealScanProcessingView()
+                    case .repeatSuggestion:
+                        MealScanProcessingView()
                     case .review:
                         MealScanReviewView(viewModel: viewModel)
                     case .manualFallback:
