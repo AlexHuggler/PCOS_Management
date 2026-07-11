@@ -51,6 +51,42 @@ struct MealScanPersistenceTests {
         #expect(imports.first?.reviewStatus == .reviewed)
     }
 
+    @Test("reused meal saves repeated labels without rewriting item nutrition sources")
+    func saveReusedMealPreservesItemNutritionSources() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        var result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .dinner)
+        var expectedSources: [UUID: NutritionDataSource] = [:]
+        for index in result.detectedItems.indices {
+            let source: NutritionDataSource = index.isMultiple(of: 2) ? .usda : .openFoodFacts
+            result.detectedItems[index].nutritionSource = source
+            expectedSources[result.detectedItems[index].id] = source
+        }
+        let repeatRecordID = UUID()
+        let confirmed = ConfirmedMealScan(
+            scanResult: result,
+            mealType: .dinner,
+            userConfirmed: true,
+            repeatSourceRecordID: repeatRecordID
+        )
+
+        try await SwiftDataMealLogRepository(modelContext: context).saveMealScan(confirmed)
+
+        let meal = try #require(context.fetch(FetchDescriptor<MealEntry>()).first)
+        let nutritionImport = try #require(context.fetch(FetchDescriptor<NutritionImportRecord>()).first)
+        let storedItems = try context.fetch(FetchDescriptor<MealScanFoodItem>())
+
+        #expect(confirmed.repeatSourceRecordID == repeatRecordID)
+        #expect(meal.sourceLabel == "Repeated reviewed meal")
+        #expect(meal.mealSource == "reusedMeal")
+        #expect(nutritionImport.sourceName == "Repeated reviewed meal")
+        #expect(nutritionImport.sourceKind == .aiMealScan)
+        #expect(storedItems.count == expectedSources.count)
+        for item in storedItems {
+            #expect(item.nutritionSource == expectedSources[item.id])
+        }
+    }
+
     @Test("schema v5 backup round trips AI meal scan metadata")
     func backupRoundTripsMealScanFields() async throws {
         let source = try TestHelpers.makeModelContainer()

@@ -1121,22 +1121,29 @@ private extension SettingsDataImportService {
     }
 
     func clearAllTrackedModels() throws {
-        try modelContext.delete(model: CycleEntry.self)
-        try modelContext.delete(model: Cycle.self)
-        try modelContext.delete(model: OvulationObservation.self)
-        try modelContext.delete(model: SymptomEntry.self)
-        try modelContext.delete(model: Insight.self)
-        try modelContext.delete(model: BloodSugarReading.self)
-        try modelContext.delete(model: SupplementLog.self)
-        try modelContext.delete(model: MealEntry.self)
-        try modelContext.delete(model: MealScanFoodItem.self)
-        try modelContext.delete(model: MealScanNutritionSummary.self)
-        try modelContext.delete(model: MealScanMetadata.self)
-        try modelContext.delete(model: NutritionImportRecord.self)
-        try modelContext.delete(model: HealthKitImportedSampleRecord.self)
-        try modelContext.delete(model: HairPhotoEntry.self)
-        try modelContext.delete(model: DailyLog.self)
-        try modelContext.delete(model: PregnancyRecord.self)
+        try deleteAll(CycleEntry.self)
+        try deleteAll(Cycle.self)
+        try deleteAll(OvulationObservation.self)
+        try deleteAll(SymptomEntry.self)
+        try deleteAll(Insight.self)
+        try deleteAll(BloodSugarReading.self)
+        try deleteAll(SupplementLog.self)
+        try deleteAll(MealScanRepeatCacheRecord.self)
+        try deleteAll(MealEntry.self)
+        try deleteAll(MealScanFoodItem.self)
+        try deleteAll(MealScanNutritionSummary.self)
+        try deleteAll(MealScanMetadata.self)
+        try deleteAll(NutritionImportRecord.self)
+        try deleteAll(HealthKitImportedSampleRecord.self)
+        try deleteAll(HairPhotoEntry.self)
+        try deleteAll(DailyLog.self)
+        try deleteAll(PregnancyRecord.self)
+    }
+
+    func deleteAll<Model: PersistentModel>(_: Model.Type) throws {
+        for model in try modelContext.fetch(FetchDescriptor<Model>()) {
+            modelContext.delete(model)
+        }
     }
 
     func importRecords(from records: SettingsDataBackupRecords) throws -> SettingsDataRecordCounts {

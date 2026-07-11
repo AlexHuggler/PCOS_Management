@@ -208,6 +208,26 @@ struct MealViewModelTests {
         #expect(vm.fetchTodaysMeals().count == 0)
     }
 
+    @Test("Delete removes repeat suggestions sourced from the meal")
+    func deleteMealRemovesRepeatCacheRecords() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let meal = MealEntry(
+            timestamp: Date(),
+            mealType: .snack,
+            mealDescription: "Reviewed apple snack",
+            glycemicImpact: .low
+        )
+        context.insert(meal)
+        context.insert(makeRepeatRecord(sourceMealID: meal.id, loggedAt: meal.timestamp))
+        try context.save()
+
+        MealViewModel(modelContext: context).deleteMeal(meal)
+
+        #expect(try context.fetch(FetchDescriptor<MealEntry>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).isEmpty)
+    }
+
     @Test("Reset clears state")
     func resetClearsState() throws {
         let container = try makeMealContainer()
@@ -377,6 +397,35 @@ struct MealViewModelTests {
         #expect(storedMeals.first?.glycemicImpact == .medium)
     }
 
+    @Test("Save replacement removes repeat suggestions sourced from the replaced meal")
+    func saveReplacementRemovesRepeatCacheRecords() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let timestamp = Date(timeIntervalSince1970: 1_700_222_222)
+        let existingMeal = MealEntry(
+            timestamp: timestamp,
+            mealType: .lunch,
+            mealDescription: "Old reviewed lunch",
+            glycemicImpact: .low
+        )
+        context.insert(existingMeal)
+        context.insert(makeRepeatRecord(sourceMealID: existingMeal.id, loggedAt: timestamp))
+        try context.save()
+
+        let vm = MealViewModel(modelContext: context)
+        vm.mealDate = timestamp
+        vm.mealType = .lunch
+        vm.mealDescription = "Updated lunch"
+        vm.glycemicImpact = .medium
+
+        try vm.saveMeal()
+
+        let meals = try context.fetch(FetchDescriptor<MealEntry>())
+        #expect(meals.count == 1)
+        #expect(meals.first?.mealDescription == "Updated lunch")
+        #expect(try context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).isEmpty)
+    }
+
     @Test("Save continues when the meal dedupe fetch path fails")
     func saveContinuesWhenDedupeFetchFails() throws {
         let container = try makeMealContainer()
@@ -396,5 +445,25 @@ struct MealViewModelTests {
         let savedMeal = try #require(vm.fetchTodaysMeals().first)
         #expect(savedMeal.mealDescription == "Fallback save")
         #expect(savedMeal.mealType == .dinner)
+    }
+
+    private func makeRepeatRecord(sourceMealID: UUID, loggedAt: Date) -> MealScanRepeatCacheRecord {
+        MealScanRepeatCacheRecord(
+            sourceMealID: sourceMealID,
+            sourceImageHash: "meal-view-model-repeat-\(sourceMealID.uuidString)",
+            featurePrintArchive: Data([0x01, 0x02]),
+            visionRevision: 2,
+            snapshotJSON: "{}",
+            snapshotSchemaVersion: RepeatMealDraftSnapshot.currentSchemaVersion,
+            mealName: "Reviewed meal",
+            mealType: .lunch,
+            caloriesKcal: 400,
+            proteinGrams: 25,
+            carbsGrams: 40,
+            fatGrams: 12,
+            sourceMealLoggedAt: loggedAt,
+            createdAt: loggedAt,
+            lastUsedAt: loggedAt
+        )
     }
 }

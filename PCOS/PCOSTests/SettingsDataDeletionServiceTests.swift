@@ -29,7 +29,25 @@ struct SettingsDataDeletionServiceTests {
         context.insert(Insight(insightType: .cyclePattern, title: "Title", content: "Body", confidence: 0.8, dataPointsUsed: 3))
         context.insert(BloodSugarReading(timestamp: Date(), glucoseValue: 101, readingType: .fasting, notes: "note"))
         context.insert(SupplementLog(date: Date(), supplementName: "Inositol", dosageMg: 2000, timeTaken: Date(), taken: true))
-        context.insert(MealEntry(timestamp: Date(), mealType: .dinner, mealDescription: "Meal", glycemicImpact: .medium))
+        let meal = MealEntry(timestamp: Date(), mealType: .dinner, mealDescription: "Meal", glycemicImpact: .medium)
+        context.insert(meal)
+        context.insert(
+            MealScanRepeatCacheRecord(
+                sourceMealID: meal.id,
+                sourceImageHash: "delete-all-repeat-hash",
+                featurePrintArchive: Data([0x01, 0x02]),
+                visionRevision: 2,
+                snapshotJSON: "{}",
+                snapshotSchemaVersion: RepeatMealDraftSnapshot.currentSchemaVersion,
+                mealName: "Meal",
+                mealType: .dinner,
+                caloriesKcal: 500,
+                proteinGrams: 30,
+                carbsGrams: 55,
+                fatGrams: 18,
+                sourceMealLoggedAt: meal.timestamp
+            )
+        )
         context.insert(
             MealScanResultCacheRecord(
                 cacheKey: "cache-key",
@@ -57,6 +75,7 @@ struct SettingsDataDeletionServiceTests {
         #expect(try context.fetch(FetchDescriptor<SupplementLog>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<MealEntry>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<MealScanResultCacheRecord>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<HairPhotoEntry>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<DailyLog>()).isEmpty)
     }

@@ -357,6 +357,7 @@ struct ConfirmedMealScan: Equatable, Sendable {
     var photoData: Data?
     var photoLocalPath: String?
     var notes: String?
+    var repeatSourceRecordID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -368,7 +369,8 @@ struct ConfirmedMealScan: Equatable, Sendable {
         finalUserConfirmedJSON: String? = nil,
         photoData: Data? = nil,
         photoLocalPath: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        repeatSourceRecordID: UUID? = nil
     ) {
         self.id = id
         self.scanResult = scanResult
@@ -380,6 +382,7 @@ struct ConfirmedMealScan: Equatable, Sendable {
         self.photoData = photoData
         self.photoLocalPath = photoLocalPath
         self.notes = notes
+        self.repeatSourceRecordID = repeatSourceRecordID
     }
 }
 

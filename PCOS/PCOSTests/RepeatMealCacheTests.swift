@@ -407,6 +407,40 @@ struct RepeatMealCacheTests {
         #expect(records.contains { $0.sourceImageHash == "stored-100" })
     }
 
+    @Test("removing a source meal clears only its repeat records")
+    func removeRecordsClearsOnlyMatchingSourceMeal() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let loggedAt = Date(timeIntervalSince1970: 1_780_060_000)
+        let removedMealID = UUID()
+        let retainedMealID = UUID()
+        insertSourceMeal(id: removedMealID, loggedAt: loggedAt, into: context)
+        insertSourceMeal(id: retainedMealID, loggedAt: loggedAt, into: context)
+        try insertRepeatRecord(
+            sourceMealID: removedMealID,
+            sourceImageHash: "removed-source",
+            sourceMealLoggedAt: loggedAt,
+            into: context
+        )
+        try insertRepeatRecord(
+            sourceMealID: retainedMealID,
+            sourceImageHash: "retained-source",
+            sourceMealLoggedAt: loggedAt,
+            into: context
+        )
+        let cache = MealScanRepeatCache(
+            modelContext: context,
+            fingerprinter: StubRepeatMealFingerprinter(),
+            similarityPolicy: .disabled
+        )
+
+        try cache.removeRecords(sourceMealID: removedMealID)
+
+        let records = try fetchRepeatRecords(from: context)
+        #expect(records.count == 1)
+        #expect(records.first?.sourceMealID == retainedMealID)
+    }
+
     @Test("similarity policy loader rejects missing malformed and unsafe artifacts")
     func similarityPolicyLoaderRequiresApprovedArtifact() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(

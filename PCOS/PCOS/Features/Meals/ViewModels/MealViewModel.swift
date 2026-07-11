@@ -115,6 +115,7 @@ final class MealViewModel {
         do {
             let existing = try existingMealsResolver(modelContext, targetDate, targetType)
             for entry in existing {
+                removeRepeatCacheRecords(sourceMealID: entry.id)
                 modelContext.delete(entry)
             }
         } catch {
@@ -240,6 +241,7 @@ final class MealViewModel {
     // MARK: - Delete
 
     func deleteMeal(_ meal: MealEntry) {
+        removeRepeatCacheRecords(sourceMealID: meal.id)
         modelContext.delete(meal)
         do {
             try modelContext.save()
@@ -247,6 +249,23 @@ final class MealViewModel {
             Logger.database.info("Deleted meal: \(meal.mealDescription)")
         } catch {
             Logger.database.error("Failed to delete meal: \(error.localizedDescription)")
+        }
+    }
+
+    private func removeRepeatCacheRecords(sourceMealID: UUID) {
+        let sourceID = sourceMealID
+        let descriptor = FetchDescriptor<MealScanRepeatCacheRecord>(
+            predicate: #Predicate { record in
+                record.sourceMealID == sourceID
+            }
+        )
+
+        do {
+            for record in try modelContext.fetch(descriptor) {
+                modelContext.delete(record)
+            }
+        } catch {
+            Logger.meals.error("Repeat meal cache cleanup failed; continuing with meal persistence.")
         }
     }
 

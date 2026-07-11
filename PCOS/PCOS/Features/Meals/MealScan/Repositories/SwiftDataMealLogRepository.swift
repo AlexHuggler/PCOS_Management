@@ -37,6 +37,9 @@ struct SwiftDataMealLogRepository: MealLogRepository {
         let result = confirmedMeal.scanResult
         let now = Date()
         let mealID = confirmedMeal.id
+        let isRepeated = confirmedMeal.repeatSourceRecordID != nil
+        let sourceName = isRepeated ? "Repeated reviewed meal" : "AI meal estimate"
+        let mealSource = isRepeated ? "reusedMeal" : NutritionImportSourceKind.aiMealScan.rawValue
         let photoPath: String?
         if featureFlags.enableMealPhotoRetention, let photoData = confirmedMeal.photoData {
             photoPath = try photoStore.saveMealPhoto(photoData, mealID: mealID)
@@ -47,7 +50,7 @@ struct SwiftDataMealLogRepository: MealLogRepository {
         let nutritionImport = NutritionImportRecord(
             id: UUID(),
             sourceKind: .aiMealScan,
-            sourceName: "AI meal estimate",
+            sourceName: sourceName,
             externalIdentifier: result.id.uuidString,
             startDate: confirmedMeal.loggedAt,
             productName: result.mealName,
@@ -80,12 +83,12 @@ struct SwiftDataMealLogRepository: MealLogRepository {
             notes: confirmedMeal.notes ?? result.metabolicProfile.explanation,
             selectedTemplateID: nil,
             nutritionImportID: nutritionImport.id,
-            sourceLabel: "AI meal estimate",
+            sourceLabel: sourceName,
             calories: result.nutrition.caloriesKcal,
             fiberGrams: result.nutrition.fiberGrams,
             sugarGrams: result.nutrition.sugarGrams,
             servingText: "\(result.detectedItems.count) estimated foods",
-            mealSource: NutritionImportSourceKind.aiMealScan.rawValue,
+            mealSource: mealSource,
             photoLocalPath: photoPath,
             confidenceScore: result.confidence.score,
             userConfirmed: confirmedMeal.userConfirmed,

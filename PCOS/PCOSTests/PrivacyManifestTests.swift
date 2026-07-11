@@ -36,6 +36,57 @@ struct PrivacyManifestTests {
 
         #expect(reasons.contains("CA92.1"))
     }
+
+    @Test("repeat meal implementation stays local and outside export serializers")
+    @MainActor
+    func repeatMealImplementationStaysLocalAndPrivate() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let repeatMealDirectory = projectRoot.appendingPathComponent(
+            "PCOS/PCOS/Features/Meals/MealScan/RepeatMeal",
+            isDirectory: true
+        )
+        let repeatMealFiles = try FileManager.default.contentsOfDirectory(
+            at: repeatMealDirectory,
+            includingPropertiesForKeys: nil
+        ).filter { $0.pathExtension == "swift" }
+        let forbiddenLocalDependencies = [
+            "URLSession",
+            "http://",
+            "https://",
+            "Firebase",
+            "RevenueCat",
+            "Gemini",
+            "AnalyticsService",
+            "logEvent(",
+            "trackEvent(",
+            "SettingsDataBackup",
+            "SettingsDataExport",
+            "generateCSV",
+        ]
+
+        #expect(!repeatMealFiles.isEmpty)
+        for fileURL in repeatMealFiles {
+            let source = try String(contentsOf: fileURL, encoding: .utf8)
+            for forbiddenDependency in forbiddenLocalDependencies {
+                #expect(
+                    !source.localizedCaseInsensitiveContains(forbiddenDependency),
+                    "\(fileURL.lastPathComponent) must not reference \(forbiddenDependency)"
+                )
+            }
+        }
+
+        for relativePath in [
+            "PCOS/PCOS/App/SettingsDataBackupService.swift",
+            "PCOS/PCOS/App/SettingsDataExportService.swift",
+        ] {
+            let source = try String(
+                contentsOf: projectRoot.appendingPathComponent(relativePath),
+                encoding: .utf8
+            )
+            #expect(!source.contains("MealScanRepeatCacheRecord"))
+            #expect(!source.contains("featurePrintArchive"))
+        }
+    }
 }
 
 @Suite("App Icon Assets", .serialized)

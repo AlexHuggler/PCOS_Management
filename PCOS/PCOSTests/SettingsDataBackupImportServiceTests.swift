@@ -23,6 +23,60 @@ struct SettingsDataBackupImportServiceTests {
         #expect(backup.records.cycles.count == 1)
     }
 
+    @Test("repeat cache stays out of exports and replace-all import clears it")
+    func repeatCacheIsPrivateAndClearedByReplaceAllImport() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let loggedAt = Date(timeIntervalSince1970: 1_780_100_000)
+        let meal = MealEntry(
+            timestamp: loggedAt,
+            mealType: .lunch,
+            mealDescription: "Private repeat source",
+            glycemicImpact: .medium
+        )
+        let privateHash = "private-repeat-hash-9B85A66E"
+        context.insert(meal)
+        context.insert(
+            MealScanRepeatCacheRecord(
+                sourceMealID: meal.id,
+                sourceImageHash: privateHash,
+                featurePrintArchive: Data([0xDE, 0xAD, 0xBE, 0xEF]),
+                visionRevision: 2,
+                snapshotJSON: "{\"privateRepeatSnapshot\":true}",
+                snapshotSchemaVersion: RepeatMealDraftSnapshot.currentSchemaVersion,
+                mealName: "Private repeat source",
+                mealType: .lunch,
+                caloriesKcal: 410,
+                proteinGrams: 28,
+                carbsGrams: 44,
+                fatGrams: 13,
+                sourceMealLoggedAt: loggedAt
+            )
+        )
+        try context.save()
+
+        let backupData = try SettingsDataBackupService(modelContext: context).generateJSONBackupData()
+        let backupJSON = try #require(String(data: backupData, encoding: .utf8))
+        let csvURL = try SettingsDataExportService(modelContext: context).generateCSVExport()
+        let csv = try String(contentsOf: csvURL, encoding: .utf8)
+
+        for exportedText in [backupJSON, csv] {
+            #expect(!exportedText.contains(privateHash))
+            #expect(!exportedText.contains("privateRepeatSnapshot"))
+            #expect(!exportedText.contains("featurePrintArchive"))
+        }
+
+        let emptyBackup = SettingsDataBackupFile(
+            exportedAt: Date(),
+            appVersion: "1.0.0",
+            source: .userExport,
+            records: SettingsDataBackupRecords()
+        )
+        _ = try SettingsDataImportService(modelContext: context).replaceAll(with: emptyBackup)
+
+        #expect(try context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).isEmpty)
+    }
+
     @Test("generateJSONBackup writes a decodable schema-v1 file")
     func generateJSONBackupWritesDecodableSchemaV1File() throws {
         let container = try TestHelpers.makeModelContainer()
