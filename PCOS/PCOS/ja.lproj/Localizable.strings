@@ -2556,3 +2556,15 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Try whole-grain or seed bread instead of white bread." = "白パンの代わりに全粒粉や雑穀のパンを試してみましょう。";
 "Turkey Chili" = "ターキーチリ";
 "Veggie Omelet" = "野菜オムレツ";
+"Scan barcode now" = "今すぐバーコードをスキャン";
+"AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving." = "AI食事スキャンは近日公開予定です。バーコード検索は現在利用でき、保存前にすべての結果を確認できます。";
+"AI meal scanning is coming soon" = "AI食事スキャンは近日公開予定です";
+"Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "写真ベースの食事推定はまだ準備中です。このリリースでは、バーコードをスキャンするか栄養情報を手動で入力してください。";
+"Log a meal or scan a barcode while it is fresh in your mind." = "記憶が新しいうちに食事を記録するかバーコードをスキャンしましょう。";
+"Photo meal estimates are coming soon" = "写真による食事推定は近日公開予定です";
+"This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now." = "このサンプルは今後の写真フローを示しています。このリリースでは、バーコードスキャンと手動の食事記録が利用できます。";
+"Estimated from a sample preview. You would review and edit before saving." = "サンプルプレビューから推定されています。保存前に確認して編集できます。";
+"Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving." = "栄養値は調理方法、量、見えにくい油、ソース、ドレッシングによって変わることがあります。バーコードスキャンは食事記録から現在利用できます。写真ベースの推定はまだ準備中で、すべての食事は保存前に編集できます。";
+"Review the source notes, then scan a barcode or log your next meal to see how new entries fit in." = "元のメモを確認してから、バーコードをスキャンするか次の食事を記録して、新しい記録との関係を確認しましょう。";
+"Choose one quick log, scan a barcode, or enter your next meal manually." = "クイック記録を1つ選ぶか、バーコードをスキャンするか、次の食事を手動で入力してください。";
+"When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device." = "写真による推定を選ぶと、圧縮された写真のコピーが分析のため安全に AI サービスへ送信されます。CycleBalance はアップロードされた写真をサーバーに保存しません。初期設定では、確認して保存した栄養情報だけが食事記録に残ります。設定で「保存した食事写真を保持」をオンにすると、写真をこのデバイス内に保存できます。";

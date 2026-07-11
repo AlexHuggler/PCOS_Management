@@ -429,6 +429,12 @@ struct LocalizationResourceTests {
         "Built around your data, not hype",
         "Designed for PCOS-aware tracking, irregular cycles, and reviewable health context.",
         "Built to give women with PCOS the insights they deserve.",
+        "Photo meal estimates are coming soon",
+        "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now.",
+        "Estimated from a sample preview. You would review and edit before saving.",
+        "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving.",
+        "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in.",
+        "Choose one quick log, scan a barcode, or enter your next meal manually.",
     ]
     private let pregnancyPostpartumKeys = [
         "Cycle Recovery",

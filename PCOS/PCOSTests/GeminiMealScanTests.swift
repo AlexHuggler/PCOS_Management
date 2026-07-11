@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import SwiftData
 import Testing
@@ -186,10 +185,32 @@ struct GeminiMealScanTests {
         #expect(second.modelVersion.contains("cache"))
     }
 
+    @Test("each uncached remote scan obtains one limited-use App Check token")
+    func uncachedRemoteScansObtainOneLimitedUseAppCheckTokenEach() async throws {
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let appCheckTokenProvider = RecordingLimitedUseAppCheckTokenProvider()
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            appCheckTokenProvider: appCheckTokenProvider
+        )
+
+        _ = try await service.scan(image: UIImage(), mealType: .lunch)
+        _ = try await service.scan(image: UIImage(), mealType: .dinner)
+
+        #expect(remote.callCount == 2)
+        #expect(remote.receivedFirebaseAppCheckTokens == ["limited-use-token-1", "limited-use-token-2"])
+        #expect(appCheckTokenProvider.limitedUseTokenCallCount == 2)
+    }
+
     @Test("proxy client exposes quota and usage metadata on success")
     func proxyClientMapsQuotaAndUsageMetadata() async throws {
         MockMealScanURLProtocol.handler = { request in
-            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-integrity") == "integrity-token")
+            #expect(request.value(forHTTPHeaderField: "X-Firebase-AppCheck") == "limited-use-token")
             return (
                 HTTPURLResponse(
                     url: request.url!,
@@ -227,7 +248,7 @@ struct GeminiMealScanTests {
         let estimate = try await GeminiMealScanProxyClient(
             endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
             urlSession: .mealScanTestSession()
-        ).estimateMeal(request: .testDefault(appIntegrityToken: "integrity-token"))
+        ).estimateMeal(request: .testDefault(firebaseAppCheckToken: "limited-use-token"))
 
         #expect(estimate.modelID == "gemini-2.5-flash-lite")
         #expect(estimate.cacheHit == false)
@@ -239,14 +260,15 @@ struct GeminiMealScanTests {
         #expect(estimate.quota?.remainingTrial == 14)
     }
 
-    @Test("proxy client sends App Attest headers when assertion is available")
-    func proxyClientSendsAppAttestHeaders() async throws {
+    @Test("proxy client sends its Firebase App Check token in the proxy contract header")
+    func proxyClientSendsFirebaseAppCheckHeader() async throws {
         MockMealScanURLProtocol.handler = { request in
             #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-integrity") == nil)
-            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-key-id") == "key-id")
-            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-attestation") == "attestation")
-            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-assertion") == "assertion")
-            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-challenge") == "challenge")
+            #expect(request.value(forHTTPHeaderField: "X-Firebase-AppCheck") == "limited-use-token")
+            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-key-id") == nil)
+            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-attestation") == nil)
+            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-assertion") == nil)
+            #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-challenge") == nil)
             return (
                 HTTPURLResponse(
                     url: request.url!,
@@ -269,13 +291,7 @@ struct GeminiMealScanTests {
             urlSession: .mealScanTestSession()
         ).estimateMeal(
             request: .testDefault(
-                appIntegrityToken: nil,
-                appAttestAssertion: RemoteMealScanAppAttestAssertion(
-                    keyID: "key-id",
-                    attestation: "attestation",
-                    assertion: "assertion",
-                    challenge: "challenge"
-                )
+                firebaseAppCheckToken: "limited-use-token"
             )
         )
     }
@@ -314,7 +330,7 @@ struct GeminiMealScanTests {
             _ = try await GeminiMealScanProxyClient(
                 endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
                 urlSession: .mealScanTestSession()
-            ).estimateMeal(request: .testDefault(appIntegrityToken: "integrity-token"))
+            ).estimateMeal(request: .testDefault(firebaseAppCheckToken: "limited-use-token"))
             #expect(Bool(false), "Expected quota error")
         } catch let error as GeminiMealScanProxyError {
             #expect(error.statusCode == 429)
@@ -349,6 +365,7 @@ struct GeminiMealScanTests {
 private final class CountingRemoteMealScanEstimator: RemoteMealScanEstimating {
     private let responseJSON: String
     var callCount = 0
+    var receivedFirebaseAppCheckTokens: [String?] = []
 
     init(responseJSON: String) {
         self.responseJSON = responseJSON
@@ -356,11 +373,22 @@ private final class CountingRemoteMealScanEstimator: RemoteMealScanEstimating {
 
     func estimateMeal(request: RemoteMealScanRequest) async throws -> RemoteMealScanEstimate {
         callCount += 1
+        receivedFirebaseAppCheckTokens.append(request.firebaseAppCheckToken)
         return RemoteMealScanEstimate(
             response: try GeminiMealScanResponseParser().parseResponseJSON(responseJSON),
             originalResponseJSON: responseJSON,
             modelID: request.modelID
         )
+    }
+}
+
+@MainActor
+private final class RecordingLimitedUseAppCheckTokenProvider: MealScanLimitedUseAppCheckTokenProviding {
+    var limitedUseTokenCallCount = 0
+
+    func limitedUseToken() async throws -> String {
+        limitedUseTokenCallCount += 1
+        return "limited-use-token-\(limitedUseTokenCallCount)"
     }
 }
 
@@ -389,8 +417,7 @@ private extension GeminiRemoteMealScanConfiguration {
 
 private extension RemoteMealScanRequest {
     static func testDefault(
-        appIntegrityToken: String?,
-        appAttestAssertion: RemoteMealScanAppAttestAssertion? = nil
+        firebaseAppCheckToken: String?
     ) -> RemoteMealScanRequest {
         RemoteMealScanRequest(
             normalizedImageJPEGData: Data("normalized-image".utf8),
@@ -401,8 +428,7 @@ private extension RemoteMealScanRequest {
             schemaVersion: "meal-scan-gemini-v1",
             promptVersion: "meal-scan-prompt-v1",
             revenueCatAppUserID: "rc-user",
-            appIntegrityToken: appIntegrityToken,
-            appAttestAssertion: appAttestAssertion
+            firebaseAppCheckToken: firebaseAppCheckToken
         )
     }
 }

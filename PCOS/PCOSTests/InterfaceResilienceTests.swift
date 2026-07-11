@@ -11,6 +11,7 @@ private let bloodSugarHistorySourceRelativePath = "../PCOS/Features/BloodSugar/V
 private let todayViewSourceRelativePath = "../PCOS/Features/Cycle/Views/TodayView.swift"
 private let mealLogSourceRelativePath = "../PCOS/Features/Meals/Views/MealLogView.swift"
 private let mealScanFlowSourceRelativePath = "../PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+private let mealScanFeatureFlagsSourceRelativePath = "../PCOS/Features/Meals/MealScan/MealScanFeatureFlags.swift"
 private let onboardingContainerSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"
 private let onboardingHowAppHelpsSourceRelativePath = "../PCOS/Features/Onboarding/Views/HowAppHelpsView.swift"
 private let onboardingQuestionnaireSourceRelativePath = "../PCOS/Features/Onboarding/Views/QuestionnaireView.swift"
@@ -130,23 +131,39 @@ struct InterfaceResilienceTests {
 
         #expect(source.contains("Add nutrition"))
         #expect(source.contains("showingBarcodeImport = true"))
+        #expect(source.contains("BarcodeMealImportSheet"))
+        #expect(source.contains("meal_log.manual_barcode_field"))
+        #expect(source.contains("meal_log.lookup_barcode_button"))
+        #expect(source.contains("AI meal scanning is coming soon"))
+        #expect(source.contains("Scan barcode now"))
+        #expect(source.contains("private func openMealScanIfAvailable()"))
+        #expect(source.contains("guard MealScanFeatureFlags.current.enableMealScanV2 else {"))
         #expect(source.contains("showingMealScan = true"))
-        #expect(source.contains("Scan Meal with AI"))
         #expect(source.contains("lunarPrimaryMealScanCard"))
         #expect(source.contains("focusManualNutritionEntry()"))
         #expect(source.contains("meal_log.manual_nutrition_button"))
-        #expect(!source.contains("if MealScanFeatureFlags.current.enableMealScanV2"))
     }
 
     @Test("Meal scan preview opens without root premium gate while real photos present contextual paywall")
     func mealScanPreviewSeparatesSampleFromPremiumPhotoActions() throws {
         let flowSource = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let featureFlagsSource = try loadSource(relativePath: mealScanFeatureFlagsSourceRelativePath)
+        let settingsSource = try loadSource(relativePath: settingsSourceRelativePath)
         let onboardingSource = try loadSource(relativePath: onboardingMealScanDemoSourceRelativePath)
         let contentSource = try loadSource(relativePath: contentViewSourceRelativePath)
 
         #expect(!flowSource.contains(".premiumGated()"))
         #expect(flowSource.contains("presentPremiumPaywall(reason: .mealScan)"))
         #expect(flowSource.contains("Use sample meal"))
+        #expect(flowSource.contains("if MealScanFeatureFlags.current.enableMockMealScanData {"))
+        #expect(flowSource.contains("a compressed copy is sent securely to our AI service for analysis"))
+        #expect(flowSource.contains("CycleBalance does not retain the uploaded photo on its server"))
+        #expect(flowSource.contains("By default, only nutrition you review and save is kept"))
+        #expect(flowSource.contains("Keep Saved Meal Photos in Settings"))
+        #expect(featureFlagsSource.contains("enableMealPhotoRetention: boolValue(key: \"mealScan.enableMealPhotoRetention\", launchArgument: \"enableMealPhotoRetention\", debugDefault: true, releaseDefault: false)"))
+        #expect(settingsSource.contains("@AppStorage(\"mealScan.enableMealPhotoRetention\") private var enableMealPhotoRetention = false"))
+        #expect(!flowSource.contains("Meal estimates stay on your device unless you choose to sync through iCloud."))
+        #expect(!flowSource.contains("Meal estimates and nutrition logs stay on your device unless you choose to sync through iCloud."))
         #expect(!onboardingSource.contains("MealScanFlowView("))
         #expect(onboardingSource.contains("Sample meal estimate"))
         #expect(!contentSource.contains("guard appState.allowsPremiumAccess else {\n            appState.presentPremiumPaywall()\n            return\n        }\n        showingMealScan = true"))
@@ -214,9 +231,15 @@ struct InterfaceResilienceTests {
         #expect(managerSource.contains("mealScanRemindersEnabled"))
         #expect(managerSource.contains("scheduleMealScanReminder"))
         #expect(managerSource.contains("AppNotificationRoute.mealScan.rawValue"))
+        #expect(managerSource.contains("Log a meal or scan a barcode"))
+        #expect(!managerSource.contains("Scan a meal with AI"))
         #expect(settingsSource.contains("settings.notifications.meal_scan_toggle"))
+        #expect(settingsSource.contains("Meal Check-In"))
+        #expect(settingsSource.contains("scan a barcode"))
         #expect(contentSource.contains("pendingNotificationRoute"))
         #expect(contentSource.contains("handleNotificationRoute"))
+        #expect(contentSource.contains("guard MealScanFeatureFlags.current.enableMealScanV2 else {"))
+        #expect(contentSource.contains("open(shortcut: .meal)"))
     }
 
     @Test("Positive actions show ranked recommendations while preserving all quick actions")

@@ -969,6 +969,12 @@ struct TrackingHubView: View {
     }
 
     private func openMealScan() {
+        guard MealScanFeatureFlags.current.enableMealScanV2 else {
+            Logger.meals.info("TrackingHubView routed disabled AI meal scan request to meal log.")
+            open(shortcut: .meal)
+            return
+        }
+
         Logger.meals.info("TrackingHubView requested AI meal scan.")
         showingMealScan = true
     }

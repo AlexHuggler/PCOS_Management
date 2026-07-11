@@ -1,5 +1,6 @@
-#include? "LocalSecrets.xcconfig"
-
+APP_ATTEST_ENVIRONMENT = production
 REVENUECAT_ENTITLEMENT_ID = CycleBalance Unlimited
 REVENUECAT_OFFERING_ID = default
 MEAL_SCAN_PROXY_BASE_URL =
+
+#include? "LocalSecrets.xcconfig"

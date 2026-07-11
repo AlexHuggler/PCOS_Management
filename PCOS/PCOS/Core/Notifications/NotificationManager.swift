@@ -229,9 +229,9 @@ final class NotificationManager {
         }
     }
 
-    // MARK: - AI Meal Scan Reminder
+    // MARK: - Meal Check-In Reminder
 
-    /// Schedules a repeating meal check-in that routes back to the meal scanner.
+    /// Schedules a repeating meal check-in that routes back to meal logging.
     func scheduleMealScanReminder(time: Date = NotificationManager.defaultMealScanReminderTime()) {
         guard mealScanRemindersEnabled else {
             logger.debug("Meal scan reminders disabled, skipping schedule")
@@ -243,11 +243,11 @@ final class NotificationManager {
         let content = UNMutableNotificationContent()
         content.title = String(
             localized: "Ready to log your meal?",
-            comment: "AI meal scan reminder notification title."
+            comment: "Meal check-in reminder notification title."
         )
         content.body = String(
-            localized: "Scan a meal with AI or add nutrition manually when it is fresh in your mind.",
-            comment: "AI meal scan reminder notification body."
+            localized: "Log a meal or scan a barcode while it is fresh in your mind.",
+            comment: "Meal check-in reminder notification body."
         )
         content.sound = .default
         content.userInfo = ["route": AppNotificationRoute.mealScan.rawValue]

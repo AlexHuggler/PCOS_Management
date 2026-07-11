@@ -150,7 +150,7 @@ struct SettingsView: View {
     @State private var lunarSymptomReminderEnabled = false
     @State private var lunarSupplementReminderEnabled = false
     @State private var lunarCheckInMood: LunarSettingsMood = .good
-    @AppStorage("mealScan.enableMealPhotoRetention") private var enableMealPhotoRetention = true
+    @AppStorage("mealScan.enableMealPhotoRetention") private var enableMealPhotoRetention = false
 
     private let profilePhotoStore = LocalProfilePhotoStore()
 

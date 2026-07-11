@@ -54,14 +54,14 @@ struct OnboardingMealScanDemoView: View {
                 .foregroundStyle(AppTheme.accentColor)
                 .accessibilityHidden(true)
 
-            Text(L10n.string("See how meal estimates work", defaultValue: "See how meal estimates work"))
+            Text(L10n.string("Photo meal estimates are coming soon", defaultValue: "Photo meal estimates are coming soon"))
                 .appHeadingFont(.title2, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .multilineTextAlignment(.center)
 
             Text(L10n.string(
-                "CycleBalance can turn a meal photo into an editable draft for calories, protein, carbs, fats, and cycle-aware nutrition notes.",
-                defaultValue: "CycleBalance can turn a meal photo into an editable draft for calories, protein, carbs, fats, and cycle-aware nutrition notes."
+                "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now.",
+                defaultValue: "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now."
             ))
             .appFont(.body)
             .foregroundStyle(.secondary)
@@ -83,7 +83,7 @@ struct OnboardingMealScanDemoView: View {
                 Text(L10n.string("Chicken rice bowl", defaultValue: "Chicken rice bowl"))
                     .appFont(.headline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
-                Text(L10n.string("Estimated from a sample image. You would review and edit before saving.", defaultValue: "Estimated from a sample image. You would review and edit before saving."))
+                Text(L10n.string("Estimated from a sample preview. You would review and edit before saving.", defaultValue: "Estimated from a sample preview. You would review and edit before saving."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -137,7 +137,7 @@ struct OnboardingMealScanDemoView: View {
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
 
-                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Continued real photo estimates are a Premium feature, but you can keep setup moving now.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Continued real photo estimates are a Premium feature, but you can keep setup moving now."))
+                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

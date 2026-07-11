@@ -4,10 +4,11 @@ Meal Scan V2 is a local-first AI meal estimate flow for CycleBalance. Pass 1 shi
 
 ## Privacy Defaults
 
-- No backend is required.
-- Mock scan data and fixture nutrition run fully on device.
+- Mock scan data and fixture nutrition run fully on device and require no backend.
+- When the user chooses a cloud photo estimate, the app sends one normalized JPEG to the CycleBalance proxy for AI analysis. The proxy does not retain raw image bytes.
 - Meal photos are stored locally only after save and only while `mealScan.enableMealPhotoRetention` remains enabled.
-- Optional Open Food Facts or barcode lookup must remain behind feature flags and use updated privacy copy before being enabled.
+- Photo-based Meal Scan V2 remains behind `mealScan.enableMealScanV2` in release builds.
+- User-initiated barcode lookup is available from Meal Log in release builds after first-use consent. Open Food Facts receives the entered or scanned UPC/EAN only, and results fill the meal draft only after review.
 
 ## Feature Flags
 
@@ -18,8 +19,13 @@ Meal Scan V2 is a local-first AI meal estimate flow for CycleBalance. Pass 1 shi
 - `mealScan.enableMealPhotoRetention`
 - `mealScan.enableMockMealScanData`
 - `mealScan.enableOpenFoodFactsLookup`
+- `mealScan.enableGeminiMealScan`
+- `mealScan.enableGeminiFallbackModel`
+- `mealScan.enableMealScanResultCache`
 
-Debug builds default Meal Scan V2 and mock data on. Segmentation, depth, barcode, and Open Food Facts are off unless explicitly enabled through launch arguments or `UserDefaults`.
+Debug builds default Meal Scan V2 and mock data on. Release builds keep the photo path off until cloud security and review gates pass. Segmentation and depth are off unless explicitly enabled through launch arguments or `UserDefaults`. The older barcode/Open Food Facts flags document the experimental Meal Scan V2 package interface; the release Meal Log barcode sheet is intentionally available outside the photo-scan feature flag.
+
+The production proxy defaults to `gemini-2.5-flash-lite` and allowlists `gemini-3.1-flash-lite` for migration evaluation. Do not use retired `gemini-2.0-flash-lite`.
 
 ## Model Assets
 

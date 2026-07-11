@@ -5,7 +5,7 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance verwendet Ihre Kamera, um Mahlzeitenfotos fuer KI-Mahlzeitenschaetzungen, Lebensmittel-Barcodes und Fotos zum Fortschritt des Haarwachstums/Haarausfalls aufzunehmen.";
+"NSCameraUsageDescription" = "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen, Mahlzeitenfotos für die KI-Analyse aufzunehmen und Fortschrittsfotos zu Haarwachstum oder Haarausfall zu erfassen.";
 
 /* Privacy - Health Share Usage Description */
 "NSHealthShareUsageDescription" = "CycleBalance liest die von Ihnen erlaubten Apple Health-Daten wie Ernährung, Glukose, Zyklus, Symptome, Schlaf, Aktivität, Herz- und Körperkontext, um lokale Protokolle und Einblicke zu füllen.";
@@ -14,4 +14,4 @@
 "NSHealthUpdateUsageDescription" = "CycleBalance liest die von Ihnen erlaubten Apple Health-Daten wie Ernährung, Glukose, Zyklus, Symptome, Schlaf, Aktivität, Herz- und Körperkontext, um lokale Protokolle und Einblicke zu füllen. Die App schreibt nicht in Apple Health.";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance verwendet Ihre Fotobibliothek, um Mahlzeitenfotos fuer KI-Mahlzeitenschaetzungen zu importieren und Fotos zum Haarwachstums-/Haarausfall-Fortschritt zu speichern oder zu vergleichen.";
+"NSPhotoLibraryUsageDescription" = "CycleBalance verwendet deine Fotomediathek, um Mahlzeitenfotos für die KI-Analyse auszuwählen und Fortschrittsfotos zu Haarwachstum oder Haarausfall zu speichern oder zu vergleichen.";

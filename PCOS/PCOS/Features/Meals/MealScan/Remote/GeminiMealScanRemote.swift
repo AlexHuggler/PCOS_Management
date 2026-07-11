@@ -1,6 +1,4 @@
 import Foundation
-import CryptoKit
-import DeviceCheck
 import SwiftData
 import UIKit
 
@@ -211,89 +209,12 @@ struct RemoteMealScanRequest: Equatable, Sendable {
     var schemaVersion: String
     var promptVersion: String
     var revenueCatAppUserID: String?
-    var appIntegrityToken: String?
-    var appAttestAssertion: RemoteMealScanAppAttestAssertion?
-}
-
-struct RemoteMealScanAppAttestAssertion: Equatable, Sendable {
-    var keyID: String
-    var attestation: String?
-    var assertion: String
-    var challenge: String
+    var firebaseAppCheckToken: String?
 }
 
 @MainActor
-protocol MealScanAppAttestProviding {
-    func assertion(for challenge: String) async throws -> RemoteMealScanAppAttestAssertion?
-}
-
-@MainActor
-struct MealScanAppAttestProvider: MealScanAppAttestProviding {
-    private let service: DCAppAttestService
-    private let defaults: UserDefaults
-    private let keyIDDefaultsKey = "mealScan.appAttest.keyID"
-
-    init(
-        service: DCAppAttestService = .shared,
-        defaults: UserDefaults = .standard
-    ) {
-        self.service = service
-        self.defaults = defaults
-    }
-
-    func assertion(for challenge: String) async throws -> RemoteMealScanAppAttestAssertion? {
-        guard service.isSupported else { return nil }
-
-        let keyRegistration = try await keyID()
-        let challengeData = Data(challenge.utf8)
-        let challengeHash = Data(SHA256.hash(data: challengeData))
-        let attestation: String?
-        if keyRegistration.isNew {
-            let attestationData = try await service.attestKey(keyRegistration.keyID, clientDataHash: challengeHash)
-            attestation = attestationData.base64EncodedString()
-        } else {
-            attestation = nil
-        }
-        let assertion = try await service.generateAssertion(keyRegistration.keyID, clientDataHash: challengeHash)
-
-        return RemoteMealScanAppAttestAssertion(
-            keyID: keyRegistration.keyID,
-            attestation: attestation,
-            assertion: assertion.base64EncodedString(),
-            challenge: challengeData.base64EncodedString()
-        )
-    }
-
-    private func keyID() async throws -> (keyID: String, isNew: Bool) {
-        if let existing = defaults.string(forKey: keyIDDefaultsKey), !existing.isEmpty {
-            return (existing, false)
-        }
-
-        let generated = try await service.generateKey()
-        defaults.set(generated, forKey: keyIDDefaultsKey)
-        return (generated, true)
-    }
-}
-
-enum MealScanAppAttestChallenge {
-    static func make(
-        sourceImageHash: String,
-        mealType: MealType,
-        modelID: String,
-        schemaVersion: String,
-        promptVersion: String,
-        revenueCatAppUserID: String?
-    ) -> String {
-        [
-            "meal-scan-v1",
-            sourceImageHash,
-            mealType.rawValue,
-            modelID,
-            schemaVersion,
-            promptVersion,
-            revenueCatAppUserID ?? "anonymous",
-        ].joined(separator: "|")
-    }
+protocol MealScanLimitedUseAppCheckTokenProviding {
+    func limitedUseToken() async throws -> String
 }
 
 struct RemoteMealScanEstimate: Equatable, Sendable {
@@ -371,7 +292,6 @@ struct GeminiRemoteMealScanConfiguration: Equatable, Sendable {
     var appBuild: String
     var proxyEndpointURL: URL?
     var revenueCatAppUserID: String?
-    var appIntegrityToken: String?
 
     init(
         modelID: String = Self.defaultModelID,
@@ -380,8 +300,7 @@ struct GeminiRemoteMealScanConfiguration: Equatable, Sendable {
         localeIdentifier: String = Locale.current.identifier,
         appBuild: String = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
         proxyEndpointURL: URL? = nil,
-        revenueCatAppUserID: String? = nil,
-        appIntegrityToken: String? = nil
+        revenueCatAppUserID: String? = nil
     ) {
         self.modelID = modelID
         self.schemaVersion = schemaVersion
@@ -390,7 +309,6 @@ struct GeminiRemoteMealScanConfiguration: Equatable, Sendable {
         self.appBuild = appBuild
         self.proxyEndpointURL = proxyEndpointURL
         self.revenueCatAppUserID = revenueCatAppUserID
-        self.appIntegrityToken = appIntegrityToken
     }
 
     static func from(
@@ -426,16 +344,8 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
         var urlRequest = URLRequest(url: endpointURL)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let appIntegrityToken = request.appIntegrityToken {
-            urlRequest.setValue(appIntegrityToken, forHTTPHeaderField: "x-cyclebalance-app-integrity")
-        }
-        if let appAttestAssertion = request.appAttestAssertion {
-            urlRequest.setValue(appAttestAssertion.keyID, forHTTPHeaderField: "x-cyclebalance-app-attest-key-id")
-            if let attestation = appAttestAssertion.attestation {
-                urlRequest.setValue(attestation, forHTTPHeaderField: "x-cyclebalance-app-attest-attestation")
-            }
-            urlRequest.setValue(appAttestAssertion.assertion, forHTTPHeaderField: "x-cyclebalance-app-attest-assertion")
-            urlRequest.setValue(appAttestAssertion.challenge, forHTTPHeaderField: "x-cyclebalance-app-attest-challenge")
+        if let firebaseAppCheckToken = request.firebaseAppCheckToken {
+            urlRequest.setValue(firebaseAppCheckToken, forHTTPHeaderField: "X-Firebase-AppCheck")
         }
 
         let payload = ProxyRequestPayload(
@@ -508,7 +418,7 @@ final class GeminiRemoteMealScanService {
     private let nutritionLookupService: any NutritionLookupService
     private let calculator: any MealNutritionCalculating
     private let configuration: GeminiRemoteMealScanConfiguration
-    private let appAttestProvider: (any MealScanAppAttestProviding)?
+    private let appCheckTokenProvider: (any MealScanLimitedUseAppCheckTokenProviding)?
     private let parser = GeminiMealScanResponseParser()
     private let mapper = GeminiMealScanResultMapper()
 
@@ -519,7 +429,7 @@ final class GeminiRemoteMealScanService {
         nutritionLookupService: any NutritionLookupService,
         calculator: any MealNutritionCalculating,
         configuration: GeminiRemoteMealScanConfiguration,
-        appAttestProvider: (any MealScanAppAttestProviding)? = nil
+        appCheckTokenProvider: (any MealScanLimitedUseAppCheckTokenProviding)? = nil
     ) {
         self.remoteEstimator = remoteEstimator
         self.resultCache = resultCache
@@ -527,7 +437,7 @@ final class GeminiRemoteMealScanService {
         self.nutritionLookupService = nutritionLookupService
         self.calculator = calculator
         self.configuration = configuration
-        self.appAttestProvider = appAttestProvider
+        self.appCheckTokenProvider = appCheckTokenProvider
     }
 
     func scan(image: UIImage, mealType: MealType) async throws -> MealScanResult {
@@ -554,21 +464,7 @@ final class GeminiRemoteMealScanService {
             )
         }
 
-        let appAttestAssertion: RemoteMealScanAppAttestAssertion?
-        do {
-            appAttestAssertion = try await appAttestProvider?.assertion(
-                for: MealScanAppAttestChallenge.make(
-                    sourceImageHash: normalized.sourceImageHash,
-                    mealType: mealType,
-                    modelID: configuration.modelID,
-                    schemaVersion: configuration.schemaVersion,
-                    promptVersion: configuration.promptVersion,
-                    revenueCatAppUserID: configuration.revenueCatAppUserID
-                )
-            )
-        } catch {
-            appAttestAssertion = nil
-        }
+        let firebaseAppCheckToken = try await appCheckTokenProvider?.limitedUseToken()
 
         let estimate = try await remoteEstimator.estimateMeal(
             request: RemoteMealScanRequest(
@@ -580,8 +476,7 @@ final class GeminiRemoteMealScanService {
                 schemaVersion: configuration.schemaVersion,
                 promptVersion: configuration.promptVersion,
                 revenueCatAppUserID: configuration.revenueCatAppUserID,
-                appIntegrityToken: configuration.appIntegrityToken,
-                appAttestAssertion: appAttestAssertion
+                firebaseAppCheckToken: firebaseAppCheckToken
             )
         )
 

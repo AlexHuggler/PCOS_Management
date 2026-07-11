@@ -328,12 +328,14 @@ struct MealCameraView: View {
                 }
                 .accessibilityIdentifier("meal_scan.take_photo_button")
 
-                Button {
-                    Task { await viewModel.useMockPhoto() }
-                } label: {
-                    Label("Use sample meal", systemImage: "sparkles")
+                if MealScanFeatureFlags.current.enableMockMealScanData {
+                    Button {
+                        Task { await viewModel.useMockPhoto() }
+                    } label: {
+                        Label("Use sample meal", systemImage: "sparkles")
+                    }
+                    .accessibilityIdentifier("meal_scan.mock_photo_button")
                 }
-                .accessibilityIdentifier("meal_scan.mock_photo_button")
 
                 if let cameraError {
                     Label(cameraError, systemImage: "exclamationmark.triangle.fill")
@@ -343,7 +345,7 @@ struct MealCameraView: View {
             } header: {
                 Text("Meal photo")
             } footer: {
-                Text("Meal estimates stay on your device unless you choose to sync through iCloud.")
+                Text(MealScanPrivacyNoticeView.remoteAnalysisDisclosure)
             }
         }
         .sheet(isPresented: $showingCamera) {
@@ -373,13 +375,13 @@ struct MealCameraView: View {
     }
 
     private func presentMealScanPaywall() {
-        cameraError = "Sample meals are available here. Subscribe to unlock real photo estimates."
+        cameraError = "Subscribe to unlock real photo estimates."
         appState.presentPremiumPaywall(reason: .mealScan)
     }
 
     private func presentCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            cameraError = "Camera is unavailable on this device. You can import a photo or use the sample meal."
+            cameraError = "Camera is unavailable on this device. You can import a meal photo instead."
             return
         }
 
@@ -808,16 +810,20 @@ struct MealScanManualFallbackView: View {
 }
 
 struct MealScanPrivacyNoticeView: View {
+    static var remoteAnalysisDisclosure: String {
+        L10n.string(
+            "When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
+            defaultValue: "When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device."
+        )
+    }
+
     var body: some View {
         if AppTheme.usesPremiumEditorStyling {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                 Label(L10n.string("Private by design", defaultValue: "Private by design"), systemImage: "lock.shield")
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.premiumEditorAccentColor)
-                Text(L10n.string(
-                    "Meal estimates and nutrition logs stay on your device unless you choose to sync through iCloud.",
-                    defaultValue: "Meal estimates and nutrition logs stay on your device unless you choose to sync through iCloud."
-                ))
+                Text(Self.remoteAnalysisDisclosure)
                 .appFont(.caption)
                 .foregroundStyle(AppTheme.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -832,7 +838,7 @@ struct MealScanPrivacyNoticeView: View {
                 Label("Private by design", systemImage: "lock.shield")
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.sage)
-                Text("Meal estimates and nutrition logs stay on your device unless you choose to sync through iCloud.")
+                Text(Self.remoteAnalysisDisclosure)
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

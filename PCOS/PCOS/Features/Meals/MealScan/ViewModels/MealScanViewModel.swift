@@ -301,7 +301,7 @@ final class MealScanViewModel {
             nutritionLookupService: nutritionRepository,
             calculator: calculator,
             configuration: configuration,
-            appAttestProvider: MealScanAppAttestProvider()
+            appCheckTokenProvider: FirebaseMealScanAppCheckTokenProvider()
         )
     }
 }

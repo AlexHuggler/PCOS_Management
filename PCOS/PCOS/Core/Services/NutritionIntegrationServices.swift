@@ -637,8 +637,8 @@ struct AhaMomentService {
             ),
             body: body,
             nextAction: L10n.string(
-                "Review the source notes, then try an AI meal estimate to see how new logs fit in.",
-                defaultValue: "Review the source notes, then try an AI meal estimate to see how new logs fit in."
+                "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in.",
+                defaultValue: "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in."
             ),
             premiumDetail: isPremium
                 ? L10n.string(
@@ -798,8 +798,8 @@ struct AhaMomentService {
                 defaultValue: "Even without Apple Health data yet, a meal, symptom, sleep note, or period day can become the first comparison point for your personal pattern."
             ),
             nextAction: L10n.string(
-                "Choose one quick log or try the AI meal estimate demo next.",
-                defaultValue: "Choose one quick log or try the AI meal estimate demo next."
+                "Choose one quick log, scan a barcode, or enter your next meal manually.",
+                defaultValue: "Choose one quick log, scan a barcode, or enter your next meal manually."
             ),
             premiumDetail: nil
         )

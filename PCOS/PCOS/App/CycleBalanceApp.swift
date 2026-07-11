@@ -1,4 +1,6 @@
 import Foundation
+import FirebaseAppCheck
+import FirebaseCore
 import SwiftUI
 import SwiftData
 import UIKit
@@ -7,6 +9,16 @@ import os
 #if canImport(AdServices)
 import AdServices
 #endif
+
+private final class CycleBalanceAppCheckProviderFactory: NSObject, AppCheckProviderFactory {
+    func createProvider(with app: FirebaseApp) -> (any AppCheckProvider)? {
+        #if DEBUG
+        AppCheckDebugProvider(app: app)
+        #else
+        AppAttestProvider(app: app)
+        #endif
+    }
+}
 
 final class AppNotificationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
@@ -65,6 +77,7 @@ struct CycleBalanceApp: App {
         Self.applyUITestLaunchOverrides()
         Self.applyAppearanceLaunchOverridesIfNeeded()
         Self.applyStoredAppLanguageOverrideIfNeeded()
+        Self.configureFirebase()
         AppChromeTypography.apply()
         AppleAdsAttributionService.shared.captureLatestTokenIfAvailable()
         Self.configureRevenueCatIfPossible()
@@ -80,6 +93,11 @@ struct CycleBalanceApp: App {
 }
 
 extension CycleBalanceApp {
+    static func configureFirebase() {
+        AppCheck.setAppCheckProviderFactory(CycleBalanceAppCheckProviderFactory())
+        FirebaseApp.configure()
+    }
+
     static func makeSharedModelContainer() -> ModelContainer {
         let schema = Schema([
             CycleEntry.self,

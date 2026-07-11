@@ -78,7 +78,7 @@ struct NotificationSettingsView: View {
                 }
 
                 Toggle(isOn: $mealScanToggle) {
-                    Label("AI Meal Check-In", systemImage: "camera.macro")
+                    Label("Meal Check-In", systemImage: "barcode.viewfinder")
                 }
                 .sensoryFeedback(.selection, trigger: mealScanToggle)
                 .accessibilityIdentifier("settings.notifications.meal_scan_toggle")
@@ -92,7 +92,7 @@ struct NotificationSettingsView: View {
                 }
 
                 if mealScanToggle {
-                    Text("A gentle midday nudge can open the AI meal scanner or manual meal entry.")
+                    Text("A gentle midday nudge can open meal logging so you can scan a barcode or enter nutrition manually.")
                         .appFont(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -297,9 +297,9 @@ struct NotificationSettingsView: View {
             }
 
             lunarReminderRow(
-                title: "AI Meal Check-In",
-                subtitle: "Midday scan or manual nutrition nudge",
-                systemImage: "camera.macro",
+                title: "Meal Check-In",
+                subtitle: "Scan a barcode or enter nutrition manually",
+                systemImage: "barcode.viewfinder",
                 tint: AppTheme.premiumEditorSecondaryAccentColor,
                 isOn: $mealScanToggle,
                 accessibilityIdentifier: "settings.notifications.meal_scan_toggle"

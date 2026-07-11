@@ -16,32 +16,60 @@ const MODEL_CONFIGS = {
     inputUSDPerMillionTokens: 0.30,
     outputUSDPerMillionTokens: 2.50,
   },
+  "gemini-3.1-flash-lite": {
+    providerId: PROVIDER_ID,
+    modelId: "gemini-3.1-flash-lite",
+    inputUSDPerMillionTokens: 0.25,
+    outputUSDPerMillionTokens: 1.50,
+  },
 };
 const HARD_DAILY_LIMIT = Number.parseInt(process.env.MEAL_SCAN_DAILY_LIMIT ?? "10", 10);
 const SOFT_DAILY_LIMIT = Number.parseInt(process.env.MEAL_SCAN_SOFT_DAILY_LIMIT ?? "5", 10);
 const TRIAL_DAILY_LIMIT = Number.parseInt(process.env.MEAL_SCAN_TRIAL_DAILY_LIMIT ?? "5", 10);
 const TRIAL_TOTAL_LIMIT = Number.parseInt(process.env.MEAL_SCAN_TRIAL_TOTAL_LIMIT ?? "25", 10);
-const MAX_BODY_BYTES = Number.parseInt(process.env.MAX_BODY_BYTES ?? String(5 * 1024 * 1024), 10);
 const BUDGET_ALERT_AT_USD = Number.parseFloat(process.env.MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD ?? "50");
 const BUDGET_DEGRADE_AT_USD = Number.parseFloat(process.env.MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD ?? "75");
 const BUDGET_DISABLE_AT_USD = Number.parseFloat(process.env.MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD ?? "100");
 
 export function createServer(overrides = {}) {
-  const scanEnabled = overrides.scanEnabled ?? process.env.MEAL_SCAN_ENABLED !== "false";
-  const requireAppAttest = overrides.requireAppAttest ?? process.env.APP_ATTEST_REQUIRED === "true";
-  const appAttestVerifier = overrides.appAttestVerifier ?? createConfiguredAppAttestVerifier();
+  const environment = overrides.environment ?? process.env;
+  const maxBodyBytes = overrides.maxBodyBytes ?? Number.parseInt(environment.MAX_BODY_BYTES ?? String(5 * 1024 * 1024), 10);
+  const maxImageBytes =
+    overrides.maxImageBytes ?? Number.parseInt(environment.MAX_IMAGE_BYTES ?? String(1_500_000), 10);
+  const resultCacheTtlMs =
+    overrides.resultCacheTtlMs ??
+    Number.parseInt(environment.MEAL_SCAN_RESULT_CACHE_TTL_SECONDS ?? String(24 * 60 * 60), 10) * 1000;
+  const scanEnabled =
+    overrides.scanEnabled ??
+    (environment.NODE_ENV === "production"
+      ? environment.MEAL_SCAN_ENABLED === "true"
+      : environment.MEAL_SCAN_ENABLED !== "false");
+  const requireAppCheck =
+    overrides.requireAppCheck ??
+    (environment.NODE_ENV === "production"
+      ? environment.APP_CHECK_REQUIRED !== "false"
+      : environment.APP_CHECK_REQUIRED === "true");
+  const appCheckVerifier = overrides.appCheckVerifier ?? createConfiguredFirebaseAppCheckVerifier(environment);
+  const budgetStateProvider =
+    overrides.getBudgetState ??
+    (overrides.budgetState
+      ? () => overrides.budgetState
+      : createConfiguredBudgetStateProvider(environment));
   const dependencies = {
     verifyAppIntegrity:
       overrides.verifyAppIntegrity ??
-      ((input) => verifyAppIntegrity(input, { requireAppAttest, appAttestVerifier })),
-    verifyRevenueCatEntitlement: overrides.verifyRevenueCatEntitlement ?? verifyRevenueCatEntitlement,
+      ((input) => verifyAppIntegrity(input, { requireAppCheck, appCheckVerifier, environment })),
+    verifyRevenueCatEntitlement:
+      overrides.verifyRevenueCatEntitlement ??
+      ((input) => verifyRevenueCatEntitlement(input, { environment })),
     quotaStore: overrides.quotaStore ?? createConfiguredQuotaStore(),
+    resultCache: overrides.resultCache ?? createConfiguredResultCache({ environment, ttlMs: resultCacheTtlMs }),
     callGemini: overrides.callGemini ?? callGemini,
-    getBudgetState: overrides.getBudgetState ?? (() => overrides.budgetState ?? currentBudgetState()),
+    getBudgetState: budgetStateProvider,
     logger: overrides.logger ?? console,
   };
 
-  return http.createServer(async (request, response) => {
+  const server = http.createServer(async (request, response) => {
     try {
       if (request.method !== "POST" || request.url !== "/v1/meal-scans/estimate") {
         return sendJSON(response, 404, { error: "not_found" });
@@ -55,7 +83,17 @@ export function createServer(overrides = {}) {
         });
       }
 
-      const budget = normalizeBudgetState(await dependencies.getBudgetState());
+      let budget;
+      try {
+        budget = normalizeBudgetState(await dependencies.getBudgetState());
+      } catch {
+        dependencies.logger.error?.("meal_scan_budget_control_unavailable");
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "budget_control_unavailable",
+          retryable: true,
+        });
+      }
       if (budget.mode === "disabled") {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -65,19 +103,23 @@ export function createServer(overrides = {}) {
         });
       }
 
-      const payload = await readJSONBody(request);
-      const validation = validatePayload(payload);
+      const payload = await readJSONBody(request, maxBodyBytes);
+      const validation = validatePayload(payload, { maxImageBytes });
       if (!validation.ok) {
         return sendJSON(response, 400, { error: "invalid_request", detail: validation.detail });
       }
+      const requestedModelId = payload.modelId ?? DEFAULT_MODEL_ID;
+      if (!MODEL_CONFIGS[requestedModelId]) {
+        return sendJSON(response, 400, {
+          error: "unsupported_model",
+          reason: "model_not_allowlisted",
+          retryable: false,
+        });
+      }
 
-      const integrityToken = request.headers["x-cyclebalance-app-integrity"];
+      const integrityToken = headerValue(request.headers["x-firebase-appcheck"]);
       const integrityResult = normalizeGateResult(await dependencies.verifyAppIntegrity({
-        token: typeof integrityToken === "string" ? integrityToken : undefined,
-        appAttestKeyId: headerValue(request.headers["x-cyclebalance-app-attest-key-id"]),
-        appAttestAttestation: headerValue(request.headers["x-cyclebalance-app-attest-attestation"]),
-        appAttestAssertion: headerValue(request.headers["x-cyclebalance-app-attest-assertion"]),
-        appAttestChallenge: headerValue(request.headers["x-cyclebalance-app-attest-challenge"]),
+        token: integrityToken,
         payload,
       }));
       if (!integrityResult.allowed) {
@@ -89,9 +131,19 @@ export function createServer(overrides = {}) {
 
       const subscriberAccess = normalizeSubscriberAccess(await dependencies.verifyRevenueCatEntitlement({
         appUserId: payload.revenueCatAppUserId,
-        entitlementId: process.env.REVENUECAT_ENTITLEMENT_ID ?? "CycleBalance Unlimited",
+        entitlementId: environment.REVENUECAT_ENTITLEMENT_ID ?? "CycleBalance Unlimited",
       }));
       if (!subscriberAccess.allowed) {
+        if (
+          subscriberAccess.reason === "entitlement_service_unavailable" ||
+          subscriberAccess.reason === "entitlement_verifier_unconfigured"
+        ) {
+          return sendJSON(response, 503, {
+            error: "meal_scan_unavailable",
+            reason: subscriberAccess.reason,
+            retryable: subscriberAccess.retryable === true,
+          });
+        }
         return sendJSON(response, 403, {
           error: "premium_entitlement_required",
           reason: subscriberAccess.reason ?? "entitlement_inactive",
@@ -101,14 +153,68 @@ export function createServer(overrides = {}) {
       const accessTier = subscriberAccess.accessTier === "trial" ? "trial" : "paid";
       const hardLimit = accessTier === "trial" ? TRIAL_DAILY_LIMIT : HARD_DAILY_LIMIT;
       const softLimit = accessTier === "trial" ? TRIAL_DAILY_LIMIT : SOFT_DAILY_LIMIT;
-      const quota = await dependencies.quotaStore.checkAndConsume({
+      const modelSelection = selectModel(payload.modelId, budget);
+      const modelId = modelSelection.modelId;
+      const quotaInput = {
         appUserId: payload.revenueCatAppUserId,
         imageHash: payload.image.sha256,
         accessTier,
         hardLimit,
         softLimit,
         trialTotalLimit: accessTier === "trial" ? TRIAL_TOTAL_LIMIT : null,
-      });
+      };
+      const cacheInput = {
+        appUserId: payload.revenueCatAppUserId,
+        imageHash: payload.image.sha256,
+        modelId,
+        schemaVersion: payload.schemaVersion,
+        promptVersion: payload.promptVersion,
+      };
+      let cachedResult = null;
+      try {
+        cachedResult = await dependencies.resultCache.get(cacheInput);
+      } catch (error) {
+        dependencies.logger.warn?.("meal_scan_cache_read_error", { message: error?.message });
+      }
+      if (cachedResult) {
+        let cachedQuota = cachedResult.quota;
+        if (typeof dependencies.quotaStore.current === "function") {
+          try {
+            cachedQuota = await dependencies.quotaStore.current(quotaInput);
+          } catch (error) {
+            dependencies.logger.warn?.("meal_scan_quota_snapshot_error", { message: error?.message });
+          }
+        }
+
+        dependencies.logger.info?.("meal_scan_estimate", {
+          appUserHash: shortHash(payload.revenueCatAppUserId),
+          imageHash: payload.image.sha256.slice(0, 12),
+          providerId: modelSelection.config.providerId,
+          modelId,
+          promptTokens: cachedResult.usage?.inputTokens,
+          outputTokens: cachedResult.usage?.outputTokens,
+          estimatedCostUSD: cachedResult.usage?.estimatedCostUSD,
+          quotaUsed: cachedQuota?.used,
+          quotaLimit: cachedQuota?.limit,
+          accessTier,
+          budgetMode: budget.mode,
+          cacheHit: true,
+        });
+
+        return sendJSON(response, 200, {
+          modelId,
+          provider: providerResponse(modelSelection),
+          estimate: cachedResult.estimate,
+          rawEstimateJSON: cachedResult.rawEstimateJSON,
+          cacheHit: true,
+          usage: cachedResult.usage,
+          usageMetadata: cachedResult.usageMetadata ?? null,
+          quota: quotaResponse(cachedQuota, accessTier),
+          budget: budgetResponse(budget),
+        });
+      }
+
+      const quota = await dependencies.quotaStore.checkAndConsume(quotaInput);
       if (!quota.allowed) {
         return sendJSON(response, 429, {
           error: "daily_scan_quota_exceeded",
@@ -117,8 +223,6 @@ export function createServer(overrides = {}) {
         });
       }
 
-      const modelSelection = selectModel(payload.modelId, budget);
-      const modelId = modelSelection.modelId;
       const geminiPayload = buildGeminiPayload(payload, modelId);
       const geminiResponse = await dependencies.callGemini({
         modelId,
@@ -126,6 +230,19 @@ export function createServer(overrides = {}) {
         timeoutMs: Number.parseInt(process.env.GEMINI_TIMEOUT_MS ?? "12000", 10),
       });
       const usage = usageResponse(geminiResponse.usageMetadata, modelSelection.config);
+      const rawEstimateJSON = JSON.stringify(geminiResponse.estimate);
+
+      try {
+        await dependencies.resultCache.set(cacheInput, {
+          estimate: geminiResponse.estimate,
+          rawEstimateJSON,
+          usage,
+          usageMetadata: geminiResponse.usageMetadata ?? null,
+          quota,
+        });
+      } catch (error) {
+        dependencies.logger.warn?.("meal_scan_cache_write_error", { message: error?.message });
+      }
 
       dependencies.logger.info?.("meal_scan_estimate", {
         appUserHash: shortHash(payload.revenueCatAppUserId),
@@ -146,7 +263,7 @@ export function createServer(overrides = {}) {
         modelId,
         provider: providerResponse(modelSelection),
         estimate: geminiResponse.estimate,
-        rawEstimateJSON: JSON.stringify(geminiResponse.estimate),
+        rawEstimateJSON,
         cacheHit: false,
         usage,
         usageMetadata: geminiResponse.usageMetadata ?? null,
@@ -155,18 +272,67 @@ export function createServer(overrides = {}) {
       });
     } catch (error) {
       if (error?.code === "REQUEST_TOO_LARGE") {
-        return sendJSON(response, 413, { error: "request_too_large" });
+        return sendJSON(response, 413, {
+          error: "request_too_large",
+          reason: "body_size_limit",
+          retryable: false,
+        });
       }
-      if (error instanceof SyntaxError) {
-        return sendJSON(response, 400, { error: "invalid_json" });
+      if (error?.code === "INVALID_JSON_BODY") {
+        return sendJSON(response, 400, {
+          error: "invalid_json",
+          reason: "request_body_invalid",
+          retryable: false,
+        });
+      }
+      if (error?.code === "GEMINI_PARSE_ERROR") {
+        return sendJSON(response, 502, {
+          error: "meal_scan_parse_error",
+          reason: "provider_response_invalid",
+          retryable: true,
+        });
+      }
+      if (error?.code === "APP_CHECK_TIMEOUT") {
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "integrity_service_timeout",
+          retryable: true,
+        });
+      }
+      if (error?.code === "REVENUECAT_TIMEOUT") {
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "entitlement_service_timeout",
+          retryable: true,
+        });
+      }
+      if (error?.code === "GEMINI_HTTP_ERROR") {
+        return sendJSON(response, 502, {
+          error: "meal_scan_provider_error",
+          reason: "provider_request_failed",
+          retryable: true,
+        });
       }
       if (error?.code === "ETIMEDOUT" || error?.name === "AbortError") {
-        return sendJSON(response, 504, { error: "gemini_timeout", retryable: true });
+        return sendJSON(response, 504, {
+          error: "gemini_timeout",
+          reason: "provider_timeout",
+          retryable: true,
+        });
       }
-      dependencies.logger.error?.("meal_scan_proxy_error", { message: error?.message });
+      dependencies.logger.error?.("meal_scan_proxy_error", {
+        code: typeof error?.code === "string" ? error.code : "UNEXPECTED",
+        status: Number.isInteger(error?.status) ? error.status : undefined,
+      });
       return sendJSON(response, 500, { error: "meal_scan_proxy_error" });
     }
   });
+
+  server.headersTimeout = 10_000;
+  server.requestTimeout = 20_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 100;
+  return server;
 }
 
 export function buildGeminiPayload(payload, modelId = DEFAULT_MODEL_ID) {
@@ -269,16 +435,30 @@ async function callGemini({ modelId, payload, timeoutMs }) {
       }
     );
     if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Gemini request failed: ${response.status} ${body.slice(0, 200)}`);
+      await response.body?.cancel?.();
+      const error = new Error("Gemini request failed");
+      error.code = "GEMINI_HTTP_ERROR";
+      error.status = response.status;
+      throw error;
     }
-    const body = await response.json();
+    let body;
+    try {
+      body = await response.json();
+    } catch {
+      throw geminiParseError("Gemini returned a non-JSON response");
+    }
     const text = body.candidates?.[0]?.content?.parts?.find((part) => typeof part.text === "string")?.text;
     if (!text) {
-      throw new Error("Gemini returned no JSON text");
+      throw geminiParseError("Gemini response did not include structured JSON text");
+    }
+    let estimate;
+    try {
+      estimate = JSON.parse(text);
+    } catch {
+      throw geminiParseError("Gemini did not return valid structured JSON");
     }
     return {
-      estimate: JSON.parse(text),
+      estimate,
       usageMetadata: body.usageMetadata,
     };
   } finally {
@@ -286,49 +466,70 @@ async function callGemini({ modelId, payload, timeoutMs }) {
   }
 }
 
-async function verifyAppIntegrity(input, { requireAppAttest, appAttestVerifier } = {}) {
-  const { token, appAttestKeyId, appAttestAssertion } = input;
-  if (requireAppAttest) {
-    if (!appAttestKeyId || !appAttestAssertion) {
-      return { allowed: false, reason: "app_attest_required" };
-    }
+function geminiParseError(message) {
+  const error = new Error(message);
+  error.code = "GEMINI_PARSE_ERROR";
+  return error;
+}
 
-    if (appAttestVerifier) {
-      return normalizeGateResult(await appAttestVerifier(input));
+async function verifyAppIntegrity(input, { requireAppCheck, appCheckVerifier, environment = process.env } = {}) {
+  const { token } = input;
+  if (requireAppCheck) {
+    if (!token) {
+      return { allowed: false, reason: "app_check_required" };
     }
-
-    if (process.env.APP_ATTEST_ACCEPT_UNVERIFIED_ASSERTIONS === "true") {
-      return { allowed: true, reason: "app_attest_dev_bypass" };
+    if (!appCheckVerifier) {
+      return { allowed: false, reason: "app_check_verifier_unconfigured" };
     }
-
-    return { allowed: false, reason: "app_attest_verifier_unconfigured" };
+    return normalizeGateResult(await appCheckVerifier(token, { consume: true }));
   }
 
-  const expected = process.env.APP_INTEGRITY_SHARED_SECRET;
+  if (environment.NODE_ENV === "production") {
+    return { allowed: false, reason: "app_check_required" };
+  }
+
+  const expected = environment.APP_INTEGRITY_SHARED_SECRET;
   if (!expected) {
     return { allowed: false, reason: "shared_secret_unconfigured" };
   }
   return { allowed: token === expected, reason: token === expected ? undefined : "shared_secret_mismatch" };
 }
 
-async function verifyRevenueCatEntitlement({ appUserId, entitlementId }) {
-  const apiKey = process.env.REVENUECAT_SECRET_API_KEY;
-  if (!apiKey || !appUserId) {
-    return false;
+export async function verifyRevenueCatEntitlement(
+  { appUserId, entitlementId },
+  { environment = process.env, fetchImpl = fetch } = {}
+) {
+  const apiKey = environment.REVENUECAT_SECRET_API_KEY;
+  const projectId = environment.REVENUECAT_PROJECT_ID;
+  if (!apiKey || !projectId || !appUserId || !entitlementId) {
+    return { allowed: false, reason: "entitlement_verifier_unconfigured" };
   }
 
-  const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`, {
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      accept: "application/json",
+  const response = await fetchWithTimeout(
+    `https://api.revenuecat.com/v2/projects/${encodeURIComponent(projectId)}/customers/${encodeURIComponent(appUserId)}/subscriptions?limit=100`,
+    {
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        accept: "application/json",
+      },
     },
-  });
+    Number.parseInt(environment.REVENUECAT_TIMEOUT_MS ?? "5000", 10),
+    fetchImpl,
+    "REVENUECAT_TIMEOUT"
+  );
   if (!response.ok) {
-    return false;
+    await response.body?.cancel?.();
+    return response.status === 404
+      ? { allowed: false, reason: "entitlement_inactive" }
+      : {
+          allowed: false,
+          reason: "entitlement_service_unavailable",
+          retryable: response.status === 429 || response.status >= 500,
+        };
   }
 
   const body = await response.json();
-  return subscriberAccessFromRevenueCat(body, entitlementId);
+  return subscriberAccessFromRevenueCatV2(body, entitlementId);
 }
 
 function createInMemoryQuotaStore() {
@@ -366,6 +567,23 @@ function createInMemoryQuotaStore() {
         trialLimit: accessTier === "trial" ? trialTotalLimit : null,
         remainingTrial:
           accessTier === "trial" ? Math.max(0, trialTotalLimit - (allowed ? nextTrialUsed : currentTrialUsed)) : null,
+        accessTier,
+      };
+    },
+    async current({ appUserId, hardLimit, softLimit, accessTier, trialTotalLimit }) {
+      const day = new Date().toISOString().slice(0, 10);
+      const appUserHash = shortHash(appUserId);
+      const currentDailyUsed = dailyCounts.get(`${appUserHash}:${day}`) ?? 0;
+      const currentTrialUsed = trialCounts.get(`${appUserHash}:trial`) ?? 0;
+      return {
+        allowed: true,
+        used: currentDailyUsed,
+        limit: hardLimit,
+        softLimit,
+        remainingToday: Math.max(0, hardLimit - currentDailyUsed),
+        trialUsed: accessTier === "trial" ? currentTrialUsed : null,
+        trialLimit: accessTier === "trial" ? trialTotalLimit : null,
+        remainingTrial: accessTier === "trial" ? Math.max(0, trialTotalLimit - currentTrialUsed) : null,
         accessTier,
       };
     },
@@ -459,7 +677,112 @@ function createFirestoreQuotaStore({ collectionName }) {
         };
       });
     },
+    async current({ appUserId, hardLimit, softLimit, accessTier, trialTotalLimit }) {
+      const db = await firestore();
+      const day = new Date().toISOString().slice(0, 10);
+      const appUserHash = shortHash(appUserId);
+      const [dailySnapshot, trialSnapshot] = await Promise.all([
+        db.collection(collectionName).doc(`${appUserHash}_${day}`).get(),
+        accessTier === "trial"
+          ? db.collection(collectionName).doc(`${appUserHash}_trial`).get()
+          : Promise.resolve(null),
+      ]);
+      const currentUsed = dailySnapshot.exists ? Number(dailySnapshot.get("used") ?? 0) : 0;
+      const currentTrialUsed = trialSnapshot?.exists ? Number(trialSnapshot.get("used") ?? 0) : 0;
+      return {
+        allowed: true,
+        used: currentUsed,
+        limit: hardLimit,
+        softLimit,
+        remainingToday: Math.max(0, hardLimit - currentUsed),
+        trialUsed: accessTier === "trial" ? currentTrialUsed : null,
+        trialLimit: accessTier === "trial" ? trialTotalLimit : null,
+        remainingTrial: accessTier === "trial" ? Math.max(0, trialTotalLimit - currentTrialUsed) : null,
+        accessTier,
+      };
+    },
   };
+}
+
+function createConfiguredResultCache({ environment, ttlMs }) {
+  const backend = environment.MEAL_SCAN_RESULT_CACHE ?? environment.MEAL_SCAN_QUOTA_STORE;
+  if (backend === "firestore") {
+    return createFirestoreResultCache({
+      collectionName: environment.MEAL_SCAN_RESULT_CACHE_COLLECTION ?? "mealScanEstimateCache",
+      ttlMs,
+    });
+  }
+  return createInMemoryResultCache({ ttlMs });
+}
+
+function createInMemoryResultCache({ ttlMs }) {
+  const records = new Map();
+  return {
+    async get(input) {
+      const key = resultCacheKey(input);
+      const record = records.get(key);
+      if (!record) return null;
+      if (record.expiresAt <= Date.now()) {
+        records.delete(key);
+        return null;
+      }
+      return record.value;
+    },
+    async set(input, value) {
+      records.set(resultCacheKey(input), {
+        value,
+        expiresAt: Date.now() + ttlMs,
+      });
+    },
+  };
+}
+
+function createFirestoreResultCache({ collectionName, ttlMs }) {
+  let firestoreClient;
+  async function firestore() {
+    if (!firestoreClient) {
+      const { Firestore } = await import("@google-cloud/firestore");
+      firestoreClient = new Firestore();
+    }
+    return firestoreClient;
+  }
+
+  return {
+    async get(input) {
+      const db = await firestore();
+      const document = db.collection(collectionName).doc(resultCacheKey(input));
+      const snapshot = await document.get();
+      if (!snapshot.exists) return null;
+
+      const expiresAtValue = snapshot.get("expiresAt");
+      const expiresAt = expiresAtValue?.toDate?.() ?? new Date(expiresAtValue);
+      if (!Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
+        await document.delete();
+        return null;
+      }
+      return snapshot.get("value") ?? null;
+    },
+    async set(input, value) {
+      const db = await firestore();
+      await db.collection(collectionName).doc(resultCacheKey(input)).set({
+        appUserHash: shortHash(input.appUserId),
+        imageHashPrefix: String(input.imageHash).slice(0, 12),
+        modelId: input.modelId,
+        schemaVersion: input.schemaVersion ?? null,
+        promptVersion: input.promptVersion ?? null,
+        value: JSON.parse(JSON.stringify(value)),
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + ttlMs),
+      });
+    },
+  };
+}
+
+function resultCacheKey({ appUserId, imageHash, modelId, schemaVersion, promptVersion }) {
+  return crypto
+    .createHash("sha256")
+    .update([appUserId, imageHash, modelId, schemaVersion ?? "", promptVersion ?? ""].join("|"))
+    .digest("hex");
 }
 
 function normalizeGateResult(result) {
@@ -485,34 +808,29 @@ function normalizeSubscriberAccess(result) {
   return { allowed: false };
 }
 
-function subscriberAccessFromRevenueCat(body, entitlementId, now = Date.now()) {
-  const subscriber = body?.subscriber;
-  const entitlement = subscriber?.entitlements?.[entitlementId];
-  const entitlementActive = isRevenueCatGrantActive(entitlement, now);
-  const activeSubscriptions = Object.values(subscriber?.subscriptions ?? {}).filter((subscription) =>
-    isRevenueCatGrantActive(subscription, now)
-  );
-  const hasActiveTrial = activeSubscriptions.some((subscription) => subscription?.period_type === "trial");
+function subscriberAccessFromRevenueCatV2(body, entitlementId) {
+  const subscriptions = Array.isArray(body?.items) ? body.items : [];
+  const matchingSubscriptions = subscriptions.filter((subscription) => {
+    if (subscription?.gives_access !== true) return false;
+    const entitlements = Array.isArray(subscription?.entitlements?.items)
+      ? subscription.entitlements.items
+      : [];
+    return entitlements.some(
+      (entitlement) => entitlement?.lookup_key === entitlementId || entitlement?.id === entitlementId
+    );
+  });
 
-  if (entitlementActive || hasActiveTrial) {
-    return {
-      allowed: true,
-      accessTier: hasActiveTrial ? "trial" : "paid",
-      entitlementExpiresAt: entitlement?.expires_date ?? null,
-    };
+  if (!matchingSubscriptions.length) {
+    return { allowed: false, reason: "entitlement_inactive" };
   }
 
-  return { allowed: false, reason: "entitlement_inactive" };
-}
-
-function isRevenueCatGrantActive(grant, now) {
-  if (!grant) {
-    return false;
-  }
-  if (grant.expires_date === null) {
-    return true;
-  }
-  return Number.isFinite(Date.parse(grant.expires_date)) && Date.parse(grant.expires_date) > now;
+  const trialSubscription = matchingSubscriptions.find((subscription) => subscription?.status === "trialing");
+  const accessSubscription = trialSubscription ?? matchingSubscriptions[0];
+  return {
+    allowed: true,
+    accessTier: trialSubscription ? "trial" : "paid",
+    entitlementExpiresAt: accessSubscription?.current_period_ends_at ?? accessSubscription?.ends_at ?? null,
+  };
 }
 
 function quotaResponse(quota, accessTier) {
@@ -554,7 +872,9 @@ function providerResponse(modelSelection) {
 function budgetResponse(budget) {
   return {
     mode: budget.mode,
+    source: budget.source ?? null,
     spendUsd: numberOrNull(budget.spendUsd),
+    budgetUsd: numberOrNull(budget.budgetUsd),
     alertAtUsd: numberOrNull(budget.alertAtUsd),
     degradeAtUsd: numberOrNull(budget.degradeAtUsd),
     disableAtUsd: numberOrNull(budget.disableAtUsd),
@@ -594,16 +914,66 @@ function headerValue(value) {
   return Array.isArray(value) ? value[0] : typeof value === "string" ? value : undefined;
 }
 
-function validatePayload(payload) {
-  if (!payload || typeof payload !== "object") return { ok: false, detail: "body must be JSON object" };
-  if (!payload.revenueCatAppUserId) return { ok: false, detail: "revenueCatAppUserId is required" };
-  if (!payload.image?.base64 || payload.image?.mimeType !== "image/jpeg") return { ok: false, detail: "jpeg image is required" };
-  if (!payload.image?.sha256) return { ok: false, detail: "image sha256 is required" };
+function validatePayload(payload, { maxImageBytes = 1_500_000 } = {}) {
+  if (!isPlainObject(payload)) return { ok: false, detail: "body must be JSON object" };
+  if (!boundedString(payload.revenueCatAppUserId, 1, 256)) {
+    return { ok: false, detail: "revenueCatAppUserId is invalid" };
+  }
+  if (!new Set(["breakfast", "lunch", "dinner", "snack"]).has(payload.mealType)) {
+    return { ok: false, detail: "mealType is invalid" };
+  }
+  if (!boundedString(payload.locale, 2, 32) || !/^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8}){0,3}$/.test(payload.locale)) {
+    return { ok: false, detail: "locale is invalid" };
+  }
+  if (payload.schemaVersion !== "meal-scan-gemini-v1") {
+    return { ok: false, detail: "schemaVersion is invalid" };
+  }
+  if (payload.promptVersion !== "meal-scan-prompt-v1") {
+    return { ok: false, detail: "promptVersion is invalid" };
+  }
+  if (!isPlainObject(payload.image) || payload.image.mimeType !== "image/jpeg") {
+    return { ok: false, detail: "jpeg image is required" };
+  }
+  if (!boundedString(payload.image.base64, 4, Math.ceil(maxImageBytes / 3) * 4 + 4)) {
+    return { ok: false, detail: "jpeg image base64 is invalid" };
+  }
+  if (typeof payload.image.sha256 !== "string" || !/^[a-fA-F0-9]{64}$/.test(payload.image.sha256)) {
+    return { ok: false, detail: "image sha256 is invalid" };
+  }
+  const normalizedBase64 = payload.image.base64.replace(/\s/g, "");
+  const imageBytes = Buffer.from(normalizedBase64, "base64");
+  if (!imageBytes.length || imageBytes.toString("base64") !== normalizedBase64) {
+    return { ok: false, detail: "jpeg image base64 is invalid" };
+  }
+  if (imageBytes.length > maxImageBytes) {
+    return { ok: false, detail: "jpeg image exceeds decoded size limit" };
+  }
+  if (
+    imageBytes.length < 4 ||
+    imageBytes[0] !== 0xff ||
+    imageBytes[1] !== 0xd8 ||
+    imageBytes[imageBytes.length - 2] !== 0xff ||
+    imageBytes[imageBytes.length - 1] !== 0xd9
+  ) {
+    return { ok: false, detail: "jpeg image bytes are invalid" };
+  }
+  const actualImageHash = crypto.createHash("sha256").update(imageBytes).digest("hex");
+  if (actualImageHash !== String(payload.image.sha256).toLowerCase()) {
+    return { ok: false, detail: "image sha256 does not match jpeg bytes" };
+  }
   return { ok: true };
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function boundedString(value, minimumLength, maximumLength) {
+  return typeof value === "string" && value.length >= minimumLength && value.length <= maximumLength;
+}
+
 function selectModel(requestedModelId, budget) {
-  const requested = MODEL_CONFIGS[requestedModelId] ? requestedModelId : DEFAULT_MODEL_ID;
+  const requested = requestedModelId ?? DEFAULT_MODEL_ID;
   if (budget.mode === "degraded" && requested !== DEFAULT_MODEL_ID) {
     return {
       modelId: DEFAULT_MODEL_ID,
@@ -621,13 +991,75 @@ function selectModel(requestedModelId, budget) {
   };
 }
 
-function currentBudgetState() {
-  const spendUsd = numberOrNull(process.env.MEAL_SCAN_MONTHLY_SPEND_USD) ?? 0;
+function createConfiguredBudgetStateProvider(environment = process.env) {
+  if (environment.MEAL_SCAN_BUDGET_STORE === "firestore") {
+    return createFirestoreBudgetStateProvider({
+      environment,
+      ttlMs: Number.parseInt(environment.MEAL_SCAN_CONTROL_CACHE_TTL_MS ?? "30000", 10),
+    });
+  }
+  return () => currentBudgetState(environment);
+}
+
+export function createFirestoreBudgetStateProvider({
+  environment = process.env,
+  ttlMs = 30_000,
+  now = Date.now,
+  readControl,
+} = {}) {
+  const loadControl = readControl ?? createFirestoreControlReader(environment);
+  let cached;
+  let cachedUntil = 0;
+
+  return async () => {
+    const timestamp = now();
+    if (cached && timestamp < cachedUntil) {
+      return cached;
+    }
+
+    const control = await loadControl();
+    if (!control || typeof control !== "object") {
+      throw new Error("meal scan budget control is missing");
+    }
+    const manualMode = validBudgetMode(control.manualMode) ? control.manualMode : null;
+    const billingMode = validBudgetMode(control.billingMode) ? control.billingMode : null;
+    if (!manualMode && !billingMode) {
+      throw new Error("meal scan budget control mode is invalid");
+    }
+
+    cached = normalizeBudgetState({
+      ...control,
+      mode: manualMode ?? billingMode,
+      source: manualMode ? "manual_override" : "cloud_billing_budget",
+    });
+    cachedUntil = timestamp + ttlMs;
+    return cached;
+  };
+}
+
+function createFirestoreControlReader(environment) {
+  let document;
+  return async () => {
+    if (!document) {
+      const { Firestore } = await import("@google-cloud/firestore");
+      const firestore = new Firestore();
+      document = firestore
+        .collection(environment.MEAL_SCAN_CONTROL_COLLECTION ?? "mealScanControls")
+        .doc(environment.MEAL_SCAN_CONTROL_DOCUMENT ?? "global");
+    }
+    const snapshot = await document.get();
+    return snapshot.exists ? snapshot.data() : null;
+  };
+}
+
+function currentBudgetState(environment = process.env) {
+  const spendUsd = numberOrNull(environment.MEAL_SCAN_MONTHLY_SPEND_USD) ?? 0;
   return normalizeBudgetState({
     spendUsd,
     alertAtUsd: BUDGET_ALERT_AT_USD,
     degradeAtUsd: BUDGET_DEGRADE_AT_USD,
     disableAtUsd: BUDGET_DISABLE_AT_USD,
+    source: "static_environment",
   });
 }
 
@@ -650,60 +1082,122 @@ function normalizeBudgetState(input) {
     }
   }
 
-  if (!["normal", "alert", "degraded", "disabled"].includes(mode)) {
+  if (!validBudgetMode(mode)) {
     mode = "normal";
   }
 
-  return { mode, spendUsd, alertAtUsd, degradeAtUsd, disableAtUsd };
-}
-
-function createConfiguredAppAttestVerifier() {
-  const verifierURL = process.env.APP_ATTEST_VERIFIER_URL;
-  if (!verifierURL) {
-    return null;
-  }
-
-  return async (input) => {
-    const response = await fetch(verifierURL, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(process.env.APP_ATTEST_VERIFIER_BEARER
-          ? { authorization: `Bearer ${process.env.APP_ATTEST_VERIFIER_BEARER}` }
-          : {}),
-      },
-      body: JSON.stringify({
-        keyId: input.appAttestKeyId,
-        attestation: input.appAttestAttestation,
-        assertion: input.appAttestAssertion,
-        challenge: input.appAttestChallenge,
-        imageHash: input.payload?.image?.sha256,
-        revenueCatAppUserId: input.payload?.revenueCatAppUserId,
-      }),
-    });
-
-    if (!response.ok) {
-      return { allowed: false, reason: "app_attest_verifier_rejected" };
-    }
-
-    const body = await response.json();
-    return normalizeGateResult(body);
+  return {
+    mode,
+    source: typeof input?.source === "string" ? input.source : null,
+    spendUsd,
+    budgetUsd: numberOrNull(input?.budgetUsd),
+    alertAtUsd,
+    degradeAtUsd,
+    disableAtUsd,
   };
 }
 
-async function readJSONBody(request) {
+function validBudgetMode(mode) {
+  return ["normal", "alert", "degraded", "disabled"].includes(mode);
+}
+
+function createConfiguredFirebaseAppCheckVerifier(environment = process.env) {
+  const expectedAppId = environment.FIREBASE_APP_ID;
+  if (!expectedAppId) {
+    return null;
+  }
+
+  let appCheckServicePromise;
+  return async (token, options = { consume: true }) => {
+    try {
+      appCheckServicePromise ??= loadFirebaseAppCheckService(environment);
+      const appCheckService = await appCheckServicePromise;
+      const verified = await withTimeout(
+        appCheckService.verifyToken(token, options),
+        Number.parseInt(environment.APP_CHECK_TIMEOUT_MS ?? "5000", 10),
+        "APP_CHECK_TIMEOUT"
+      );
+      if (verified.alreadyConsumed) {
+        return { allowed: false, reason: "app_check_token_replayed" };
+      }
+      if (verified.appId !== expectedAppId) {
+        return { allowed: false, reason: "app_check_app_mismatch" };
+      }
+      return { allowed: true, appId: verified.appId };
+    } catch (error) {
+      if (error?.code === "APP_CHECK_TIMEOUT") {
+        throw error;
+      }
+      return { allowed: false, reason: "app_check_rejected" };
+    }
+  };
+}
+
+async function loadFirebaseAppCheckService(environment) {
+  const [{ getApp, getApps, initializeApp }, { getAppCheck }] = await Promise.all([
+    import("firebase-admin/app"),
+    import("firebase-admin/app-check"),
+  ]);
+  const app = getApps().length
+    ? getApp()
+    : initializeApp({ projectId: environment.GOOGLE_CLOUD_PROJECT ?? environment.GCLOUD_PROJECT });
+  return getAppCheck(app);
+}
+
+async function readJSONBody(request, maxBodyBytes) {
   let body = "";
   let bytes = 0;
   for await (const chunk of request) {
     bytes += chunk.length;
-    if (bytes > MAX_BODY_BYTES) {
+    if (bytes > maxBodyBytes) {
       const error = new Error("request too large");
       error.code = "REQUEST_TOO_LARGE";
       throw error;
     }
     body += chunk;
   }
-  return JSON.parse(body || "{}");
+  try {
+    return JSON.parse(body || "{}");
+  } catch {
+    const error = new Error("request body is not valid JSON");
+    error.code = "INVALID_JSON_BODY";
+    throw error;
+  }
+}
+
+async function fetchWithTimeout(url, options, timeoutMs, fetchImpl, timeoutCode) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      const timeoutError = new Error("upstream request timed out");
+      timeoutError.code = timeoutCode;
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function withTimeout(promise, timeoutMs, timeoutCode) {
+  let timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => {
+          const error = new Error("upstream operation timed out");
+          error.code = timeoutCode;
+          reject(error);
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function sendJSON(response, status, body) {

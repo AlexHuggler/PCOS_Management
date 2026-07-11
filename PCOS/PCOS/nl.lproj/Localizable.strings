@@ -2559,3 +2559,15 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Try whole-grain or seed bread instead of white bread." = "Probeer volkoren- of zadenbrood in plaats van wit brood.";
 "Turkey Chili" = "Kalkoenchili";
 "Veggie Omelet" = "Groenteomelet";
+"Scan barcode now" = "Scan barcode nu";
+"AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving." = "AI-maaltijdscan komt binnenkort. Barcode zoeken is nu beschikbaar, en je controleert elk resultaat voordat je opslaat.";
+"AI meal scanning is coming soon" = "AI-maaltijdscan komt binnenkort";
+"Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "Fotogebaseerde maaltijdschattingen worden nog voorbereid. Scan een barcode of voer voeding handmatig in voor deze release.";
+"Log a meal or scan a barcode while it is fresh in your mind." = "Log een maaltijd of scan een barcode terwijl het nog vers in je geheugen zit.";
+"Photo meal estimates are coming soon" = "Fotomaaltijdschattingen komen binnenkort";
+"This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now." = "Dit voorbeeld toont de toekomstige fotoflow. Voor deze release zijn barcode scannen en handmatig maaltijden loggen nu beschikbaar.";
+"Estimated from a sample preview. You would review and edit before saving." = "Geschat op basis van een voorbeeldpreview. Je zou dit controleren en bewerken voordat je opslaat.";
+"Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving." = "Voedingswaarden kunnen variëren door bereiding, portiegrootte, verborgen olie, saus of dressing. Barcode scannen is nu beschikbaar vanuit maaltijdregistratie. Fotogebaseerde schattingen worden nog voorbereid, en elke maaltijd blijft bewerkbaar voordat je opslaat.";
+"Review the source notes, then scan a barcode or log your next meal to see how new entries fit in." = "Bekijk de bronnotities en scan daarna een barcode of log je volgende maaltijd om te zien hoe nieuwe invoer past.";
+"Choose one quick log, scan a barcode, or enter your next meal manually." = "Kies één snelle log, scan een barcode of voer je volgende maaltijd handmatig in.";
+"When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device." = "Wanneer je een fotoschatting kiest, wordt een gecomprimeerde kopie veilig naar onze AI-service gestuurd voor analyse. CycleBalance bewaart de geüploade foto niet op de server. Standaard blijven alleen voedingsgegevens die je controleert en opslaat in je maaltijdlogboek; je kunt Bewaar opgeslagen maaltijdfoto's inschakelen in Instellingen om foto's lokaal op dit apparaat te bewaren.";

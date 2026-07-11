@@ -7,7 +7,8 @@ FIRESTORE_LOCATION="${FIRESTORE_LOCATION:-nam5}"
 SERVICE_ACCOUNT_NAME="${SERVICE_ACCOUNT_NAME:-cyclebalance-meal-scan-proxy}"
 GEMINI_SECRET_NAME="${GEMINI_SECRET_NAME:-cyclebalance-gemini-api-key}"
 REVENUECAT_SECRET_NAME="${REVENUECAT_SECRET_NAME:-cyclebalance-revenuecat-secret-api-key}"
-APP_ATTEST_BEARER_SECRET_NAME="${APP_ATTEST_BEARER_SECRET_NAME:-cyclebalance-app-attest-verifier-bearer}"
+QUOTA_COLLECTION_NAME="${QUOTA_COLLECTION_NAME:-mealScanDailyQuota}"
+RESULT_CACHE_COLLECTION_NAME="${RESULT_CACHE_COLLECTION_NAME:-mealScanEstimateCache}"
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -68,6 +69,12 @@ gcloud services enable \
   secretmanager.googleapis.com \
   firestore.googleapis.com \
   generativelanguage.googleapis.com \
+  apikeys.googleapis.com \
+  firebase.googleapis.com \
+  firebaseappcheck.googleapis.com \
+  firebaseinstallations.googleapis.com \
+  billingbudgets.googleapis.com \
+  pubsub.googleapis.com \
   --project "$PROJECT_ID"
 
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -92,7 +99,6 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 
 ensure_secret "$GEMINI_SECRET_NAME"
 ensure_secret "$REVENUECAT_SECRET_NAME"
-ensure_secret "$APP_ATTEST_BEARER_SECRET_NAME"
 
 gcloud secrets add-iam-policy-binding "$GEMINI_SECRET_NAME" \
   --project "$PROJECT_ID" \
@@ -102,21 +108,35 @@ gcloud secrets add-iam-policy-binding "$REVENUECAT_SECRET_NAME" \
   --project "$PROJECT_ID" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/secretmanager.secretAccessor" >/dev/null
-gcloud secrets add-iam-policy-binding "$APP_ATTEST_BEARER_SECRET_NAME" \
-  --project "$PROJECT_ID" \
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-  --role="roles/secretmanager.secretAccessor" >/dev/null
+  --role="roles/firebaseappcheck.tokenVerifier" \
+  --condition=None >/dev/null
+
+echo "Enabling Firestore TTL deletion for quota and structured estimate cache records..."
+gcloud firestore fields ttls update expiresAt \
+  --collection-group="$QUOTA_COLLECTION_NAME" \
+  --database="(default)" \
+  --enable-ttl \
+  --project="$PROJECT_ID" \
+  --async >/dev/null
+gcloud firestore fields ttls update expiresAt \
+  --collection-group="$RESULT_CACHE_COLLECTION_NAME" \
+  --database="(default)" \
+  --enable-ttl \
+  --project="$PROJECT_ID" \
+  --async >/dev/null
 
 echo
 echo "The next prompts are hidden. Values go directly to Secret Manager, not to this repo."
 add_secret_version_from_prompt "$GEMINI_SECRET_NAME" "Gemini API key" true
 add_secret_version_from_prompt "$REVENUECAT_SECRET_NAME" "RevenueCat secret API key" true
-add_secret_version_from_prompt "$APP_ATTEST_BEARER_SECRET_NAME" "Optional App Attest verifier bearer token, press Enter to skip" false
 
 echo
 echo "Bootstrap complete."
 echo "Project: $PROJECT_ID"
 echo "Region: $REGION"
 echo "Service account: $SERVICE_ACCOUNT_EMAIL"
-echo "Secrets: $GEMINI_SECRET_NAME, $REVENUECAT_SECRET_NAME, $APP_ATTEST_BEARER_SECRET_NAME"
+echo "Secrets: $GEMINI_SECRET_NAME, $REVENUECAT_SECRET_NAME"
 echo "Firestore: (default) in $FIRESTORE_LOCATION"

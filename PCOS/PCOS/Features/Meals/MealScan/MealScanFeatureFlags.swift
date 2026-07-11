@@ -19,7 +19,7 @@ struct MealScanFeatureFlags: Equatable, Sendable {
             enableFoodSegmentation: boolValue(key: "mealScan.enableFoodSegmentation", launchArgument: "enableFoodSegmentation", debugDefault: false, releaseDefault: false),
             enableDepthEstimation: boolValue(key: "mealScan.enableDepthEstimation", launchArgument: "enableDepthEstimation", debugDefault: false, releaseDefault: false),
             enableBarcodeNutritionLookup: boolValue(key: "mealScan.enableBarcodeNutritionLookup", launchArgument: "enableBarcodeNutritionLookup", debugDefault: false, releaseDefault: false),
-            enableMealPhotoRetention: boolValue(key: "mealScan.enableMealPhotoRetention", launchArgument: "enableMealPhotoRetention", debugDefault: true, releaseDefault: true),
+            enableMealPhotoRetention: boolValue(key: "mealScan.enableMealPhotoRetention", launchArgument: "enableMealPhotoRetention", debugDefault: true, releaseDefault: false),
             enableMockMealScanData: boolValue(key: "mealScan.enableMockMealScanData", launchArgument: "enableMockMealScanData", debugDefault: true, releaseDefault: false),
             enableOpenFoodFactsLookup: boolValue(key: "mealScan.enableOpenFoodFactsLookup", launchArgument: "enableOpenFoodFactsLookup", debugDefault: false, releaseDefault: false),
             enableGeminiMealScan: boolValue(key: "mealScan.enableGeminiMealScan", launchArgument: "enableGeminiMealScan", debugDefault: false, releaseDefault: false),
