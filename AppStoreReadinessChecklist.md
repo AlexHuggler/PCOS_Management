@@ -42,3 +42,10 @@
 - Trigger the camera and HealthKit permission prompts in at least one non-English locale and confirm the system sheets use localized `InfoPlist.strings`.
 - Open paywall, settings, calendar, track, insights, and pregnancy/postpartum surfaces in at least one Latin-script locale and one CJK locale.
 - Validate restore purchases, privacy policy, and terms links from the paywall before submission.
+
+## Meal Scan Review Preparation (Pending Owner Approval)
+
+- A preparation-only packet now exists at `docs/app_store_meal_scan_review_packet_2026-07-11.md`. It is not App Store Connect metadata and has not been submitted.
+- The currently submitted `1.0.4 (17)` build must continue to describe AI meal scanning as coming soon. A future cloud-photo review candidate requires a build number greater than `17` and separate approval for every build-number, metadata, screenshot, and submission action.
+- Before enabling Photo Estimate for App Review, complete the physical App Check probe, labeled meal-photo quality review, App Privacy update, deployed privacy-policy/terms verification, reviewer test-access confirmation, and screenshot refresh.
+- The required App Privacy/policy posture is user-initiated photo upload for purpose-limited analysis, no raw-image retention on the proxy, local-only reviewed nutrition storage, quota/budget limits, and continued barcode/manual fallbacks.
