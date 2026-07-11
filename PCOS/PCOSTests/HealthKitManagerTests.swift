@@ -329,7 +329,8 @@ struct HealthKitManagerTests {
         let backupSchemaSource = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/App/SettingsDataBackupSchema.swift"))
 
         #expect(appSource.contains("HealthKitImportedSampleRecord.self"))
-        #expect(testHelpersSource.contains("HealthKitImportedSampleRecord.self"))
+        #expect(testHelpersSource.contains("let primarySchema = CycleBalanceApp.primarySchema"))
+        #expect(testHelpersSource.contains("for: CycleBalanceApp.completeSchema"))
         #expect(backupSchemaSource.contains("healthKitImportedSamples"))
     }
 
