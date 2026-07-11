@@ -146,8 +146,8 @@ struct SwiftDataMealLogRepository: MealLogRepository {
             )
         )
 
-        try modelContext.save()
-        InsightRefreshCoordinator.invalidate()
-        Logger.meals.info("Saved AI meal estimate: \(result.mealName, privacy: .public)")
+            try modelContext.save()
+            InsightRefreshCoordinator.invalidate()
+            Logger.meals.info("Saved reviewed AI meal estimate.")
+        }
     }
-}

@@ -416,7 +416,7 @@ function mealEstimateSchema() {
   };
 }
 
-async function callGemini({ modelId, payload, timeoutMs }) {
+export async function callGemini({ modelId, payload, timeoutMs }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured");
@@ -426,10 +426,13 @@ async function callGemini({ modelId, payload, timeoutMs }) {
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent`,
       {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
         body: JSON.stringify(payload),
         signal: controller.signal,
       }

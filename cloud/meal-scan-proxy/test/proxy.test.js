@@ -826,6 +826,42 @@ test("rejects an oversized body before integrity entitlement quota or Gemini", a
   assert.deepEqual(calls, []);
 });
 
+test("sends the Gemini API key in a header instead of the request URL", async () => {
+  assert.equal(typeof proxyModule.callGemini, "function");
+
+  const originalAPIKey = process.env.GEMINI_API_KEY;
+  const originalFetch = globalThis.fetch;
+  const apiKey = "test-gemini-key-never-in-url";
+  process.env.GEMINI_API_KEY = apiKey;
+  globalThis.fetch = async (url, options) => {
+    const requestURL = new URL(url);
+    assert.equal(requestURL.searchParams.has("key"), false);
+    assert.equal(options.headers["x-goog-api-key"], apiKey);
+    return {
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: "{}" }] } }],
+        usageMetadata: {},
+      }),
+    };
+  };
+
+  try {
+    await proxyModule.callGemini({
+      modelId: "gemini-2.5-flash-lite",
+      payload: {},
+      timeoutMs: 1_000,
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalAPIKey === undefined) {
+      delete process.env.GEMINI_API_KEY;
+    } else {
+      process.env.GEMINI_API_KEY = originalAPIKey;
+    }
+  }
+});
+
 function allowQuotaStore() {
   return {
     checkAndConsume: async () => ({ allowed: true, used: 1, limit: 10, softLimit: 5, remainingToday: 9, accessTier: "paid" }),

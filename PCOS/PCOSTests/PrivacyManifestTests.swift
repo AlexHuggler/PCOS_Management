@@ -87,6 +87,20 @@ struct PrivacyManifestTests {
             #expect(!source.contains("featurePrintArchive"))
         }
     }
+
+    @Test("meal scan persistence does not log reviewed meal names publicly")
+    @MainActor
+    func mealScanPersistenceKeepsMealNamesOutOfPublicLogs() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let source = try String(
+            contentsOf: projectRoot.appendingPathComponent(
+                "PCOS/PCOS/Features/Meals/MealScan/Repositories/SwiftDataMealLogRepository.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(!source.contains("result.mealName, privacy: .public"))
+    }
 }
 
 @Suite("App Icon Assets", .serialized)
