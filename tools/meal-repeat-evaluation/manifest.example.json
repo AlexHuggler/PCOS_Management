@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "id": "opaque_0001",
+      "label": "meal_identity_01",
+      "file": "dataset/<opaque-file-name>.jpg",
+      "highRisk": false
+    }
+  ]
+}

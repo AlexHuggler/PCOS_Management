@@ -1,0 +1,12 @@
+dataset/
+output/
+*.heic
+*.HEIC
+*.jpg
+*.JPG
+*.jpeg
+*.JPEG
+*.png
+*.PNG
+manifest.private.json
+policy.json
