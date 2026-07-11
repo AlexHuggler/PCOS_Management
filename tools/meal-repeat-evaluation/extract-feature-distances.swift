@@ -4,6 +4,12 @@ import Vision
 
 private let productionImageCount = 100
 private let smokeImageCount = 5
+private let toolkitDirectoryURL = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .standardizedFileURL
+private let outputDirectoryURL = toolkitDirectoryURL
+    .appendingPathComponent("output", isDirectory: true)
+    .standardizedFileURL
 
 private struct EvaluationManifest: Decodable {
     let version: Int
@@ -20,7 +26,6 @@ private struct ManifestImage: Decodable {
 private struct ReportImage: Encodable {
     let id: String
     let label: String
-    let highRisk: Bool
     let nearestNeighborID: String
     let nearestNeighborDistance: Double
     let nearestNeighborMargin: Double
@@ -35,7 +40,6 @@ private struct PairDistance: Encodable {
 
 private struct DistanceReport: Encodable {
     let version: Int
-    let mode: String
     let evaluatedImageCount: Int
     let images: [ReportImage]
     let pairs: [PairDistance]
@@ -53,8 +57,10 @@ private enum ExtractorError: LocalizedError {
     case invalidManifest
     case invalidImageMetadata(Int)
     case duplicateID
+    case invalidReleaseTopology
     case missingImageFile(Int)
     case failedFeaturePrint(Int)
+    case unsafeReportDestination
 
     var errorDescription: String? {
         switch self {
@@ -66,10 +72,14 @@ private enum ExtractorError: LocalizedError {
             return "invalid image metadata at manifest index \(index)"
         case .duplicateID:
             return "manifest IDs must be unique opaque values"
+        case .invalidReleaseTopology:
+            return "invalid manifest: production runs require exactly 20 labels with four images each and 20 single-image negative labels"
         case let .missingImageFile(index):
             return "manifest image at index \(index) does not reference a readable local file"
         case let .failedFeaturePrint(index):
             return "Vision could not create a feature print for manifest image at index \(index)"
+        case .unsafeReportDestination:
+            return "report must be written inside \(outputDirectoryURL.path)"
         }
     }
 }
@@ -110,6 +120,36 @@ private func isOpaqueID(_ value: String) -> Bool {
     return value.range(of: expression, options: .regularExpression) != nil
 }
 
+private func validateReleaseDatasetTopology(_ images: [ManifestImage]) throws {
+    var labelCounts = [String: Int]()
+    for image in images {
+        labelCounts[image.label, default: 0] += 1
+    }
+    let fourImageLabels = labelCounts.values.filter { $0 == 4 }.count
+    let singleImageLabels = labelCounts.values.filter { $0 == 1 }.count
+    guard labelCounts.count == 40, fourImageLabels == 20, singleImageLabels == 20 else {
+        throw ExtractorError.invalidReleaseTopology
+    }
+}
+
+private func resolveReportDestination(_ requestedURL: URL) throws -> URL {
+    let fileManager = FileManager.default
+    try fileManager.createDirectory(at: outputDirectoryURL, withIntermediateDirectories: true)
+    guard outputDirectoryURL.resolvingSymlinksInPath() == outputDirectoryURL else {
+        throw ExtractorError.unsafeReportDestination
+    }
+
+    let destinationURL = requestedURL.standardizedFileURL
+    guard destinationURL.deletingLastPathComponent() == outputDirectoryURL else {
+        throw ExtractorError.unsafeReportDestination
+    }
+    if let fileType = try? fileManager.attributesOfItem(atPath: destinationURL.path)[.type] as? FileAttributeType,
+       fileType == .typeSymbolicLink {
+        throw ExtractorError.unsafeReportDestination
+    }
+    return destinationURL
+}
+
 private func loadManifest(at url: URL, smoke: Bool) throws -> [ManifestImage] {
     let manifest = try JSONDecoder().decode(EvaluationManifest.self, from: Data(contentsOf: url))
     let requiredCount = smoke ? smokeImageCount : productionImageCount
@@ -126,6 +166,9 @@ private func loadManifest(at url: URL, smoke: Bool) throws -> [ManifestImage] {
         guard FileManager.default.isReadableFile(atPath: image.file) else {
             throw ExtractorError.missingImageFile(index)
         }
+    }
+    if !smoke {
+        try validateReleaseDatasetTopology(manifest.images)
     }
     return manifest.images
 }
@@ -156,7 +199,7 @@ private func rounded(_ value: Double) -> Double {
     (value * 1_000_000).rounded() / 1_000_000
 }
 
-private func buildReport(records: [FeatureRecord], smoke: Bool, startedAt: Date) throws -> DistanceReport {
+private func buildReport(records: [FeatureRecord], startedAt: Date) throws -> DistanceReport {
     var pairs = [PairDistance]()
     var distances = [String: Double]()
     for firstIndex in records.indices {
@@ -187,7 +230,6 @@ private func buildReport(records: [FeatureRecord], smoke: Bool, startedAt: Date)
         return ReportImage(
             id: record.manifest.id,
             label: record.manifest.label,
-            highRisk: record.manifest.highRisk ?? false,
             nearestNeighborID: nearest.id,
             nearestNeighborDistance: rounded(nearest.distance),
             nearestNeighborMargin: rounded(neighbors[1].distance - nearest.distance),
@@ -197,7 +239,6 @@ private func buildReport(records: [FeatureRecord], smoke: Bool, startedAt: Date)
 
     return DistanceReport(
         version: 1,
-        mode: smoke ? "smoke" : "production",
         evaluatedImageCount: records.count,
         images: images,
         pairs: pairs,
@@ -207,11 +248,12 @@ private func buildReport(records: [FeatureRecord], smoke: Bool, startedAt: Date)
 
 private func main() throws {
     let options = try parseArguments()
+    let reportURL = try resolveReportDestination(options.reportURL)
     let startedAt = Date()
     let images = try loadManifest(at: options.manifestURL, smoke: options.smoke)
-    let report = try buildReport(records: makeFeatureRecords(for: images), smoke: options.smoke, startedAt: startedAt)
+    let report = try buildReport(records: makeFeatureRecords(for: images), startedAt: startedAt)
     let data = try JSONEncoder().encode(report)
-    try data.write(to: options.reportURL, options: .atomic)
+    try data.write(to: reportURL, options: .atomic)
     FileHandle.standardOutput.write(Data("feature distance report created for \(report.evaluatedImageCount) images\n".utf8))
 }
 

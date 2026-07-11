@@ -1,9 +1,12 @@
-import { readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const REQUIRED_IMAGE_COUNT = 100;
 const MINIMUM_PRECISION = 0.95;
 const EPSILON = 1e-9;
+const toolkitDirectory = realpathSync(dirname(fileURLToPath(import.meta.url)));
+const outputDirectory = join(toolkitDirectory, "output");
 
 function fail(message) {
   throw new Error(message);
@@ -61,7 +64,20 @@ function validateManifest(manifest) {
     }
     images.set(image.id, { label: image.label, highRisk: image.highRisk === true });
   }
+  validateReleaseDatasetTopology(images);
   return images;
+}
+
+function validateReleaseDatasetTopology(images) {
+  const labelCounts = new Map();
+  for (const { label } of images.values()) {
+    labelCounts.set(label, (labelCounts.get(label) ?? 0) + 1);
+  }
+  const fourImageLabels = [...labelCounts.values()].filter((count) => count === 4).length;
+  const singleImageLabels = [...labelCounts.values()].filter((count) => count === 1).length;
+  if (labelCounts.size !== 40 || fourImageLabels !== 20 || singleImageLabels !== 20) {
+    fail("release gate failed: manifest must contain exactly 20 labels with four images each and 20 single-image negative labels");
+  }
 }
 
 function pairKey(firstID, secondID) {
@@ -73,6 +89,7 @@ function validateReport(report, manifestImages) {
       !Array.isArray(report.images) || !Array.isArray(report.pairs)) {
     fail("release gate failed: report must describe exactly 100 evaluated images");
   }
+  if (report.mode !== undefined) fail("report must not include mode metadata");
   if (report.images.length !== REQUIRED_IMAGE_COUNT) {
     fail("release gate failed: report must describe exactly 100 evaluated images");
   }
@@ -80,8 +97,8 @@ function validateReport(report, manifestImages) {
   const reportIDs = new Set();
   for (const image of report.images) {
     const manifestImage = manifestImages.get(image?.id);
-    if (!manifestImage || reportIDs.has(image.id) || image.label !== manifestImage.label ||
-        image.highRisk !== undefined && image.highRisk !== manifestImage.highRisk) {
+    if (image?.highRisk !== undefined) fail("report must not include high-risk metadata");
+    if (!manifestImage || reportIDs.has(image.id) || image.label !== manifestImage.label) {
       fail("report images do not match manifest metadata");
     }
     reportIDs.add(image.id);
@@ -102,6 +119,27 @@ function validateReport(report, manifestImages) {
     distances.set(key, pair.distance);
   }
   return distances;
+}
+
+function resolveOutputDestination(destinationPath, kind) {
+  mkdirSync(outputDirectory, { recursive: true, mode: 0o700 });
+  const resolvedOutputDirectory = realpathSync(outputDirectory);
+  if (resolvedOutputDirectory !== outputDirectory) {
+    fail(`${kind} output directory must not be a symbolic link`);
+  }
+
+  const destination = resolve(destinationPath);
+  if (dirname(destination) !== outputDirectory) {
+    fail(`${kind} must be written inside ${outputDirectory}`);
+  }
+  try {
+    if (lstatSync(destination).isSymbolicLink()) {
+      fail(`${kind} destination must not be a symbolic link`);
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return destination;
 }
 
 function scoreNearestNeighbors(images, distances) {
@@ -191,6 +229,7 @@ function writePolicyAtomically(policyPath, policy) {
 
 function main() {
   const options = parseArguments(process.argv.slice(2));
+  const policyPath = resolveOutputDestination(options["--policy"], "policy");
   const manifestImages = validateManifest(readJSON(options["--manifest"], "manifest"));
   const distances = validateReport(readJSON(options["--report"], "report"), manifestImages);
   const selected = selectPolicy(scoreNearestNeighbors(manifestImages, distances));
@@ -203,7 +242,7 @@ function main() {
     precision: round(selected.precision),
     highRiskFalseMatches: selected.highRiskFalseMatches,
   };
-  writePolicyAtomically(options["--policy"], policy);
+  writePolicyAtomically(policyPath, policy);
   process.stdout.write(`policy selected: precision=${policy.precision} recall=${round(selected.recall)}\n`);
 }
 

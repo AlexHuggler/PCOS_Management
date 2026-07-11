@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -8,11 +8,15 @@ import { fileURLToPath } from "node:url";
 
 const toolkitDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const calibratorPath = join(toolkitDirectory, "calibrate-policy.mjs");
+const outputDirectory = join(toolkitDirectory, "output");
+let policySequence = 0;
 
 function makeSyntheticEvaluation({ imageCount = 100, unsafeCrossMatches = 0, highRisk = false } = {}) {
   const images = Array.from({ length: imageCount }, (_, index) => ({
     id: `sample_${String(index + 1).padStart(3, "0")}`,
-    label: `meal_${String(Math.floor(index / 2) + 1).padStart(2, "0")}`,
+    label: index < 80
+      ? `meal_${String(Math.floor(index / 4) + 1).padStart(2, "0")}`
+      : `negative_${String(index - 79).padStart(2, "0")}`,
     highRisk: false,
   }));
   const distances = [];
@@ -22,14 +26,14 @@ function makeSyntheticEvaluation({ imageCount = 100, unsafeCrossMatches = 0, hig
       distances.push({
         firstID: images[first].id,
         secondID: images[second].id,
-        distance: Math.floor(first / 2) === Math.floor(second / 2) ? 0.1 : 0.15,
+        distance: first < 80 && second < 80 && Math.floor(first / 4) === Math.floor(second / 4) ? 0.1 : 0.15,
       });
     }
   }
 
   for (let match = 0; match < unsafeCrossMatches; match += 1) {
-    const first = match * 4;
-    const second = first + 2;
+    const first = match * 8;
+    const second = first + 4;
     const pair = distances.find(({ firstID, secondID }) => (
       firstID === images[first].id && secondID === images[second].id
     ));
@@ -39,32 +43,48 @@ function makeSyntheticEvaluation({ imageCount = 100, unsafeCrossMatches = 0, hig
 
   return {
     manifest: { version: 1, images },
-    report: { version: 1, evaluatedImageCount: imageCount, images, pairs: distances },
+    report: {
+      version: 1,
+      evaluatedImageCount: imageCount,
+      images: images.map(({ id, label }) => ({ id, label })),
+      pairs: distances,
+    },
   };
+}
+
+function makeMalformedHundredImageEvaluation() {
+  const evaluation = makeSyntheticEvaluation();
+  evaluation.manifest.images[99].label = "meal_20";
+  evaluation.report.images[99].label = "meal_20";
+  return evaluation;
 }
 
 function writeEvaluationFixture(evaluation) {
   const directory = mkdtempSync(join(tmpdir(), "cyclebalance-repeat-evaluation-"));
   const manifestPath = join(directory, "manifest.json");
   const reportPath = join(directory, "distances.json");
-  const policyPath = join(directory, "policy.json");
+  mkdirSync(outputDirectory, { recursive: true });
+  const policyPath = join(outputDirectory, `test-policy-${process.pid}-${Date.now()}-${policySequence += 1}.json`);
   writeFileSync(manifestPath, JSON.stringify(evaluation.manifest));
   writeFileSync(reportPath, JSON.stringify(evaluation.report));
-  return { directory, manifestPath, reportPath, policyPath };
+  return { directory, manifestPath, reportPath, policyPath, unsafePolicyPath: join(directory, "policy.json") };
 }
 
-function runCalibrator(fixture) {
+function runCalibrator(fixture, policyPath = fixture.policyPath) {
   return spawnSync(process.execPath, [
     calibratorPath,
     "--manifest", fixture.manifestPath,
     "--report", fixture.reportPath,
-    "--policy", fixture.policyPath,
+    "--policy", policyPath,
   ], { encoding: "utf8" });
 }
 
 test("selects the highest-recall policy that meets every release gate", (t) => {
   const fixture = writeEvaluationFixture(makeSyntheticEvaluation());
-  t.after(() => rmSync(fixture.directory, { recursive: true, force: true }));
+  t.after(() => {
+    rmSync(fixture.directory, { recursive: true, force: true });
+    rmSync(fixture.policyPath, { force: true });
+  });
 
   const result = runCalibrator(fixture);
 
@@ -73,27 +93,59 @@ test("selects the highest-recall policy that meets every release gate", (t) => {
     version: 1,
     enabled: true,
     maximumDistance: 0.1,
-    minimumNeighborMargin: 0.05,
+    minimumNeighborMargin: 0,
     evaluatedImageCount: 100,
     precision: 1,
     highRiskFalseMatches: 0,
   });
 });
 
-test("refuses unsafe or incomplete evaluations without writing a policy", (t) => {
+test("refuses unsafe, incomplete, or malformed evaluations without writing a policy", (t) => {
   const cases = [
     ["sub-95-percent precision", makeSyntheticEvaluation({ unsafeCrossMatches: 3 })],
     ["high-risk cross-meal match", makeSyntheticEvaluation({ unsafeCrossMatches: 1, highRisk: true })],
     ["incomplete dataset", makeSyntheticEvaluation({ imageCount: 99 })],
+    ["malformed 100-image composition", makeMalformedHundredImageEvaluation()],
   ];
 
   for (const [name, evaluation] of cases) {
     const fixture = writeEvaluationFixture(evaluation);
-    t.after(() => rmSync(fixture.directory, { recursive: true, force: true }));
+    t.after(() => {
+      rmSync(fixture.directory, { recursive: true, force: true });
+      rmSync(fixture.policyPath, { force: true });
+    });
     const result = runCalibrator(fixture);
 
     assert.notEqual(result.status, 0, name);
-    assert.match(result.stderr, /release gate|exactly 100/i, name);
+    assert.match(result.stderr, /release gate|exactly 100|20 labels|four images|negative labels/i, name);
     assert.throws(() => readFileSync(fixture.policyPath), name);
   }
+});
+
+test("refuses report safety metadata and unsafe policy destinations before writing", (t) => {
+  const metadataFixture = writeEvaluationFixture(makeSyntheticEvaluation());
+  const report = JSON.parse(readFileSync(metadataFixture.reportPath, "utf8"));
+  report.images[0].highRisk = true;
+  writeFileSync(metadataFixture.reportPath, JSON.stringify(report));
+  t.after(() => {
+    rmSync(metadataFixture.directory, { recursive: true, force: true });
+    rmSync(metadataFixture.policyPath, { force: true });
+  });
+
+  const metadataResult = runCalibrator(metadataFixture);
+
+  assert.notEqual(metadataResult.status, 0, metadataResult.stderr);
+  assert.match(metadataResult.stderr, /report.*high-risk|report.*metadata/i);
+  assert.throws(() => readFileSync(metadataFixture.policyPath));
+
+  const destinationFixture = writeEvaluationFixture(makeSyntheticEvaluation());
+  t.after(() => {
+    rmSync(destinationFixture.directory, { recursive: true, force: true });
+    rmSync(destinationFixture.policyPath, { force: true });
+  });
+  const destinationResult = runCalibrator(destinationFixture, destinationFixture.unsafePolicyPath);
+
+  assert.notEqual(destinationResult.status, 0, destinationResult.stderr);
+  assert.match(destinationResult.stderr, /must be written inside.*output/i);
+  assert.throws(() => readFileSync(destinationFixture.unsafePolicyPath));
 });

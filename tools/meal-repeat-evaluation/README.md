@@ -40,12 +40,14 @@ Run a production evaluation using a local 100-image manifest:
 ```sh
 /tmp/cyclebalance-extract-feature-distances \
   --manifest manifest.private.json \
-  --report output/feature-distances.json
+  --report tools/meal-repeat-evaluation/output/feature-distances.json
 ```
 
-The extractor rejects a normal run unless the manifest has exactly 100 unique opaque IDs and every referenced local file exists. It uses `VNGenerateImageFeaturePrintRequestRevision2`, retains feature prints in memory only, and emits only IDs, labels, high-risk flags, pair distances, nearest-neighbor margins, and timing data. It never copies photos or emits input paths.
+The extractor rejects a normal run unless the manifest has exactly 20 labels with four images each, 20 single-image negative labels, 100 unique opaque IDs, and every referenced local file exists. It uses `VNGenerateImageFeaturePrintRequestRevision2`, retains feature prints in memory only, and emits only IDs, labels, pair distances, nearest-neighbor margins, and timing data. It never copies photos, input paths, high-risk flags, or an execution mode into the report.
 
-For mechanics-only validation, `--smoke` accepts exactly five locally generated test images. The smoke output is explicitly non-production and cannot pass the calibrator's 100-image gate.
+For mechanics-only validation, `--smoke` accepts exactly five locally generated test images. The smoke output is explicitly non-production and cannot pass the calibrator's 100-image gate. High-risk flags remain in the private manifest; calibration joins them by opaque image ID.
+
+Both writers resolve their artifact path and reject any destination outside `tools/meal-repeat-evaluation/output/` (including symbolic-link destinations) before writing. The ignored output directory contains all generated report and policy names.
 
 ## Review And Calibration
 
@@ -56,13 +58,13 @@ Run the policy calibrator only after the complete review is recorded:
 ```sh
 node tools/meal-repeat-evaluation/calibrate-policy.mjs \
   --manifest manifest.private.json \
-  --report output/feature-distances.json \
-  --policy output/policy.json
+  --report tools/meal-repeat-evaluation/output/feature-distances.json \
+  --policy tools/meal-repeat-evaluation/output/policy.json
 ```
 
 The calibrator recomputes leave-one-out nearest-neighbor matches and searches distance and margin thresholds. It refuses to write a policy unless all conditions are true:
 
-- exactly 100 evaluated images;
+- exactly 20 labels with four images each, 20 single-image negative labels, and 100 evaluated images;
 - precision is at least `0.95`; and
 - high-risk false matches equal `0`.
 
