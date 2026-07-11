@@ -2560,6 +2560,11 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Turkey Chili" = "Kalkoenchili";
 "Veggie Omelet" = "Groenteomelet";
 "Scan barcode now" = "Scan barcode nu";
+"Looks familiar" = "Komt je bekend voor";
+"You can adjust anything before saving." = "Je kunt alles aanpassen voordat je opslaat.";
+"Use Previous Meal" = "Vorige maaltijd gebruiken";
+"Scan as New" = "Als nieuwe maaltijd scannen";
+"last logged %@" = "voor het laatst geregistreerd: %@";
 "AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving." = "AI-maaltijdscan komt binnenkort. Barcode zoeken is nu beschikbaar, en je controleert elk resultaat voordat je opslaat.";
 "AI meal scanning is coming soon" = "AI-maaltijdscan komt binnenkort";
 "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "Fotogebaseerde maaltijdschattingen worden nog voorbereid. Scan een barcode of voer voeding handmatig in voor deze release.";

@@ -3,6 +3,7 @@ import Foundation
 @testable import PCOS
 
 private let contentViewSourceRelativePath = "../PCOS/App/ContentView.swift"
+private let cycleBalanceAppSourceRelativePath = "../PCOS/App/CycleBalanceApp.swift"
 private let paywallSourceRelativePath = "../PCOS/Core/StoreKit/PaywallView.swift"
 private let premiumGateSourceRelativePath = "../PCOS/Core/StoreKit/PremiumGate.swift"
 private let calendarSourceRelativePath = "../PCOS/Features/Cycle/Views/CalendarMonthView.swift"
@@ -11,6 +12,7 @@ private let bloodSugarHistorySourceRelativePath = "../PCOS/Features/BloodSugar/V
 private let todayViewSourceRelativePath = "../PCOS/Features/Cycle/Views/TodayView.swift"
 private let mealLogSourceRelativePath = "../PCOS/Features/Meals/Views/MealLogView.swift"
 private let mealScanFlowSourceRelativePath = "../PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+private let repeatMealSuggestionSourceRelativePath = "../PCOS/Features/Meals/MealScan/RepeatMeal/RepeatMealSuggestionView.swift"
 private let mealScanFeatureFlagsSourceRelativePath = "../PCOS/Features/Meals/MealScan/MealScanFeatureFlags.swift"
 private let onboardingContainerSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"
 private let onboardingHowAppHelpsSourceRelativePath = "../PCOS/Features/Onboarding/Views/HowAppHelpsView.swift"
@@ -167,6 +169,38 @@ struct InterfaceResilienceTests {
         #expect(!onboardingSource.contains("MealScanFlowView("))
         #expect(onboardingSource.contains("Sample meal estimate"))
         #expect(!contentSource.contains("guard appState.allowsPremiumAccess else {\n            appState.presentPremiumPaywall()\n            return\n        }\n        showingMealScan = true"))
+    }
+
+    @Test("Repeat meal suggestion stays quiet adaptive and user controlled")
+    func repeatMealSuggestionStaysQuietAdaptiveAndUserControlled() throws {
+        let source = try loadSource(relativePath: repeatMealSuggestionSourceRelativePath)
+        let flowSource = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let appSource = try loadSource(relativePath: cycleBalanceAppSourceRelativePath)
+
+        for requiredCopy in [
+            "Looks familiar",
+            "You can adjust anything before saving.",
+            "Use Previous Meal",
+            "Scan as New",
+        ] {
+            #expect(source.contains("L10n.string(\"\(requiredCopy)\""))
+        }
+
+        #expect(source.contains("suggestion.sourceMealLoggedAt"))
+        #expect(source.contains("last logged %@"))
+        #expect(source.contains("ScrollView"))
+        #expect(source.contains(".fixedSize(horizontal: false, vertical: true)"))
+        #expect(source.contains("meal_scan.repeat_suggestion.use_previous"))
+        #expect(source.contains("meal_scan.repeat_suggestion.scan_as_new"))
+        #expect(!source.localizedCaseInsensitiveContains("cache"))
+        #expect(!source.localizedCaseInsensitiveContains("similarity"))
+        #expect(!source.localizedCaseInsensitiveContains("match percentage"))
+        #expect(!source.contains("lastUsedAt"))
+        #expect(flowSource.contains("RepeatMealSuggestionView("))
+        #expect(flowSource.contains("viewModel.usePreviousMeal()"))
+        #expect(flowSource.contains("viewModel.scanPendingImageAsNew()"))
+        #expect(appSource.contains("arguments.contains(\"SeedRepeatMealSuggestion\")"))
+        #expect(appSource.contains("MealScanRepeatCacheRecord("))
     }
 
     @Test("FSA letter preview uses readable selectable text instead of a disabled fixed editor")

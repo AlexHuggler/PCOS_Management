@@ -2592,6 +2592,11 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Turkey Chili" = "Chili di tacchino";
 "Veggie Omelet" = "Omelette alle verdure";
 "Scan barcode now" = "Scansiona il codice a barre ora";
+"Looks familiar" = "Ti sembra familiare";
+"You can adjust anything before saving." = "Puoi modificare tutto prima di salvare.";
+"Use Previous Meal" = "Usa il pasto precedente";
+"Scan as New" = "Scansiona come nuovo pasto";
+"last logged %@" = "ultima registrazione: %@";
 "AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving." = "La scansione pasti con IA arriverà presto. La ricerca tramite codice a barre è disponibile ora, e rivedi ogni risultato prima di salvare.";
 "AI meal scanning is coming soon" = "La scansione pasti con IA arriverà presto";
 "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "Le stime dei pasti basate su foto sono ancora in preparazione. Scansiona un codice a barre o inserisci manualmente i valori nutrizionali per questa versione.";

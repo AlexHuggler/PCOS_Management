@@ -56,7 +56,7 @@ final class MealScanViewModel {
         remoteMealScanService: (any RemoteMealScanServing)? = nil,
         featureFlags: MealScanFeatureFlags = .current,
         imageNormalizer: any MealScanImageNormalizing = MealScanImageNormalizer(),
-        repeatMealFingerprinter: any MealImageFingerprinting = VisionRepeatMealImageFingerprinter(),
+        repeatMealFingerprinter: (any MealImageFingerprinting)? = nil,
         repeatMealCache: (any MealScanRepeatCaching)? = nil,
         mealLogRepository: (any MealLogRepository)? = nil
     ) {
@@ -66,7 +66,8 @@ final class MealScanViewModel {
         self.nutritionRepository = LocalFoodNutritionRepository(records: SampleNutritionFixtures.records)
         self.pipeline = pipeline ?? (featureFlags.enableMockMealScanData ? .mock() : .production(registry: MealScanModelRegistry(foodClassifierModelName: nil, foodSegmentationModelName: nil, depthModelName: nil, modelVersion: "unconfigured")))
         self.imageNormalizer = imageNormalizer
-        self.repeatMealFingerprinter = repeatMealFingerprinter
+        let resolvedRepeatMealFingerprinter = repeatMealFingerprinter ?? Self.makeRepeatMealFingerprinter()
+        self.repeatMealFingerprinter = resolvedRepeatMealFingerprinter
         self.mealLogRepository = mealLogRepository ?? SwiftDataMealLogRepository(modelContext: modelContext)
         self.remoteMealScanService = remoteMealScanService ?? Self.makeRemoteMealScanService(
             modelContext: modelContext,
@@ -79,7 +80,7 @@ final class MealScanViewModel {
         } else if featureFlags.enableRepeatMealSuggestions {
             self.repeatMealCache = MealScanRepeatCache(
                 modelContext: modelContext,
-                fingerprinter: repeatMealFingerprinter,
+                fingerprinter: resolvedRepeatMealFingerprinter,
                 similarityPolicy: featureFlags.enableSimilarMealSuggestions
                     ? MealRepeatSimilarityPolicy.loadApproved()
                     : .disabled
@@ -460,7 +461,37 @@ final class MealScanViewModel {
             appCheckTokenProvider: FirebaseMealScanAppCheckTokenProvider()
         )
     }
+
+    private static func makeRepeatMealFingerprinter() -> any MealImageFingerprinting {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("UITestMode"),
+           arguments.contains("SeedRepeatMealSuggestion") {
+            return UITestRepeatMealImageFingerprinter()
+        }
+        #endif
+        return VisionRepeatMealImageFingerprinter()
+    }
 }
+
+#if DEBUG
+private struct UITestRepeatMealImageFingerprinter: MealImageFingerprinting {
+    func makeFingerprint(for normalizedJPEGData: Data) async throws -> MealImageFingerprint {
+        MealImageFingerprint(
+            sourceImageHash: MealScanImageNormalizer.sha256Hex(normalizedJPEGData),
+            featurePrintArchive: nil,
+            visionRevision: 2
+        )
+    }
+
+    func distance(
+        between lhs: MealImageFingerprint,
+        and rhs: MealImageFingerprint
+    ) async throws -> Float {
+        throw RepeatMealFingerprintError.missingArchive
+    }
+}
+#endif
 
 private enum MealScanViewModelError: Error {
     case missingPendingImage

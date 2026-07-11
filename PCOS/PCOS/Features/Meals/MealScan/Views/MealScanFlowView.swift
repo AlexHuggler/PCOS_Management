@@ -22,7 +22,26 @@ struct MealScanFlowView: View {
                     case .processing:
                         MealScanProcessingView()
                     case .repeatSuggestion:
-                        MealScanProcessingView()
+                        if let suggestion = viewModel.repeatMealSuggestion {
+                            RepeatMealSuggestionView(
+                                suggestion: suggestion,
+                                onUsePrevious: {
+                                    viewModel.usePreviousMeal()
+                                },
+                                onScanAsNew: {
+                                    Task {
+                                        do {
+                                            try await viewModel.scanPendingImageAsNew()
+                                        } catch {
+                                            viewModel.errorMessage = "No food was confidently detected. You can retake the photo or add the meal manually."
+                                            viewModel.phase = .manualFallback
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            MealScanProcessingView()
+                        }
                     case .review:
                         MealScanReviewView(viewModel: viewModel)
                     case .manualFallback:

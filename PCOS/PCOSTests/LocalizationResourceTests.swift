@@ -94,6 +94,13 @@ private func makeTemporaryLocalizedAppBundle(from appDirectory: URL) throws -> U
 
 @Suite("Localization Resources", .serialized)
 struct LocalizationResourceTests {
+    private let mealReuseLocalizationKeys = [
+        "Looks familiar",
+        "You can adjust anything before saving.",
+        "Use Previous Meal",
+        "Scan as New",
+        "last logged %@",
+    ]
     private let representativeLocalizableKeys = [
         "Spotting",
         "Premium active",
@@ -729,6 +736,28 @@ struct LocalizationResourceTests {
                 let value = table[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 #expect(!value.isEmpty, "Missing localized value for '\(key)' in \(languageIdentifier).")
                 #expect(value != key, "Localized value for '\(key)' in \(languageIdentifier) fell back to English.")
+            }
+        }
+    }
+
+    @Test("Previous meal scan strings are translated for all supported languages")
+    func previousMealScanStringsAreTranslated() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
+            Issue.record("Unable to locate the localized app resource directory from the test bundle.")
+            return
+        }
+
+        for languageIdentifier in L10n.supportedLanguageIdentifiers {
+            guard let table = loadStringsTable(named: "Localizable", languageIdentifier: languageIdentifier, appDirectory: appDirectory) else {
+                Issue.record("Unable to load Localizable.strings for \(languageIdentifier).")
+                continue
+            }
+
+            for key in mealReuseLocalizationKeys {
+                let value = table[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                #expect(!value.isEmpty, "Missing previous-meal localized value for '\(key)' in \(languageIdentifier).")
+                #expect(value != key, "Previous-meal localized value for '\(key)' in \(languageIdentifier) fell back to English.")
             }
         }
     }

@@ -551,10 +551,102 @@ extension CycleBalanceApp {
         let importService = SettingsDataImportService(modelContext: modelContext)
         _ = try importService.replaceAll(with: backup)
         try seedGeneratedInsights(in: modelContext)
+        #if DEBUG
+        try seedRepeatMealSuggestionIfNeeded(in: modelContext, arguments: arguments)
+        #endif
         applyUITestDemoScenarioDefaults(scenario)
 
         Logger.database.info("Loaded UI test demo scenario \(scenario.rawValue, privacy: .public)")
     }
+
+    #if DEBUG
+    static func seedRepeatMealSuggestionIfNeeded(
+        in modelContext: ModelContext,
+        arguments: [String]
+    ) throws {
+        guard arguments.contains("UITestMode"),
+              arguments.contains("SeedRepeatMealSuggestion") else {
+            return
+        }
+
+        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: UIImage())
+        let loggedAt = Date().addingTimeInterval(-3_600)
+        let sourceMealID = UUID(uuidString: "6D9979A0-0FC4-4AA2-AB8C-2D5DA356A1D4") ?? UUID()
+        let sourceMeal = MealEntry(
+            id: sourceMealID,
+            timestamp: loggedAt,
+            mealType: .lunch,
+            mealDescription: "Reviewed lentil bowl",
+            glycemicImpact: .medium,
+            carbsGrams: 52,
+            proteinGrams: 27,
+            fatGrams: 14,
+            sourceLabel: "AI meal estimate",
+            calories: 430,
+            fiberGrams: 9,
+            mealSource: NutritionImportSourceKind.aiMealScan.rawValue,
+            confidenceScore: NutritionConfidence.high.score,
+            userConfirmed: true
+        )
+        let nutrition = NutritionSnapshot(
+            caloriesKcal: 430,
+            proteinGrams: 27,
+            carbsGrams: 52,
+            fatGrams: 14,
+            fiberGrams: 9
+        )
+        let item = MealFoodItemDraft(
+            displayName: "Lentil rice bowl",
+            canonicalFoodId: "lentil-rice-bowl",
+            nutritionSource: .usda,
+            estimatedGrams: 320,
+            servingDescription: "1 reviewed bowl",
+            nutrition: nutrition,
+            confidence: .high,
+            detectionSource: "ui_test_reviewed_meal",
+            portionEstimationMethod: .servingSizeHeuristic
+        )
+        let snapshot = RepeatMealDraftSnapshot(
+            mealName: "Reviewed lentil bowl",
+            mealType: .lunch,
+            items: [item],
+            nutrition: nutrition,
+            confidence: .high,
+            warnings: [],
+            hiddenIngredientEstimate: .no,
+            source: RepeatMealSourceMetadata(
+                modelVersion: "ui-test-reviewed-v1",
+                pipelineVersion: MealScanPipeline.pipelineVersion
+            )
+        )
+        let snapshotData = try JSONEncoder().encode(snapshot)
+        guard let snapshotJSON = String(data: snapshotData, encoding: .utf8) else {
+            return
+        }
+
+        modelContext.insert(sourceMeal)
+        modelContext.insert(
+            MealScanRepeatCacheRecord(
+                sourceMealID: sourceMealID,
+                sourceImageHash: normalizedImage.sourceImageHash,
+                featurePrintArchive: nil,
+                visionRevision: 2,
+                snapshotJSON: snapshotJSON,
+                snapshotSchemaVersion: snapshot.schemaVersion,
+                mealName: snapshot.mealName,
+                mealType: snapshot.mealType,
+                caloriesKcal: snapshot.nutrition.caloriesKcal,
+                proteinGrams: snapshot.nutrition.proteinGrams,
+                carbsGrams: snapshot.nutrition.carbsGrams,
+                fatGrams: snapshot.nutrition.fatGrams,
+                sourceMealLoggedAt: loggedAt,
+                createdAt: loggedAt,
+                lastUsedAt: loggedAt
+            )
+        )
+        try modelContext.save()
+    }
+    #endif
 
     static func applyStoredAppLanguageOverrideIfNeeded() {
         let arguments = ProcessInfo.processInfo.arguments

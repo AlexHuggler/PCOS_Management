@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import SwiftData
+import UIKit
 @testable import PCOS
 
 @Suite("UI Test Demo Scenario Seeding", .serialized)
@@ -81,6 +82,30 @@ struct UITestDemoScenarioSeedingTests {
         #expect(initialSummaries.map(\.signature) == refreshedSummaries.map(\.signature))
         #expect(initialSummaries.map(\.displayText) != refreshedSummaries.map(\.displayText))
         #expect(defaults.string(forKey: InsightLocalizationRefreshService.defaultsKey) == "en")
+    }
+
+    @Test("Repeat meal fixture requires UI test mode and matches the sample photo hash")
+    func repeatMealFixtureIsUITestOnlyAndMatchesSamplePhoto() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+
+        try CycleBalanceApp.seedRepeatMealSuggestionIfNeeded(
+            in: context,
+            arguments: ["SeedRepeatMealSuggestion"]
+        )
+        #expect(try context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).isEmpty)
+
+        try CycleBalanceApp.seedRepeatMealSuggestionIfNeeded(
+            in: context,
+            arguments: ["UITestMode", "SeedRepeatMealSuggestion"]
+        )
+
+        let record = try #require(context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).first)
+        let sourceMeal = try #require(context.fetch(FetchDescriptor<MealEntry>()).first)
+        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: UIImage())
+        #expect(record.sourceMealID == sourceMeal.id)
+        #expect(record.sourceImageHash == normalizedImage.sourceImageHash)
+        #expect(record.mealName == "Reviewed lentil bowl")
     }
 
     private func seedScenario(

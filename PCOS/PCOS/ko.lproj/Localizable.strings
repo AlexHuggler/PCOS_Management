@@ -2557,6 +2557,11 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Turkey Chili" = "터키 칠리";
 "Veggie Omelet" = "채소 오믈렛";
 "Scan barcode now" = "지금 바코드 스캔";
+"Looks familiar" = "익숙한 식사네요";
+"You can adjust anything before saving." = "저장하기 전에 원하는 대로 수정할 수 있어요.";
+"Use Previous Meal" = "이전 식사 사용";
+"Scan as New" = "새 식사로 분석";
+"last logged %@" = "마지막 기록: %@";
 "AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving." = "AI 식사 스캔은 곧 제공될 예정입니다. 바코드 조회는 지금 사용할 수 있으며, 저장 전에 모든 결과를 검토합니다.";
 "AI meal scanning is coming soon" = "AI 식사 스캔은 곧 제공될 예정입니다";
 "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "사진 기반 식사 추정은 아직 준비 중입니다. 이번 릴리스에서는 바코드를 스캔하거나 영양 정보를 수동으로 입력하세요.";
