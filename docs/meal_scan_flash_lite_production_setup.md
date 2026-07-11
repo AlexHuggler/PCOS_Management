@@ -4,11 +4,13 @@ This runbook records the deployed CycleBalance meal-photo estimate architecture,
 
 ## Architecture
 
-The iOS app never calls Gemini directly. After the user chooses Photo Estimate, it normalizes one JPEG and requests a limited-use Firebase App Check token backed by Apple App Attest. The Cloud Run proxy verifies the token and app ID, checks RevenueCat access, reuses a matching cached result or consumes Firestore quota, and only then calls an allowlisted model. The app presents one editable nutrition draft before saving reviewed values locally.
+The iOS app never calls Gemini directly. After the user chooses Photo Estimate, it normalizes one JPEG and first checks an on-device cache of previously reviewed meals. An exact local match can restore the reviewed draft without App Check, network access, quota use, or a model call. If the user chooses `Scan as New` or no exact match exists, the app requests a limited-use Firebase App Check token backed by Apple App Attest. The Cloud Run proxy verifies the token and app ID, checks RevenueCat access, reuses a matching server result or consumes Firestore quota, and only then calls an allowlisted model. Every path presents one editable nutrition draft before saving reviewed values locally.
 
 ```mermaid
 flowchart LR
-    A["CycleBalance iOS app"] -->|"JPEG plus limited-use token"| B["Cloud Run meal-scan proxy"]
+    A["CycleBalance iOS app"] --> C["Local reviewed-meal cache"]
+    C -->|"Exact reuse"| A
+    A -->|"Fresh JPEG plus limited-use token"| B["Cloud Run meal-scan proxy"]
     B --> C["Firebase App Check and App Attest"]
     B --> D["RevenueCat V2 entitlement"]
     B --> E["Firestore quota, cache, and budget control"]
@@ -17,11 +19,11 @@ flowchart LR
     H --> E
 ```
 
-Raw photos are not retained by the proxy. Logs contain only hashed identifiers, an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata.
+Raw photos are not retained by the proxy. Logs contain only hashed identifiers, an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata. Reviewed meal names and raw image bytes are not written to logs.
 
 ## Live Production Posture
 
-As of July 10, 2026:
+As of July 11, 2026:
 
 - Google Cloud project: `cyclebalance-prod-20260710` (`CycleBalance Production`), project number `947929010052`.
 - Region: `us-central1`.
@@ -34,6 +36,7 @@ As of July 10, 2026:
 - Firestore: Native mode in `nam5`; quota and result-cache TTL policies are active.
 - Cloud Run limits: two instances, 20 concurrent requests per instance, 30-second request timeout.
 - Release app posture: Meal Scan V2, Gemini, mock data, and meal-photo retention remain off; barcode and manual entry remain available.
+- Repeat-meal posture: exact local matching is implemented independently of the model, while similarity matching remains disabled until the private labeled evaluation gate passes.
 
 The production service is intentionally unreachable by mobile clients while disabled. When the release gates pass, it must become publicly invokable because an iOS app cannot hold a Cloud Run IAM credential. Firebase App Check, RevenueCat, quota, validation, and budget gates remain the application-layer protection.
 
@@ -103,7 +106,9 @@ Only these server secrets belong in Secret Manager:
 - `cyclebalance-gemini-api-key`
 - `cyclebalance-revenuecat-secret-api-key`
 
-The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The RevenueCat key is limited to read-only Customers and Subscriptions. The Gemini key is restricted to `generativelanguage.googleapis.com`. Proxy, budget-controller, and build service accounts have no user-managed keys.
+The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The RevenueCat key is limited to read-only Customers and Subscriptions. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Proxy, budget-controller, and build service accounts have no user-managed keys.
+
+The current restricted Gemini key is a standard API key and remains valid for the present probe. Google states that standard Gemini API keys will stop working in September 2026. Replace it with an authorization key bound to the proxy service account, add a new Secret Manager version, deploy and verify that version, then disable the old key before that deadline. Do not expose either key to the iOS target.
 
 Never place server secret values in `Info.plist`, `.xcconfig`, `.env`, source files, CI logs, or Cloud Run plain environment variables. The Firebase iOS API key and RevenueCat mobile SDK key are public client identifiers; keep their platform/API restrictions in place, but do not treat them as server credentials.
 
@@ -182,6 +187,8 @@ Complete now:
 - [x] Firebase App Check/App Attest integration and production Release entitlement.
 - [x] RevenueCat V2 entitlement/trial lookup.
 - [x] Firestore quota, dedupe cache, TTL, and remote kill switch.
+- [x] Local exact-repeat reuse with no network/quota/model call, editable review, delete-all cleanup, and no backup/export serialization.
+- [x] Gemini key transport moved from the URL to `x-goog-api-key`; reviewed meal names removed from public logs.
 - [x] Proxy tests, dependency audit, disabled-service smoke test, focused iOS tests, and signed Release build.
 - [x] Current App Store build keeps the feature hidden/coming soon.
 
@@ -190,6 +197,7 @@ Required before enabling users:
 - [ ] Test 50-100 representative meal photos against a labeled nutrition review set.
 - [ ] Run the private repeat-meal evaluation toolkit with exactly 100 images: 20 meal identities with four unchanged-portion views each and 20 visually similar negatives. Strip EXIF, exclude faces/documents/medication labels/location-revealing backgrounds, and keep macro truth outside the image manifest. Do not install a repeat-similarity policy unless the calibrator reports precision at least `0.95` and zero high-risk false matches; the five-image extractor smoke run is mechanics-only evidence and does not satisfy this gate. See `tools/meal-repeat-evaluation/README.md`.
 - [ ] Compare Gemini 2.5 and 3.1 on accuracy, parse success, latency, and cost; approve the default model.
+- [ ] Replace the restricted standard Gemini key with an authorization key before September 2026 and verify Secret Manager rotation/rollback.
 - [ ] Perform one production App Check request from a physical iPhone without exposing or persisting a debug token.
 - [ ] Update App Privacy, privacy policy, terms, screenshots, and App Review notes for user-initiated remote photo analysis.
 - [ ] Increment `CURRENT_PROJECT_VERSION` above build `17` before uploading any binary that contains the production scanner client.
@@ -200,6 +208,7 @@ Required before enabling users:
 
 - Gemini pricing: https://ai.google.dev/gemini-api/docs/pricing
 - Gemini model deprecations: https://ai.google.dev/gemini-api/docs/deprecations
+- Gemini API key security and migration: https://ai.google.dev/gemini-api/docs/api-key
 - Cloud Billing budgets: https://cloud.google.com/billing/docs/how-to/budgets
 - Cloud Run secrets: https://cloud.google.com/run/docs/configuring/services/secrets
 - Secret Manager best practices: https://cloud.google.com/secret-manager/docs/best-practices

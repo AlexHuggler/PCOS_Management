@@ -18,7 +18,7 @@ Paste the following only for the approved build that enables photo estimates:
 
 > CycleBalance is a PCOS-focused health and wellness tracker. No account or sign-in is required. Health logs and reviewed nutrition entries are stored locally on the user's device. HealthKit access is optional and read-only; users choose individual Apple Health permissions, and CycleBalance does not write to HealthKit.
 >
-> Photo Estimate is optional and user initiated. After the user chooses a meal photo and taps the estimate action, CycleBalance sends one compressed JPEG securely to the CycleBalance meal-analysis service to create an editable nutrition draft. The proxy does not retain raw uploaded image bytes. CycleBalance stores only nutrition the user reviews and saves in the local meal log, unless the user separately enables local saved-meal-photo retention in Settings.
+> Photo Estimate is optional and user initiated. CycleBalance first checks on device whether the normalized photo exactly matches a previously reviewed meal. In that case, it offers to reuse the prior editable draft without sending the photo, consuming quota, or calling an AI model. The user can instead choose Scan as New. For a fresh estimate, CycleBalance sends one compressed JPEG securely to the CycleBalance meal-analysis service to create an editable nutrition draft. The proxy does not retain raw uploaded image bytes. CycleBalance stores only nutrition the user reviews and saves in the local meal log, unless the user separately enables local saved-meal-photo retention in Settings.
 >
 > Photo Estimate is controlled by app-integrity validation, active trial/subscription entitlement checks, daily and trial quotas, and a monthly budget stop. It is an estimate for personal tracking, not medical advice, nutrition counseling, diagnosis, treatment, allergy guidance, or an exact measurement. Users can review and edit every result before saving.
 >
@@ -32,9 +32,10 @@ Paste the following only for the approved build that enables photo estimates:
 2. Open `Track` > `Meals` and confirm manual entry and `Scan barcode` remain available.
 3. Choose `Photo Estimate`, select a non-sensitive test meal photo, and read the in-app disclosure before sending it.
 4. Verify the estimate result is presented as an editable draft. Change an item or amount, then save it and confirm the reviewed nutrition appears in the local meal log.
-5. Return to the meal flow and confirm a user without an active trial or subscription receives the entitlement message and can still use barcode lookup or manual entry.
-6. Open `Settings` > `Subscription` to review purchase/restore controls; do not require a private CycleBalance login.
-7. Open `Settings` > `Apple Health` and verify HealthKit access is optional and read-only.
+5. Repeat the same locally reviewed photo and verify CycleBalance offers `Use Previous Meal` and `Scan as New`. Confirm either path still lands in an editable draft before saving.
+6. Return to the meal flow and confirm a user without an active trial or subscription receives the entitlement message for a fresh estimate and can still use barcode lookup or manual entry.
+7. Open `Settings` > `Subscription` to review purchase/restore controls; do not require a private CycleBalance login.
+8. Open `Settings` > `Apple Health` and verify HealthKit access is optional and read-only.
 
 ## App Privacy And Policy Delta
 
@@ -42,7 +43,7 @@ Update App Store Connect App Privacy for the approved cloud-photo build:
 
 | Data type | Purpose | Linked to user | Used for tracking | Required disclosure |
 | --- | --- | --- | --- | --- |
-| User Content > Photos or Videos | App Functionality | No | No | A user-initiated meal photo is transmitted as one normalized JPEG to the CycleBalance proxy/Gemini for an editable estimate. The proxy does not retain raw image bytes. |
+| User Content > Photos or Videos | App Functionality | No | No | For a fresh user-initiated estimate, one normalized JPEG is transmitted to the CycleBalance proxy/Gemini for an editable draft. An exact on-device repeat can be reused without transmission. The proxy does not retain raw image bytes. |
 | Other Data > Other Data Types | App Functionality | No | No | Optional UPC/EAN barcode lookup continues to send only the barcode chosen by the user to obtain product nutrition. |
 | Purchases > Purchase History | App Functionality | No | No | RevenueCat manages subscription/trial entitlement checks. |
 
@@ -50,6 +51,7 @@ The live privacy policy and terms must state all of the following before submiss
 
 - A meal photo is uploaded only after the user selects it and requests a photo estimate.
 - Processing is limited to creating the requested meal estimate; the proxy does not retain raw uploaded image bytes.
+- An exact match to a previously reviewed meal can be reused on device without sending the photo again; `Scan as New` remains available.
 - Nutrition remains local unless the user reviews and saves it; saved-meal-photo retention is local and separately controlled in Settings.
 - Active trial/subscription checks, daily/trial quotas, and a budget kill switch limit feature access.
 - Barcode lookup and manual entry are available alternatives that do not require photo analysis.
@@ -60,6 +62,7 @@ The live privacy policy and terms must state all of the following before submiss
 - [ ] Capture the enabled meal entry screen with `Photo Estimate`, `Scan barcode`, and manual entry visible; never show a real person's health data or an unredacted meal photo.
 - [ ] Capture the pre-send privacy notice explaining user-initiated upload and local reviewed-nutrition storage.
 - [ ] Capture the editable estimate review screen, including the user-editable items and save action.
+- [x] Capture the exact-repeat suggestion in Botanical Journal and Lunar Calm at accessibility XXXL without real health data; local evidence is in `Artifacts/botanical-repeat-meal-standard-text.png` and `Artifacts/lunar-calm-repeat-meal-accessibility-xxxl-actions.png`.
 - [ ] Capture the entitlement/fallback state showing barcode and manual alternatives; do not expose test identifiers or backend errors.
 - [ ] Capture subscription and restore controls with the final localized legal-link layout.
 - [ ] Refresh iPhone screenshot sizes and every shipped App Store localization as required by the new feature; retain no misleading coming-soon copy on an enabled screenshot set.

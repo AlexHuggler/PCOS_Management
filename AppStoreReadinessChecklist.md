@@ -14,6 +14,7 @@
 - Locale-matrix UI coverage validates localized onboarding phases, localized tab shell labels, and localized paywall presentation.
 - The production meal-scan proxy, Firebase App Check/App Attest validation, RevenueCat V2 entitlement lookup, Firestore quotas/cache, and budget controller are deployed in `cyclebalance-prod-20260710` but remain private and disabled.
 - The current Release configuration keeps Meal Scan V2, Gemini scanning, mock scan data, and photo retention off. Its locally signed entitlements use the production App Attest environment, and its app configuration contains only the public proxy URL and mobile SDK keys.
+- Exact repeat-meal reuse is implemented as an on-device reviewed-draft cache. Exact hits make no network request and consume no quota; similar-image matching remains disabled until its private labeled evaluation gate passes.
 
 ## App Store Connect Status
 
@@ -49,3 +50,4 @@
 - The currently submitted `1.0.4 (17)` build must continue to describe AI meal scanning as coming soon. A future cloud-photo review candidate requires a build number greater than `17` and separate approval for every build-number, metadata, screenshot, and submission action.
 - Before enabling Photo Estimate for App Review, complete the physical App Check probe, labeled meal-photo quality review, App Privacy update, deployed privacy-policy/terms verification, reviewer test-access confirmation, and screenshot refresh.
 - The required App Privacy/policy posture is user-initiated photo upload for purpose-limited analysis, no raw-image retention on the proxy, local-only reviewed nutrition storage, quota/budget limits, and continued barcode/manual fallbacks.
+- Repeat-meal review screenshots are captured in Botanical Journal and Lunar Calm at accessibility XXXL. App Review copy must state that an exact previously reviewed meal can be reused locally or deliberately scanned as new.
