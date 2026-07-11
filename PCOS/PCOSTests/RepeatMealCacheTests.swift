@@ -6,6 +6,10 @@ import Testing
 @Suite("Repeat Meal Cache", .serialized)
 @MainActor
 struct RepeatMealCacheTests {
+    private enum ForcedContainerError: Error {
+        case completeStoreFailure
+    }
+
     private static let riceDraft = MealFoodItemDraft(
         id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
         displayName: "White rice",
@@ -114,5 +118,139 @@ struct RepeatMealCacheTests {
 
         #expect(entityNames.contains(String(describing: MealEntry.self)))
         #expect(!entityNames.contains(String(describing: MealScanRepeatCacheRecord.self)))
+    }
+
+    @Test("primary and complete schemas derive from the canonical primary model list")
+    func schemasDeriveFromCanonicalPrimaryModels() {
+        let primaryModelNames = Set(
+            CycleBalanceApp.primaryModelTypes.map { String(describing: $0) }
+        )
+        let primarySchemaNames = Set(CycleBalanceApp.primarySchema.entities.map(\.name))
+        let completeSchemaNames = Set(CycleBalanceApp.completeSchema.entities.map(\.name))
+
+        #expect(primarySchemaNames == primaryModelNames)
+        #expect(
+            completeSchemaNames
+                == primaryModelNames.union([String(describing: MealScanRepeatCacheRecord.self)])
+        )
+    }
+
+    @Test("cache recovery preserves a readable primary store and resets only the cache store")
+    func cacheRecoveryPreservesPrimaryStore() throws {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("RepeatMealCacheRecovery-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+
+        let primaryStoreURL = directoryURL.appendingPathComponent("Primary.sqlite")
+        let cacheStoreURL = directoryURL.appendingPathComponent("RepeatCache.sqlite")
+        let primaryConfiguration = ModelConfiguration(
+            "RepeatMealRecoveryPrimary",
+            schema: CycleBalanceApp.primarySchema,
+            url: primaryStoreURL,
+            cloudKitDatabase: .none
+        )
+        let cacheConfiguration = ModelConfiguration(
+            "RepeatMealRecoveryCache",
+            schema: CycleBalanceApp.repeatCacheSchema,
+            url: cacheStoreURL,
+            cloudKitDatabase: .none
+        )
+
+        do {
+            let seedContainer = try ModelContainer(
+                for: CycleBalanceApp.primarySchema,
+                configurations: [primaryConfiguration]
+            )
+            seedContainer.mainContext.insert(
+                MealEntry(
+                    timestamp: Date(timeIntervalSince1970: 1_780_000_000),
+                    mealType: .lunch,
+                    mealDescription: "Preexisting recovery meal",
+                    glycemicImpact: .low
+                )
+            )
+            try seedContainer.mainContext.save()
+        }
+
+        var containerAttempts = 0
+        var attemptedSchemaNames: [Set<String>] = []
+        var attemptedConfigurationURLs: [[URL]] = []
+        var primaryProbeReadPreexistingMeal = false
+        var resetStoreURLs: [URL] = []
+
+        let recoveredContainer = try CycleBalanceApp.makeModelContainerRecoveringCache(
+            completeSchema: CycleBalanceApp.completeSchema,
+            primarySchema: CycleBalanceApp.primarySchema,
+            primaryConfiguration: primaryConfiguration,
+            cacheConfiguration: cacheConfiguration,
+            containerFactory: { schema, configurations in
+                containerAttempts += 1
+                attemptedSchemaNames.append(Set(schema.entities.map(\.name)))
+                attemptedConfigurationURLs.append(configurations.map(\.url))
+                if containerAttempts == 1 {
+                    throw ForcedContainerError.completeStoreFailure
+                }
+
+                let container = try ModelContainer(
+                    for: schema,
+                    configurations: configurations
+                )
+                if containerAttempts == 2 {
+                    primaryProbeReadPreexistingMeal = try container.mainContext
+                        .fetch(FetchDescriptor<MealEntry>())
+                        .contains { $0.mealDescription == "Preexisting recovery meal" }
+                }
+                return container
+            },
+            resetStoreFiles: { storeURL in
+                resetStoreURLs.append(storeURL)
+                try StoreRecovery.backupAndResetStoreFiles(at: storeURL)
+            }
+        )
+
+        #expect(containerAttempts == 3)
+        #expect(
+            attemptedSchemaNames == [
+                Set(CycleBalanceApp.completeSchema.entities.map(\.name)),
+                Set(CycleBalanceApp.primarySchema.entities.map(\.name)),
+                Set(CycleBalanceApp.completeSchema.entities.map(\.name)),
+            ]
+        )
+        #expect(
+            attemptedConfigurationURLs == [
+                [primaryStoreURL, cacheStoreURL],
+                [primaryStoreURL],
+                [primaryStoreURL, cacheStoreURL],
+            ]
+        )
+        #expect(primaryProbeReadPreexistingMeal)
+        #expect(resetStoreURLs == [cacheStoreURL])
+
+        let recoveredMeals = try recoveredContainer.mainContext.fetch(FetchDescriptor<MealEntry>())
+        #expect(recoveredMeals.contains { $0.mealDescription == "Preexisting recovery meal" })
+
+        let cacheRecord = MealScanRepeatCacheRecord(
+            sourceMealID: UUID(),
+            sourceImageHash: "recovered-cache-image",
+            featurePrintArchive: nil,
+            visionRevision: 2,
+            snapshotJSON: "{}",
+            snapshotSchemaVersion: 1,
+            mealName: "Recovered cache meal",
+            mealType: .lunch,
+            caloriesKcal: 540,
+            proteinGrams: 32,
+            carbsGrams: 61,
+            fatGrams: 17,
+            sourceMealLoggedAt: Date(timeIntervalSince1970: 1_780_000_000)
+        )
+        recoveredContainer.mainContext.insert(cacheRecord)
+        try recoveredContainer.mainContext.save()
+
+        let recoveredCacheRecords = try recoveredContainer.mainContext.fetch(
+            FetchDescriptor<MealScanRepeatCacheRecord>()
+        )
+        #expect(recoveredCacheRecords.count == 1)
     }
 }

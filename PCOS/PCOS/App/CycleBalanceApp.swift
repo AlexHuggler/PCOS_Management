@@ -104,26 +104,28 @@ extension CycleBalanceApp {
         FirebaseApp.configure()
     }
 
+    static let primaryModelTypes: [any PersistentModel.Type] = [
+        CycleEntry.self,
+        Cycle.self,
+        OvulationObservation.self,
+        SymptomEntry.self,
+        Insight.self,
+        BloodSugarReading.self,
+        SupplementLog.self,
+        MealEntry.self,
+        MealScanFoodItem.self,
+        MealScanNutritionSummary.self,
+        MealScanMetadata.self,
+        MealScanResultCacheRecord.self,
+        NutritionImportRecord.self,
+        HealthKitImportedSampleRecord.self,
+        HairPhotoEntry.self,
+        DailyLog.self,
+        PregnancyRecord.self,
+    ]
+
     static var primarySchema: Schema {
-        Schema([
-            CycleEntry.self,
-            Cycle.self,
-            OvulationObservation.self,
-            SymptomEntry.self,
-            Insight.self,
-            BloodSugarReading.self,
-            SupplementLog.self,
-            MealEntry.self,
-            MealScanFoodItem.self,
-            MealScanNutritionSummary.self,
-            MealScanMetadata.self,
-            MealScanResultCacheRecord.self,
-            NutritionImportRecord.self,
-            HealthKitImportedSampleRecord.self,
-            HairPhotoEntry.self,
-            DailyLog.self,
-            PregnancyRecord.self,
-        ])
+        Schema(primaryModelTypes)
     }
 
     static var repeatCacheSchema: Schema {
@@ -131,26 +133,7 @@ extension CycleBalanceApp {
     }
 
     static var completeSchema: Schema {
-        Schema([
-            CycleEntry.self,
-            Cycle.self,
-            OvulationObservation.self,
-            SymptomEntry.self,
-            Insight.self,
-            BloodSugarReading.self,
-            SupplementLog.self,
-            MealEntry.self,
-            MealScanFoodItem.self,
-            MealScanNutritionSummary.self,
-            MealScanMetadata.self,
-            MealScanResultCacheRecord.self,
-            NutritionImportRecord.self,
-            HealthKitImportedSampleRecord.self,
-            HairPhotoEntry.self,
-            DailyLog.self,
-            PregnancyRecord.self,
-            MealScanRepeatCacheRecord.self,
-        ])
+        Schema(primaryModelTypes + [MealScanRepeatCacheRecord.self])
     }
 
     static func makeSharedModelContainer() -> ModelContainer {
@@ -411,25 +394,25 @@ extension CycleBalanceApp {
         return applicationSupportURL.appendingPathComponent(repeatCacheStoreFileName)
     }
 
-    private static func makeModelContainerRecoveringCache(
+    static func makeModelContainerRecoveringCache(
         completeSchema: Schema,
         primarySchema: Schema,
         primaryConfiguration: ModelConfiguration,
-        cacheConfiguration: ModelConfiguration
+        cacheConfiguration: ModelConfiguration,
+        containerFactory: (Schema, [ModelConfiguration]) throws -> ModelContainer = { schema, configurations in
+            try ModelContainer(for: schema, configurations: configurations)
+        },
+        resetStoreFiles: (URL) throws -> Void = { storeURL in
+            try StoreRecovery.backupAndResetStoreFiles(at: storeURL)
+        }
     ) throws -> ModelContainer {
         do {
-            return try ModelContainer(
-                for: completeSchema,
-                configurations: [primaryConfiguration, cacheConfiguration]
-            )
+            return try containerFactory(completeSchema, [primaryConfiguration, cacheConfiguration])
         } catch {
             let initialError = String(describing: error)
 
             do {
-                _ = try ModelContainer(
-                    for: primarySchema,
-                    configurations: [primaryConfiguration]
-                )
+                _ = try containerFactory(primarySchema, [primaryConfiguration])
             } catch {
                 throw ModelContainerStartupError.primaryStore(
                     initial: initialError,
@@ -438,11 +421,8 @@ extension CycleBalanceApp {
             }
 
             do {
-                try StoreRecovery.backupAndResetStoreFiles(at: cacheConfiguration.url)
-                return try ModelContainer(
-                    for: completeSchema,
-                    configurations: [primaryConfiguration, cacheConfiguration]
-                )
+                try resetStoreFiles(cacheConfiguration.url)
+                return try containerFactory(completeSchema, [primaryConfiguration, cacheConfiguration])
             } catch {
                 throw ModelContainerStartupError.cacheStore(
                     initial: initialError,

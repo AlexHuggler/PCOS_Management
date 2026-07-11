@@ -10,46 +10,8 @@ enum TestHelpers {
 
     /// Creates an in-memory ModelContainer for testing.
     static func makeModelContainer() throws -> ModelContainer {
-        let primarySchema = Schema([
-            CycleEntry.self,
-            Cycle.self,
-            OvulationObservation.self,
-            SymptomEntry.self,
-            Insight.self,
-            BloodSugarReading.self,
-            SupplementLog.self,
-            MealEntry.self,
-            MealScanFoodItem.self,
-            MealScanNutritionSummary.self,
-            MealScanMetadata.self,
-            MealScanResultCacheRecord.self,
-            NutritionImportRecord.self,
-            HealthKitImportedSampleRecord.self,
-            HairPhotoEntry.self,
-            DailyLog.self,
-            PregnancyRecord.self,
-        ])
-        let cacheSchema = Schema([MealScanRepeatCacheRecord.self])
-        let schema = Schema([
-            CycleEntry.self,
-            Cycle.self,
-            OvulationObservation.self,
-            SymptomEntry.self,
-            Insight.self,
-            BloodSugarReading.self,
-            SupplementLog.self,
-            MealEntry.self,
-            MealScanFoodItem.self,
-            MealScanNutritionSummary.self,
-            MealScanMetadata.self,
-            MealScanResultCacheRecord.self,
-            NutritionImportRecord.self,
-            HealthKitImportedSampleRecord.self,
-            HairPhotoEntry.self,
-            DailyLog.self,
-            PregnancyRecord.self,
-            MealScanRepeatCacheRecord.self,
-        ])
+        let primarySchema = CycleBalanceApp.primarySchema
+        let cacheSchema = CycleBalanceApp.repeatCacheSchema
         let primaryConfig = ModelConfiguration(
             schema: primarySchema,
             isStoredInMemoryOnly: true,
@@ -61,7 +23,10 @@ enum TestHelpers {
             isStoredInMemoryOnly: true,
             cloudKitDatabase: .none
         )
-        return try ModelContainer(for: schema, configurations: [primaryConfig, cacheConfig])
+        return try ModelContainer(
+            for: CycleBalanceApp.completeSchema,
+            configurations: [primaryConfig, cacheConfig]
+        )
     }
 
     static func projectRoot(from filePath: StaticString = #filePath) throws -> URL {
