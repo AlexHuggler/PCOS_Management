@@ -20,6 +20,11 @@ private final class CycleBalanceAppCheckProviderFactory: NSObject, AppCheckProvi
     }
 }
 
+private enum ModelContainerStartupError: Error {
+    case primaryStore(initial: String, primary: String)
+    case cacheStore(initial: String, cache: String)
+}
+
 final class AppNotificationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
@@ -68,6 +73,7 @@ struct CycleBalanceApp: App {
     private static let debugStoreDirectoryName = "CycleBalanceDebugStore"
     private static let debugStoreFileName = "CycleBalance.sqlite"
 #endif
+    private static let repeatCacheStoreFileName = "MealScanRepeatCache.sqlite"
 
     var sharedModelContainer: ModelContainer = Self.makeSharedModelContainer()
     @State private var appearancePreferences = AppearancePreferences.shared
@@ -98,8 +104,8 @@ extension CycleBalanceApp {
         FirebaseApp.configure()
     }
 
-    static func makeSharedModelContainer() -> ModelContainer {
-        let schema = Schema([
+    static var primarySchema: Schema {
+        Schema([
             CycleEntry.self,
             Cycle.self,
             OvulationObservation.self,
@@ -118,15 +124,57 @@ extension CycleBalanceApp {
             DailyLog.self,
             PregnancyRecord.self,
         ])
+    }
+
+    static var repeatCacheSchema: Schema {
+        Schema([MealScanRepeatCacheRecord.self])
+    }
+
+    static var completeSchema: Schema {
+        Schema([
+            CycleEntry.self,
+            Cycle.self,
+            OvulationObservation.self,
+            SymptomEntry.self,
+            Insight.self,
+            BloodSugarReading.self,
+            SupplementLog.self,
+            MealEntry.self,
+            MealScanFoodItem.self,
+            MealScanNutritionSummary.self,
+            MealScanMetadata.self,
+            MealScanResultCacheRecord.self,
+            NutritionImportRecord.self,
+            HealthKitImportedSampleRecord.self,
+            HairPhotoEntry.self,
+            DailyLog.self,
+            PregnancyRecord.self,
+            MealScanRepeatCacheRecord.self,
+        ])
+    }
+
+    static func makeSharedModelContainer() -> ModelContainer {
+        let primarySchema = Self.primarySchema
+        let repeatCacheSchema = Self.repeatCacheSchema
+        let completeSchema = Self.completeSchema
 
         if isRunningTests {
             do {
-                let testConfiguration = ModelConfiguration(
-                    schema: schema,
+                let primaryConfiguration = ModelConfiguration(
+                    schema: primarySchema,
                     isStoredInMemoryOnly: true,
                     cloudKitDatabase: .none
                 )
-                let container = try ModelContainer(for: schema, configurations: [testConfiguration])
+                let cacheConfiguration = ModelConfiguration(
+                    "RepeatMealCacheTests",
+                    schema: repeatCacheSchema,
+                    isStoredInMemoryOnly: true,
+                    cloudKitDatabase: .none
+                )
+                let container = try ModelContainer(
+                    for: completeSchema,
+                    configurations: [primaryConfiguration, cacheConfiguration]
+                )
                 try applyUITestDemoScenarioIfNeeded(to: container)
                 recordStartupMode("test_in_memory")
                 return container
@@ -139,15 +187,23 @@ extension CycleBalanceApp {
         if CloudKitStartupPolicy.shouldUseLocalStoreInDebug() {
             let fallbackReason = CloudKitStartupPolicy.debugFallbackReason()
             return makeLocalFallbackContainer(
-                schema: schema,
+                completeSchema: completeSchema,
+                primarySchema: primarySchema,
+                repeatCacheSchema: repeatCacheSchema,
                 reason: fallbackReason,
                 cloudError: nil
             )
         }
 
         do {
-            let cloudKitConfiguration = makeCloudKitConfiguration(schema: schema)
-            let container = try ModelContainer(for: schema, configurations: [cloudKitConfiguration])
+            let cloudKitConfiguration = makeCloudKitConfiguration(schema: primarySchema)
+            let cacheConfiguration = try makeLocalDebugCacheConfiguration(schema: repeatCacheSchema)
+            let container = try makeModelContainerRecoveringCache(
+                completeSchema: completeSchema,
+                primarySchema: primarySchema,
+                primaryConfiguration: cloudKitConfiguration,
+                cacheConfiguration: cacheConfiguration
+            )
             recordStartupMode("cloudkit")
             Logger.database.notice("Using CloudKit SwiftData store in Debug due to explicit opt-in.")
             return container
@@ -155,15 +211,23 @@ extension CycleBalanceApp {
             let cloudError = String(describing: error)
             Logger.database.error("CloudKit ModelContainer init failed in Debug: \(cloudError, privacy: .public)")
             return makeLocalFallbackContainer(
-                schema: schema,
+                completeSchema: completeSchema,
+                primarySchema: primarySchema,
+                repeatCacheSchema: repeatCacheSchema,
                 reason: .cloudkitInitError,
                 cloudError: cloudError
             )
         }
 #else
-        let localConfiguration = makeLocalReleaseConfiguration(schema: schema)
         do {
-            let container = try ModelContainer(for: schema, configurations: [localConfiguration])
+            let primaryConfiguration = makeLocalReleaseConfiguration(schema: primarySchema)
+            let cacheConfiguration = try makeLocalReleaseCacheConfiguration(schema: repeatCacheSchema)
+            let container = try makeModelContainerRecoveringCache(
+                completeSchema: completeSchema,
+                primarySchema: primarySchema,
+                primaryConfiguration: primaryConfiguration,
+                cacheConfiguration: cacheConfiguration
+            )
             recordStartupMode("local_only")
             Logger.database.notice("Using local-only SwiftData store in Release.")
             return container
@@ -171,13 +235,20 @@ extension CycleBalanceApp {
             let localError = String(describing: error)
             Logger.database.fault("Local-only ModelContainer init failed in Release: \(localError, privacy: .public)")
 
-            // A store that fails to open (failed migration, corruption) would
-            // otherwise crash-loop at every launch. Move the unreadable store
-            // files into a backup folder and start fresh instead.
+            guard case ModelContainerStartupError.primaryStore = error else {
+                fatalError("Could not create repeat-meal cache store. Primary user data was not reset. \(localError)")
+            }
+
             do {
-                try StoreRecovery.backupAndResetStoreFiles(at: localConfiguration.url)
-                let retryConfiguration = makeLocalReleaseConfiguration(schema: schema)
-                let container = try ModelContainer(for: schema, configurations: [retryConfiguration])
+                let primaryConfiguration = makeLocalReleaseConfiguration(schema: primarySchema)
+                try StoreRecovery.backupAndResetStoreFiles(at: primaryConfiguration.url)
+                let cacheConfiguration = try makeLocalReleaseCacheConfiguration(schema: repeatCacheSchema)
+                let container = try makeModelContainerRecoveringCache(
+                    completeSchema: completeSchema,
+                    primarySchema: primarySchema,
+                    primaryConfiguration: primaryConfiguration,
+                    cacheConfiguration: cacheConfiguration
+                )
                 recordStartupMode("local_only_after_reset")
                 Logger.database.notice("Recovered local-only store after backing up unreadable store files.")
                 return container
@@ -203,13 +274,21 @@ extension CycleBalanceApp {
     }
 
     static func makeLocalFallbackContainer(
-        schema: Schema,
+        completeSchema: Schema,
+        primarySchema: Schema,
+        repeatCacheSchema: Schema,
         reason: CloudKitFallbackReason,
         cloudError: String?
     ) -> ModelContainer {
         do {
-            let localConfiguration = try makeLocalDebugConfiguration(schema: schema)
-            let container = try ModelContainer(for: schema, configurations: [localConfiguration])
+            let primaryConfiguration = try makeLocalDebugConfiguration(schema: primarySchema)
+            let cacheConfiguration = try makeLocalDebugCacheConfiguration(schema: repeatCacheSchema)
+            let container = try makeModelContainerRecoveringCache(
+                completeSchema: completeSchema,
+                primarySchema: primarySchema,
+                primaryConfiguration: primaryConfiguration,
+                cacheConfiguration: cacheConfiguration
+            )
             recordStartupMode("local_fallback_\(reason.rawValue)")
             Logger.database.notice("Using local SwiftData fallback store due to \(reason.rawValue, privacy: .public).")
             if let cloudError {
@@ -220,10 +299,20 @@ extension CycleBalanceApp {
             let fallbackError = String(describing: error)
             Logger.database.error("Local fallback ModelContainer init failed: \(fallbackError, privacy: .public)")
 
+            guard case ModelContainerStartupError.primaryStore = error else {
+                fatalError("Could not create repeat-meal cache store. Primary user data was not reset. \(fallbackError)")
+            }
+
             do {
                 try resetDebugLocalStoreFiles()
-                let localConfiguration = try makeLocalDebugConfiguration(schema: schema)
-                let container = try ModelContainer(for: schema, configurations: [localConfiguration])
+                let primaryConfiguration = try makeLocalDebugConfiguration(schema: primarySchema)
+                let cacheConfiguration = try makeLocalDebugCacheConfiguration(schema: repeatCacheSchema)
+                let container = try makeModelContainerRecoveringCache(
+                    completeSchema: completeSchema,
+                    primarySchema: primarySchema,
+                    primaryConfiguration: primaryConfiguration,
+                    cacheConfiguration: cacheConfiguration
+                )
                 recordStartupMode("local_fallback_after_reset_\(reason.rawValue)")
                 Logger.database.notice("Recovered local fallback store after debug reset.")
                 return container
@@ -249,6 +338,15 @@ extension CycleBalanceApp {
         )
     }
 
+    static func makeLocalDebugCacheConfiguration(schema: Schema) throws -> ModelConfiguration {
+        ModelConfiguration(
+            "RepeatMealCacheDebug",
+            schema: schema,
+            url: try debugStoreDirectoryURL().appendingPathComponent(repeatCacheStoreFileName),
+            cloudKitDatabase: .none
+        )
+    }
+
     static func resetDebugLocalStoreFiles() throws {
         let storeURL = try debugLocalStoreURL()
         let fileManager = FileManager.default
@@ -265,6 +363,10 @@ extension CycleBalanceApp {
     }
 
     private static func debugLocalStoreURL() throws -> URL {
+        try debugStoreDirectoryURL().appendingPathComponent(debugStoreFileName)
+    }
+
+    private static func debugStoreDirectoryURL() throws -> URL {
         let fileManager = FileManager.default
         let appSupportURL = try fileManager.url(
             for: .applicationSupportDirectory,
@@ -278,7 +380,7 @@ extension CycleBalanceApp {
             try fileManager.createDirectory(at: storeDirectoryURL, withIntermediateDirectories: true)
         }
 
-        return storeDirectoryURL.appendingPathComponent(debugStoreFileName)
+        return storeDirectoryURL
     }
 #endif
 
@@ -288,6 +390,66 @@ extension CycleBalanceApp {
             isStoredInMemoryOnly: false,
             cloudKitDatabase: .none
         )
+    }
+
+    static func makeLocalReleaseCacheConfiguration(schema: Schema) throws -> ModelConfiguration {
+        ModelConfiguration(
+            "RepeatMealCacheRelease",
+            schema: schema,
+            url: try repeatCacheStoreURL(),
+            cloudKitDatabase: .none
+        )
+    }
+
+    private static func repeatCacheStoreURL() throws -> URL {
+        let applicationSupportURL = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        return applicationSupportURL.appendingPathComponent(repeatCacheStoreFileName)
+    }
+
+    private static func makeModelContainerRecoveringCache(
+        completeSchema: Schema,
+        primarySchema: Schema,
+        primaryConfiguration: ModelConfiguration,
+        cacheConfiguration: ModelConfiguration
+    ) throws -> ModelContainer {
+        do {
+            return try ModelContainer(
+                for: completeSchema,
+                configurations: [primaryConfiguration, cacheConfiguration]
+            )
+        } catch {
+            let initialError = String(describing: error)
+
+            do {
+                _ = try ModelContainer(
+                    for: primarySchema,
+                    configurations: [primaryConfiguration]
+                )
+            } catch {
+                throw ModelContainerStartupError.primaryStore(
+                    initial: initialError,
+                    primary: String(describing: error)
+                )
+            }
+
+            do {
+                try StoreRecovery.backupAndResetStoreFiles(at: cacheConfiguration.url)
+                return try ModelContainer(
+                    for: completeSchema,
+                    configurations: [primaryConfiguration, cacheConfiguration]
+                )
+            } catch {
+                throw ModelContainerStartupError.cacheStore(
+                    initial: initialError,
+                    cache: String(describing: error)
+                )
+            }
+        }
     }
 
     static func recordStartupMode(_ mode: String) {

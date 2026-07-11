@@ -10,7 +10,7 @@ enum TestHelpers {
 
     /// Creates an in-memory ModelContainer for testing.
     static func makeModelContainer() throws -> ModelContainer {
-        let schema = Schema([
+        let primarySchema = Schema([
             CycleEntry.self,
             Cycle.self,
             OvulationObservation.self,
@@ -29,12 +29,39 @@ enum TestHelpers {
             DailyLog.self,
             PregnancyRecord.self,
         ])
-        let config = ModelConfiguration(
-            schema: schema,
+        let cacheSchema = Schema([MealScanRepeatCacheRecord.self])
+        let schema = Schema([
+            CycleEntry.self,
+            Cycle.self,
+            OvulationObservation.self,
+            SymptomEntry.self,
+            Insight.self,
+            BloodSugarReading.self,
+            SupplementLog.self,
+            MealEntry.self,
+            MealScanFoodItem.self,
+            MealScanNutritionSummary.self,
+            MealScanMetadata.self,
+            MealScanResultCacheRecord.self,
+            NutritionImportRecord.self,
+            HealthKitImportedSampleRecord.self,
+            HairPhotoEntry.self,
+            DailyLog.self,
+            PregnancyRecord.self,
+            MealScanRepeatCacheRecord.self,
+        ])
+        let primaryConfig = ModelConfiguration(
+            schema: primarySchema,
             isStoredInMemoryOnly: true,
             cloudKitDatabase: .none
         )
-        return try ModelContainer(for: schema, configurations: [config])
+        let cacheConfig = ModelConfiguration(
+            "RepeatMealCacheTests",
+            schema: cacheSchema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        return try ModelContainer(for: schema, configurations: [primaryConfig, cacheConfig])
     }
 
     static func projectRoot(from filePath: StaticString = #filePath) throws -> URL {

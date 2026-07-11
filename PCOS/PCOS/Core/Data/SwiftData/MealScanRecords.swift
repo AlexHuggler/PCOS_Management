@@ -214,3 +214,65 @@ final class MealScanResultCacheRecord {
         self.expiresAt = expiresAt
     }
 }
+
+@Model
+final class MealScanRepeatCacheRecord {
+    var id: UUID = UUID()
+    var sourceMealID: UUID = UUID()
+    var sourceImageHash: String = ""
+    var featurePrintArchive: Data?
+    var visionRevision: Int = 0
+    var snapshotJSON: String = "{}"
+    var snapshotSchemaVersion: Int = RepeatMealDraftSnapshot.currentSchemaVersion
+    var mealName: String = ""
+    var mealType: MealType = MealType.snack
+    var caloriesKcal: Double = 0
+    var proteinGrams: Double = 0
+    var carbsGrams: Double = 0
+    var fatGrams: Double = 0
+    var sourceMealLoggedAt: Date = Date()
+    var createdAt: Date = Date()
+    var lastUsedAt: Date = Date()
+    var lastMatchedAt: Date?
+    var reuseCount: Int = 0
+
+    init(
+        id: UUID = UUID(),
+        sourceMealID: UUID,
+        sourceImageHash: String,
+        featurePrintArchive: Data?,
+        visionRevision: Int,
+        snapshotJSON: String,
+        snapshotSchemaVersion: Int,
+        mealName: String,
+        mealType: MealType,
+        caloriesKcal: Double,
+        proteinGrams: Double,
+        carbsGrams: Double,
+        fatGrams: Double,
+        sourceMealLoggedAt: Date,
+        createdAt: Date = Date(),
+        lastUsedAt: Date = Date(),
+        lastMatchedAt: Date? = nil,
+        reuseCount: Int = 0
+    ) {
+        self.id = id
+        self.sourceMealID = sourceMealID
+        self.sourceImageHash = sourceImageHash
+        self.featurePrintArchive = featurePrintArchive
+        self.visionRevision = visionRevision
+        self.snapshotJSON = snapshotJSON
+        self.snapshotSchemaVersion = snapshotSchemaVersion
+        self.mealName = mealName
+        self.mealType = mealType
+        self.caloriesKcal = caloriesKcal
+        self.proteinGrams = proteinGrams
+        self.carbsGrams = carbsGrams
+        self.fatGrams = fatGrams
+        self.sourceMealLoggedAt = sourceMealLoggedAt
+        self.createdAt = createdAt
+        self.lastUsedAt = lastUsedAt
+        self.lastMatchedAt = lastMatchedAt
+        self.reuseCount = reuseCount
+    }
+}

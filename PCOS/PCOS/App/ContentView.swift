@@ -1246,6 +1246,7 @@ private struct LunarWaveMark: View {
             MealScanNutritionSummary.self,
             MealScanMetadata.self,
             MealScanResultCacheRecord.self,
+            MealScanRepeatCacheRecord.self,
             NutritionImportRecord.self,
             HealthKitImportedSampleRecord.self,
             HairPhotoEntry.self,
