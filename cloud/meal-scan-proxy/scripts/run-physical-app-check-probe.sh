@@ -2,12 +2,15 @@
 # Runs one deliberately non-entitled physical-device request. The normal path is dry-run only.
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-}"
+readonly PINNED_PROJECT_ID="cyclebalance-prod-20260710"
+readonly PINNED_SERVICE_NAME="cyclebalance-meal-scan-proxy"
+readonly DEFAULT_DEVICE_ID="0C663BE9-3804-587C-BD8A-A2B4D38F998A"
+
+PROJECT_ID="${PROJECT_ID:-$PINNED_PROJECT_ID}"
 REGION="${REGION:-us-central1}"
-SERVICE_NAME="${SERVICE_NAME:-cyclebalance-meal-scan-proxy}"
-DEVICE_UDID="${DEVICE_UDID:-0C663BE9-3804-587C-BD8A-A2B4D38F998A}"
+SERVICE_NAME="${SERVICE_NAME:-$PINNED_SERVICE_NAME}"
 DEVICE_NAME="${DEVICE_NAME:-General Kenobi}"
-PROBE_SCHEME="${PROBE_SCHEME:-PCOS Production Meal Scan Probe}"
+readonly PROBE_SCHEME="PCOS Production Meal Scan Probe"
 DRY_RUN="${DRY_RUN:-false}"
 CONFIRM_TEMPORARY_PUBLIC_PROBE="${CONFIRM_TEMPORARY_PUBLIC_PROBE:-}"
 
@@ -24,6 +27,7 @@ ROLLBACK_COMPLETE=false
 TEMP_ROOT=""
 SERVICE_URL=""
 START_UTC=""
+DEVICE_IDENTIFIER=""
 
 die() {
   printf 'ERROR: %s\n' "$*" >&2
@@ -43,6 +47,53 @@ require_equal() {
   local expected="$2"
   local description="$3"
   [[ "$actual" == "$expected" ]] || die "$description (expected $expected, found $actual)"
+}
+
+validate_pinned_cloud_identity() {
+  require_equal "$PROJECT_ID" "$PINNED_PROJECT_ID" "The probe is pinned to the production project"
+  require_equal "$SERVICE_NAME" "$PINNED_SERVICE_NAME" "The probe is pinned to the production service"
+}
+
+resolve_device_identifier() {
+  local device_id="${DEVICE_ID:-}"
+  local device_udid="${DEVICE_UDID:-}"
+  if [[ -n "$device_id" && -n "$device_udid" && "$device_id" != "$device_udid" ]]; then
+    die "DEVICE_ID and DEVICE_UDID must match when both are set"
+  fi
+  printf '%s\n' "${device_id:-${device_udid:-$DEFAULT_DEVICE_ID}}"
+}
+
+device_lock_is_verified_unlocked() {
+  local lock_json="$1"
+  jq -e '
+    [
+      .. | objects |
+      (if has("passcodeRequired") and (.passcodeRequired | type == "boolean")
+        then (.passcodeRequired == false) else empty end),
+      (if has("isLocked") and (.isLocked | type == "boolean")
+        then (.isLocked == false) else empty end),
+      (if has("lockState") and (.lockState | type == "string") and
+          ((.lockState | ascii_downcase) == "locked" or (.lockState | ascii_downcase) == "unlocked")
+        then ((.lockState | ascii_downcase) == "unlocked") else empty end)
+    ] as $recognized_states |
+    (($recognized_states | length) > 0 and all($recognized_states[]; . == true))
+  ' "$lock_json" >/dev/null
+}
+
+normalize_service_url() {
+  local url="$1"
+  if [[ "$url" == */ ]]; then
+    url="${url%/}"
+  fi
+  printf '%s\n' "$url"
+}
+
+require_service_url_match() {
+  local app_url verified_url
+  app_url="$(normalize_service_url "$1")"
+  verified_url="$(normalize_service_url "$2")"
+  [[ "$verified_url" == https://* ]] || die "Verified Cloud Run service URL must use HTTPS"
+  require_equal "$app_url" "$verified_url" "Release app proxy URL must exactly match the verified Cloud Run service URL"
 }
 
 cleanup_temp() {
@@ -67,20 +118,18 @@ rollback() {
   exit "$status"
 }
 
-trap rollback EXIT INT TERM
-
 print_dry_run() {
   note "DRY RUN ONLY: no cloud, device, build, installation, or backup action will run."
   note "1. Validate project $PROJECT_ID and Cloud Run service $SERVICE_NAME in $REGION."
   note "2. Require MEAL_SCAN_ENABLED=false, Firestore budget mode normal, and no allUsers Cloud Run invoker."
-  note "3. Confirm $DEVICE_NAME ($DEVICE_UDID) is paired, unlocked, in Developer Mode, and can auto-mount its DDI."
+  note "3. Confirm $DEVICE_NAME ($DEVICE_IDENTIFIER) is paired, explicitly reported unlocked, in Developer Mode, and can auto-mount its DDI."
   note "4. Back up $APP_BUNDLE_ID app data to ~/Library/Application Support/CycleBalance/DeviceBackups/<UTC timestamp> mode 0700; abort if it fails."
-  note "5. Build current Release source in a temporary DerivedData directory without -allowProvisioningUpdates."
-  note "6. Inspect the product for bundle ID $APP_BUNDLE_ID, production App Attest entitlement, and a complete HTTPS proxy URL."
+  note "5. Build current Release source in a temporary DerivedData directory without automatic provisioning changes."
+  note "6. Inspect the product for bundle ID $APP_BUNDLE_ID, production App Attest entitlement, and exact equality with the verified Cloud Run URL."
   note "7. Arm rollback before any cloud mutation."
   note "8. Temporarily deploy MEAL_SCAN_ENABLED=true with unauthenticated ingress using deploy-cloud-run.sh."
-  note "9. Run only $PROBE_TEST with RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1 on the named device."
-  note "10. Require HTTP 403 premium_entitlement_required / entitlement_inactive, no quota document, and no Gemini estimate log for the image-hash prefix."
+  note "9. Run only $PROBE_TEST through the dedicated opt-in Release scheme on the named device."
+  note "10. Require HTTP 403 premium_entitlement_required / entitlement_inactive, an unchanged full quota snapshot, and no Gemini estimate log for the image-hash prefix."
   note "11. Always redeploy disabled/private and require unauthenticated 403 plus authenticated 503 feature_disabled."
 }
 
@@ -111,7 +160,22 @@ const snapshot = await new Firestore({ projectId })
   .collection("mealScanDailyQuota")
   .doc(`${appUserHash}_${day}`)
   .get();
-process.stdout.write(snapshot.exists ? String(snapshot.get("used") ?? 0) : "absent");
+
+function normalize(value) {
+  if (value === null || value === undefined) return value ?? null;
+  if (typeof value.toDate === "function") return value.toDate().toISOString();
+  if (Array.isArray(value)) return value.map(normalize);
+  if (typeof value === "object") {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalize(value[key])]));
+  }
+  return value;
+}
+
+process.stdout.write(JSON.stringify({
+  exists: snapshot.exists,
+  updateTime: snapshot.updateTime ? snapshot.updateTime.toDate().toISOString() : null,
+  data: snapshot.exists ? normalize(snapshot.data() ?? {}) : null,
+}));
 NODE
   )
 }
@@ -154,22 +218,22 @@ verify_device_preconditions() {
   ddi_json="$TEMP_ROOT/device-ddi.json"
 
   xcrun devicectl list devices --json-output "$devices_json" >/dev/null
-  jq -e --arg udid "$DEVICE_UDID" --arg name "$DEVICE_NAME" '
+  jq -e --arg udid "$DEVICE_IDENTIFIER" --arg name "$DEVICE_NAME" '
     .. | objects | select((.identifier? // .udid? // "") == $udid) |
     [.. | strings | select(. == $name)] | length > 0
-  ' "$devices_json" >/dev/null || die "Expected paired device $DEVICE_NAME ($DEVICE_UDID) was not found"
+  ' "$devices_json" >/dev/null || die "Expected paired device $DEVICE_NAME ($DEVICE_IDENTIFIER) was not found"
 
-  xcrun devicectl device info details --device "$DEVICE_UDID" --json-output "$details_json" >/dev/null
+  xcrun devicectl device info details --device "$DEVICE_IDENTIFIER" --json-output "$details_json" >/dev/null
   jq -e '.. | objects | [.isPaired?, .paired?, .deviceProperties?.isPaired?] | any(. == true)' \
     "$details_json" >/dev/null || die "Device is not paired"
   jq -e '.. | objects | [.developerModeEnabled?, .isDeveloperModeEnabled?, .deviceProperties?.developerModeEnabled?] | any(. == true)' \
     "$details_json" >/dev/null || die "Developer Mode must be enabled"
 
-  xcrun devicectl device info lockState --device "$DEVICE_UDID" --json-output "$lock_json" >/dev/null
-  ! jq -e '.. | strings | ascii_downcase | select(. == "locked" or . == "lock")' "$lock_json" >/dev/null \
-    || die "Device is locked. Unlock it manually; this script will never request a passcode."
+  xcrun devicectl device info lockState --device "$DEVICE_IDENTIFIER" --json-output "$lock_json" >/dev/null
+  device_lock_is_verified_unlocked "$lock_json" \
+    || die "Device lock state is missing, unknown, conflicting, or locked. Unlock it manually; this script will never request a passcode."
 
-  xcrun devicectl device info ddiServices --auto-mount-ddis --device "$DEVICE_UDID" --json-output "$ddi_json" >/dev/null \
+  xcrun devicectl device info ddiServices --auto-mount-ddis --device "$DEVICE_IDENTIFIER" --json-output "$ddi_json" >/dev/null \
     || die "CoreDevice could not mount or verify the developer disk image"
   jq -e '.. | objects | select(has("services")) | .services | length > 0' "$ddi_json" >/dev/null \
     || die "Developer disk image services are not available"
@@ -184,7 +248,7 @@ backup_app_data() {
   chmod 0700 "$backup_root" "$backup_dir"
   note "Backing up the installed app-data container before any installation."
   xcrun devicectl device copy from \
-    --device "$DEVICE_UDID" \
+    --device "$DEVICE_IDENTIFIER" \
     --domain-type appDataContainer \
     --domain-identifier "$APP_BUNDLE_ID" \
     --source . \
@@ -212,8 +276,7 @@ build_and_inspect_release_product() {
   app_attest_environment="$(codesign -d --entitlements :- "$app_path" 2>/dev/null | plutil -extract 'com.apple.developer.devicecheck.appattest-environment' raw -)"
   require_equal "$app_attest_environment" "production" "Release build must use production App Attest"
   proxy_url="$(/usr/libexec/PlistBuddy -c 'Print :MEAL_SCAN_PROXY_BASE_URL' "$app_path/Info.plist")"
-  [[ "$proxy_url" == https://* && "$proxy_url" != *'$('* && "$proxy_url" != *'YOUR_'* ]] \
-    || die "Release build must contain a complete production HTTPS proxy URL"
+  require_service_url_match "$proxy_url" "$SERVICE_URL"
 }
 
 deploy_temporary_public_probe() {
@@ -258,11 +321,11 @@ run_probe_and_verify_side_effects() {
   test_log="$TEMP_ROOT/physical-probe-test.log"
   START_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   note "Running the opt-in Release test on the physical device."
-  RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1 xcodebuild test \
+  xcodebuild test \
     -project "$REPOSITORY_ROOT/PCOS.xcodeproj" \
     -scheme "$PROBE_SCHEME" \
     -configuration Release \
-    -destination "platform=iOS,id=$DEVICE_UDID" \
+    -destination "platform=iOS,id=$DEVICE_IDENTIFIER" \
     -derivedDataPath "$TEMP_ROOT/ProbeTestDerivedData" \
     -only-testing:"$PROBE_TEST" | tee "$test_log"
 
@@ -272,7 +335,7 @@ run_probe_and_verify_side_effects() {
   require_equal "$after_quota" "$before_quota" "Probe must not write or consume quota"
 
   estimate_logs="$(gcloud logging read \
-    "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"$SERVICE_NAME\" AND timestamp>=\"$START_UTC\" AND jsonPayload.imageHash=\"$hash_prefix\"" \
+    "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"$SERVICE_NAME\" AND timestamp>=\"$START_UTC\" AND \"meal_scan_estimate\" AND jsonPayload.imageHash=\"$hash_prefix\"" \
     --project "$PROJECT_ID" \
     --limit=1 \
     --format='value(insertId)')"
@@ -280,7 +343,8 @@ run_probe_and_verify_side_effects() {
 }
 
 main() {
-  [[ -n "$PROJECT_ID" ]] || die "PROJECT_ID is required"
+  validate_pinned_cloud_identity
+  DEVICE_IDENTIFIER="$(resolve_device_identifier)"
   if [[ "$DRY_RUN" == "true" ]]; then
     print_dry_run
     return
@@ -308,4 +372,7 @@ main() {
   note "Physical probe passed. The rollback trap will now restore private/disabled state."
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  trap rollback EXIT INT TERM
+  main "$@"
+fi

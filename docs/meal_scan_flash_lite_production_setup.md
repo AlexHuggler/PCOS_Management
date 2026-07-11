@@ -139,6 +139,40 @@ REGION="us-central1" \
 ./scripts/deploy-cloud-run.sh
 ```
 
+## Physical App Check Production Probe
+
+The reviewed probe script is pinned to Google Cloud project `cyclebalance-prod-20260710` and Cloud Run service `cyclebalance-meal-scan-proxy`. It rejects a different `PROJECT_ID` or `SERVICE_NAME`, including in dry-run mode, so caller overrides cannot redirect the workflow. It never prints the App Check token, Google identity token, or server secrets; it builds current Release source in temporary DerivedData and never consumes a stale IPA.
+
+Run the side-effect-free preview first from the repository root. It performs no cloud query or mutation, device query, backup, build, installation, or test:
+
+```sh
+cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management"
+DRY_RUN=true cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh
+```
+
+Do not run the live path until the owner explicitly approves the temporary public probe and is physically controlling the iPhone. The owner must confirm all of these prerequisites immediately before execution:
+
+- The intended iPhone is paired with this Mac, manually unlocked, in Developer Mode, and available for automatic developer disk image mounting.
+- Set either `DEVICE_ID` or the legacy-compatible `DEVICE_UDID`. If both are set, they must be identical. The script accepts only an explicit current unlocked result such as `passcodeRequired=false`, `isLocked=false`, or `lockState=unlocked`; missing, unknown, locked, or conflicting JSON fails closed.
+- The owner can keep the device unlocked without sharing a passcode. The script never requests or handles a passcode.
+- The installed `alex.PCOS` app-data container is eligible for CoreDevice backup. A failed or empty backup is a hard stop before build, cloud mutation, or installation. Complete and verify an encrypted Finder backup before retrying.
+- The dedicated `PCOS Production Meal Scan Probe` scheme is present, uses Release, includes `PCOSTests`, and is the only scheme that injects `RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1`.
+
+Only after that approval and those checks may the owner run the live command:
+
+```sh
+cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management"
+CONFIRM_TEMPORARY_PUBLIC_PROBE=YES \
+DEVICE_ID="<owner-confirmed physical-device identifier>" \
+cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh
+```
+
+Before any temporary Cloud Run change, the script verifies the pinned project/service, disabled/private service posture, normal budget mode, owner-controlled device state, non-empty app-data backup, Release bundle ID, production App Attest entitlement, and the app's proxy URL. The app URL must equal the verified Cloud Run `SERVICE_URL` exactly; only trailing slashes are ignored. The build command does not permit automatic provisioning-profile updates.
+
+The expected probe result is HTTP `403` with `error=premium_entitlement_required` and `reason=entitlement_inactive`. Before and after the request, evidence captures the quota document's existence, update time, and complete data; the snapshots must be identical. Logging evidence must also show no `meal_scan_estimate` event for the emitted 12-character image-hash prefix, proving that neither quota consumption nor a model estimate occurred.
+
+The rollback trap is armed immediately before the first cloud mutation and runs on success, failure, interrupt, or termination. It redeploys `MEAL_SCAN_ENABLED=false` with private IAM, then requires an unauthenticated `403` and an authenticated `503` body with `error=meal_scan_unavailable` and `reason=feature_disabled`. Any rollback deploy or verification failure is fatal and requires immediate owner investigation of the Cloud Run service.
+
 ## Release Gates
 
 Complete now:

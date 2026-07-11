@@ -154,3 +154,24 @@ schemes:
         - name: PCOSUITests
     archive:
       config: Release
+
+  PCOS Production Meal Scan Probe:
+    build:
+      targets:
+        PCOS: all
+        PCOSTests: [test]
+    run:
+      config: Release
+    test:
+      config: Release
+      gatherCoverageData: false
+      environmentVariables:
+        RUN_PRODUCTION_MEAL_SCAN_INTEGRATION: "1"
+      targets:
+        - name: PCOSTests
+    profile:
+      config: Release
+    analyze:
+      config: Release
+    archive:
+      config: Release
