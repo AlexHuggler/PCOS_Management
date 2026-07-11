@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
+import UIKit
 @testable import PCOS
 
 @Suite("Repeat Meal Cache", .serialized)
@@ -73,6 +74,28 @@ struct RepeatMealCacheTests {
         #expect(reused.detectionSource == Self.riceDraft.detectionSource)
         #expect(reused.portionEstimationMethod == Self.riceDraft.portionEstimationMethod)
         #expect(reused.canonicalFoodId == Self.riceDraft.canonicalFoodId)
+    }
+
+#if targetEnvironment(simulator)
+    @Test(
+        "Vision fingerprint archives revision 2 and compares itself",
+        .disabled("Vision feature-print requests require a physical device.")
+    )
+#else
+    @Test("Vision fingerprint archives revision 2 and compares itself")
+#endif
+    func visionFingerprintRoundTripsAndHasZeroSelfDistance() async throws {
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 120, height: 120)).image { context in
+            UIColor.systemGreen.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 120, height: 120))
+        }
+        let normalized = try MealScanImageNormalizer().normalizeJPEGData(from: image)
+        let fingerprinter = VisionRepeatMealImageFingerprinter()
+        let fingerprint = try await fingerprinter.makeFingerprint(for: normalized.jpegData)
+
+        #expect(fingerprint.sourceImageHash.count == 64)
+        #expect(fingerprint.visionRevision == 2)
+        #expect(try await fingerprinter.distance(between: fingerprint, and: fingerprint) < 0.0001)
     }
 
     @Test("repeat cache record inserts and fetches through the test container")
