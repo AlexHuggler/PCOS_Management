@@ -27,6 +27,9 @@ Package.resolved
 # CocoaPods
 Pods/
 
+# Node.js
+node_modules/
+
 # Fastlane
 fastlane/report.xml
 fastlane/Preview.html

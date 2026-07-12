@@ -80,6 +80,40 @@ device_lock_is_verified_unlocked() {
   ' "$lock_json" >/dev/null
 }
 
+device_details_are_paired() {
+  local details_json="$1"
+  jq -e '
+    [
+      .. | objects |
+      (if has("isPaired") and (.isPaired | type == "boolean")
+        then .isPaired else empty end),
+      (if has("paired") and (.paired | type == "boolean")
+        then .paired else empty end),
+      (if has("pairingState") and (.pairingState | type == "string") and
+          ((.pairingState | ascii_downcase) == "paired" or (.pairingState | ascii_downcase) == "unpaired")
+        then ((.pairingState | ascii_downcase) == "paired") else empty end)
+    ] as $recognized_states |
+    (($recognized_states | length) > 0 and all($recognized_states[]; . == true))
+  ' "$details_json" >/dev/null
+}
+
+device_details_have_developer_mode() {
+  local details_json="$1"
+  jq -e '
+    [
+      .. | objects |
+      (if has("developerModeEnabled") and (.developerModeEnabled | type == "boolean")
+        then .developerModeEnabled else empty end),
+      (if has("isDeveloperModeEnabled") and (.isDeveloperModeEnabled | type == "boolean")
+        then .isDeveloperModeEnabled else empty end),
+      (if has("developerModeStatus") and (.developerModeStatus | type == "string") and
+          ((.developerModeStatus | ascii_downcase) == "enabled" or (.developerModeStatus | ascii_downcase) == "disabled")
+        then ((.developerModeStatus | ascii_downcase) == "enabled") else empty end)
+    ] as $recognized_states |
+    (($recognized_states | length) > 0 and all($recognized_states[]; . == true))
+  ' "$details_json" >/dev/null
+}
+
 normalize_service_url() {
   local url="$1"
   if [[ "$url" == */ ]]; then
@@ -133,51 +167,54 @@ print_dry_run() {
   note "11. Always redeploy disabled/private and require unauthenticated 403 plus authenticated 503 feature_disabled."
 }
 
-read_budget_mode() {
-  (cd "$PROXY_DIR" && node --input-type=module - "$PROJECT_ID" <<'NODE'
-import { Firestore } from "@google-cloud/firestore";
+firestore_document_json() {
+  local collection="$1"
+  local document_id="$2"
+  local access_token auth_config response_file status
+  access_token="$(gcloud auth print-access-token)" || return 1
+  auth_config="$(mktemp "$TEMP_ROOT/firestore-auth.XXXXXX")" || return 1
+  response_file="$(mktemp "$TEMP_ROOT/firestore-response.XXXXXX")" || return 1
+  printf 'header = "Authorization: Bearer %s"\n' "$access_token" >"$auth_config"
+  unset access_token
 
-const projectId = process.argv[2];
-const snapshot = await new Firestore({ projectId }).collection("mealScanControls").doc("global").get();
-if (!snapshot.exists) process.exit(2);
-const data = snapshot.data() ?? {};
-const mode = data.manualMode ?? data.billingMode;
-if (typeof mode !== "string") process.exit(3);
-process.stdout.write(mode);
-NODE
-  )
+  status="$(curl --silent --show-error \
+    --config "$auth_config" \
+    --output "$response_file" \
+    --write-out '%{http_code}' \
+    "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/$collection/$document_id")" \
+    || return 1
+  rm -f "$auth_config"
+
+  case "$status" in
+    200) cat "$response_file" ;;
+    404) printf '{"__notFound":true}' ;;
+    *) return 1 ;;
+  esac
+}
+
+read_budget_mode() {
+  local document
+  document="$(firestore_document_json "mealScanControls" "global")" || return 1
+  jq -er '
+    select(.__notFound != true) |
+    (.fields.manualMode.stringValue // .fields.billingMode.stringValue // empty)
+  ' <<<"$document"
 }
 
 quota_snapshot() {
-  (cd "$PROXY_DIR" && node --input-type=module - "$PROJECT_ID" "$PROBE_USER_ID" <<'NODE'
-import crypto from "node:crypto";
-import { Firestore } from "@google-cloud/firestore";
+  local app_user_hash day document
+  app_user_hash="$(node -e '
+    const crypto = require("node:crypto");
+    process.stdout.write(crypto.createHash("sha256").update(process.argv[1]).digest("hex").slice(0, 16));
+  ' "$PROBE_USER_ID")" || return 1
+  day="$(date -u +%Y-%m-%d)"
+  document="$(firestore_document_json "mealScanDailyQuota" "${app_user_hash}_${day}")" || return 1
 
-const [projectId, appUserId] = process.argv.slice(2);
-const appUserHash = crypto.createHash("sha256").update(appUserId).digest("hex").slice(0, 16);
-const day = new Date().toISOString().slice(0, 10);
-const snapshot = await new Firestore({ projectId })
-  .collection("mealScanDailyQuota")
-  .doc(`${appUserHash}_${day}`)
-  .get();
-
-function normalize(value) {
-  if (value === null || value === undefined) return value ?? null;
-  if (typeof value.toDate === "function") return value.toDate().toISOString();
-  if (Array.isArray(value)) return value.map(normalize);
-  if (typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalize(value[key])]));
-  }
-  return value;
-}
-
-process.stdout.write(JSON.stringify({
-  exists: snapshot.exists,
-  updateTime: snapshot.updateTime ? snapshot.updateTime.toDate().toISOString() : null,
-  data: snapshot.exists ? normalize(snapshot.data() ?? {}) : null,
-}));
-NODE
-  )
+  if jq -e '.__notFound == true' <<<"$document" >/dev/null; then
+    jq -cnS '{exists: false, updateTime: null, data: null}'
+  else
+    jq -cS '{exists: true, updateTime: (.updateTime // null), data: (.fields // {})}' <<<"$document"
+  fi
 }
 
 service_json() {
@@ -224,10 +261,8 @@ verify_device_preconditions() {
   ' "$devices_json" >/dev/null || die "Expected paired device $DEVICE_NAME ($DEVICE_IDENTIFIER) was not found"
 
   xcrun devicectl device info details --device "$DEVICE_IDENTIFIER" --json-output "$details_json" >/dev/null
-  jq -e '.. | objects | [.isPaired?, .paired?, .deviceProperties?.isPaired?] | any(. == true)' \
-    "$details_json" >/dev/null || die "Device is not paired"
-  jq -e '.. | objects | [.developerModeEnabled?, .isDeveloperModeEnabled?, .deviceProperties?.developerModeEnabled?] | any(. == true)' \
-    "$details_json" >/dev/null || die "Developer Mode must be enabled"
+  device_details_are_paired "$details_json" || die "Device is not paired"
+  device_details_have_developer_mode "$details_json" || die "Developer Mode must be enabled"
 
   xcrun devicectl device info lockState --device "$DEVICE_IDENTIFIER" --json-output "$lock_json" >/dev/null
   device_lock_is_verified_unlocked "$lock_json" \
@@ -360,6 +395,7 @@ main() {
   require_command codesign
 
   TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/cyclebalance-physical-probe.XXXXXX")"
+  umask 077
   verify_initial_cloud_state
   verify_device_preconditions
   backup_app_data

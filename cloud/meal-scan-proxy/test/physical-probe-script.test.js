@@ -107,6 +107,51 @@ test("device lock parser requires an explicit recognized unlocked state", () => 
   }
 });
 
+test("device details parser accepts Xcode 26 pairing and Developer Mode fields", () => {
+  withJsonFixture(
+    {
+      result: {
+        connectionProperties: { pairingState: "paired" },
+        deviceProperties: { developerModeStatus: "enabled" },
+      },
+    },
+    (fixturePath) => {
+      const paired = callSourcedFunction(`device_details_are_paired "${fixturePath}"`);
+      assert.equal(paired.status, 0, paired.stderr);
+      const developerMode = callSourcedFunction(`device_details_have_developer_mode "${fixturePath}"`);
+      assert.equal(developerMode.status, 0, developerMode.stderr);
+    }
+  );
+
+  const rejectedFixtures = [
+    {
+      value: {
+        result: {
+          connectionProperties: { pairingState: "unpaired" },
+          deviceProperties: { developerModeStatus: "enabled" },
+        },
+      },
+      functionName: "device_details_are_paired",
+    },
+    {
+      value: {
+        result: {
+          connectionProperties: { pairingState: "paired" },
+          deviceProperties: { developerModeStatus: "disabled" },
+        },
+      },
+      functionName: "device_details_have_developer_mode",
+    },
+  ];
+
+  for (const fixture of rejectedFixtures) {
+    withJsonFixture(fixture.value, (fixturePath) => {
+      const result = callSourcedFunction(`${fixture.functionName} "${fixturePath}"`);
+      assert.notEqual(result.status, 0, `unsafe fixture passed: ${JSON.stringify(fixture.value)}`);
+    });
+  }
+});
+
 test("Release proxy URL must equal the verified service URL except for trailing slashes", () => {
   for (const candidate of [
     "https://service.example.run.app",
@@ -142,8 +187,15 @@ test("quota snapshots preserve existence, update time, and complete document dat
   assert.match(quotaFunction, /exists:/);
   assert.match(quotaFunction, /updateTime:/);
   assert.match(quotaFunction, /data:/);
-  assert.match(quotaFunction, /snapshot\.data\(\)/);
-  assert.doesNotMatch(quotaFunction, /snapshot\.get\("used"\)/);
+  assert.match(quotaFunction, /\.fields/);
+  assert.doesNotMatch(quotaFunction, /\.fields\.used/);
+});
+
+test("Firestore preflight uses a short-lived gcloud token without ADC or service-account keys", () => {
+  assert.match(scriptSource, /gcloud auth print-access-token/);
+  assert.match(scriptSource, /https:\/\/firestore\.googleapis\.com\/v1\/projects/);
+  assert.doesNotMatch(scriptSource, /@google-cloud\/firestore/);
+  assert.doesNotMatch(scriptSource, /new Firestore/);
 });
 
 test("script preserves ordering, rollback, redaction, fresh-build, and provisioning safety", () => {
