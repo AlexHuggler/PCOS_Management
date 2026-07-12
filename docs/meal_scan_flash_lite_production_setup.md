@@ -85,6 +85,17 @@ node cloud/meal-scan-proxy/scripts/estimate-usage-cost.mjs \
 
 The project-scoped Cloud Billing budget is named `CycleBalance Production 100-User Scanner Budget` and is set to `$150/month`. It sends actual-spend notifications at 50%, 75%, 90%, and 100%, plus a forecast notification at 100%.
 
+Gemini API billing is a separate control plane from the Google Cloud welcome-credit balance. As verified on July 11, 2026, the production Secret Manager key can read metadata for both `gemini-2.5-flash-lite` and `gemini-3.1-flash-lite`, but generation returns `429 RESOURCE_EXHAUSTED` because the billing account's Gemini Prepay balance is depleted. Google requires a positive Prepay balance for inference and a minimum `$10` purchase when setting up Prepay; the `$300` Cloud welcome credit cannot fund Gemini usage.
+
+Use this staged funding posture:
+
+- Evaluation: purchase `$10-$25` manually only after owner approval, with auto-reload off.
+- Limited production: set the AI Studio project spend cap for `cyclebalance-prod-20260710` to `$120` and keep the proxy's independent `$120` stop.
+- Optional auto-reload: use small reload increments and set AI Studio's monthly auto-charge limit to no more than `$150`; do not enable it without separate owner approval.
+- Reconcile project identity after billing changes. AI Studio billing tier and credits are determined at the billing-account level, but the production API key and project spend cap must still remain associated with `CycleBalance Production (cyclebalance-prod-20260710)`.
+
+AI Studio project spend caps and Prepay balance enforcement can lag, so neither replaces the proxy quota, budget-control document, or remote kill switch.
+
 Google Cloud budgets notify; they do not stop charges. The enforceable scanner controls are:
 
 - `$75`: proxy reports alert mode.
@@ -182,7 +193,7 @@ The rollback trap is armed immediately before the first cloud mutation and runs 
 
 Complete now:
 
-- [x] Dedicated project, billing, budget, Pub/Sub controller, and hard proxy disable threshold.
+- [x] Dedicated project, linked Cloud Billing account, `$150` Cloud budget, Pub/Sub controller, and hard proxy disable threshold.
 - [x] Secret Manager, least-privilege IAM, restricted API keys, and no user-managed service-account keys.
 - [x] Firebase App Check/App Attest integration and production Release entitlement.
 - [x] RevenueCat V2 entitlement/trial lookup.
@@ -194,6 +205,7 @@ Complete now:
 
 Required before enabling users:
 
+- [ ] Activate paid Gemini billing for the exact production project, purchase an owner-approved Prepay balance, configure the `$120` AI Studio project spend cap, and obtain a successful header-auth generation smoke test. The current balance is depleted and inference is intentionally unavailable.
 - [ ] Test 50-100 representative meal photos against a labeled nutrition review set.
 - [ ] Run the private repeat-meal evaluation toolkit with exactly 100 images: 20 meal identities with four unchanged-portion views each and 20 visually similar negatives. Strip EXIF, exclude faces/documents/medication labels/location-revealing backgrounds, and keep macro truth outside the image manifest. Do not install a repeat-similarity policy unless the calibrator reports precision at least `0.95` and zero high-risk false matches; the five-image extractor smoke run is mechanics-only evidence and does not satisfy this gate. See `tools/meal-repeat-evaluation/README.md`.
 - [ ] Compare Gemini 2.5 and 3.1 on accuracy, parse success, latency, and cost; approve the default model.
@@ -209,6 +221,7 @@ Required before enabling users:
 - Gemini pricing: https://ai.google.dev/gemini-api/docs/pricing
 - Gemini model deprecations: https://ai.google.dev/gemini-api/docs/deprecations
 - Gemini API key security and migration: https://ai.google.dev/gemini-api/docs/api-key
+- Gemini billing, Prepay, auto-reload, and project spend caps: https://ai.google.dev/gemini-api/docs/billing
 - Cloud Billing budgets: https://cloud.google.com/billing/docs/how-to/budgets
 - Cloud Run secrets: https://cloud.google.com/run/docs/configuring/services/secrets
 - Secret Manager best practices: https://cloud.google.com/secret-manager/docs/best-practices

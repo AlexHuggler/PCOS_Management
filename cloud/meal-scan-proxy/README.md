@@ -64,6 +64,7 @@ RevenueCat API V2 is the entitlement and trial-state source, not the quota ledge
 - Firestore quota and estimate-cache records have active TTL policies.
 - Google Cloud budget: `$150/month`, with notifications at 50%, 75%, 90%, and 100% plus forecasted 100%.
 - A Pub/Sub-triggered budget controller writes the live Firestore control document. The scanner alerts at `$75`, degrades at `$90`, and disables at `$120`, leaving a `$30` buffer. Google Cloud budgets are alerts rather than billing caps; the proxy disable gate is the enforceable scanner safeguard.
+- Gemini inference currently remains unavailable because the billing account's Prepay balance is depleted. Model metadata and key authentication succeed, but generation returns `429 RESOURCE_EXHAUSTED`. Before rollout, fund an owner-approved `$10-$25` evaluation balance, set the AI Studio project spend cap to `$120`, and keep auto-reload off unless the owner separately approves a monthly auto-charge limit no greater than `$150`.
 - Cloud Run is limited to two proxy instances, 20 concurrent requests per instance, and a 30-second request timeout.
 - No custom runtime service account has a user-managed key.
 
