@@ -60,7 +60,7 @@ Representative request: 2,448 input tokens and 750 output tokens.
 
 ## 100-User Cost Plan
 
-The launch quota remains a five-scan soft warning and ten-scan daily hard cap for paid users. The budget is sized against the more generous planning case of 100 users at 15 scans/day so there is room to tune quotas after observing real usage.
+The launch quota remains a five-scan soft warning and ten-scan daily hard cap for paid users. The 15-scan scenario below is a stress forecast for deciding whether to raise that cap later; it is not reachable under the launch policy. Keep the ten-scan cap while the `$120` proxy stop is in force because the high end of the 15-scan Gemini 3.1 all-in range would exceed the `$150` monthly budget.
 
 | Model or planning range | 100 users at 10/day (30,000/month) | 100 users at 15/day (45,000/month) |
 |---|---:|---:|
@@ -222,6 +222,7 @@ Required before enabling users:
 - Gemini model deprecations: https://ai.google.dev/gemini-api/docs/deprecations
 - Gemini API key security and migration: https://ai.google.dev/gemini-api/docs/api-key
 - Gemini billing, Prepay, auto-reload, and project spend caps: https://ai.google.dev/gemini-api/docs/billing
+- OpenAI model catalog and current Luna/Terra rates: https://developers.openai.com/api/docs/models
 - Cloud Billing budgets: https://cloud.google.com/billing/docs/how-to/budgets
 - Cloud Run secrets: https://cloud.google.com/run/docs/configuring/services/secrets
 - Secret Manager best practices: https://cloud.google.com/secret-manager/docs/best-practices
