@@ -51,7 +51,7 @@
     "url": "https://cyclebalance.app/it/terms",
     "inLanguage": "it",
     "datePublished": "2026-05-01",
-    "dateModified": "2026-05-11",
+    "dateModified": "2026-07-12",
     "publisher": {
       "@type": "Organization",
       "name": "CycleBalance",
@@ -291,7 +291,7 @@
   <div class="page-title">
     <h1>Termini di utilizzo</h1>
   </div>
-  <div class="effective-date">Data di entrata in vigore: 1° maggio 2026 &middot; Ultimo aggiornamento: 11 maggio 2026</div>
+  <div class="effective-date">Data di entrata in vigore: 1° maggio 2026 &middot; Ultimo aggiornamento: 12 luglio 2026</div>
   <p class="translation-note">Questa versione localizzata è fornita per comodità. Nella misura consentita dalla legge, fa fede la versione inglese.</p>
 
   <!-- Legal Content -->
@@ -309,7 +309,8 @@
       <li><strong>Tracciamento del ciclo:</strong> Strumenti per tracciare cicli mestruali irregolari senza affidarsi alle classiche ipotesi del ciclo di 28 giorni.</li>
       <li><strong>Registrazione dei sintomi:</strong> La possibilità di registrare e monitorare i sintomi correlati alla PCOS, inclusi cambiamenti ormonali, livelli di insulina e glucosio, impatto della dieta e altri indicatori di salute.</li>
       <li><strong>Tracciamento di gravidanza e post-partum:</strong> Tracciamento opzionale per i periodi di gravidanza e post-partum, inclusi date presunte del parto ed esiti della gravidanza.</li>
-      <li><strong>Integrazione HealthKit:</strong> Accesso opzionale in sola lettura ai dati di Apple HealthKit, inclusi peso corporeo, analisi del sonno, glicemia, energia attiva, frequenza cardiaca a riposo e numero di passi, per fornire un quadro sanitario più completo.</li>
+      <li><strong>Integrazione HealthKit:</strong> accesso opzionale in sola lettura ai dati di Apple HealthKit, inclusi contesto corporeo, sonno, attività e allenamenti, metriche cardiache e di recupero, glicemia, nutrizione, campioni di ciclo e ovulazione, contesto riproduttivo e campioni di sintomi compatibili.</li>
+      <li><strong>Stime dei pasti tramite IA e bozze assistite da codice a barre:</strong> la Stima da foto è una funzionalità premium opzionale che crea una bozza modificabile da una foto del pasto selezionata. Ogni nuova stima richiede la tua conferma esplicita prima che CycleBalance invii una foto compressa a Google Gemini tramite il proprio proxy sicuro. Il riutilizzo esatto di un pasto già rivisto resta sul dispositivo. La disponibilità può essere limitata dallo stato dell’abbonamento o della prova, dalle quote giornaliere o totali di prova, dalla disponibilità del fornitore, dai controlli di sicurezza del modello e dalle protezioni di budget di CycleBalance. La ricerca tramite codice a barre usa Open Food Facts per permetterti di verificare i dati nutrizionali pubblici prima del salvataggio. USDA FoodData Central viene usato solo quando è configurata una chiave API locale.</li>
       <li><strong>Approfondimenti tramite machine learning sul dispositivo:</strong> Riconoscimento di pattern personalizzati e correlazioni generate interamente sul tuo dispositivo utilizzando ML on-device, progettati per aiutarti a comprendere meglio gli schemi unici del tuo corpo.</li>
       <li><strong>Report sanitari ed esportazione dei dati:</strong> Report sanitari in PDF da condividere con il tuo medico, esportazioni dati in CSV per l'uso in fogli di calcolo e backup JSON con versionamento dello schema per la piena portabilità dei dati.</li>
     </ul>
@@ -321,7 +322,6 @@
     <p>CycleBalance offre funzionalità premium tramite le seguenti opzioni di acquisto:</p>
     <ul>
       <li><strong>Abbonamenti a rinnovo automatico:</strong> L'accesso premium è disponibile tramite piani di abbonamento a rinnovo automatico con cicli di fatturazione mensili o annuali. Gli abbonamenti si rinnovano automaticamente alla fine di ogni periodo di fatturazione a meno che non vengano annullati almeno 24 ore prima della fine del periodo corrente.</li>
-      <li><strong>Acquisto a vita:</strong> Un acquisto in-app non consumabile una tantum che concede l'accesso permanente alle funzionalità premium.</li>
     </ul>
     <p>Tutti gli acquisti vengono elaborati tramite l'Apple App Store. Apple gestisce fatturazione, elaborazione dei pagamenti, eventuali imposte applicabili, ricevute, impostazioni dell'abbonamento e richieste di rimborso. CycleBalance non raccoglie né archivia direttamente i dati della tua carta di pagamento.</p>
     <p>Per gestire o annullare un abbonamento, vai su Impostazioni del tuo dispositivo &gt; ID Apple &gt; Abbonamenti. L'annullamento ha effetto alla fine del periodo di fatturazione corrente; manterrai l'accesso alle funzionalità premium fino a tale data.</p>
@@ -340,6 +340,7 @@
       <li>Se pensi di avere un'emergenza medica, chiama immediatamente il tuo medico o i servizi di emergenza.</li>
       <li>CycleBalance non raccomanda né approva test, medici, prodotti, procedure, opinioni o altre informazioni specifiche che possano essere menzionati nell'App.</li>
       <li>CycleBalance non fornisce consigli medici ostetrici, prenatali o post-partum. Le funzionalità di tracciamento di gravidanza e post-partum sono solo per la registrazione informativa e non sostituiscono l'assistenza prenatale o postnatale professionale.</li>
+      <li>Le Stime da foto possono essere incomplete o imprecise e non identificare ingredienti nascosti, oli, salse, metodi di preparazione, allergeni o porzioni esatte. Le funzioni di scansione, codice a barre e nutrizione sono solo punti di partenza modificabili per il tracciamento personale. Verifica le etichette e consulta un professionista qualificato per decisioni mediche, nutrizionali, allergiche, relative alla gravidanza o al trattamento.</li>
     </ul>
     <p>L'affidamento a qualsiasi informazione fornita da CycleBalance è esclusivamente a tuo rischio.</p>
 
@@ -366,11 +367,13 @@
     <hr class="section-divider">
 
     <h2>7. Dati e privacy</h2>
-    <p>La tua privacy è fondamentale per il modo in cui è costruita CycleBalance. <strong>Tutti i dati sanitari personali che inserisci nell'App sono archiviati esclusivamente sul tuo dispositivo.</strong> Non raccogliamo, trasmettiamo o archiviamo i tuoi dati sanitari su server esterni.</p>
+    <p>La tua privacy è fondamentale per il modo in cui è costruita CycleBalance. <strong>I registri sanitari personali che inserisci nell’App sono archiviati localmente sul tuo dispositivo.</strong> CycleBalance non raccoglie né archivia questa cronologia salvata su server CycleBalance esterni. Una nuova Stima da foto è un’eccezione limitata: solo dopo la tua conferma esplicita, una foto compressa del pasto viene inviata a Google Gemini tramite il proxy sicuro di CycleBalance.</p>
     <ul>
-      <li>Gli approfondimenti di machine learning sono generati interamente sul tuo dispositivo utilizzando l'elaborazione on-device.</li>
-      <li>I tuoi registri dei sintomi, i dati del ciclo e le informazioni sanitarie non lasciano mai il tuo dispositivo.</li>
-      <li>Con il tuo permesso, CycleBalance può leggere i dati da Apple HealthKit. Questi dati vengono utilizzati esclusivamente all'interno dell'app sul tuo dispositivo e non vengono mai trasmessi esternamente.</li>
+      <li>Le analisi dei pattern Core ML sono generate interamente sul dispositivo. La Stima da foto Google Gemini è separata e richiede la tua conferma per ogni nuovo caricamento.</li>
+      <li>I tuoi registri dei sintomi, i dati del ciclo e le informazioni sanitarie sono trattati con un approccio local-first e non vengono inviati ai server CycleBalance per analisi o pubblicità.</li>
+      <li>Con il tuo permesso, CycleBalance può leggere i dati da Apple HealthKit. Questi dati vengono utilizzati nell'app sul tuo dispositivo e non vengono inviati ai server CycleBalance, a terze parti o a reti pubblicitarie.</li>
+      <li>Se scansioni o inserisci un codice a barre, il codice UPC/EAN viene inviato al database alimentare selezionato affinché CycleBalance mostri una bozza di pasto da rivedere.</li>
+      <li>CycleBalance non archivia sul proxy le foto grezze caricate. L’app e il proxy possono memorizzare nella cache un risultato strutturato esatto fino a 24 ore; i record pseudonimi delle quote giornaliere e totali di prova scadono rispettivamente dopo tre e trenta giorni; i log applicativi minimi e sottoposti a hash del server entro trenta giorni. Google dichiara che le richieste Gemini a pagamento non vengono usate per migliorare i suoi prodotti, ma il servizio a pagamento standard può conservare prompt, contesto e output fino a 55 giorni per monitorare gli abusi e soddisfare le divulgazioni legali o normative richieste.</li>
       <li>Sei responsabile del backup dei tuoi dati. Se elimini l'App o perdi il dispositivo, i tuoi dati potrebbero non essere recuperabili.</li>
     </ul>
     <p>Per i dettagli completi su come gestiamo le tue informazioni, consulta la nostra <a href="/it/privacy">Informativa sulla privacy</a>, che è incorporata nei presenti Termini per riferimento.</p>

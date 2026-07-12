@@ -51,7 +51,7 @@
     "url": "https://cyclebalance.app/terms",
     "inLanguage": "en",
     "datePublished": "2026-05-01",
-    "dateModified": "2026-05-11",
+    "dateModified": "2026-07-12",
     "publisher": {
       "@type": "Organization",
       "name": "CycleBalance",
@@ -291,7 +291,7 @@
   <div class="page-title">
     <h1>Terms of Use</h1>
   </div>
-  <div class="effective-date">Effective Date: May 1, 2026 &middot; Last Updated: May 11, 2026</div>
+  <div class="effective-date">Effective Date: May 1, 2026 &middot; Last Updated: July 12, 2026</div>
 
   <!-- Legal Content -->
   <div class="legal-content">
@@ -308,8 +308,9 @@
       <li><strong>Cycle Tracking:</strong> Tools for tracking irregular menstrual cycles without relying on standard 28-day assumptions.</li>
       <li><strong>Symptom Logging:</strong> The ability to record and monitor PCOS-related symptoms, including hormonal changes, insulin and glucose levels, dietary impact, and other health markers.</li>
       <li><strong>Pregnancy and Postpartum Tracking:</strong> Optional tracking for pregnancy and postpartum periods, including estimated due dates and pregnancy outcomes.</li>
-      <li><strong>HealthKit Integration:</strong> Optional read-only access to Apple HealthKit data, including body mass, sleep analysis, blood glucose, active energy, resting heart rate, and step count, to provide a more comprehensive health picture.</li>
-      <li><strong>On-Device Machine Learning Insights:</strong> Personalized pattern recognition and correlations generated entirely on your device using on-device ML, designed to help you better understand your body's unique patterns.</li>
+      <li><strong>HealthKit Integration:</strong> Optional read-only access to Apple HealthKit data, including body context, sleep, activity and workouts, heart and recovery metrics, blood glucose, nutrition, cycle and ovulation samples, reproductive context, and compatible symptom samples.</li>
+      <li><strong>AI Meal Estimates and Barcode-Assisted Meal Drafts:</strong> Photo Estimate is an optional premium feature that creates an editable draft from a user-selected meal photo. A fresh estimate requires explicit confirmation before CycleBalance sends one compressed photo through its secure proxy to Google Gemini. Exact reuse of a previously reviewed meal stays on your device. Availability may be limited by subscription or trial status, daily or trial quotas, provider availability, model safety controls, and CycleBalance budget safeguards. Barcode lookup uses Open Food Facts so you can review public product nutrition data before saving a meal. USDA FoodData Central lookup is used only when a local API key is configured.</li>
+      <li><strong>On-Device Machine Learning Insights:</strong> Personalized pattern recognition and correlations generated on your device using on-device ML, designed to help you better understand your body's unique patterns.</li>
       <li><strong>Health Reports and Data Export:</strong> PDF health reports for sharing with your healthcare provider, CSV data exports for spreadsheet use, and JSON backups with schema versioning for full data portability.</li>
     </ul>
     <p>We may update, modify, or discontinue features of the App at any time without prior notice.</p>
@@ -320,7 +321,6 @@
     <p>CycleBalance offers premium features through the following purchase options:</p>
     <ul>
       <li><strong>Auto-Renewable Subscriptions:</strong> Premium access is available through auto-renewable subscription plans with monthly or annual billing cycles. Subscriptions automatically renew at the end of each billing period unless canceled at least 24 hours before the end of the current period.</li>
-      <li><strong>Lifetime Purchase:</strong> A one-time, non-consumable in-app purchase that grants permanent access to premium features.</li>
     </ul>
     <p>All purchases are processed through the Apple App Store. Apple manages billing, payment processing, taxes where applicable, receipts, subscription settings, and refund requests. CycleBalance does not directly collect or store your payment card information.</p>
     <p>To manage or cancel a subscription, go to your device's Settings &gt; Apple ID &gt; Subscriptions. Cancellation takes effect at the end of the current billing period; you will retain access to premium features until that date.</p>
@@ -339,6 +339,7 @@
       <li>If you think you may have a medical emergency, call your doctor or emergency services immediately.</li>
       <li>CycleBalance does not recommend or endorse any specific tests, physicians, products, procedures, opinions, or other information that may be referenced within the App.</li>
       <li>CycleBalance does not provide obstetric, prenatal, or postpartum medical advice. Pregnancy and postpartum tracking features are for informational record-keeping only and are not a substitute for professional prenatal or postnatal care.</li>
+      <li>Photo Estimate may be incomplete, inaccurate, or unable to identify hidden ingredients, oils, sauces, preparation methods, allergens, or exact portions. Meal scan, barcode, and nutrition features are provided only as editable starting points for personal tracking. Review food labels and consult a qualified professional for medical, nutrition, allergy, pregnancy, or treatment decisions.</li>
     </ul>
     <p>Your reliance on any information provided by CycleBalance is solely at your own risk.</p>
 
@@ -365,11 +366,14 @@
     <hr class="section-divider">
 
     <h2>7. Data and Privacy</h2>
-    <p>Your privacy is fundamental to how CycleBalance is built. <strong>All personal health data you enter into the App is stored exclusively on your device.</strong> We do not collect, transmit, or store your health data on external servers.</p>
+    <p>Your privacy is fundamental to how CycleBalance is built. <strong>Personal health logs you enter into the App are stored locally on your device by default.</strong> We do not collect or store that saved health history on CycleBalance servers. A fresh Photo Estimate is a limited exception: only after your explicit confirmation, one compressed meal photo is sent through CycleBalance's secure proxy to Google Gemini for processing.</p>
     <ul>
-      <li>Machine learning insights are generated entirely on your device using on-device processing.</li>
-      <li>Your symptom logs, cycle data, and health information never leave your device.</li>
-      <li>With your permission, CycleBalance may read data from Apple HealthKit. This data is used solely within the app on your device and is never transmitted externally.</li>
+      <li>Core ML pattern insights are generated entirely on your device using on-device processing. Google Gemini Photo Estimate processing is separate and requires confirmation for each fresh upload.</li>
+      <li>Your symptom logs, cycle data, and health information are stored on your device and are not sent to CycleBalance servers.</li>
+      <li>With your permission, CycleBalance may read data from Apple HealthKit. This data is used within the app on your device and is not transmitted to CycleBalance servers.</li>
+      <li>If you choose to scan or type a barcode, the UPC/EAN code is sent to the selected food database so CycleBalance can show a reviewed meal draft.</li>
+      <li>CycleBalance does not store raw uploaded meal photos on its proxy. The app and proxy may cache an exact structured result for up to 24 hours; pseudonymous daily and trial-total quota records expire after three and thirty days respectively; and minimal hashed server application logs expire after no more than thirty days. Google states that paid Gemini requests are not used to improve its products, but its standard paid service may retain prompts, context, and outputs for up to 55 days for abuse monitoring and required legal or regulatory disclosures.</li>
+      <li>App Store purchases are processed by Apple and managed through RevenueCat. Apple Ads attribution diagnostics may be stored locally when available. These services do not receive your health logs from CycleBalance.</li>
       <li>You are responsible for backing up your own data. If you delete the App or lose your device, your data may not be recoverable.</li>
     </ul>
     <p>For complete details on how we handle your information, please review our <a href="/privacy">Privacy Policy</a>, which is incorporated into these Terms by reference.</p>
@@ -377,18 +381,21 @@
     <hr class="section-divider">
 
     <h2>8. HealthKit Integration</h2>
-    <p>CycleBalance offers optional integration with Apple HealthKit to provide a more comprehensive view of your health data. By granting permission, you allow the App to read the following data types from HealthKit:</p>
+    <p>CycleBalance offers optional integration with Apple HealthKit to provide a more comprehensive view of your health data. By granting permission, you allow the App to read the following categories of data from HealthKit:</p>
     <ul>
-      <li>Body mass (weight)</li>
+      <li>Body context, including body mass, height, and date of birth when shared</li>
       <li>Sleep analysis</li>
+      <li>Activity and workouts, including active energy, exercise time, steps, walking/running distance, and workouts</li>
+      <li>Heart and recovery metrics, including heart rate, resting heart rate, heart rate variability, and electrodermal activity</li>
       <li>Blood glucose</li>
-      <li>Resting heart rate</li>
-      <li>Active energy burned</li>
-      <li>Step count</li>
+      <li>Nutrition, including dietary energy, carbohydrates, protein, total fat, saturated fat, fiber, sugar, sodium, cholesterol, potassium, calcium, iron, and water</li>
+      <li>Cycle and ovulation context, including body temperature, basal body temperature, menstruation, cervical mucus, ovulation test results, and progesterone test results</li>
+      <li>Reproductive context, including pregnancy, pregnancy test results, lactation, and sexual activity</li>
+      <li>Compatible symptom samples, including cramps, pelvic pain, fatigue, bloating, acne, hair loss, headache, mood changes, appetite changes, and sleep changes</li>
     </ul>
     <p>HealthKit integration is entirely optional. You can enable or disable access to each data type individually through your device's Settings &gt; Privacy &amp; Security &gt; Health &gt; CycleBalance.</p>
     <p>CycleBalance accesses HealthKit data in read-only mode. The App does not write any data to HealthKit.</p>
-    <p>All HealthKit data accessed by CycleBalance remains on your device and is used solely within the App to display health metrics and generate insights. HealthKit data is never transmitted to CycleBalance servers, shared with third parties, or used for advertising purposes.</p>
+    <p>All HealthKit data accessed by CycleBalance remains on your device and is used within the App to display health metrics and generate insights. HealthKit data is never transmitted to CycleBalance servers, shared with third parties, or used for advertising purposes.</p>
 
     <hr class="section-divider">
 

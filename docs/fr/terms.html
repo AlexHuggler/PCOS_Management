@@ -51,7 +51,7 @@
     "url": "https://cyclebalance.app/fr/terms",
     "inLanguage": "fr",
     "datePublished": "2026-05-01",
-    "dateModified": "2026-05-11",
+    "dateModified": "2026-07-12",
     "publisher": {
       "@type": "Organization",
       "name": "CycleBalance",
@@ -291,7 +291,7 @@
   <div class="page-title">
     <h1>Conditions d'utilisation</h1>
   </div>
-  <div class="effective-date">Date d'entrée en vigueur : 1<sup>er</sup> mai 2026 &middot; Dernière mise à jour : 11 mai 2026</div>
+  <div class="effective-date">Date d'entrée en vigueur : 1<sup>er</sup> mai 2026 &middot; Dernière mise à jour : 12 juillet 2026</div>
   <p class="translation-note">Cette version localisée est fournie pour votre commodité. Dans la mesure permise par la loi, la version anglaise prévaut.</p>
 
   <!-- Legal Content -->
@@ -309,7 +309,8 @@
       <li><strong>Suivi du cycle :</strong> outils de suivi des cycles menstruels irréguliers, sans s'appuyer sur l'hypothèse standard d'un cycle de 28 jours.</li>
       <li><strong>Suivi des symptômes :</strong> possibilité d'enregistrer et de suivre les symptômes liés au SOPK, notamment les variations hormonales, les niveaux d'insuline et de glucose, l'impact alimentaire et d'autres indicateurs de santé.</li>
       <li><strong>Suivi de grossesse et post-partum :</strong> suivi optionnel des périodes de grossesse et post-partum, y compris les dates d'accouchement estimées et les issues de grossesse.</li>
-      <li><strong>Intégration HealthKit :</strong> accès optionnel en lecture seule aux données d'Apple HealthKit, notamment la masse corporelle, l'analyse du sommeil, la glycémie, l'énergie active, la fréquence cardiaque au repos et le nombre de pas, afin d'offrir une vue plus complète de votre santé.</li>
+      <li><strong>Intégration HealthKit :</strong> accès optionnel en lecture seule aux données d’Apple HealthKit, notamment le contexte corporel, le sommeil, l’activité et les entraînements, les mesures cardiaques et de récupération, la glycémie, la nutrition, les échantillons de cycle et d’ovulation, le contexte reproductif et les échantillons de symptômes compatibles.</li>
+      <li><strong>Estimations de repas par IA et brouillons assistés par code-barres :</strong> l’Estimation photo est une fonctionnalité premium optionnelle qui crée un brouillon modifiable à partir d’une photo de repas choisie. Chaque nouvelle estimation exige votre confirmation explicite avant que CycleBalance envoie une photo compressée à Google Gemini via son proxy sécurisé. La réutilisation exacte d’un repas déjà vérifié reste sur votre appareil. La disponibilité peut être limitée par l’abonnement ou l’essai, les quotas quotidiens ou totaux d’essai, la disponibilité du fournisseur, les contrôles de sécurité du modèle et les protections budgétaires de CycleBalance. La recherche par code-barres utilise Open Food Facts afin que vous puissiez vérifier les données nutritionnelles publiques avant d’enregistrer un repas. USDA FoodData Central n’est utilisé que si une clé API locale est configurée.</li>
       <li><strong>Analyses par apprentissage automatique sur l'appareil :</strong> reconnaissance de schémas et corrélations personnalisées générées entièrement sur votre appareil grâce à l'apprentissage automatique local, conçues pour vous aider à mieux comprendre les schémas uniques de votre corps.</li>
       <li><strong>Rapports de santé et export de données :</strong> rapports de santé PDF à partager avec votre professionnel de santé, exports CSV pour les tableurs, et sauvegardes JSON avec versionnage de schéma pour une portabilité totale des données.</li>
     </ul>
@@ -321,7 +322,6 @@
     <p>CycleBalance propose des fonctionnalités premium via les options d'achat suivantes :</p>
     <ul>
       <li><strong>Abonnements auto-renouvelables :</strong> l'accès premium est disponible via des formules d'abonnement à renouvellement automatique avec des cycles de facturation mensuels ou annuels. Les abonnements se renouvellent automatiquement à la fin de chaque période de facturation, sauf s'ils sont annulés au moins 24 heures avant la fin de la période en cours.</li>
-      <li><strong>Achat à vie :</strong> achat intégré unique et non consommable qui donne un accès permanent aux fonctionnalités premium.</li>
     </ul>
     <p>Tous les achats sont traités via l'App Store d'Apple. Apple gère la facturation, le traitement des paiements, les taxes le cas échéant, les reçus, les réglages d'abonnement et les demandes de remboursement. CycleBalance ne collecte ni ne stocke directement vos informations de carte de paiement.</p>
     <p>Pour gérer ou annuler un abonnement, accédez aux Réglages de votre appareil &gt; Identifiant Apple &gt; Abonnements. L'annulation prend effet à la fin de la période de facturation en cours ; vous conserverez l'accès aux fonctionnalités premium jusqu'à cette date.</p>
@@ -340,6 +340,7 @@
       <li>Si vous pensez être confronté(e) à une urgence médicale, appelez immédiatement votre médecin ou les services d'urgence.</li>
       <li>CycleBalance ne recommande ni n'approuve aucun test spécifique, médecin, produit, procédure, opinion ou autre information qui pourrait être référencé(e) dans l'Application.</li>
       <li>CycleBalance ne fournit pas d'avis médical en matière d'obstétrique, de soins prénatals ou postnatals. Les fonctionnalités de suivi de grossesse et de post-partum servent uniquement à conserver des informations à titre indicatif et ne remplacent pas un suivi prénatal ou postnatal professionnel.</li>
+      <li>Les Estimations photo peuvent être incomplètes ou inexactes et ne pas identifier des ingrédients cachés, huiles, sauces, modes de préparation, allergènes ou portions exactes. Les fonctions de scan, code-barres et nutrition sont uniquement des points de départ modifiables pour le suivi personnel. Vérifiez les étiquettes et consultez un professionnel qualifié pour toute décision médicale, nutritionnelle, allergique, liée à la grossesse ou au traitement.</li>
     </ul>
     <p>Toute confiance que vous accordez aux informations fournies par CycleBalance relève de votre seule responsabilité.</p>
 
@@ -366,11 +367,13 @@
     <hr class="section-divider">
 
     <h2>7. Données et confidentialité</h2>
-    <p>Votre vie privée est au cœur de la conception de CycleBalance. <strong>Toutes les données personnelles de santé que vous saisissez dans l'Application sont stockées exclusivement sur votre appareil.</strong> Nous ne collectons, ne transmettons ni ne stockons vos données de santé sur des serveurs externes.</p>
+    <p>Votre vie privée est au cœur de la conception de CycleBalance. <strong>Les journaux personnels de santé que vous saisissez dans l’Application sont stockés localement sur votre appareil.</strong> CycleBalance ne collecte ni ne stocke cet historique enregistré sur des serveurs CycleBalance externes. Une nouvelle Estimation photo est une exception limitée : uniquement après votre confirmation explicite, une photo de repas compressée est envoyée à Google Gemini via le proxy sécurisé de CycleBalance.</p>
     <ul>
-      <li>Les analyses par apprentissage automatique sont générées entièrement sur votre appareil grâce à un traitement local.</li>
-      <li>Vos journaux de symptômes, vos données de cycle et vos informations de santé ne quittent jamais votre appareil.</li>
-      <li>Avec votre autorisation, CycleBalance peut lire les données depuis Apple HealthKit. Ces données sont utilisées uniquement au sein de l'application sur votre appareil et ne sont jamais transmises à l'extérieur.</li>
+      <li>Les analyses de schémas Core ML sont générées entièrement sur votre appareil. L’Estimation photo Google Gemini est distincte et exige votre confirmation pour chaque nouvel envoi.</li>
+      <li>Vos journaux de symptômes, données de cycle et informations de santé sont traités selon une approche locale d’abord et ne sont pas envoyés aux serveurs CycleBalance à des fins d’analyse ou de publicité.</li>
+      <li>Avec votre autorisation, CycleBalance peut lire les données depuis Apple HealthKit. Ces données sont utilisées dans l’application sur votre appareil et ne sont pas envoyées aux serveurs CycleBalance, à des tiers ou à des réseaux publicitaires.</li>
+      <li>Si vous scannez ou saisissez un code-barres, le code UPC/EAN est envoyé à la base alimentaire sélectionnée afin que CycleBalance affiche un brouillon de repas à vérifier.</li>
+      <li>CycleBalance ne stocke pas les photos brutes téléversées sur son proxy. L’app et le proxy peuvent mettre en cache un résultat structuré exact pendant 24 heures au maximum ; les quotas pseudonymes quotidiens et totaux d’essai expirent respectivement après trois et trente jours ; les journaux applicatifs minimaux et hachés du serveur après trente jours au maximum. Google indique que les requêtes Gemini payantes ne servent pas à améliorer ses produits, mais son service payant standard peut conserver les invites, le contexte et les sorties jusqu’à 55 jours pour la surveillance des abus et les divulgations légales ou réglementaires requises.</li>
       <li>Vous êtes responsable de la sauvegarde de vos propres données. Si vous supprimez l'Application ou perdez votre appareil, vos données peuvent ne pas être récupérables.</li>
     </ul>
     <p>Pour des informations complètes sur la manière dont nous traitons vos informations, veuillez consulter notre <a href="/fr/privacy">Politique de confidentialité</a>, qui est intégrée aux présentes Conditions par référence.</p>
