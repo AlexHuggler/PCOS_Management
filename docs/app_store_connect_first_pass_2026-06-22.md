@@ -66,7 +66,10 @@ Conditional App Privacy update if cloud photo estimates are enabled:
 | Data type | Purpose | Linked to user | Used for tracking | Notes |
 | --- | --- | --- | --- | --- |
 | User Content > Photos or Videos | App Functionality | No | No | A user-confirmed meal photo estimate sends one normalized JPEG through the CycleBalance proxy to Google Gemini. The proxy does not retain raw bytes; standard Gemini abuse monitoring may retain request content for up to 55 days unless production-project ZDR is verified. |
-| Other Data > Other Data Types | App Functionality | No | No | Continue declaring optional UPC/EAN barcode lookup. Add proxy quota metadata only if retained in a way that qualifies as collected data under Apple guidance. |
+| Health & Fitness > Health | App Functionality | Yes | No | A structured meal-nutrition estimate is cached for 24 hours under a stable pseudonymous app-user hash to deduplicate identical requests. |
+| Identifiers > User ID | App Functionality | Yes | No | Quota and cache records use a stable one-way hash derived from the anonymous RevenueCat App User ID; the raw ID is not persisted in CycleBalance Firestore or application logs. |
+| Usage Data > Product Interaction | App Functionality | Yes | No | Daily/trial usage and rejection counts enforce scanner limits. Daily records expire after three days and trial totals after thirty days. |
+| Other Data > Other Data Types | App Functionality | No | No | Continue declaring optional UPC/EAN barcode lookup. |
 
 ## App Review Notes
 

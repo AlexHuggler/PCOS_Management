@@ -54,6 +54,9 @@ Update App Store Connect App Privacy for the approved cloud-photo build:
 | Data type | Purpose | Linked to user | Used for tracking | Required disclosure |
 | --- | --- | --- | --- | --- |
 | User Content > Photos or Videos | App Functionality | No | No | For a fresh user-confirmed estimate, one normalized JPEG is transmitted through the CycleBalance proxy to Google Gemini for an editable draft. An exact on-device repeat can be reused without transmission. The proxy does not retain raw bytes. Under the standard provider posture, Google may retain request content for up to 55 days for abuse monitoring; reevaluate whether this row remains required only after production-project ZDR is verified against Apple's current definition of collection. |
+| Health & Fitness > Health | App Functionality | Yes | No | A successful structured meal-nutrition estimate is cached for 24 hours under a stable pseudonymous app-user hash so an identical request can be reused without another model call or quota charge. |
+| Identifiers > User ID | App Functionality | Yes | No | Daily/trial quota and estimate-cache records use a stable one-way hash derived from the anonymous RevenueCat App User ID. The raw ID is not stored in CycleBalance Firestore or application logs. |
+| Usage Data > Product Interaction | App Functionality | Yes | No | Scan usage, rejections, quota tier, and cache behavior enforce limits and support reliability. Daily records expire after three days; trial totals expire after thirty days. |
 | Other Data > Other Data Types | App Functionality | No | No | Optional UPC/EAN barcode lookup continues to send only the barcode chosen by the user to obtain product nutrition. |
 | Purchases > Purchase History | App Functionality | No | No | RevenueCat manages subscription/trial entitlement checks. |
 
@@ -65,6 +68,7 @@ The live privacy policy and terms must state all of the following before submiss
 - An exact match to a previously reviewed meal can be reused on device without sending the photo again; `Scan as New` remains available.
 - Nutrition remains local unless the user reviews and saves it; saved-meal-photo retention is local and separately controlled in Settings.
 - Active trial/subscription checks, daily/trial quotas, and a budget kill switch limit feature access.
+- A pseudonymous structured estimate may be cached for 24 hours; daily quota records expire after three days and trial totals after thirty days. The app-user hash, estimate, and meal name are excluded from application logs, and service HTTP request logs are excluded from the default log bucket.
 - Barcode lookup and manual entry are available alternatives that do not require photo analysis.
 - The result is an editable personal-tracking estimate, not medical advice or a diagnosis.
 
@@ -85,6 +89,7 @@ The live privacy policy and terms must state all of the following before submiss
 - [ ] Approve a build number greater than `17` and the target review train.
 - [ ] Confirm whether Photo Estimate is enabled for the review candidate or remains coming soon.
 - [ ] Approve the retention posture: verified Google ZDR for the production project, or the standard 55-day abuse-monitoring disclosure.
+- [ ] Decide whether automatic 24-hour/3-day/30-day expiry is sufficient or whether the enabled app must include a self-service cloud meal-scan deletion action.
 - [ ] Enter the approved App Privacy answers and updated reviewer notes in App Store Connect.
 - [ ] Publish and verify the live privacy-policy and terms changes.
 - [ ] Upload the approved screenshot set and submit only after the physical-device and quality gates pass.
