@@ -25,26 +25,26 @@
 - Create: `PCOS/PCOSTests/ProductionMealScanAppCheckProbeTests.swift`
 - Modify: `project.yml`
 
-- [ ] **Step 1: Add a test gated by `RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1`**
+- [x] **Step 1: Add a test gated by `RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1`**
 
 The test obtains a limited-use token from `FirebaseMealScanAppCheckTokenProvider`, prepares one valid normalized JPEG, uses `revenueCatAppUserId = "cyclebalance-appcheck-probe-no-entitlement"`, and calls the production proxy without exposing token values.
 
-- [ ] **Step 2: Assert HTTP `403`, `error = "premium_entitlement_required"`, and `reason = "entitlement_inactive"`**
+- [x] **Step 2: Assert HTTP `403`, `error = "premium_entitlement_required"`, and `reason = "entitlement_inactive"`**
 
 Print only the normalized image-hash prefix needed for safe log correlation. Any `200`, quota write, or Gemini event is a hard failure.
 
-- [ ] **Step 3: Add a Release XcodeGen test scheme with the opt-in environment value**
+- [x] **Step 3: Add a Release XcodeGen test scheme with the opt-in environment value**
 
-- [ ] **Step 4: Verify the test compiles but remains skipped in ordinary suites**
+- [x] **Step 4: Verify the test compiles but remains skipped in ordinary suites**
 
 ### Task 2: Add The Fail-Safe Probe Orchestrator
 
 **Files:**
 - Create: `cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh`
 
-- [ ] **Step 1: Implement a side-effect-free `DRY_RUN=true` path**
+- [x] **Step 1: Implement a side-effect-free `DRY_RUN=true` path**
 
-- [ ] **Step 2: Before any mutation, verify project/service identity, budget mode `normal`, initial `MEAL_SCAN_ENABLED=false`, and absence of `allUsers` IAM**
+- [x] **Step 2: Before any mutation, verify project/service identity, budget mode `normal`, initial `MEAL_SCAN_ENABLED=false`, and absence of `allUsers` IAM**
 
 - [ ] **Step 3: Verify `General Kenobi` (`0C663BE9-3804-587C-BD8A-A2B4D38F998A`) is unlocked, paired, in Developer Mode, and can mount its developer disk image**
 
@@ -56,7 +56,7 @@ Copy it to `~/Library/Application Support/CycleBalance/DeviceBackups/<UTC timest
 
 Assert bundle ID `alex.PCOS`, production App Attest entitlement, and the complete production proxy URL. Do not pass `-allowProvisioningUpdates`.
 
-- [ ] **Step 6: Register the rollback trap before the first cloud mutation**
+- [x] **Step 6: Register the rollback trap before the first cloud mutation**
 
 - [ ] **Step 7: Temporarily deploy with `MEAL_SCAN_ENABLED=true` and unauthenticated ingress using the reviewed deploy script**
 
@@ -66,9 +66,9 @@ Assert bundle ID `alex.PCOS`, production App Attest entitlement, and the complet
 
 ### Task 3: Verify The Orchestrator Before A Live Probe
 
-- [ ] **Step 1: Run `bash -n cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh`**
+- [x] **Step 1: Run `bash -n cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh`**
 
-- [ ] **Step 2: Run the dry path**
+- [x] **Step 2: Run the dry path**
 
 ```sh
 DRY_RUN=true PROJECT_ID=cyclebalance-prod-20260710 \
@@ -101,26 +101,30 @@ cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh
 - Modify: `AppStoreReadinessChecklist.md`
 - Modify: `docs/meal_scan_flash_lite_production_setup.md`
 
-- [ ] **Step 1: Draft exact review notes and reviewer test steps**
+- [x] **Step 1: Draft exact review notes and reviewer test steps**
 
-- [ ] **Step 2: Document App Privacy and privacy-policy deltas**
+- [x] **Step 2: Document App Privacy and privacy-policy deltas**
 
 Include user-initiated photo upload disclosure, purpose-limited processing, no raw-image retention on the proxy, local-only reviewed nutrition storage, quotas, and manual/barcode fallbacks.
 
-- [ ] **Step 3: Prepare the screenshot checklist and require a build number above `17`**
+- [x] **Step 3: Prepare the screenshot checklist and require a build number above `17`**
 
-- [ ] **Step 4: Keep all submission and build-number mutations pending separate owner approval**
+- [x] **Step 4: Keep all submission and build-number mutations pending separate owner approval**
 
 ### Task 6: Final Verification
 
-- [ ] **Step 1: Run `git diff --check`**
+- [x] **Step 1: Run `git diff --check`**
 
-- [ ] **Step 2: Run proxy and budget-controller tests and high-severity audits**
+- [x] **Step 2: Run proxy and budget-controller tests and high-severity audits**
 
-- [ ] **Step 3: Regenerate with XcodeGen and run the simulator test suite**
+- [x] **Step 3: Regenerate with XcodeGen and run the simulator test suite**
 
-- [ ] **Step 4: Build generic-device Release without `-allowProvisioningUpdates`**
+- [x] **Step 4: Build generic-device Release without `-allowProvisioningUpdates`**
 
-- [ ] **Step 5: Verify production App Attest, exact repeat matching enabled, similar matching disabled, and Cloud Run private/disabled**
+- [x] **Step 5: Verify production App Attest configuration, exact repeat matching enabled, similar matching disabled, and Cloud Run private/disabled**
 
-- [ ] **Step 6: Commit probe and review-preparation artifacts only after rollback verification**
+The configuration and safe cloud posture are verified. The physical production App Attest request itself remains Task 4 and is not implied by this checkbox.
+
+- [ ] **Step 6: Commit final physical-probe evidence only after rollback verification**
+
+The implementation and preparation artifacts are already committed after independent private/disabled verification. The device backup path, probe response, side-effect checks, temporary revision, and rollback evidence remain uncommitted because the live physical probe has not run.
