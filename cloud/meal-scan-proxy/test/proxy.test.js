@@ -245,6 +245,30 @@ test("returns structured estimate and quota metadata on success", async () => {
   assert.equal(response.body.estimate.meal_name, "Rice bowl");
 });
 
+test("does not log pseudonymous app user identifiers or meal content", async () => {
+  const events = [];
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    verifyRevenueCatEntitlement: async () => true,
+    quotaStore: allowQuotaStore(),
+    callGemini: async () => successGeminiResponse(),
+    logger: {
+      info(name, metadata) {
+        events.push({ name, metadata });
+      },
+    },
+  });
+
+  const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+  const estimateEvent = events.find((event) => event.name === "meal_scan_estimate");
+
+  assert.equal(response.status, 200);
+  assert.ok(estimateEvent);
+  assert.equal(Object.hasOwn(estimateEvent.metadata, "appUserHash"), false);
+  assert.equal(estimateEvent.metadata.imageHash, validPayload.image.sha256.slice(0, 12));
+  assert.equal(JSON.stringify(estimateEvent).includes("Rice bowl"), false);
+});
+
 test("reuses a successful image hash without consuming quota or calling Gemini twice", async () => {
   let quotaConsumeCalls = 0;
   let quotaSnapshotCalls = 0;
@@ -516,6 +540,18 @@ test("Firestore budget control caches reads and gives a manual kill switch prece
   assert.equal(first.source, "manual_override");
   assert.deepEqual(second, first);
   assert.equal(readCount, 1);
+});
+
+test("uses Firestore timestamp-compatible dates for quota expiry", () => {
+  assert.equal(typeof proxyModule.quotaExpiryDates, "function");
+  const now = new Date("2026-07-11T12:00:00.000Z");
+
+  const expiry = proxyModule.quotaExpiryDates(now);
+
+  assert.ok(expiry.daily instanceof Date);
+  assert.ok(expiry.trial instanceof Date);
+  assert.equal(expiry.daily.toISOString(), "2026-07-14T12:00:00.000Z");
+  assert.equal(expiry.trial.toISOString(), "2026-08-10T12:00:00.000Z");
 });
 
 test("allows trial subscribers with five daily scans and twenty five total trial scans", async () => {

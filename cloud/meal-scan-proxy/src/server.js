@@ -187,7 +187,6 @@ export function createServer(overrides = {}) {
         }
 
         dependencies.logger.info?.("meal_scan_estimate", {
-          appUserHash: shortHash(payload.revenueCatAppUserId),
           imageHash: payload.image.sha256.slice(0, 12),
           providerId: modelSelection.config.providerId,
           modelId,
@@ -245,7 +244,6 @@ export function createServer(overrides = {}) {
       }
 
       dependencies.logger.info?.("meal_scan_estimate", {
-        appUserHash: shortHash(payload.revenueCatAppUserId),
         imageHash: payload.image.sha256.slice(0, 12),
         providerId: modelSelection.config.providerId,
         modelId,
@@ -602,6 +600,13 @@ function createConfiguredQuotaStore() {
   return createInMemoryQuotaStore();
 }
 
+export function quotaExpiryDates(now) {
+  return {
+    daily: new Date(now.getTime() + 3 * 86_400_000),
+    trial: new Date(now.getTime() + 30 * 86_400_000),
+  };
+}
+
 function createFirestoreQuotaStore({ collectionName }) {
   let firestoreClient;
   async function firestore() {
@@ -616,6 +621,7 @@ function createFirestoreQuotaStore({ collectionName }) {
     async checkAndConsume({ appUserId, hardLimit, softLimit, accessTier, trialTotalLimit }) {
       const db = await firestore();
       const now = new Date();
+      const expiry = quotaExpiryDates(now);
       const day = now.toISOString().slice(0, 10);
       const appUserHash = shortHash(appUserId);
       const dailyDoc = db.collection(collectionName).doc(`${appUserHash}_${day}`);
@@ -645,7 +651,7 @@ function createFirestoreQuotaStore({ collectionName }) {
             limit: hardLimit,
             softLimit,
             updatedAt: now.toISOString(),
-            expiresAt: new Date(now.getTime() + 3 * 86_400_000).toISOString(),
+            expiresAt: expiry.daily,
           },
           { merge: true }
         );
@@ -659,7 +665,7 @@ function createFirestoreQuotaStore({ collectionName }) {
               limit: trialTotalLimit,
               rejectedCount: allowed ? Number(trialSnapshot?.get("rejectedCount") ?? 0) : Number(trialSnapshot?.get("rejectedCount") ?? 0) + 1,
               updatedAt: now.toISOString(),
-              expiresAt: new Date(now.getTime() + 30 * 86_400_000).toISOString(),
+              expiresAt: expiry.trial,
             },
             { merge: true }
           );
