@@ -57,14 +57,15 @@ Build facts to verify before submission:
 - USDA lookup is only used when a local USDA FoodData Central API key is configured.
 - Meal Scan V2 is release-disabled by default unless explicitly enabled for the submitted build.
 - If Meal Scan V2 is enabled, it must remain local-first, editable, and review-before-save; do not claim exact nutrition scanning.
-- If Gemini/cloud meal-photo estimation is enabled, update App Privacy, privacy policy, terms, screenshots, and review notes before submission. The submitted build must describe that a user-selected meal photo is sent to the CycleBalance proxy/Gemini only after the user chooses photo estimation, and that barcode/manual logging remain available without photo analysis.
-- Limited-production cloud photo estimates require the production proxy gates: `MEAL_SCAN_ENABLED` kill switch, App Attest enforcement with a configured verifier, RevenueCat entitlement/trial verification, Firestore quota storage, 5/day and 25/trial limits for trial users, 5/day soft and 10/day hard limits for paid users, monthly budget thresholds (`$50` alert, `$75` degrade to Flash-Lite only, `$100` disable), and no raw image retention on the proxy.
+- If Gemini/cloud meal-photo estimation is enabled, update App Privacy, privacy policy, terms, screenshots, and review notes before submission. The submitted build must name Google Gemini as the third-party AI processor, wait for explicit confirmation before every fresh upload, state the verified provider-retention posture, and keep barcode/manual logging available without photo analysis.
+- Limited-production cloud photo estimates require the production proxy gates: `MEAL_SCAN_ENABLED` kill switch, App Attest enforcement with a configured verifier, RevenueCat entitlement/trial verification, Firestore quota storage, 5/day and 25/trial limits for trial users, 5/day soft and 10/day hard limits for paid users, monthly budget thresholds (`$75` alert, `$90` degrade to Flash-Lite only, `$120` disable), and no raw image retention on the proxy.
+- The proxy's no-retention guarantee does not cover Google. Under the standard paid Gemini posture, Google may retain prompts, context, and outputs for 55 days for abuse monitoring. Before enabling uploads, either verify ZDR approval for `cyclebalance-prod-20260710` or disclose the 55-day posture throughout the app and policy surfaces.
 
 Conditional App Privacy update if cloud photo estimates are enabled:
 
 | Data type | Purpose | Linked to user | Used for tracking | Notes |
 | --- | --- | --- | --- | --- |
-| User Content > Photos or Videos | App Functionality | No | No | User-initiated meal photo estimate sends one normalized JPEG to the CycleBalance proxy/Gemini for analysis. The proxy should not retain raw image bytes. |
+| User Content > Photos or Videos | App Functionality | No | No | A user-confirmed meal photo estimate sends one normalized JPEG through the CycleBalance proxy to Google Gemini. The proxy does not retain raw bytes; standard Gemini abuse monitoring may retain request content for up to 55 days unless production-project ZDR is verified. |
 | Other Data > Other Data Types | App Functionality | No | No | Continue declaring optional UPC/EAN barcode lookup. Add proxy quota metadata only if retained in a way that qualifies as collected data under Apple guidance. |
 
 ## App Review Notes

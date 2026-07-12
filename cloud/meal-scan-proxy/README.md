@@ -49,7 +49,7 @@ Successful responses include:
 - `modelId`
 - `usage.inputTokens`, `usage.outputTokens`, `usage.totalTokens`, and `usage.estimatedCostUSD`
 
-The proxy must not store raw image bytes. Logs should stay limited to hashed app user identifiers, image hash prefixes, provider/model ID, token usage, estimated cost, quota tier, budget mode, and status metadata.
+The proxy must not store raw image bytes. Logs should stay limited to hashed app user identifiers, image hash prefixes, provider/model ID, token usage, estimated cost, quota tier, budget mode, and status metadata. This guarantee covers CycleBalance infrastructure only: standard paid Gemini abuse monitoring may retain request content for 55 days unless Google has approved Zero Data Retention for the production project.
 
 Client JSON errors, oversized bodies, provider timeouts, and malformed provider output return distinct user-safe `reason` and `retryable` fields. Provider parse failures are never reported as invalid client JSON.
 

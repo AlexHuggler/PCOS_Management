@@ -19,7 +19,16 @@ flowchart LR
     H --> E
 ```
 
-Raw photos are not retained by the proxy. Logs contain only hashed identifiers, an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata. Reviewed meal names and raw image bytes are not written to logs.
+Raw photos are not retained by the proxy. Logs contain only hashed identifiers, an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata. Reviewed meal names and raw image bytes are not written to proxy logs.
+
+That proxy guarantee is not the same as provider-wide zero retention. Google states that paid Gemini prompts, contextual information, and outputs are not used to improve its products, but are normally retained for 55 days for abuse monitoring. After Google approves Zero Data Retention for a particular project, user content and identifiable metadata are cleared before abuse-monitoring logs are written. CycleBalance does not use grounding, the File API, stored Interactions, Live session resumption, or explicit context caching.
+
+Before enabling fresh uploads, choose and verify one posture:
+
+- Recommended: obtain and record Google ZDR approval for `cyclebalance-prod-20260710`.
+- Fallback: explicitly disclose Google's 55-day abuse-monitoring retention in the app, privacy policy, App Privacy answers, and App Review notes.
+
+Either posture requires a pre-upload confirmation that names Google Gemini and waits for affirmative user action. The current entry notice says only `our AI service` and photo selection can continue directly into a fresh estimate, so this consent gate remains incomplete. Exact local repeat reuse must not show the remote-upload confirmation or make any network request.
 
 ## Live Production Posture
 
@@ -206,6 +215,7 @@ Complete now:
 Required before enabling users:
 
 - [ ] Activate paid Gemini billing for the exact production project, purchase an owner-approved Prepay balance, configure the `$120` AI Studio project spend cap, and obtain a successful header-auth generation smoke test. The current balance is depleted and inference is intentionally unavailable.
+- [ ] Obtain and verify production-project ZDR approval, or approve and implement the standard 55-day provider-retention disclosure. Add explicit per-upload consent naming Google Gemini before any fresh request.
 - [ ] Test 50-100 representative meal photos against a labeled nutrition review set.
 - [ ] Run the private repeat-meal evaluation toolkit with exactly 100 images: 20 meal identities with four unchanged-portion views each and 20 visually similar negatives. Strip EXIF, exclude faces/documents/medication labels/location-revealing backgrounds, and keep macro truth outside the image manifest. Do not install a repeat-similarity policy unless the calibrator reports precision at least `0.95` and zero high-risk false matches; the five-image extractor smoke run is mechanics-only evidence and does not satisfy this gate. See `tools/meal-repeat-evaluation/README.md`.
 - [ ] Compare Gemini 2.5 and 3.1 on accuracy, parse success, latency, and cost; approve the default model.
@@ -222,6 +232,8 @@ Required before enabling users:
 - Gemini model deprecations: https://ai.google.dev/gemini-api/docs/deprecations
 - Gemini API key security and migration: https://ai.google.dev/gemini-api/docs/api-key
 - Gemini billing, Prepay, auto-reload, and project spend caps: https://ai.google.dev/gemini-api/docs/billing
+- Gemini abuse-monitoring retention: https://ai.google.dev/gemini-api/docs/usage-policies
+- Gemini Zero Data Retention: https://ai.google.dev/gemini-api/docs/zdr
 - OpenAI model catalog and current Luna/Terra rates: https://developers.openai.com/api/docs/models
 - Cloud Billing budgets: https://cloud.google.com/billing/docs/how-to/budgets
 - Cloud Run secrets: https://cloud.google.com/run/docs/configuring/services/secrets
