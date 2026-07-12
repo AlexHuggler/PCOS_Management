@@ -19,7 +19,7 @@ flowchart LR
     H --> E
 ```
 
-Raw photos are not retained by the proxy. Logs contain only hashed identifiers, an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata. Reviewed meal names and raw image bytes are not written to proxy logs.
+Raw photos are not retained by the proxy. Application logs contain an image-hash prefix, provider/model metadata, token usage, estimated cost, quota tier, budget mode, and status metadata. Pseudonymous app user hashes, reviewed meal names, and raw image bytes are not written to application logs. The `_Default` log sink excludes this service's Cloud Run HTTP request logs while retaining application and audit logs; the remaining application logs use the bucket's 30-day retention.
 
 That proxy guarantee is not the same as provider-wide zero retention. Google states that paid Gemini prompts, contextual information, and outputs are not used to improve its products, but are normally retained for 55 days for abuse monitoring. After Google approves Zero Data Retention for a particular project, user content and identifiable metadata are cleared before abuse-monitoring logs are written. CycleBalance does not use grounding, the File API, stored Interactions, Live session resumption, or explicit context caching.
 
@@ -209,6 +209,8 @@ Complete now:
 - [x] Firestore quota, dedupe cache, TTL, and remote kill switch.
 - [x] Local exact-repeat reuse with no network/quota/model call, editable review, delete-all cleanup, and no backup/export serialization.
 - [x] Gemini key transport moved from the URL to `x-goog-api-key`; reviewed meal names removed from public logs.
+- [x] Pseudonymous user hashes removed from application logs; service HTTP request logs excluded from the default log bucket.
+- [x] Firestore quota expirations use timestamp-compatible values so the active TTL policy can delete daily records after three days and trial totals after thirty days.
 - [x] Proxy tests, dependency audit, disabled-service smoke test, focused iOS tests, and signed Release build.
 - [x] Current App Store build keeps the feature hidden/coming soon.
 
