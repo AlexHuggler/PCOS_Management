@@ -1204,7 +1204,11 @@ async function withTimeout(promise, timeoutMs, timeoutCode) {
 }
 
 function sendJSON(response, status, body) {
-  response.writeHead(status, { "content-type": "application/json" });
+  response.writeHead(status, {
+    "cache-control": "no-store",
+    "content-type": "application/json",
+    "x-content-type-options": "nosniff",
+  });
   response.end(JSON.stringify(body));
 }
 

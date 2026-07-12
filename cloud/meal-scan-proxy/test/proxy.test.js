@@ -739,6 +739,13 @@ test("configures bounded HTTP server timeouts", () => {
   assert.equal(server.maxRequestsPerSocket, 100);
 });
 
+test("marks JSON responses as non-cacheable and non-sniffable", async () => {
+  const response = await request(createServer({ scanEnabled: false }), validPayload);
+
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+});
+
 test("maps Gemini timeout to retryable gateway timeout", async () => {
   const server = createServer({
     verifyAppIntegrity: async () => true,
@@ -901,7 +908,7 @@ async function requestRaw(server, bodyPayload, headers = {}) {
       body: bodyPayload,
     });
     const body = await response.json();
-    return { status: response.status, body };
+    return { status: response.status, body, headers: response.headers };
   } finally {
     await new Promise((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
