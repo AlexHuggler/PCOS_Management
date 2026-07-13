@@ -2,19 +2,19 @@
 
 Date: 2026-07-13
 
-Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump; it has not been archived, uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, cache/expiry policy, model selection, and limited Gemini funding. The physical production App Attest probe is complete, but the App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy review, and final screenshot gates below remain incomplete. The current production service is private and disabled; Release keeps Photo Estimate hidden rather than advertising an unavailable feature.
+Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump; it has not been archived, uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, standard 55-day disclosure, durable lifetime quota, model selection, and limited Gemini funding. The current-contract physical probes, App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy correction, and final screenshot gates below remain incomplete. The production service is private and disabled; Release keeps Photo Estimate hidden until every gate passes.
 
 ## Submission Gates
 
 - Use local target `1.0.5 (18)`. Build `18` was verified unused, but this packet does not authorize an archive upload, TestFlight distribution, App Store Connect mutation, or submission.
-- Complete the limited physical App Check probe and labeled meal-photo quality review before making the scanner available to App Review.
+- Complete the current-contract negative App Check probe and the later positive sandbox-JWS TestFlight path before making the scanner available to App Review.
 - Verify the production proxy remains App Check protected, entitlement gated, quota limited, budget controlled, and private/disabled outside the narrowly reviewed probe window.
 - Add an explicit pre-upload confirmation that names Google Gemini as the third-party AI processor. Returning from the camera or photo picker must not begin a fresh remote estimate until the user affirmatively continues; exact local reuse must remain network-free.
-- Choose and verify one provider-retention posture before enabling the feature: obtain Google approval for Zero Data Retention on `cyclebalance-prod-20260710`, or disclose Google's standard 55-day abuse-monitoring retention in the app, privacy policy, App Privacy answers, and review notes.
-- Update App Privacy, the live privacy policy, and terms before enabling the feature in a submitted build. Verify the deployed public pages rather than relying on local website copy.
-- Confirm App Review can exercise the intended photo-estimate path without an owner credential, private device access, or unshared test account. Otherwise keep the feature disabled for review and describe it as coming soon.
+- Keep Google's standard 55-day abuse-monitoring disclosure consistent in the app, privacy policy, App Privacy answers, and review notes. Do not claim Zero Data Retention unless the production project later receives verified approval and every surface is updated together.
+- Update App Privacy before enabling the feature in a submitted build. The live privacy policy and terms already disclose Gemini, but their trial-total thirty-day language must be corrected to the durable lifetime ledger and read back from the deployed pages.
+- Confirm App Review can exercise the intended photo-estimate path without an owner credential, private device access, or unshared test account. Otherwise do not submit an archive that exposes the feature.
 - [ ] Regenerate or verify the App Store distribution profile against the frozen archive. The embedded profile must include production App Attest and HealthKit entitlements with `get-task-allow=false`; the current profile evidence is not sufficient to clear this gate.
-- [ ] Freeze and pass the 80-image paid benchmark and the separate similarity-policy evaluation. Until those gates pass, Release keeps the scanner UI, Gemini path, mock data, debug-direct path, fallback model, and visual similarity off.
+- [ ] Freeze and pass the exact 80-image/120-call paid benchmark. Visual similarity remains out of scope and disabled for this release; it must not block exact local cache reuse or weaken the scanner benchmark.
 
 ## App Review Notes
 
@@ -26,7 +26,7 @@ Paste the following only for the approved build that enables photo estimates:
 >
 > Fresh Photo Estimate access uses a verified StoreKit 2 transaction JWS. The proxy verifies the Apple transaction and current subscription state, derives an HMAC purchase principal from the verified original transaction identifier, and then asks RevenueCat API v2 to corroborate only that current Apple-verified transaction ID and environment. Apple remains authoritative for identity and tier. The proxy never trusts a RevenueCat App User ID and never sends the raw StoreKit JWS to RevenueCat.
 >
-> Paid access allows 10 fresh estimates per rolling 24 hours, with an immutable server maximum of 15 and an in-app warning at 2 remaining. Trial and sandbox access allows 5 fresh estimates per rolling 24 hours and 25 lifetime. Exact local or server cache hits do not consume AI quota. Monthly budget controls use a $15 alert, $20 degraded, and $25 disabled posture. Photo Estimate is an editable personal-tracking estimate, not medical advice, nutrition counseling, diagnosis, treatment, allergy guidance, or an exact measurement.
+> Paid access allows 10 fresh estimates per rolling 24 hours, with an immutable server maximum of 15 and an in-app warning at 2 remaining. Trial and sandbox access allows 5 fresh estimates per rolling 24 hours and 25 lifetime. Exact local or server cache hits do not consume AI quota. Monthly budget controls use a $15 alert; at $20 trial dispatches stop and paid access falls to 5 fresh estimates per rolling 24 hours; at $25 all fresh AI dispatches stop. Photo Estimate is an editable personal-tracking estimate, not medical advice, nutrition counseling, diagnosis, treatment, allergy guidance, or an exact measurement.
 >
 > Users can always choose manual meal entry and barcode lookup without photo analysis or AI quota. Barcode lookup is optional and user initiated; it sends only the UPC/EAN selected by the user to retrieve public product nutrition data.
 >
@@ -61,7 +61,7 @@ Update App Store Connect App Privacy for the approved cloud-photo build:
 | Health & Fitness > Health | App Functionality | Yes | No | Structured meal nutrition is associated with the requested estimate and may be held in the 24-hour structured-result cache. Saved nutrition and HealthKit health records remain on device. |
 | Health & Fitness > Fitness | App Functionality | Yes | No | Optional Apple Health fitness context supports on-device insights. It is declared conservatively for App Functionality; the meal-scan proxy is not sent Fitness records. |
 | Identifiers > User ID | App Functionality | Yes | No | The server derives a stable HMAC-derived purchase principal from Apple's verified original transaction identifier. The raw identifier and StoreKit JWS are not used as stored application identifiers. |
-| Usage Data > Product Interaction | App Functionality | Yes | No | Scan attempts, outcomes, quota tier, and cache behavior enforce rolling and lifetime limits and support reliability. |
+| Usage Data > Product Interaction | App Functionality | Yes | No | Scan attempts, outcomes, quota tier, and cache behavior enforce rolling and lifetime limits and support reliability. The HMAC-keyed trial/sandbox lifetime counter remains durable so the 25-lifetime maximum cannot reset. |
 | Other Data > Other Data Types | App Functionality | Yes | No | Optional UPC/EAN barcode lookup sends only the barcode chosen by the user to obtain product nutrition. |
 | Purchases > Purchase History | App Functionality | Yes | No | Apple StoreKit establishes current purchase status and the HMAC quota principal; RevenueCat supports purchase/restore and secondarily corroborates the current Apple-verified transaction. |
 
@@ -72,8 +72,8 @@ The live privacy policy and terms must state all of the following before submiss
 - Processing is limited to creating the requested meal estimate; the proxy does not retain raw uploaded image bytes. Do not imply that Google retains nothing unless ZDR approval has been verified for the production project.
 - An exact match to a previously reviewed meal can be reused on device without sending the photo again; `Scan as New` remains available.
 - Nutrition remains local unless the user reviews and saves it; saved-meal-photo retention is local and separately controlled in Settings.
-- Active trial/subscription checks use verified StoreKit evidence and the HMAC-derived principal. Paid users receive 10 fresh estimates per rolling 24 hours with a hard maximum of 15; trial and sandbox users receive 5 per rolling 24 hours and 25 lifetime. Exact cache hits do not consume quota, and the app warns at 2 remaining.
-- A pseudonymous structured estimate may be held in the 24-hour structured-result cache. The StoreKit JWS, raw original transaction identifier, estimate, and meal name are excluded from application logs, and service HTTP request logs are excluded from the default log bucket.
+- Active trial/subscription checks use verified StoreKit evidence and the HMAC-derived principal. Paid users receive 10 fresh estimates per rolling 24 hours with a hard maximum of 15; trial and sandbox users receive 5 per rolling 24 hours and 25 lifetime. Exact cache hits do not consume quota, and the app warns at 2 remaining. Trial/sandbox lifetime counters are retained under the HMAC principal so the lifetime maximum cannot reset; rolling-only paid records expire after their short cleanup window.
+- A pseudonymous structured estimate may be held in the 24-hour structured-result cache. The StoreKit JWS, raw original transaction identifier, request ID, image hash, estimate, and meal name are excluded from application logs, and service HTTP request logs are excluded from the default log bucket.
 - Monthly budget handling is alert at `$15`, degraded at `$20`, and disabled at `$25`; unavailable budget state fails closed.
 - Google may retain paid Gemini request content for up to 55 days for abuse monitoring under the current non-ZDR posture.
 - Manual meal entry and barcode lookup are available alternatives that do not require photo analysis or consume AI quota.
@@ -81,22 +81,16 @@ The live privacy policy and terms must state all of the following before submiss
 
 ## Screenshot Checklist
 
-- [ ] Capture the enabled meal entry screen with `Photo Estimate`, `Scan barcode`, and manual entry visible; never show a real person's health data or an unredacted meal photo.
-- [ ] Capture the pre-send privacy notice explaining user-initiated upload and local reviewed-nutrition storage.
-- [ ] Capture the explicit Google Gemini confirmation immediately before a fresh remote upload; the screenshot must match the verified ZDR or 55-day retention posture.
-- [ ] Capture the editable estimate review screen, including the user-editable items and save action.
-- [x] Capture the exact-repeat suggestion in Botanical Journal and Lunar Calm at accessibility XXXL without real health data; local evidence is in `Artifacts/botanical-repeat-meal-standard-text.png` and `Artifacts/lunar-calm-repeat-meal-accessibility-xxxl-actions.png`.
-- [ ] Capture the entitlement/fallback state showing barcode and manual alternatives; do not expose test identifiers or backend errors.
-- [ ] Capture subscription and restore controls with the final localized legal-link layout.
-- [ ] Refresh iPhone screenshot sizes and every shipped App Store localization as required by the new feature; retain no misleading coming-soon copy on an enabled screenshot set.
+- [ ] Capture exactly six clean `1290 x 2796` screenshots per store localization from the submitted archive: Add Nutrition with photo/barcode/manual choices; Google Gemini consent; editable estimate; quota/fallback with barcode/manual alternatives; paywall/restore; and core cycle/health tracking. Never show real health data, private identifiers, raw backend errors, or a real person's unredacted photo.
+- [ ] Keep the existing repeat-meal images only as implementation evidence; they are not submission screenshots.
 - [ ] Verify screenshots, App Privacy answers, policy text, reviewer notes, and the archived build all describe the same enabled/disabled state.
 
 ## Owner Actions Pending Approval
 
-- [ ] Approve a build number greater than `17` and the target review train.
-- [ ] Confirm whether Photo Estimate is enabled for the review candidate or remains coming soon.
-- [ ] Approve the retention posture: verified Google ZDR for the production project, or the standard 55-day abuse-monitoring disclosure.
-- [ ] Decide whether automatic 24-hour/3-day/30-day expiry is sufficient or whether the enabled app must include a self-service cloud meal-scan deletion action.
+- [x] Use `1.0.5 (18)` unless App Store Connect later reports that build `18` has become unavailable.
+- [x] Prepare Photo Estimate for the review candidate, but keep it hidden and the cloud disabled until every benchmark, security, profile, archive, and approval gate passes.
+- [x] Use Google's standard 55-day abuse-monitoring disclosure; do not claim unverified ZDR.
+- [x] Preserve the 24-hour result cache and durable HMAC-keyed trial/sandbox lifetime ledger required to enforce the 25-lifetime maximum.
 - [ ] Enter the approved App Privacy answers and updated reviewer notes in App Store Connect.
 - [ ] Verify the production RevenueCat offering, monthly/annual packages, localized products, pricing, purchase, restore, receipt synchronization, API v2 project/entitlement/product mappings, and the least-privilege `customer_information:subscriptions:read` secret against the exact candidate archive. RevenueCat remains secondary; it is not the quota principal or tier authority.
 - [ ] Publish and verify the live privacy-policy and terms changes.

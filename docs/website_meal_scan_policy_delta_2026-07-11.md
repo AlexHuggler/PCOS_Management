@@ -1,8 +1,8 @@
 # CycleBalance Website Meal Scan Policy Delta
 
-Date: 2026-07-11
+Date: 2026-07-13
 
-Status: owner and legal review draft. Do not publish this copy until the enabled build, Google retention posture, App Privacy answers, and in-app consent screen are final. The live privacy, terms, and support pages were verified on 2026-07-11 and still contain absolute on-device/no-server claims.
+Status: correction packet. Live privacy, terms, and support pages were verified on 2026-07-13 and now contain the Google Gemini, explicit-confirmation, cache, and standard 55-day disclosures. Before Photo Estimate is enabled, correct the live statement that trial-total records expire after thirty days: the HMAC-keyed trial/sandbox counter must remain durable to enforce the promised 25-lifetime maximum.
 
 This is product/privacy drafting, not legal advice. Preserve the current website's RevenueCat, barcode, HealthKit, Apple Ads, support-form, and localization updates when applying it.
 
@@ -14,7 +14,7 @@ Add a dedicated subsection under both `Information We Collect` and `Third-Party 
 >
 > For a fresh estimate, CycleBalance identifies Google Gemini as the third-party AI processor and asks you to confirm before uploading. If you continue, the app sends one compressed JPEG through the CycleBalance meal-analysis service to Google Gemini. Barcode lookup and manual entry remain available without photo analysis.
 >
-> The CycleBalance proxy processes the JPEG in memory and does not retain raw uploaded image bytes. It may retain a structured meal-nutrition estimate for up to 24 hours under a pseudonymous identifier so an identical request can be reused without another AI call or quota charge. Daily scan-count records expire after three days and trial-total records expire after thirty days. Application logs retain only an image-hash prefix, provider/model, token and cost information, quota tier, budget mode, and cache status for up to thirty days; they do not contain the meal photo, meal name, structured estimate, or app-user identifier. Cloud Run HTTP request logs for the meal-analysis service are excluded from the project's default log bucket.
+> The CycleBalance proxy processes the JPEG in memory and does not retain raw uploaded image bytes. It may retain a structured meal-nutrition estimate for up to 24 hours under a pseudonymous identifier so an identical request can be reused without another AI call or quota charge. Rolling-only paid quota records use a short cleanup period. To prevent the 25-lifetime trial/sandbox maximum from resetting, CycleBalance retains the lifetime count under an HMAC identifier derived from Apple's verified original transaction identifier; the raw StoreKit JWS and transaction identifier are not stored. Application logs retain only identifier-free provider/model, token and cost, quota/cache, rejection, budget, status, and latency metrics for up to thirty days; they do not contain the purchase identifier, request ID, transaction ID, image hash, meal photo, meal name, or structured estimate. Cloud Run HTTP request logs for the meal-analysis service are excluded from the project's default log bucket.
 >
 > Google states that paid Gemini requests are not used to improve its products. Under Google's standard paid-service posture, prompts, contextual information, and outputs may be retained for up to 55 days solely for abuse monitoring and required legal or regulatory disclosures. Google-authorized personnel may review content flagged by safety systems under controlled procedures.
 
@@ -26,12 +26,7 @@ Replace the final paragraph above with this only after Zero Data Retention is ve
 
 Add under `Your Rights and Choices`:
 
-> Photo Estimate is optional. You can use manual meal entry or barcode lookup instead, close the confirmation without uploading, or reuse an exact previously reviewed meal locally. Deleting a saved meal removes its local repeat-meal record. Deleting all CycleBalance data removes local meal photos, nutrition records, and repeat-meal fingerprints. Pseudonymous server cache and quota records expire automatically on the schedules described above.
-
-Before publishing, choose one final deletion sentence:
-
-- Automatic-expiry posture: `CycleBalance does not maintain an account that can be used to retrieve these pseudonymous records; they are automatically deleted after their stated retention periods.`
-- Self-service posture: `You can also use Settings > Privacy > Clear Cloud Meal Scan Data to request deletion of the current app installation's pseudonymous meal-scan cache and quota records.`
+> Photo Estimate is optional. You can use manual meal entry or barcode lookup instead, close the confirmation without uploading, or reuse an exact previously reviewed meal locally. Deleting a saved meal removes its local repeat-meal record. Deleting all CycleBalance data removes local meal photos, nutrition records, and repeat-meal fingerprints. Structured-result caches and rolling-only records expire on the schedules above. CycleBalance is accountless and cannot use an app login to retrieve the HMAC-keyed trial/sandbox lifetime count; that count remains durable solely to prevent the 25-lifetime allowance from resetting.
 
 ## Terms: AI Meal Estimate Clause
 
@@ -51,12 +46,12 @@ Replace the absolute `Everything stays on your device` answer with:
 
 ## Publication Checklist
 
-- [ ] Owner chooses verified Google ZDR or standard 55-day disclosure.
-- [ ] Owner chooses automatic expiry or self-service cloud deletion.
-- [ ] In-app consent copy exactly matches the selected retention posture.
+- [x] Use the standard 55-day disclosure; do not claim unverified ZDR.
+- [x] Keep the HMAC-keyed trial/sandbox lifetime count durable to enforce the 25-lifetime maximum; keep the 24-hour result cache and short rolling-only cleanup periods.
+- [x] In-app consent copy matches the standard provider-retention posture.
 - [ ] English privacy, terms, support FAQ, metadata descriptions, and structured FAQ data are updated together.
 - [ ] German, French, Italian, Japanese, Korean, and Dutch legal/support pages receive reviewed translations of the same facts.
 - [ ] Legal links, language switchers, canonical URLs, and page dates remain correct.
 - [ ] Render and inspect every locale at desktop and mobile widths.
-- [ ] Publish only after owner approval, then verify `https://cyclebalance.app/privacy`, `/terms`, and `/support` from the live site.
+- [ ] Publish the lifetime-ledger correction only after owner/legal review, then verify `https://cyclebalance.app/privacy`, `/terms`, and `/support` from the live site.
 - [ ] Reconcile the live pages with App Store Connect App Privacy and the exact archived build before submission.
