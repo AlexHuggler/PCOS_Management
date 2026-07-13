@@ -4,10 +4,12 @@ set -euo pipefail
 PROJECT_ID="${PROJECT_ID:-}"
 REGION="${REGION:-us-central1}"
 FIRESTORE_LOCATION="${FIRESTORE_LOCATION:-nam5}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_ACCOUNT_NAME="${SERVICE_ACCOUNT_NAME:-cyclebalance-meal-scan-proxy}"
 GEMINI_SECRET_NAME="${GEMINI_SECRET_NAME:-cyclebalance-gemini-api-key}"
 REVENUECAT_SECRET_NAME="${REVENUECAT_SECRET_NAME:-cyclebalance-revenuecat-secret-api-key}"
 QUOTA_COLLECTION_NAME="${QUOTA_COLLECTION_NAME:-mealScanDailyQuota}"
+REQUEST_GATE_COLLECTION_NAME="${REQUEST_GATE_COLLECTION_NAME:-mealScanRequestGate}"
 RESULT_CACHE_COLLECTION_NAME="${RESULT_CACHE_COLLECTION_NAME:-mealScanEstimateCache}"
 
 require_command() {
@@ -56,7 +58,9 @@ add_secret_version_from_prompt() {
     --data-file=-
 }
 
+require_command curl
 require_command gcloud
+require_command jq
 prompt_if_empty PROJECT_ID "Google Cloud project ID for CycleBalance"
 
 gcloud config set project "$PROJECT_ID"
@@ -68,6 +72,7 @@ gcloud services enable \
   artifactregistry.googleapis.com \
   secretmanager.googleapis.com \
   firestore.googleapis.com \
+  firebaserules.googleapis.com \
   generativelanguage.googleapis.com \
   apikeys.googleapis.com \
   firebase.googleapis.com \
@@ -92,6 +97,9 @@ if ! gcloud firestore databases describe --database="(default)" --project "$PROJ
     --project "$PROJECT_ID"
 fi
 
+echo "Deploying deny-all Firestore mobile/web security rules..."
+PROJECT_ID="$PROJECT_ID" "$SCRIPT_DIR/deploy-firestore-rules.sh"
+
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/datastore.user" \
@@ -114,9 +122,15 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role="roles/firebaseappcheck.tokenVerifier" \
   --condition=None >/dev/null
 
-echo "Enabling Firestore TTL deletion for quota and structured estimate cache records..."
+echo "Enabling Firestore TTL deletion for quota, request-gate, and structured estimate cache records..."
 gcloud firestore fields ttls update expiresAt \
   --collection-group="$QUOTA_COLLECTION_NAME" \
+  --database="(default)" \
+  --enable-ttl \
+  --project="$PROJECT_ID" \
+  --async >/dev/null
+gcloud firestore fields ttls update expiresAt \
+  --collection-group="$REQUEST_GATE_COLLECTION_NAME" \
   --database="(default)" \
   --enable-ttl \
   --project="$PROJECT_ID" \

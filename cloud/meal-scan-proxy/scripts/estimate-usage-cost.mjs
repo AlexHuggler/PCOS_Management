@@ -13,16 +13,15 @@ const args = Object.fromEntries(
 const users = numberArg("users", 100);
 const scansPerUserPerDay = numberArg("scans-per-user-per-day", 15);
 const days = numberArg("days", 30);
-const inputTokens = numberArg("input-tokens", 2_448);
-const outputTokens = numberArg("output-tokens", 750);
-const allInLowCostPerScan = numberArg("all-in-low-cost-per-scan", 0.002);
-const allInHighCostPerScan = numberArg("all-in-high-cost-per-scan", 0.004);
+const inputTokens = numberArg("input-tokens", 1_184);
+const outputTokens = numberArg("output-tokens", 189);
+const allInLowCostPerScan = numberArg("all-in-low-cost-per-scan", 0.001);
+const allInHighCostPerScan = numberArg("all-in-high-cost-per-scan", 0.003);
 
 const dailyScans = users * scansPerUserPerDay;
 const periodScans = dailyScans * days;
 
 const modelRates = [
-  ["Gemini 2.5 Flash-Lite model only", 0.10, 0.40],
   ["Gemini 3.1 Flash-Lite model only", 0.25, 1.50],
   ["OpenAI GPT-5.6 Luna model only", 1.00, 6.00],
   ["OpenAI GPT-5.6 Terra model only", 2.50, 15.00],

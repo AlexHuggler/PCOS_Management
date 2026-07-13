@@ -3,14 +3,21 @@ import crypto from "node:crypto";
 import test from "node:test";
 import * as proxyModule from "../src/server.js";
 
-const { createFirestoreBudgetStateProvider, createServer } = proxyModule;
+const {
+  createFirestoreBudgetStateProvider,
+  createInMemoryRequestGate,
+  createServer: createProxyServer,
+} = proxyModule;
 
-const validJPEGData = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+const validJPEGData = Buffer.from(
+  "/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMQD/2wBDAAgEBAQEBAUFBQUFBQYGBgYGBgYGBgYGBgYHBwcICAgHBwcGBgcHCAgICAkJCQgICAgJCQoKCgwMCwsODg4RERT/xABLAAEBAAAAAAAAAAAAAAAAAAAABwEBAAAAAAAAAAAAAAAAAAAAABABAAAAAAAAAAAAAAAAAAAAABEBAAAAAAAAAAAAAAAAAAAAAP/AABEIAAIAAgMBIgACEQADEQD/2gAMAwEAAhEDEQA/AL+AD//Z",
+  "base64"
+);
 const validPayload = {
-  revenueCatAppUserId: "user_123",
+  requestId: "d148889d-8cc8-4839-887f-609fbac55270",
+  signedTransactionJWS: "apple.signed.transaction",
   mealType: "lunch",
   locale: "en_US",
-  modelId: "gemini-2.5-flash-lite",
   schemaVersion: "meal-scan-gemini-v1",
   promptVersion: "meal-scan-prompt-v1",
   image: {
@@ -41,11 +48,94 @@ test("rejects missing app integrity token before entitlement or Gemini calls", a
   assert.deepEqual(calls, []);
 });
 
-test("rejects inactive RevenueCat entitlement before quota or Gemini calls", async () => {
+test("production App Check rejects a missing token before reading or parsing the body", async () => {
+  let budgetReads = 0;
+  const server = createServer({
+    requireAppCheck: true,
+    getBudgetState: async () => {
+      budgetReads += 1;
+      return { mode: "normal" };
+    },
+    appCheckVerifier: async () => {
+      throw new Error("a missing token must not reach the verifier");
+    },
+  });
+
+  const response = await requestRaw(server, "{not-json");
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.error, "app_integrity_required");
+  assert.equal(response.body.reason, "app_check_required");
+  assert.equal(budgetReads, 0);
+});
+
+test("request abuse gate rejects before RevenueCat entitlement lookup", async () => {
   const calls = [];
   const server = createServer({
     verifyAppIntegrity: async () => true,
-    verifyRevenueCatEntitlement: async () => false,
+    requestGate: {
+      checkAndConsume: async () => {
+        calls.push("request_gate");
+        return { allowed: false, reason: "global_request_limit_exceeded", retryAfterSeconds: 15 };
+      },
+    },
+    verifyRevenueCatEntitlement: async () => {
+      calls.push("entitlement");
+      return true;
+    },
+    quotaStore: allowQuotaStore(),
+    callGemini: async () => {
+      calls.push("gemini");
+      return successGeminiResponse();
+    },
+  });
+
+  const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+
+  assert.equal(response.status, 429);
+  assert.equal(response.body.reason, "global_request_limit_exceeded");
+  assert.deepEqual(calls, ["request_gate"]);
+});
+
+test("global request gate bounds distinct untrusted RevenueCat identifiers", async () => {
+  const gate = createInMemoryRequestGate({
+    minuteLimit: 10,
+    dayLimit: 10,
+    globalMinuteLimit: 2,
+    globalDayLimit: 2,
+  });
+
+  assert.equal((await gate.checkAndConsume({ appUserId: "user-a" })).allowed, true);
+  assert.equal((await gate.checkAndConsume({ appUserId: "user-b" })).allowed, true);
+  const limited = await gate.checkAndConsume({ appUserId: "user-c" });
+
+  assert.equal(limited.allowed, false);
+  assert.equal(limited.reason, "global_request_limit_exceeded");
+});
+
+test("request abuse counters use a collection isolated from billable scan quota", () => {
+  assert.equal(typeof proxyModule.requestGateCollectionName, "function");
+  assert.equal(proxyModule.requestGateCollectionName({}), "mealScanRequestGate");
+  assert.equal(
+    proxyModule.requestGateCollectionName({
+      MEAL_SCAN_REQUEST_GATE_COLLECTION: "customRequestGate",
+      MEAL_SCAN_QUOTA_COLLECTION: "customQuota",
+    }),
+    "customRequestGate"
+  );
+  assert.equal(
+    proxyModule.requestGateCollectionName({ MEAL_SCAN_QUOTA_COLLECTION: "customQuota" }),
+    "mealScanRequestGate"
+  );
+});
+
+test("rejects an expired verified StoreKit subscription before quota or Gemini calls", async () => {
+  const calls = [];
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ expiresDate: Date.now() - 1 }),
+    },
     quotaStore: {
       checkAndConsume: async () => {
         calls.push("quota");
@@ -61,117 +151,66 @@ test("rejects inactive RevenueCat entitlement before quota or Gemini calls", asy
   const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
 
   assert.equal(response.status, 403);
+  assert.equal(response.body.reason, "subscription_expired");
   assert.deepEqual(calls, []);
 });
 
-test("checks RevenueCat access through the project-scoped V2 subscriptions endpoint", async () => {
-  assert.equal(typeof proxyModule.verifyRevenueCatEntitlement, "function");
-  const calls = [];
-
-  const access = await proxyModule.verifyRevenueCatEntitlement(
-    {
-      appUserId: "$RCAnonymousID:device-123",
-      entitlementId: "CycleBalance Unlimited",
+test("uses only the verified StoreKit purchase principal for quota identity", async () => {
+  let quotaInput;
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    quotaStore: {
+      checkAndConsume: async (input) => {
+        quotaInput = input;
+        return rollingQuota();
+      },
     },
-    {
-      environment: {
-        REVENUECAT_SECRET_API_KEY: "server-secret",
-        REVENUECAT_PROJECT_ID: "proj8da4e000",
-        REVENUECAT_TIMEOUT_MS: "5000",
-      },
-      fetchImpl: async (url, options) => {
-        calls.push({ url, options });
-        return new Response(
-          JSON.stringify({
-            object: "list",
-            items: [
-              {
-                gives_access: true,
-                status: "trialing",
-                current_period_ends_at: 1_800_000_000_000,
-                entitlements: {
-                  items: [{ lookup_key: "CycleBalance Unlimited" }],
-                },
-              },
-            ],
-          }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        );
-      },
-    }
-  );
-
-  assert.deepEqual(access, {
-    allowed: true,
-    accessTier: "trial",
-    entitlementExpiresAt: 1_800_000_000_000,
+    callGemini: async () => successGeminiResponse(),
   });
-  assert.equal(
-    calls[0].url,
-    "https://api.revenuecat.com/v2/projects/proj8da4e000/customers/%24RCAnonymousID%3Adevice-123/subscriptions?limit=100"
-  );
-  assert.equal(calls[0].options.headers.authorization, "Bearer server-secret");
-  assert.equal(calls[0].options.headers.accept, "application/json");
+
+  const response = await request(server, validPayload);
+
+  assert.equal(response.status, 200);
+  assert.match(quotaInput.principal, /^[a-f0-9]{64}$/);
+  assert.equal(quotaInput.principal.includes("1000000123456789"), false);
+  assert.equal(quotaInput.tier, "paid");
 });
 
-test("rejects a RevenueCat subscription that does not grant the configured entitlement", async () => {
-  assert.equal(typeof proxyModule.verifyRevenueCatEntitlement, "function");
+test("rejects a verified StoreKit transaction for a product outside the allowlist", async () => {
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () =>
+        activeStoreKitTransaction({ productId: "attacker.unrelated.subscription" }),
+    },
+  });
 
-  const access = await proxyModule.verifyRevenueCatEntitlement(
-    { appUserId: "customer-123", entitlementId: "CycleBalance Unlimited" },
-    {
-      environment: {
-        REVENUECAT_SECRET_API_KEY: "server-secret",
-        REVENUECAT_PROJECT_ID: "proj8da4e000",
-      },
-      fetchImpl: async () =>
-        new Response(
-          JSON.stringify({
-            object: "list",
-            items: [
-              {
-                gives_access: true,
-                status: "active",
-                entitlements: { items: [{ lookup_key: "another-entitlement" }] },
-              },
-            ],
-          }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        ),
-    }
-  );
+  const response = await request(server, validPayload);
 
-  assert.deepEqual(access, { allowed: false, reason: "entitlement_inactive" });
+  assert.equal(response.status, 403);
+  assert.equal(response.body.reason, "storekit_product_mismatch");
 });
 
-test("fails closed before RevenueCat when the V2 project ID is missing", async () => {
-  assert.equal(typeof proxyModule.verifyRevenueCatEntitlement, "function");
-  let fetchCalls = 0;
+test("rejects a verified StoreKit transaction that is not an auto-renewable subscription", async () => {
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () =>
+        activeStoreKitTransaction({ type: "Consumable" }),
+    },
+  });
 
-  const access = await proxyModule.verifyRevenueCatEntitlement(
-    { appUserId: "customer-123", entitlementId: "CycleBalance Unlimited" },
-    {
-      environment: { REVENUECAT_SECRET_API_KEY: "server-secret" },
-      fetchImpl: async () => {
-        fetchCalls += 1;
-        throw new Error("RevenueCat should not be called");
-      },
-    }
-  );
+  const response = await request(server, validPayload);
 
-  assert.deepEqual(access, { allowed: false, reason: "entitlement_verifier_unconfigured" });
-  assert.equal(fetchCalls, 0);
+  assert.equal(response.status, 403);
+  assert.equal(response.body.reason, "storekit_product_type_invalid");
 });
 
-test("maps an unavailable RevenueCat entitlement service to a retryable 503", async () => {
+test("fails closed when the StoreKit verifier is unconfigured", async () => {
   const calls = [];
   const server = createServer({
     verifyAppIntegrity: async () => true,
-    verifyRevenueCatEntitlement: async () => ({
-      allowed: false,
-      reason: "entitlement_service_unavailable",
-      retryable: true,
-    }),
+    storeKitVerifier: null,
     quotaStore: {
       checkAndConsume: async () => {
         calls.push("quota");
@@ -188,8 +227,8 @@ test("maps an unavailable RevenueCat entitlement service to a retryable 503", as
 
   assert.equal(response.status, 503);
   assert.equal(response.body.error, "meal_scan_unavailable");
-  assert.equal(response.body.reason, "entitlement_service_unavailable");
-  assert.equal(response.body.retryable, true);
+  assert.equal(response.body.reason, "storekit_verifier_unconfigured");
+  assert.equal(response.body.retryable, false);
   assert.deepEqual(calls, []);
 });
 
@@ -221,7 +260,7 @@ test("returns structured estimate and quota metadata on success", async () => {
     verifyRevenueCatEntitlement: async () => true,
     quotaStore: allowQuotaStore(),
     callGemini: async ({ modelId, payload }) => {
-      assert.equal(modelId, "gemini-2.5-flash-lite");
+      assert.equal(modelId, "gemini-3.1-flash-lite");
       assert.equal(payload.generationConfig.responseMimeType, "application/json");
       assert.equal(payload.tools, undefined);
       return successGeminiResponse();
@@ -231,16 +270,18 @@ test("returns structured estimate and quota metadata on success", async () => {
   const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.modelId, "gemini-2.5-flash-lite");
+  assert.equal(response.body.modelId, "gemini-3.1-flash-lite");
   assert.equal(response.body.quota.used, 1);
-  assert.equal(response.body.quota.remainingToday, 9);
-  assert.equal(response.body.quota.remainingTrial, null);
+  assert.equal(response.body.quota.tier, "paid");
+  assert.equal(response.body.quota.remaining, 9);
+  assert.equal(response.body.quota.windowSeconds, 86_400);
+  assert.equal(response.body.quota.resetAt, null);
   assert.equal(response.body.cacheHit, false);
   assert.equal(response.body.usage.inputTokens, 2448);
   assert.equal(response.body.usage.outputTokens, 750);
-  assert.equal(response.body.usage.estimatedCostUSD, 0.0005448);
+  assert.equal(response.body.usage.estimatedCostUSD, 0.001737);
   assert.equal(response.body.provider.id, "google-gemini");
-  assert.equal(response.body.provider.modelId, "gemini-2.5-flash-lite");
+  assert.equal(response.body.provider.modelId, "gemini-3.1-flash-lite");
   assert.equal(response.body.budget.mode, "normal");
   assert.equal(response.body.estimate.meal_name, "Rice bowl");
 });
@@ -265,7 +306,10 @@ test("does not log pseudonymous app user identifiers or meal content", async () 
   assert.equal(response.status, 200);
   assert.ok(estimateEvent);
   assert.equal(Object.hasOwn(estimateEvent.metadata, "appUserHash"), false);
-  assert.equal(estimateEvent.metadata.imageHash, validPayload.image.sha256.slice(0, 12));
+  assert.equal(Object.hasOwn(estimateEvent.metadata, "imageHash"), false);
+  assert.equal(Object.hasOwn(estimateEvent.metadata, "requestId"), false);
+  assert.equal(Object.hasOwn(estimateEvent.metadata, "principal"), false);
+  assert.equal(JSON.stringify(estimateEvent).includes("1000000123456789"), false);
   assert.equal(JSON.stringify(estimateEvent).includes("Rice bowl"), false);
 });
 
@@ -301,7 +345,11 @@ test("reuses a successful image hash without consuming quota or calling Gemini t
   });
 
   const first = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
-  const duplicate = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+  const duplicate = await request(
+    server,
+    { ...validPayload, requestId: "8ec768b0-6e55-49ce-9746-214cfb532cab" },
+    { "x-cyclebalance-app-integrity": "token" }
+  );
 
   assert.equal(first.status, 200);
   assert.equal(first.body.cacheHit, false);
@@ -313,7 +361,115 @@ test("reuses a successful image hash without consuming quota or calling Gemini t
   assert.equal(geminiCalls, 1);
 });
 
-test("rejects retired or unknown models before gated services", async () => {
+test("cache identity includes meal type and locale", async () => {
+  let geminiCalls = 0;
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    verifyRevenueCatEntitlement: async () => true,
+    quotaStore: allowQuotaStore(),
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const lunch = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+  const dinner = await request(
+    server,
+    { ...validPayload, requestId: "8dc77fa2-484d-40c0-b6d5-48d514151a06", mealType: "dinner" },
+    { "x-cyclebalance-app-integrity": "token" }
+  );
+  const frenchDinner = await request(
+    server,
+    {
+      ...validPayload,
+      requestId: "4ecf97d8-1ea3-453c-9288-167c8e8278b5",
+      mealType: "dinner",
+      locale: "fr_FR",
+    },
+    { "x-cyclebalance-app-integrity": "token" }
+  );
+
+  assert.equal(lunch.body.cacheHit, false);
+  assert.equal(dinner.body.cacheHit, false);
+  assert.equal(frenchDinner.body.cacheHit, false);
+  assert.equal(geminiCalls, 3);
+});
+
+test("concurrent identical requests share one quota charge and Gemini call", async () => {
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    verifyRevenueCatEntitlement: async () => true,
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return { allowed: true, used: 1, limit: 10, remainingToday: 9, accessTier: "paid" };
+      },
+      current: async () => ({ allowed: true, used: 1, limit: 10, remainingToday: 9, accessTier: "paid" }),
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return successGeminiResponse();
+    },
+  });
+
+  const responses = await requestMany(server, [
+    validPayload,
+    { ...validPayload, requestId: "e3cb79b6-6348-43e0-9f03-25e0d9aeb3af" },
+  ], {
+    "x-cyclebalance-app-integrity": "token",
+  });
+
+  assert.deepEqual(responses.map((response) => response.status), [200, 200]);
+  assert.deepEqual(responses.map((response) => response.body.cacheHit).sort(), [false, true]);
+  assert.equal(quotaCalls, 1);
+  assert.equal(geminiCalls, 1);
+});
+
+test("request abuse gate applies to cache hits without consuming another scan", async () => {
+  let requestGateCalls = 0;
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const server = createServer({
+    verifyAppIntegrity: async () => true,
+    verifyRevenueCatEntitlement: async () => true,
+    requestGate: {
+      checkAndConsume: async () => {
+        requestGateCalls += 1;
+        return requestGateCalls === 1
+          ? { allowed: true, remainingMinute: 29, remainingDay: 199 }
+          : { allowed: false, reason: "request_limit_exceeded", retryAfterSeconds: 30 };
+      },
+    },
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return { allowed: true, used: 1, limit: 10, remainingToday: 9, accessTier: "paid" };
+      },
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const first = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+  const limited = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
+
+  assert.equal(first.status, 200);
+  assert.equal(limited.status, 429);
+  assert.equal(limited.body.error, "meal_scan_request_rate_limited");
+  assert.equal(limited.body.reason, "request_limit_exceeded");
+  assert.equal(limited.body.retryAfterSeconds, 30);
+  assert.equal(requestGateCalls, 2);
+  assert.equal(quotaCalls, 1);
+  assert.equal(geminiCalls, 1);
+});
+
+test("rejects every public model selection before gated services", async () => {
   const calls = [];
   const server = createServer({
     verifyAppIntegrity: async () => {
@@ -336,11 +492,13 @@ test("rejects retired or unknown models before gated services", async () => {
     },
   });
 
-  const response = await request(server, { ...validPayload, modelId: "gemini-2.0-flash-lite" });
+  for (const modelId of ["gemini-2.0-flash-lite", "gemini-2.5-flash-lite", "unknown-model"]) {
+    const response = await request(server, { ...validPayload, modelId });
 
-  assert.equal(response.status, 400);
-  assert.equal(response.body.error, "unsupported_model");
-  assert.equal(response.body.reason, "model_not_allowlisted");
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error, "invalid_request");
+    assert.equal(response.body.detail, "modelId is not allowed");
+  }
   assert.deepEqual(calls, []);
 });
 
@@ -378,13 +536,13 @@ test("rejects a declared image hash that does not match the submitted JPEG", asy
   assert.deepEqual(calls, []);
 });
 
-test("defaults requests without a model id to Gemini 2.5 Flash-Lite", async () => {
+test("defaults requests without a model id to Gemini 3.1 Flash-Lite", async () => {
   const server = createServer({
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
     quotaStore: allowQuotaStore(),
     callGemini: async ({ modelId }) => {
-      assert.equal(modelId, "gemini-2.5-flash-lite");
+      assert.equal(modelId, "gemini-3.1-flash-lite");
       return successGeminiResponse();
     },
   });
@@ -398,10 +556,10 @@ test("defaults requests without a model id to Gemini 2.5 Flash-Lite", async () =
   );
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.modelId, "gemini-2.5-flash-lite");
+  assert.equal(response.body.modelId, "gemini-3.1-flash-lite");
 });
 
-test("routes allowlisted Gemini 3.1 Flash-Lite with current cost metadata", async () => {
+test("routes the server-pinned Gemini 3.1 Flash-Lite with current cost metadata", async () => {
   const server = createServer({
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
@@ -414,7 +572,7 @@ test("routes allowlisted Gemini 3.1 Flash-Lite with current cost metadata", asyn
 
   const response = await request(
     server,
-    { ...validPayload, modelId: "gemini-3.1-flash-lite" },
+    validPayload,
     { "x-cyclebalance-app-integrity": "token" }
   );
 
@@ -424,7 +582,7 @@ test("routes allowlisted Gemini 3.1 Flash-Lite with current cost metadata", asyn
   assert.equal(response.body.usage.estimatedCostUSD, 0.001737);
 });
 
-test("monthly budget disables scans before integrity entitlement quota or Gemini calls", async () => {
+test("monthly budget disables scans after integrity but before entitlement quota or Gemini calls", async () => {
   const calls = [];
   const server = createServer({
     budgetState: { mode: "disabled", spendUsd: 101, disableAtUsd: 100 },
@@ -454,10 +612,10 @@ test("monthly budget disables scans before integrity entitlement quota or Gemini
   assert.equal(response.body.error, "meal_scan_unavailable");
   assert.equal(response.body.reason, "monthly_budget_exceeded");
   assert.equal(response.body.budget.mode, "disabled");
-  assert.deepEqual(calls, []);
+  assert.deepEqual(calls, ["integrity"]);
 });
 
-test("unavailable budget control fails closed before integrity entitlement quota or Gemini", async () => {
+test("unavailable budget control fails closed after integrity and before entitlement quota or Gemini", async () => {
   const calls = [];
   const server = createServer({
     getBudgetState: async () => {
@@ -490,28 +648,27 @@ test("unavailable budget control fails closed before integrity entitlement quota
   assert.equal(response.status, 503);
   assert.equal(response.body.error, "meal_scan_unavailable");
   assert.equal(response.body.reason, "budget_control_unavailable");
-  assert.deepEqual(calls, ["budget"]);
+  assert.deepEqual(calls, ["integrity", "budget"]);
 });
 
-test("monthly budget degraded mode forces flash requests back to flash lite", async () => {
-  const requestedFlashPayload = { ...validPayload, modelId: "gemini-2.5-flash" };
+test("monthly budget degraded mode retains the server-pinned Gemini 3.1 Flash-Lite", async () => {
   const server = createServer({
     budgetState: { mode: "degraded", spendUsd: 80, degradeAtUsd: 75 },
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
     quotaStore: allowQuotaStore(),
     callGemini: async ({ modelId }) => {
-      assert.equal(modelId, "gemini-2.5-flash-lite");
+      assert.equal(modelId, "gemini-3.1-flash-lite");
       return successGeminiResponse();
     },
   });
 
-  const response = await request(server, requestedFlashPayload, { "x-cyclebalance-app-integrity": "token" });
+  const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.modelId, "gemini-2.5-flash-lite");
-  assert.equal(response.body.provider.requestedModelId, "gemini-2.5-flash");
-  assert.equal(response.body.provider.selectionReason, "budget_degraded_to_lite");
+  assert.equal(response.body.modelId, "gemini-3.1-flash-lite");
+  assert.equal(response.body.provider.requestedModelId, null);
+  assert.equal(response.body.provider.selectionReason, "server_pinned_model");
   assert.equal(response.body.budget.mode, "degraded");
 });
 
@@ -542,6 +699,26 @@ test("Firestore budget control caches reads and gives a manual kill switch prece
   assert.equal(readCount, 1);
 });
 
+test("Firestore billing hard stop overrides a stale manual normal mode", async () => {
+  const provider = createFirestoreBudgetStateProvider({
+    ttlMs: 60_000,
+    now: () => 1_000,
+    readControl: async () => ({
+      billingMode: "disabled",
+      manualMode: "normal",
+      spendUsd: 121,
+      alertAtUsd: 75,
+      degradeAtUsd: 90,
+      disableAtUsd: 120,
+    }),
+  });
+
+  const state = await provider();
+
+  assert.equal(state.mode, "disabled");
+  assert.equal(state.source, "fail_closed_combined_control");
+});
+
 test("uses Firestore timestamp-compatible dates for quota expiry", () => {
   assert.equal(typeof proxyModule.quotaExpiryDates, "function");
   const now = new Date("2026-07-11T12:00:00.000Z");
@@ -554,24 +731,25 @@ test("uses Firestore timestamp-compatible dates for quota expiry", () => {
   assert.equal(expiry.trial.toISOString(), "2026-08-10T12:00:00.000Z");
 });
 
-test("allows trial subscribers with five daily scans and twenty five total trial scans", async () => {
+test("allows verified sandbox subscribers with five rolling scans and twenty five lifetime scans", async () => {
   const seenQuota = [];
   const server = createServer({
     verifyAppIntegrity: async () => true,
-    verifyRevenueCatEntitlement: async () => ({ allowed: true, accessTier: "trial" }),
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ environment: "Sandbox" }),
+    },
     quotaStore: {
       checkAndConsume: async (input) => {
         seenQuota.push(input);
         return {
           allowed: true,
+          tier: "trial",
           used: 3,
           limit: 5,
-          softLimit: 5,
-          remainingToday: 2,
-          trialUsed: 11,
-          trialLimit: 25,
-          remainingTrial: 14,
-          accessTier: "trial",
+          remaining: 2,
+          windowSeconds: 86_400,
+          resetAt: "2026-07-14T12:00:00.000Z",
+          retryAfterSeconds: null,
         };
       },
     },
@@ -581,35 +759,35 @@ test("allows trial subscribers with five daily scans and twenty five total trial
   const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
 
   assert.equal(response.status, 200);
-  assert.equal(seenQuota[0].accessTier, "trial");
-  assert.equal(seenQuota[0].hardLimit, 5);
-  assert.equal(seenQuota[0].trialTotalLimit, 25);
+  assert.equal(seenQuota[0].tier, "trial");
+  assert.equal(seenQuota[0].limit, 5);
+  assert.equal(seenQuota[0].lifetimeLimit, 25);
   assert.equal(response.body.quota.limit, 5);
-  assert.equal(response.body.quota.remainingToday, 2);
-  assert.equal(response.body.quota.trialLimit, 25);
-  assert.equal(response.body.quota.remainingTrial, 14);
+  assert.equal(response.body.quota.remaining, 2);
+  assert.equal(response.body.quota.windowSeconds, 86_400);
 });
 
-test("enforces total trial quota before Gemini call", async () => {
+test("enforces the sandbox lifetime quota before Gemini call", async () => {
   const calls = [];
   const server = createServer({
     verifyAppIntegrity: async () => true,
-    verifyRevenueCatEntitlement: async () => ({ allowed: true, accessTier: "trial" }),
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ environment: "Sandbox" }),
+    },
     quotaStore: {
       checkAndConsume: async (input) => {
-        assert.equal(input.accessTier, "trial");
-        assert.equal(input.trialTotalLimit, 25);
+        assert.equal(input.tier, "trial");
+        assert.equal(input.lifetimeLimit, 25);
         return {
           allowed: false,
-          reason: "trial_quota_exceeded",
+          reason: "trial_lifetime_quota_exceeded",
+          tier: "trial",
           used: 5,
           limit: 5,
-          softLimit: 5,
-          remainingToday: 0,
-          trialUsed: 25,
-          trialLimit: 25,
-          remainingTrial: 0,
-          accessTier: "trial",
+          remaining: 0,
+          windowSeconds: 86_400,
+          resetAt: "2026-07-14T12:00:00.000Z",
+          retryAfterSeconds: 86_400,
         };
       },
     },
@@ -622,8 +800,8 @@ test("enforces total trial quota before Gemini call", async () => {
   const response = await request(server, validPayload, { "x-cyclebalance-app-integrity": "token" });
 
   assert.equal(response.status, 429);
-  assert.equal(response.body.reason, "trial_quota_exceeded");
-  assert.equal(response.body.quota.remainingTrial, 0);
+  assert.equal(response.body.reason, "trial_lifetime_quota_exceeded");
+  assert.equal(response.body.quota.remaining, 0);
   assert.deepEqual(calls, []);
 });
 
@@ -688,6 +866,81 @@ test("production defaults to disabled when the meal scan flag is absent", async 
   assert.equal(response.status, 503);
   assert.equal(response.body.reason, "feature_disabled");
   assert.deepEqual(calls, []);
+});
+
+test("production-enabled startup fails closed without durable security backends", () => {
+  assert.throws(
+    () => createServer({ environment: { NODE_ENV: "production", MEAL_SCAN_ENABLED: "true" } }),
+    /production meal scan configuration is incomplete/
+  );
+});
+
+test("production-enabled startup accepts the complete durable security configuration", () => {
+  const environment = {
+    NODE_ENV: "production",
+    MEAL_SCAN_ENABLED: "true",
+    APP_CHECK_REQUIRED: "true",
+    FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "1234567890",
+    APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+    APPLE_ROOT_CA_BASE64: "dGVzdA==",
+    MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    GEMINI_API_KEY: "test-gemini-key",
+    MEAL_SCAN_QUOTA_STORE: "firestore",
+    MEAL_SCAN_RESULT_CACHE: "firestore",
+    MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
+    MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_BUDGET_STORE: "firestore",
+  };
+
+  const server = createServer({
+    environment,
+    appCheckVerifier: async () => ({ allowed: true }),
+    verifyRevenueCatEntitlement: async () => ({ allowed: true, accessTier: "paid" }),
+    requestGate: { checkAndConsume: async () => ({ allowed: true }) },
+    quotaStore: allowQuotaStore(),
+    resultCache: { get: async () => null, set: async () => true },
+    getBudgetState: async () => ({ mode: "normal" }),
+    callGemini: async () => successGeminiResponse(),
+  });
+
+  server.close();
+});
+
+test("production-enabled startup rejects invalid body and lease limits", () => {
+  const baseEnvironment = {
+    NODE_ENV: "production",
+    MEAL_SCAN_ENABLED: "true",
+    APP_CHECK_REQUIRED: "true",
+    FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "1234567890",
+    APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+    APPLE_ROOT_CA_BASE64: "dGVzdA==",
+    MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    GEMINI_API_KEY: "test-gemini-key",
+    MEAL_SCAN_QUOTA_STORE: "firestore",
+    MEAL_SCAN_RESULT_CACHE: "firestore",
+    MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
+    MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_BUDGET_STORE: "firestore",
+  };
+
+  assert.throws(
+    () => createServer({ environment: { ...baseEnvironment, MAX_BODY_BYTES: "invalid" } }),
+    /MAX_BODY_BYTES must be a positive integer/
+  );
+  assert.throws(
+    () => createServer({
+      environment: {
+        ...baseEnvironment,
+        MEAL_SCAN_RESULT_LEASE_TTL_MS: "1000",
+        GEMINI_TIMEOUT_MS: "12000",
+      },
+    }),
+    /production meal scan numeric configuration is invalid/
+  );
 });
 
 test("production Firebase App Check mode rejects legacy App Attest and shared secret headers", async () => {
@@ -782,7 +1035,7 @@ test("marks JSON responses as non-cacheable and non-sniffable", async () => {
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
 });
 
-test("maps Gemini timeout to retryable gateway timeout", async () => {
+test("maps Gemini timeout to a durable non-retryable unknown outcome", async () => {
   const server = createServer({
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
@@ -798,10 +1051,11 @@ test("maps Gemini timeout to retryable gateway timeout", async () => {
 
   assert.equal(response.status, 504);
   assert.equal(response.body.reason, "provider_timeout");
-  assert.equal(response.body.retryable, true);
+  assert.equal(response.body.retryable, false);
+  assert.equal(response.body.idempotency.state, "unknown");
 });
 
-test("maps malformed Gemini output to a retryable provider parse failure", async () => {
+test("maps malformed Gemini output to a durable non-retryable provider failure", async () => {
   const server = createServer({
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
@@ -818,7 +1072,8 @@ test("maps malformed Gemini output to a retryable provider parse failure", async
   assert.equal(response.status, 502);
   assert.equal(response.body.error, "meal_scan_parse_error");
   assert.equal(response.body.reason, "provider_response_invalid");
-  assert.equal(response.body.retryable, true);
+  assert.equal(response.body.retryable, false);
+  assert.equal(response.body.idempotency.state, "unknown");
 });
 
 test("rejects invalid client JSON distinctly from a provider parse failure", async () => {
@@ -891,7 +1146,7 @@ test("sends the Gemini API key in a header instead of the request URL", async ()
 
   try {
     await proxyModule.callGemini({
-      modelId: "gemini-2.5-flash-lite",
+      modelId: "gemini-3.1-flash-lite",
       payload: {},
       timeoutMs: 1_000,
     });
@@ -905,9 +1160,494 @@ test("sends the Gemini API key in a header instead of the request URL", async ()
   }
 });
 
+test("accepts an in-memory Gemini API key without requiring an environment secret", async () => {
+  const originalAPIKey = process.env.GEMINI_API_KEY;
+  const originalFetch = globalThis.fetch;
+  const apiKey = "benchmark-key-held-in-memory";
+  delete process.env.GEMINI_API_KEY;
+  globalThis.fetch = async (_url, options) => {
+    assert.equal(options.headers["x-goog-api-key"], apiKey);
+    return {
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: "{}" }] } }],
+        usageMetadata: {},
+      }),
+    };
+  };
+
+  try {
+    await proxyModule.callGemini({
+      modelId: "gemini-3.1-flash-lite",
+      payload: {},
+      timeoutMs: 1_000,
+      apiKey,
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalAPIKey === undefined) {
+      delete process.env.GEMINI_API_KEY;
+    } else {
+      process.env.GEMINI_API_KEY = originalAPIKey;
+    }
+  }
+});
+
+const canonicalJPEGData = validJPEGData;
+const hardenedPayload = {
+  requestId: "41a5546a-1e2c-4ad4-8a25-a7308d078b59",
+  signedTransactionJWS: "apple.signed.transaction",
+  mealType: "lunch",
+  locale: "en_US",
+  schemaVersion: "meal-scan-gemini-v1",
+  promptVersion: "meal-scan-prompt-v1",
+  image: {
+    mimeType: "image/jpeg",
+    base64: canonicalJPEGData.toString("base64"),
+    sha256: crypto.createHash("sha256").update(canonicalJPEGData).digest("hex"),
+  },
+};
+
+test("rejects forged, expired, revoked, and wrong-app StoreKit transaction evidence", async (t) => {
+  const cases = [
+    {
+      name: "forged",
+      verifier: { verifyAndDecodeTransaction: async () => { throw new Error("signature invalid"); } },
+      reason: "storekit_transaction_invalid",
+    },
+    {
+      name: "expired",
+      verifier: { verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ expiresDate: Date.now() - 1 }) },
+      reason: "subscription_expired",
+    },
+    {
+      name: "revoked",
+      verifier: { verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ revocationDate: Date.now() - 1 }) },
+      reason: "transaction_revoked",
+    },
+    {
+      name: "wrong app",
+      verifier: { verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ bundleId: "com.attacker.app" }) },
+      reason: "storekit_app_mismatch",
+    },
+  ];
+
+  for (const scenario of cases) {
+    await t.test(scenario.name, async () => {
+      let quotaCalls = 0;
+      let geminiCalls = 0;
+      const server = createHardenedServer({
+        storeKitVerifier: scenario.verifier,
+        quotaStore: {
+          checkAndConsume: async () => {
+            quotaCalls += 1;
+            return rollingQuota();
+          },
+        },
+        callGemini: async () => {
+          geminiCalls += 1;
+          return successGeminiResponse();
+        },
+      });
+
+      const response = await request(server, hardenedPayload);
+
+      assert.equal(response.status, 403);
+      assert.equal(response.body.error, "premium_entitlement_required");
+      assert.equal(response.body.reason, scenario.reason);
+      assert.equal(quotaCalls, 0);
+      assert.equal(geminiCalls, 0);
+    });
+  }
+});
+
+test("namespaces the HMAC purchase principal by verified Apple environment", () => {
+  assert.equal(typeof proxyModule.derivePurchasePrincipal, "function");
+  const secret = "test-principal-secret-with-adequate-entropy";
+  const production = proxyModule.derivePurchasePrincipal({
+    originalTransactionId: "1000000123456789",
+    environment: "Production",
+    secret,
+  });
+  const sandbox = proxyModule.derivePurchasePrincipal({
+    originalTransactionId: "1000000123456789",
+    environment: "Sandbox",
+    secret,
+  });
+
+  assert.match(production, /^[a-f0-9]{64}$/);
+  assert.match(sandbox, /^[a-f0-9]{64}$/);
+  assert.notEqual(production, sandbox);
+  assert.equal(production.includes("1000000123456789"), false);
+});
+
+test("rejects a raw RevenueCat identifier instead of trusting it as identity", async () => {
+  const server = createHardenedServer();
+  const response = await request(server, {
+    ...hardenedPayload,
+    revenueCatAppUserId: "$RCAnonymousID:untrusted-device-id",
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error, "invalid_request");
+  assert.equal(response.body.detail, "revenueCatAppUserId is not allowed");
+});
+
+test("rolling quota expires an event at the exact 24-hour boundary", async () => {
+  assert.equal(typeof proxyModule.createInMemoryRollingQuotaStore, "function");
+  let timestamp = Date.parse("2026-07-13T12:00:00.000Z");
+  const quota = proxyModule.createInMemoryRollingQuotaStore({ now: () => timestamp });
+  const input = { principal: "principal-a", tier: "paid", limit: 1, lifetimeLimit: null };
+
+  const first = await quota.checkAndConsume(input);
+  timestamp += 86_400_000 - 1;
+  const justInside = await quota.checkAndConsume(input);
+  timestamp += 1;
+  const boundary = await quota.checkAndConsume(input);
+
+  assert.deepEqual(first, {
+    allowed: true,
+    reason: null,
+    tier: "paid",
+    used: 1,
+    limit: 1,
+    remaining: 0,
+    windowSeconds: 86_400,
+    resetAt: "2026-07-14T12:00:00.000Z",
+    retryAfterSeconds: 86_400,
+  });
+  assert.equal(justInside.allowed, false);
+  assert.equal(justInside.retryAfterSeconds, 1);
+  assert.equal(boundary.allowed, true);
+  assert.equal(boundary.used, 1);
+  assert.equal(boundary.resetAt, "2026-07-15T12:00:00.000Z");
+});
+
+test("rejects a configured paid rolling allowance above the absolute startup maximum", () => {
+  assert.throws(
+    () => createServer({
+      environment: {
+        NODE_ENV: "test",
+        MEAL_SCAN_DAILY_LIMIT: "16",
+      },
+    }),
+    /MEAL_SCAN_DAILY_LIMIT must not exceed 15/
+  );
+});
+
+test("a server cache hit does not consume rolling quota", async () => {
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const server = createHardenedServer({
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return rollingQuota({ used: quotaCalls, remaining: 10 - quotaCalls });
+      },
+      current: async () => rollingQuota({ used: quotaCalls, remaining: 10 - quotaCalls }),
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const responses = await requestSequentially(server, [
+    hardenedPayload,
+    { ...hardenedPayload, requestId: "6af22ec2-1ed1-43bd-8904-a08b290c0673" },
+  ]);
+
+  assert.deepEqual(responses.map((response) => response.status), [200, 200]);
+  assert.equal(responses[1].body.cacheHit, true);
+  assert.equal(quotaCalls, 1);
+  assert.equal(geminiCalls, 1);
+});
+
+test("one requestId permits only one in-flight provider dispatch", async () => {
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const server = createHardenedServer({
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return rollingQuota();
+      },
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return successGeminiResponse();
+    },
+  });
+
+  const responses = await requestMany(server, [hardenedPayload, hardenedPayload]);
+
+  assert.deepEqual(responses.map((response) => response.status).sort(), [200, 409]);
+  const pending = responses.find((response) => response.status === 409);
+  assert.equal(pending.body.error, "meal_scan_in_progress");
+  assert.equal(pending.body.idempotency.state, "pending");
+  assert.equal(quotaCalls, 1);
+  assert.equal(geminiCalls, 1);
+});
+
+test("an ambiguous provider timeout is durable and cannot dispatch again", async () => {
+  let geminiCalls = 0;
+  const server = createHardenedServer({
+    callGemini: async () => {
+      geminiCalls += 1;
+      const error = new Error("provider deadline elapsed");
+      error.name = "AbortError";
+      throw error;
+    },
+  });
+
+  const responses = await requestSequentially(server, [hardenedPayload, hardenedPayload]);
+
+  assert.equal(responses[0].status, 504);
+  assert.equal(responses[0].body.error, "meal_scan_outcome_unknown");
+  assert.equal(responses[0].body.idempotency.state, "unknown");
+  assert.equal(responses[1].status, 409);
+  assert.equal(responses[1].body.error, "meal_scan_outcome_unknown");
+  assert.equal(responses[1].body.idempotency.state, "unknown");
+  assert.equal(geminiCalls, 1);
+});
+
+test("binds an idempotency key to the canonical request hash", async () => {
+  let geminiCalls = 0;
+  const server = createHardenedServer({
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const responses = await requestSequentially(server, [
+    hardenedPayload,
+    { ...hardenedPayload, mealType: "dinner" },
+  ]);
+
+  assert.equal(responses[0].status, 200);
+  assert.equal(responses[1].status, 409);
+  assert.equal(responses[1].body.error, "idempotency_conflict");
+  assert.equal(responses[1].body.reason, "request_body_mismatch");
+  assert.equal(geminiCalls, 1);
+});
+
+test("rejects public model selection and always dispatches the pinned model", async () => {
+  let selectedModel;
+  const server = createHardenedServer({
+    callGemini: async ({ modelId }) => {
+      selectedModel = modelId;
+      return successGeminiResponse();
+    },
+  });
+
+  const rejected = await request(server, { ...hardenedPayload, modelId: "gemini-2.5-flash" });
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.detail, "modelId is not allowed");
+  assert.equal(selectedModel, undefined);
+
+  const accepted = await request(createHardenedServer({
+    callGemini: async ({ modelId }) => {
+      selectedModel = modelId;
+      return successGeminiResponse();
+    },
+  }), hardenedPayload);
+  assert.equal(accepted.status, 200);
+  assert.equal(selectedModel, "gemini-3.1-flash-lite");
+});
+
+test("defaults the public JSON body cap to 2.2 MB", async () => {
+  const server = createHardenedServer();
+  const response = await requestRaw(server, `{"padding":"${"a".repeat(2_200_000)}"}`);
+
+  assert.equal(response.status, 413);
+  assert.equal(response.body.reason, "body_size_limit");
+});
+
+test("rejects decoded, pixel, and canonicalized image size violations", async (t) => {
+  await t.test("decoded bytes", async () => {
+    const oversized = Buffer.concat([Buffer.from([0xff, 0xd8]), Buffer.alloc(32), Buffer.from([0xff, 0xd9])]);
+    const payload = payloadWithJPEG(oversized);
+    const response = await request(createHardenedServer({ maxImageBytes: 32 }), payload);
+    assert.equal(response.status, 400);
+    assert.equal(response.body.detail, "jpeg image exceeds decoded size limit");
+  });
+
+  await t.test("source pixels", async () => {
+    const response = await request(createHardenedServer({
+      processImage: async ({ bytes }) => ({
+        data: bytes,
+        sourceWidth: 5_000,
+        sourceHeight: 5_000,
+      }),
+    }), hardenedPayload);
+    assert.equal(response.status, 400);
+    assert.equal(response.body.detail, "jpeg image exceeds pixel limit");
+  });
+
+  await t.test("canonical bytes", async () => {
+    const response = await request(createHardenedServer({
+      maxCanonicalImageBytes: 32,
+      processImage: async () => ({
+        data: Buffer.concat([Buffer.from([0xff, 0xd8]), Buffer.alloc(32), Buffer.from([0xff, 0xd9])]),
+        sourceWidth: 2,
+        sourceHeight: 2,
+      }),
+    }), hardenedPayload);
+    assert.equal(response.status, 400);
+    assert.equal(response.body.detail, "canonical jpeg exceeds size limit");
+  });
+});
+
+test("bounds Gemini structured output and rejects an oversized provider result", async () => {
+  const providerPayload = proxyModule.buildGeminiPayload(hardenedPayload);
+  const schema = providerPayload.generationConfig.responseSchema;
+  assert.equal(providerPayload.generationConfig.maxOutputTokens, 1_600);
+  assert.equal(schema.properties.meal_name.maxLength, 120);
+  assert.equal(schema.properties.warnings.maxItems, 8);
+  assert.equal(schema.properties.items.maxItems, 20);
+  assert.equal(schema.properties.items.items.properties.estimated_grams.maximum, 5_000);
+
+  const server = createHardenedServer({
+    callGemini: async () => ({
+      ...successGeminiResponse(),
+      estimate: {
+        meal_name: "x".repeat(121),
+        confidence: "medium",
+        warnings: [],
+        items: [],
+      },
+    }),
+  });
+  const response = await request(server, hardenedPayload);
+  assert.equal(response.status, 502);
+  assert.equal(response.body.reason, "provider_response_out_of_bounds");
+  assert.equal(response.body.idempotency.state, "unknown");
+});
+
+test("classifies monthly spend at the exact $15, $20, and $25 boundaries", () => {
+  assert.equal(typeof proxyModule.classifyBudgetSpend, "function");
+  assert.equal(proxyModule.classifyBudgetSpend(14.99).mode, "normal");
+  assert.equal(proxyModule.classifyBudgetSpend(15).mode, "alert");
+  assert.equal(proxyModule.classifyBudgetSpend(20).mode, "degraded");
+  assert.equal(proxyModule.classifyBudgetSpend(25).mode, "disabled");
+  assert.deepEqual(proxyModule.classifyBudgetSpend(25), {
+    mode: "disabled",
+    source: "static_environment",
+    spendUsd: 25,
+    budgetUsd: null,
+    alertAtUsd: 15,
+    degradeAtUsd: 20,
+    disableAtUsd: 25,
+  });
+});
+
+function createHardenedServer(overrides = {}) {
+  return createServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "true",
+      APPLE_BUNDLE_ID: "alex.PCOS",
+      APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    },
+    verifyAppIntegrity: async () => true,
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction(),
+    },
+    processImage: async ({ bytes }) => ({ data: bytes, sourceWidth: 2, sourceHeight: 2 }),
+    requestGate: { checkAndConsume: async () => ({ allowed: true }) },
+    quotaStore: { checkAndConsume: async () => rollingQuota() },
+    getBudgetState: async () => ({ mode: "normal" }),
+    callGemini: async () => successGeminiResponse(),
+    logger: { info() {}, warn() {}, error() {} },
+    ...overrides,
+  });
+}
+
+function activeStoreKitTransaction(overrides = {}) {
+  return {
+    originalTransactionId: "1000000123456789",
+    transactionId: "1000000987654321",
+    bundleId: "alex.PCOS",
+    productId: "cyclebalance.premium.monthly",
+    type: "Auto-Renewable Subscription",
+    environment: "Production",
+    expiresDate: Date.now() + 3_600_000,
+    signedDate: Date.now(),
+    ...overrides,
+  };
+}
+
+function rollingQuota(overrides = {}) {
+  return {
+    allowed: true,
+    reason: null,
+    tier: "paid",
+    used: 1,
+    limit: 10,
+    remaining: 9,
+    windowSeconds: 86_400,
+    resetAt: new Date(Date.now() + 86_400_000).toISOString(),
+    retryAfterSeconds: null,
+    ...overrides,
+  };
+}
+
+function payloadWithJPEG(bytes, overrides = {}) {
+  return {
+    ...hardenedPayload,
+    ...overrides,
+    image: {
+      mimeType: "image/jpeg",
+      base64: bytes.toString("base64"),
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    },
+  };
+}
+
+function createServer(overrides = {}) {
+  const {
+    environment = {},
+    storeKitVerifier,
+    processImage,
+    ...remainingOverrides
+  } = overrides;
+  return createProxyServer({
+    environment: {
+      NODE_ENV: "test",
+      ...(environment.NODE_ENV === "production" ? {} : { MEAL_SCAN_ENABLED: "true" }),
+      APPLE_BUNDLE_ID: "alex.PCOS",
+      APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+      ...environment,
+    },
+    storeKitVerifier: Object.hasOwn(overrides, "storeKitVerifier")
+      ? storeKitVerifier
+      : { verifyAndDecodeTransaction: async () => activeStoreKitTransaction() },
+    processImage: processImage ?? (async ({ bytes }) => ({
+      data: bytes,
+      sourceWidth: 2,
+      sourceHeight: 2,
+    })),
+    ...remainingOverrides,
+  });
+}
+
 function allowQuotaStore() {
   return {
-    checkAndConsume: async () => ({ allowed: true, used: 1, limit: 10, softLimit: 5, remainingToday: 9, accessTier: "paid" }),
+    checkAndConsume: async () => ({
+      allowed: true,
+      reason: null,
+      tier: "paid",
+      used: 1,
+      limit: 10,
+      remaining: 9,
+      windowSeconds: 86_400,
+      resetAt: null,
+      retryAfterSeconds: null,
+    }),
   };
 }
 
@@ -945,6 +1685,48 @@ async function requestRaw(server, bodyPayload, headers = {}) {
     });
     const body = await response.json();
     return { status: response.status, body, headers: response.headers };
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+async function requestMany(server, payloads, headers = {}) {
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const { port } = server.address();
+    return await Promise.all(
+      payloads.map(async (payload) => {
+        const response = await fetch(`http://127.0.0.1:${port}/v1/meal-scans/estimate`, {
+          method: "POST",
+          headers: { "content-type": "application/json", ...headers },
+          body: JSON.stringify(payload),
+        });
+        return { status: response.status, body: await response.json(), headers: response.headers };
+      })
+    );
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+async function requestSequentially(server, payloads, headers = {}) {
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const { port } = server.address();
+    const responses = [];
+    for (const payload of payloads) {
+      const response = await fetch(`http://127.0.0.1:${port}/v1/meal-scans/estimate`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...headers },
+        body: JSON.stringify(payload),
+      });
+      responses.push({ status: response.status, body: await response.json(), headers: response.headers });
+    }
+    return responses;
   } finally {
     await new Promise((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

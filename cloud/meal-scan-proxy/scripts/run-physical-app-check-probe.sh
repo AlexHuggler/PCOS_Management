@@ -15,8 +15,9 @@ DRY_RUN="${DRY_RUN:-false}"
 CONFIRM_TEMPORARY_PUBLIC_PROBE="${CONFIRM_TEMPORARY_PUBLIC_PROBE:-}"
 
 readonly APP_BUNDLE_ID="alex.PCOS"
-readonly PROBE_TEST="PCOSTests/ProductionMealScanAppCheckProbeTests"
+readonly PROBE_TEST="PCOSProductionProbeTests/ProductionMealScanAppCheckProbeTests"
 readonly PROBE_USER_ID="cyclebalance-appcheck-probe-no-entitlement"
+readonly MEAL_SCAN_REQUEST_GATE_COLLECTION="mealScanRequestGate"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROXY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly REPOSITORY_ROOT="$(cd "$PROXY_DIR/../.." && pwd)"
@@ -27,7 +28,12 @@ ROLLBACK_COMPLETE=false
 TEMP_ROOT=""
 SERVICE_URL=""
 START_UTC=""
+END_UTC=""
+PROBE_REVISION=""
 DEVICE_IDENTIFIER=""
+XCODE_DEVICE_UDID=""
+APP_WAS_INSTALLED=""
+PROBE_APP_INSTALL_STARTED=false
 
 die() {
   printf 'ERROR: %s\n' "$*" >&2
@@ -49,6 +55,10 @@ require_equal() {
   [[ "$actual" == "$expected" ]] || die "$description (expected $expected, found $actual)"
 }
 
+private_invoker_gate_rejects_status() {
+  [[ "$1" == "403" || "$1" == "404" ]]
+}
+
 validate_pinned_cloud_identity() {
   require_equal "$PROJECT_ID" "$PINNED_PROJECT_ID" "The probe is pinned to the production project"
   require_equal "$SERVICE_NAME" "$PINNED_SERVICE_NAME" "The probe is pinned to the production service"
@@ -61,6 +71,25 @@ resolve_device_identifier() {
     die "DEVICE_ID and DEVICE_UDID must match when both are set"
   fi
   printf '%s\n' "${device_id:-${device_udid:-$DEFAULT_DEVICE_ID}}"
+}
+
+resolve_xcode_device_udid() {
+  local xcdevice_json="$1"
+  local expected_name="$2"
+  jq -er --arg expected_name "$expected_name" '
+    [
+      .[] |
+      select(
+        .name == $expected_name and
+        .available == true and
+        .simulator == false and
+        .platform == "com.apple.platform.iphoneos" and
+        (.identifier | type == "string") and
+        (.identifier | length > 0)
+      )
+    ] |
+    if length == 1 then .[0].identifier else empty end
+  ' "$xcdevice_json"
 }
 
 device_lock_is_verified_unlocked() {
@@ -114,6 +143,46 @@ device_details_have_developer_mode() {
   ' "$details_json" >/dev/null
 }
 
+device_ddi_is_usable() {
+  local ddi_json="$1"
+  jq -e '
+    [
+      .. | objects |
+      (if has("ddiMetadata") and (.ddiMetadata | type == "object") and
+          (.ddiMetadata.isUsable | type == "boolean") and
+          (.ddiMetadata.contentIsCompatible | type == "boolean")
+        then (.ddiMetadata.isUsable == true and .ddiMetadata.contentIsCompatible == true)
+      elif has("services") and (.services | type == "array")
+        then (.services | length > 0)
+      else empty end)
+    ] as $recognized_states |
+    (($recognized_states | length) > 0 and all($recognized_states[]; . == true))
+  ' "$ddi_json" >/dev/null
+}
+
+device_app_inventory_is_valid() {
+  local apps_json="$1"
+  jq -e '
+    .info.outcome == "success" and
+    (.result.apps | type == "array") and
+    all(.result.apps[]; (.bundleIdentifier | type == "string"))
+  ' "$apps_json" >/dev/null
+}
+
+device_has_installed_app() {
+  local apps_json="$1"
+  local bundle_id="$2"
+  jq -e --arg bundle_id "$bundle_id" '
+    any(.result.apps[]; .bundleIdentifier == $bundle_id)
+  ' "$apps_json" >/dev/null
+}
+
+app_attest_environment_from_app() {
+  local app_path="$1"
+  codesign --display --xml --entitlements - "$app_path" 2>/dev/null |
+    plutil -extract 'com\.apple\.developer\.devicecheck\.appattest-environment' raw -
+}
+
 normalize_service_url() {
   local url="$1"
   if [[ "$url" == */ ]]; then
@@ -134,6 +203,60 @@ cleanup_temp() {
   [[ -n "$TEMP_ROOT" && -d "$TEMP_ROOT" ]] && rm -rf "$TEMP_ROOT"
 }
 
+preserve_probe_diagnostics() {
+  [[ -n "$TEMP_ROOT" && -d "$TEMP_ROOT" ]] || return 0
+
+  local test_log result_bundle diagnostics_root diagnostics_dir
+  test_log="$TEMP_ROOT/physical-probe-test.log"
+  result_bundle="$TEMP_ROOT/PhysicalProbe.xcresult"
+  [[ -f "$test_log" || -d "$result_bundle" ]] || return 0
+
+  diagnostics_root="$HOME/Library/Logs/CycleBalance/PhysicalProbe"
+  diagnostics_dir="$diagnostics_root/$(date -u +%Y%m%dT%H%M%SZ)-failed"
+  umask 077
+  mkdir -p "$diagnostics_dir"
+  chmod 0700 "$diagnostics_root" "$diagnostics_dir"
+  if [[ -f "$test_log" ]]; then
+    sed -E \
+      -e 's/(Authorization: Bearer )[[:graph:]]+/\1[REDACTED]/g' \
+      -e 's/AIza[[:alnum:]_-]+/[REDACTED_GOOGLE_API_KEY]/g' \
+      "$test_log" >"$diagnostics_dir/physical-probe-test.log"
+    chmod 0600 "$diagnostics_dir/physical-probe-test.log"
+  fi
+  if [[ -d "$result_bundle" ]]; then
+    cp -R "$result_bundle" "$diagnostics_dir/PhysicalProbe.xcresult"
+  fi
+  note "Preserved failed-probe diagnostics at $diagnostics_dir."
+}
+
+restore_original_app_absence() {
+  [[ "$APP_WAS_INSTALLED" == false && "$PROBE_APP_INSTALL_STARTED" == true ]] || return 0
+  [[ -n "$TEMP_ROOT" && -d "$TEMP_ROOT" && -n "$DEVICE_IDENTIFIER" ]] || return 1
+
+  local apps_json verified_apps_json
+  apps_json="$TEMP_ROOT/rollback-device-apps.json"
+  verified_apps_json="$TEMP_ROOT/rollback-device-apps-verified.json"
+  xcrun devicectl device info apps \
+    --device "$DEVICE_IDENTIFIER" \
+    --json-output "$apps_json" >/dev/null || return 1
+  device_app_inventory_is_valid "$apps_json" || return 1
+  if ! device_has_installed_app "$apps_json" "$APP_BUNDLE_ID"; then
+    return 0
+  fi
+
+  note "Device cleanup: removing the transient probe app because CycleBalance was initially absent."
+  xcrun devicectl device uninstall app \
+    --device "$DEVICE_IDENTIFIER" \
+    "$APP_BUNDLE_ID" \
+    --quiet \
+    --timeout 30 || return 1
+  xcrun devicectl device info apps \
+    --device "$DEVICE_IDENTIFIER" \
+    --json-output "$verified_apps_json" >/dev/null || return 1
+  device_app_inventory_is_valid "$verified_apps_json" || return 1
+  ! device_has_installed_app "$verified_apps_json" "$APP_BUNDLE_ID"
+}
+
 rollback() {
   local status=$?
   set +e
@@ -142,11 +265,18 @@ rollback() {
     deploy_private
     if verify_private_disabled_state; then
       ROLLBACK_COMPLETE=true
-      note "Rollback verification passed: unauthenticated 403 and authenticated 503 feature_disabled."
+      note "Rollback verification passed: unauthenticated 403/404 and authenticated 503 feature_disabled."
     else
       note "FATAL: rollback deploy or verification failed; inspect the Cloud Run service immediately." >&2
       status=1
     fi
+  fi
+  if ! restore_original_app_absence; then
+    note "FATAL: the transient CycleBalance probe app could not be removed from the device." >&2
+    status=1
+  fi
+  if [[ "$status" -ne 0 ]]; then
+    preserve_probe_diagnostics || note "WARNING: failed-probe diagnostics could not be preserved." >&2
   fi
   cleanup_temp
   exit "$status"
@@ -157,14 +287,14 @@ print_dry_run() {
   note "1. Validate project $PROJECT_ID and Cloud Run service $SERVICE_NAME in $REGION."
   note "2. Require MEAL_SCAN_ENABLED=false, Firestore budget mode normal, and no allUsers Cloud Run invoker."
   note "3. Confirm $DEVICE_NAME ($DEVICE_IDENTIFIER) is paired, explicitly reported unlocked, in Developer Mode, and can auto-mount its DDI."
-  note "4. Back up $APP_BUNDLE_ID app data to ~/Library/Application Support/CycleBalance/DeviceBackups/<UTC timestamp> mode 0700; abort if it fails."
+  note "4. Prove whether $APP_BUNDLE_ID is installed. If present, back up its app data to ~/Library/Application Support/CycleBalance/DeviceBackups/<UTC timestamp> mode 0700; abort if inventory or backup fails."
   note "5. Build current Release source in a temporary DerivedData directory without automatic provisioning changes."
   note "6. Inspect the product for bundle ID $APP_BUNDLE_ID, production App Attest entitlement, and exact equality with the verified Cloud Run URL."
   note "7. Arm rollback before any cloud mutation."
   note "8. Temporarily deploy MEAL_SCAN_ENABLED=true with unauthenticated ingress using deploy-cloud-run.sh."
   note "9. Run only $PROBE_TEST through the dedicated opt-in Release scheme on the named device."
-  note "10. Require HTTP 403 premium_entitlement_required / entitlement_inactive, an unchanged full quota snapshot, and no Gemini estimate log for the image-hash prefix."
-  note "11. Always redeploy disabled/private and require unauthenticated 403 plus authenticated 503 feature_disabled."
+  note "10. Require HTTP 403 premium_entitlement_required / entitlement_inactive, exactly one isolated request-gate advance, an unchanged full billable-quota snapshot, and no Gemini estimate log on the probe revision."
+  note "11. Always redeploy disabled/private, verify the transport and kill switch, and remove a transient probe app when CycleBalance was initially absent."
 }
 
 firestore_document_json() {
@@ -192,21 +322,31 @@ firestore_document_json() {
   esac
 }
 
+effective_budget_mode_from_json() {
+  jq -er '
+    def rank:
+      if . == "normal" then 0
+      elif . == "alert" then 1
+      elif . == "degraded" then 2
+      elif . == "disabled" then 3
+      else -1
+      end;
+    select(.__notFound != true) |
+    [.fields.manualMode.stringValue?, .fields.billingMode.stringValue?] |
+    map(select(rank >= 0)) |
+    if length == 0 then empty else max_by(rank) end
+  '
+}
+
 read_budget_mode() {
   local document
   document="$(firestore_document_json "mealScanControls" "global")" || return 1
-  jq -er '
-    select(.__notFound != true) |
-    (.fields.manualMode.stringValue // .fields.billingMode.stringValue // empty)
-  ' <<<"$document"
+  effective_budget_mode_from_json <<<"$document"
 }
 
 quota_snapshot() {
   local app_user_hash day document
-  app_user_hash="$(node -e '
-    const crypto = require("node:crypto");
-    process.stdout.write(crypto.createHash("sha256").update(process.argv[1]).digest("hex").slice(0, 16));
-  ' "$PROBE_USER_ID")" || return 1
+  app_user_hash="$(probe_app_user_hash)" || return 1
   day="$(date -u +%Y-%m-%d)"
   document="$(firestore_document_json "mealScanDailyQuota" "${app_user_hash}_${day}")" || return 1
 
@@ -215,6 +355,43 @@ quota_snapshot() {
   else
     jq -cS '{exists: true, updateTime: (.updateTime // null), data: (.fields // {})}' <<<"$document"
   fi
+}
+
+probe_app_user_hash() {
+  node -e '
+    const crypto = require("node:crypto");
+    process.stdout.write(crypto.createHash("sha256").update(process.argv[1]).digest("hex").slice(0, 16));
+  ' "$PROBE_USER_ID"
+}
+
+request_gate_snapshot() {
+  local document_id="$1"
+  local document
+  document="$(firestore_document_json "$MEAL_SCAN_REQUEST_GATE_COLLECTION" "$document_id")" || return 1
+
+  if jq -e '.__notFound == true' <<<"$document" >/dev/null; then
+    jq -cnS '{exists: false, updateTime: null, requestCount: 0, expiresAt: null}'
+  else
+    jq -cS '{
+      exists: true,
+      updateTime: (.updateTime // null),
+      requestCount: ((.fields.requestCount.integerValue // "0") | tonumber),
+      expiresAt: (.fields.expiresAt.timestampValue // null)
+    }' <<<"$document"
+  fi
+}
+
+request_gate_advanced_once() {
+  local before="$1"
+  local after="$2"
+  jq -en --argjson before "$before" --argjson after "$after" '
+    ($after.exists == true) and
+    (($after.requestCount | type) == "number") and
+    ($after.requestCount == (($before.requestCount // 0) + 1)) and
+    (($after.updateTime | type) == "string") and
+    (($after.updateTime | length) > 0) and
+    (($before.updateTime == null) or ($after.updateTime != $before.updateTime))
+  ' >/dev/null
 }
 
 service_json() {
@@ -244,15 +421,24 @@ verify_initial_cloud_state() {
     --region "$REGION" \
     --format=json | jq -e '[.bindings[]? | select(.role == "roles/run.invoker") | .members[]?] | index("allUsers") != null' >/dev/null \
     || die "Cloud Run service must not grant allUsers the invoker role before the probe"
+
+  local unauthenticated_status response_file
+  response_file="$TEMP_ROOT/initial-private-response.txt"
+  unauthenticated_status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+    --request POST "$SERVICE_URL/v1/meal-scans/estimate")" \
+    || die "Unable to verify the Cloud Run private transport before the probe"
+  private_invoker_gate_rejects_status "$unauthenticated_status" \
+    || die "Cloud Run must reject unauthenticated transport with HTTP 403 or concealed 404 before the probe"
 }
 
 verify_device_preconditions() {
   note "Checking the named physical device without requesting any passcode."
-  local devices_json details_json lock_json ddi_json
+  local devices_json details_json lock_json ddi_json xcdevice_json
   devices_json="$TEMP_ROOT/devices.json"
   details_json="$TEMP_ROOT/device-details.json"
   lock_json="$TEMP_ROOT/device-lock.json"
   ddi_json="$TEMP_ROOT/device-ddi.json"
+  xcdevice_json="$TEMP_ROOT/xcdevice.json"
 
   xcrun devicectl list devices --json-output "$devices_json" >/dev/null
   jq -e --arg udid "$DEVICE_IDENTIFIER" --arg name "$DEVICE_NAME" '
@@ -270,12 +456,32 @@ verify_device_preconditions() {
 
   xcrun devicectl device info ddiServices --auto-mount-ddis --device "$DEVICE_IDENTIFIER" --json-output "$ddi_json" >/dev/null \
     || die "CoreDevice could not mount or verify the developer disk image"
-  jq -e '.. | objects | select(has("services")) | .services | length > 0' "$ddi_json" >/dev/null \
+  device_ddi_is_usable "$ddi_json" \
     || die "Developer disk image services are not available"
+
+  xcrun xcdevice list >"$xcdevice_json" \
+    || die "Xcode could not list physical-device destinations"
+  XCODE_DEVICE_UDID="$(resolve_xcode_device_udid "$xcdevice_json" "$DEVICE_NAME")" \
+    || die "Expected exactly one available physical Xcode destination named $DEVICE_NAME"
+  note "Resolved $DEVICE_NAME from CoreDevice $DEVICE_IDENTIFIER to Xcode destination $XCODE_DEVICE_UDID."
 }
 
 backup_app_data() {
-  local backup_root backup_dir
+  local apps_json backup_root backup_dir
+  apps_json="$TEMP_ROOT/device-apps.json"
+  xcrun devicectl device info apps \
+    --device "$DEVICE_IDENTIFIER" \
+    --json-output "$apps_json" >/dev/null \
+    || die "CoreDevice could not read the installed-app inventory"
+  device_app_inventory_is_valid "$apps_json" \
+    || die "CoreDevice returned an invalid installed-app inventory"
+  if ! device_has_installed_app "$apps_json" "$APP_BUNDLE_ID"; then
+    APP_WAS_INSTALLED=false
+    note "$APP_BUNDLE_ID is not installed, so no existing app-data container requires backup."
+    return
+  fi
+  APP_WAS_INSTALLED=true
+
   backup_root="$HOME/Library/Application Support/CycleBalance/DeviceBackups"
   backup_dir="$backup_root/$(date -u +%Y%m%dT%H%M%SZ)"
   umask 077
@@ -302,13 +508,16 @@ build_and_inspect_release_product() {
     -configuration Release \
     -sdk iphoneos \
     -derivedDataPath "$TEMP_ROOT/DerivedData" \
+    ENABLE_TESTABILITY=YES \
     build
 
   app_path="$(find "$TEMP_ROOT/DerivedData/Build/Products/Release-iphoneos" -maxdepth 1 -name 'PCOS.app' -print -quit)"
   [[ -n "$app_path" ]] || die "Release build did not produce PCOS.app"
   bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_path/Info.plist")"
   require_equal "$bundle_id" "$APP_BUNDLE_ID" "Unexpected Release bundle identifier"
-  app_attest_environment="$(codesign -d --entitlements :- "$app_path" 2>/dev/null | plutil -extract 'com.apple.developer.devicecheck.appattest-environment' raw -)"
+  if ! app_attest_environment="$(app_attest_environment_from_app "$app_path")"; then
+    die "Unable to read the App Attest environment from the signed Release product"
+  fi
   require_equal "$app_attest_environment" "production" "Release build must use production App Attest"
   proxy_url="$(/usr/libexec/PlistBuddy -c 'Print :MEAL_SCAN_PROXY_BASE_URL' "$app_path/Info.plist")"
   require_service_url_match "$proxy_url" "$SERVICE_URL"
@@ -319,6 +528,14 @@ deploy_temporary_public_probe() {
   (cd "$PROXY_DIR" && \
     PROJECT_ID="$PROJECT_ID" REGION="$REGION" SERVICE_NAME="$SERVICE_NAME" \
     MEAL_SCAN_ENABLED=true ALLOW_UNAUTHENTICATED=true "$DEPLOY_SCRIPT")
+
+  local service
+  service="$(service_json)" || die "Unable to read the temporary Cloud Run revision"
+  PROBE_REVISION="$(jq -r '.status.latestReadyRevisionName // empty' <<<"$service")"
+  [[ -n "$PROBE_REVISION" ]] || die "Temporary Cloud Run revision name is missing"
+  jq -e '[.spec.template.spec.containers[].env[]? | select(.name == "MEAL_SCAN_ENABLED") | .value] | index("true") != null' \
+    <<<"$service" >/dev/null || die "Temporary Cloud Run revision is not enabled"
+  note "Temporary probe revision: $PROBE_REVISION"
 }
 
 deploy_private() {
@@ -328,7 +545,7 @@ deploy_private() {
 }
 
 verify_private_disabled_state() {
-  local service unauthenticated_status authenticated_status response_file identity_token
+  local service unauthenticated_status authenticated_status response_file identity_token auth_header_curl_config
   service="$(service_json)" || return 1
   SERVICE_URL="$(jq -r '.status.url // empty' <<<"$service")"
   jq -e '[.spec.template.spec.containers[].env[]? | select(.name == "MEAL_SCAN_ENABLED") | .value] | index("false") != null' \
@@ -339,42 +556,69 @@ verify_private_disabled_state() {
   response_file="$TEMP_ROOT/disabled-response.json"
   unauthenticated_status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
     --request POST "$SERVICE_URL/v1/meal-scans/estimate")" || return 1
-  [[ "$unauthenticated_status" == "403" ]] || return 1
+  private_invoker_gate_rejects_status "$unauthenticated_status" || return 1
 
   identity_token="$(gcloud auth print-identity-token)" || return 1
+  auth_header_curl_config="$(mktemp "$TEMP_ROOT/cloud-run-auth.XXXXXX")" || return 1
+  chmod 600 "$auth_header_curl_config" || return 1
+  printf 'header = "Authorization: Bearer %s"\n' "$identity_token" >"$auth_header_curl_config"
+  unset identity_token
   authenticated_status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
     --request POST \
-    --header "Authorization: Bearer $identity_token" \
+    --config "$auth_header_curl_config" \
     "$SERVICE_URL/v1/meal-scans/estimate")" || return 1
+  rm -f "$auth_header_curl_config"
   [[ "$authenticated_status" == "503" ]] || return 1
   jq -e '.error == "meal_scan_unavailable" and .reason == "feature_disabled"' "$response_file" >/dev/null || return 1
 }
 
 run_probe_and_verify_side_effects() {
-  local before_quota after_quota test_log hash_prefix estimate_logs
+  local before_quota after_quota test_log estimate_logs
+  local app_user_hash day user_gate_id global_gate_id
+  local before_user_gate before_global_gate after_user_gate after_global_gate
   before_quota="$(quota_snapshot)" || die "Unable to read the probe quota document before test execution"
+  app_user_hash="$(probe_app_user_hash)" || die "Unable to hash the probe App User ID"
+  day="$(date -u +%Y-%m-%d)"
+  user_gate_id="${app_user_hash}_${day}"
+  global_gate_id="global_${day}"
+  before_user_gate="$(request_gate_snapshot "$user_gate_id")" \
+    || die "Unable to read the probe request gate before test execution"
+  before_global_gate="$(request_gate_snapshot "$global_gate_id")" \
+    || die "Unable to read the global request gate before test execution"
   test_log="$TEMP_ROOT/physical-probe-test.log"
   START_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   note "Running the opt-in Release test on the physical device."
+  PROBE_APP_INSTALL_STARTED=true
   xcodebuild test \
     -project "$REPOSITORY_ROOT/PCOS.xcodeproj" \
     -scheme "$PROBE_SCHEME" \
     -configuration Release \
-    -destination "platform=iOS,id=$DEVICE_IDENTIFIER" \
-    -derivedDataPath "$TEMP_ROOT/ProbeTestDerivedData" \
+    -destination "platform=iOS,id=$XCODE_DEVICE_UDID" \
+    -derivedDataPath "$TEMP_ROOT/DerivedData" \
+    -resultBundlePath "$TEMP_ROOT/PhysicalProbe.xcresult" \
+    ENABLE_TESTABILITY=YES \
     -only-testing:"$PROBE_TEST" | tee "$test_log"
 
-  hash_prefix="$(sed -n 's/.*image hash prefix: \([0-9a-f]\{12\}\).*/\1/p' "$test_log" | tail -n 1)"
-  [[ "$hash_prefix" =~ ^[0-9a-f]{12}$ ]] || die "The probe did not emit its safe image-hash prefix"
+  END_UTC="$(date -u -v+2S +%Y-%m-%dT%H:%M:%SZ)"
   after_quota="$(quota_snapshot)" || die "Unable to read the probe quota document after test execution"
   require_equal "$after_quota" "$before_quota" "Probe must not write or consume quota"
+  after_user_gate="$(request_gate_snapshot "$user_gate_id")" \
+    || die "Unable to read the probe request gate after test execution"
+  after_global_gate="$(request_gate_snapshot "$global_gate_id")" \
+    || die "Unable to read the global request gate after test execution"
+  request_gate_advanced_once "$before_user_gate" "$after_user_gate" \
+    || die "Probe must advance the isolated user request gate exactly once"
+  request_gate_advanced_once "$before_global_gate" "$after_global_gate" \
+    || die "Probe must advance the isolated global request gate exactly once"
 
+  sleep 10
   estimate_logs="$(gcloud logging read \
-    "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"$SERVICE_NAME\" AND timestamp>=\"$START_UTC\" AND \"meal_scan_estimate\" AND jsonPayload.imageHash=\"$hash_prefix\"" \
+    "resource.type=\"cloud_run_revision\" AND resource.labels.revision_name=\"$PROBE_REVISION\" AND timestamp>=\"$START_UTC\" AND timestamp<=\"$END_UTC\" AND \"meal_scan_estimate\"" \
     --project "$PROJECT_ID" \
     --limit=1 \
     --format='value(insertId)')"
-  [[ -z "$estimate_logs" ]] || die "Probe must not create a Gemini estimate event for image-hash prefix $hash_prefix"
+  [[ -z "$estimate_logs" ]] || die "Probe must not create a Gemini estimate event on $PROBE_REVISION"
+  note "Physical App Check evidence passed in $MEAL_SCAN_REQUEST_GATE_COLLECTION: one isolated request-gate advance, unchanged billable quota, and no Gemini estimate event."
 }
 
 main() {
@@ -400,6 +644,8 @@ main() {
   verify_device_preconditions
   backup_app_data
   build_and_inspect_release_product
+  note "Rechecking the physical device immediately before the temporary cloud mutation."
+  verify_device_preconditions
 
   # From this point forward the EXIT trap restores the private, disabled revision on every exit path.
   ROLLBACK_ARMED=true

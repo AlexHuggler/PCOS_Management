@@ -3,6 +3,17 @@
 .gcloudignore
 node_modules/
 npm-debug.log
+.env
+.env.*
+*.p8
+*.pem
+*.key
+*.keystore
+*secret*
+secrets/
+**/secrets/
+LocalSecrets.xcconfig
+**/LocalSecrets.xcconfig
 test/
 scripts/
 README.md
