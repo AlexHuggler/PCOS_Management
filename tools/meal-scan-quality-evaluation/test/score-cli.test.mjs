@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+import {
+  buildInterpretationDigest,
+  createQualitativeReviewTemplate,
+} from "../src/evaluation.mjs";
 
 const toolkitDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const scorerPath = join(toolkitDirectory, "score.mjs");
@@ -53,6 +58,9 @@ function makeManifest() {
 function makeResults(manifest, transform = ({ truth }) => truth) {
   return manifest.records.map((record, index) => {
     const prediction = transform({ truth: record.groundTruth, record, index });
+    const dominantFoodInterpretation = prediction === null
+      ? null
+      : `Benchmark meal ${index + 1} — dominant food ${index + 1}`;
     return {
       id: record.id,
       structuredSuccess: prediction !== null,
@@ -66,6 +74,13 @@ function makeResults(manifest, transform = ({ truth }) => truth) {
       normalizerVersion: candidate.normalizerVersion,
       sourceCommit: candidate.sourceCommit,
       latencyMs: 120 + index,
+      dominantFoodInterpretation,
+      interpretationDigest: buildInterpretationDigest({
+        candidate: manifest.candidate,
+        id: record.id,
+        structuredSuccess: prediction !== null,
+        dominantFoodInterpretation,
+      }),
     };
   });
 }
@@ -74,6 +89,9 @@ function makeStabilityResults(manifest, transform = ({ truth }) => truth) {
   return manifest.records.filter(({ holdout }) => holdout).flatMap((record, holdoutIndex) => (
     Array.from({ length: 2 }, (_, runIndex) => {
       const prediction = transform({ truth: record.groundTruth, record, holdoutIndex, runIndex });
+      const dominantFoodInterpretation = prediction === null
+        ? null
+        : `Holdout meal ${holdoutIndex + 1} — repeat food ${runIndex + 1}`;
       return {
         id: record.id,
         structuredSuccess: prediction !== null,
@@ -87,18 +105,30 @@ function makeStabilityResults(manifest, transform = ({ truth }) => truth) {
         normalizerVersion: manifest.candidate.normalizerVersion,
         sourceCommit: manifest.candidate.sourceCommit,
         latencyMs: 100 + runIndex,
+        dominantFoodInterpretation,
+        interpretationDigest: buildInterpretationDigest({
+          candidate: manifest.candidate,
+          id: record.id,
+          structuredSuccess: prediction !== null,
+          dominantFoodInterpretation,
+        }),
       };
     })
   ));
 }
 
-function makeQualitative(manifest, transform = () => ({ acceptable: true, severe: false })) {
+function makeQualitative(
+  manifest,
+  transform = () => ({ acceptable: true, severe: false }),
+  results = makeResults(manifest),
+) {
+  const template = createQualitativeReviewTemplate(manifest.candidate, results);
   return {
-    version: 1,
-    records: manifest.records.map((record, index) => {
+    ...template,
+    records: template.records.map((record, index) => {
       const review = transform({ record, index });
       return {
-        id: record.id,
+        ...record,
         acceptableDominantFoodInterpretation: review.acceptable,
         severeOrUneditableFailure: review.severe,
       };
@@ -116,6 +146,20 @@ function writeFixture({
   omitQualitative = false,
 }) {
   const directory = mkdtempSync(join(tmpdir(), "cyclebalance-meal-quality-"));
+  const binDirectory = join(directory, "bin");
+  mkdirSync(binDirectory);
+  const gitPath = join(binDirectory, "git");
+  writeFileSync(gitPath, `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.includes("status")) {
+  if (process.env.CYCLEBALANCE_TEST_DIRTY_SCORER === "1") process.stdout.write(" M tools/meal-scan-quality-evaluation/score.mjs\\n");
+} else if (args.includes("rev-parse")) {
+  process.stdout.write("${candidate.sourceCommit}\\n");
+} else {
+  process.exitCode = 64;
+}
+`);
+  chmodSync(gitPath, 0o700);
   const manifestPath = join(directory, "manifest.json");
   const resultsPath = join(directory, resultsFormat === "jsonl" ? "results.jsonl" : "results.json");
   writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -140,19 +184,32 @@ function writeFixture({
 
   let qualitativePath;
   if (!omitQualitative) {
-    qualitative ??= makeQualitative(manifest);
+    if (qualitative === undefined) {
+      try {
+        qualitative = makeQualitative(manifest, undefined, results);
+      } catch {
+        qualitative = makeQualitative(makeManifest());
+      }
+    }
     qualitativePath = join(directory, "qualitative.json");
     writeFileSync(qualitativePath, JSON.stringify(qualitative));
   }
 
-  return { directory, manifestPath, resultsPath, stabilityPath, qualitativePath };
+  return { directory, binDirectory, manifestPath, resultsPath, stabilityPath, qualitativePath };
 }
 
-function runScorer(fixture) {
+function runScorer(fixture, { dirtyScorer = false } = {}) {
   const args = [scorerPath, "--manifest", fixture.manifestPath, "--results", fixture.resultsPath];
   if (fixture.stabilityPath) args.push("--stability", fixture.stabilityPath);
   if (fixture.qualitativePath) args.push("--qualitative", fixture.qualitativePath);
-  return spawnSync(process.execPath, args, { encoding: "utf8" });
+  return spawnSync(process.execPath, args, {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${fixture.binDirectory}:${process.env.PATH ?? ""}`,
+      CYCLEBALANCE_TEST_DIRTY_SCORER: dirtyScorer ? "1" : "0",
+    },
+  });
 }
 
 function parseSuccessfulRun(result) {
@@ -211,6 +268,7 @@ test("scores JSONL results separately by source and in combination without leaki
     "groundTruth",
     "samplingReason",
     "imagePath",
+    "dominantFoodInterpretation",
   ]) {
     assert.equal(serialized.includes(forbidden), false, `report leaked ${forbidden}`);
   }
@@ -226,6 +284,13 @@ test("accepts a JSON array and counts a structured failure against JSON and nutr
     protein: null,
     carbs: null,
     fat: null,
+    dominantFoodInterpretation: null,
+    interpretationDigest: buildInterpretationDigest({
+      candidate: manifest.candidate,
+      id: results[0].id,
+      structuredSuccess: false,
+      dominantFoodInterpretation: null,
+    }),
   };
   const fixture = writeFixture({ manifest, results });
   t.after(() => rmSync(fixture.directory, { recursive: true, force: true }));
@@ -327,7 +392,7 @@ test("rejects manifests that do not preserve the exact public-dataset topology a
     ["samplingReason", (manifest) => { delete manifest.records[0].samplingReason; }],
     ["unique", (manifest) => { manifest.records[1].id = manifest.records[0].id; }],
     ["candidate", (manifest) => { delete manifest.candidate.promptVersion; }],
-    ["sourceCommit", (manifest) => { manifest.candidate.sourceCommit = "dirty"; }],
+    ["source.?commit", (manifest) => { manifest.candidate.sourceCommit = "dirty"; }],
   ];
 
   for (const [expectedMessage, mutate] of cases) {
@@ -359,14 +424,47 @@ test("requires both complete stability and qualitative inputs", (t) => {
   }
 });
 
+test("scorer refuses a dirty candidate checkout before emitting a report", (t) => {
+  const fixture = writeFixture({});
+  t.after(() => rmSync(fixture.directory, { recursive: true, force: true }));
+
+  const result = runScorer(fixture, { dirtyScorer: true });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /clean and committed/i);
+  assert.equal(result.stdout, "");
+});
+
 test("requires exactly two structured-success repeats for every and only locked holdout", (t) => {
   const manifest = makeManifest();
   const cases = [
     ["exactly two", (records) => records.pop()],
     ["exactly two", (records) => records.push({ ...records[0] })],
-    ["locked holdout", (records) => { records[0].id = manifest.records.find(({ holdout }) => !holdout).id; }],
+    ["locked holdout", (records) => {
+      records[0].id = manifest.records.find(({ holdout }) => !holdout).id;
+      records[0].interpretationDigest = buildInterpretationDigest({
+        candidate: manifest.candidate,
+        id: records[0].id,
+        structuredSuccess: records[0].structuredSuccess,
+        dominantFoodInterpretation: records[0].dominantFoodInterpretation,
+      });
+    }],
     ["structured-success", (records) => {
-      records[0] = { ...records[0], structuredSuccess: false, calories: null, protein: null, carbs: null, fat: null };
+      records[0] = {
+        ...records[0],
+        structuredSuccess: false,
+        calories: null,
+        protein: null,
+        carbs: null,
+        fat: null,
+        dominantFoodInterpretation: null,
+        interpretationDigest: buildInterpretationDigest({
+          candidate: manifest.candidate,
+          id: records[0].id,
+          structuredSuccess: false,
+          dominantFoodInterpretation: null,
+        }),
+      };
     }],
   ];
 
@@ -423,11 +521,50 @@ test("requires at least 72 acceptable qualitative reviews and zero severe or une
   }
 });
 
+test("rejects qualitative decisions when interpretation evidence or primary results are changed", (t) => {
+  const manifest = makeManifest();
+  const results = makeResults(manifest);
+  const tamperedInterpretation = makeQualitative(manifest, undefined, results);
+  tamperedInterpretation.records[0].dominantFoodInterpretation = "A different dominant food";
+
+  const changedResults = makeResults(manifest);
+  changedResults[0].calories += 1;
+  const staleReview = makeQualitative(manifest, undefined, results);
+
+  for (const [qualitative, fixtureResults, expected] of [
+    [tamperedInterpretation, results, /interpretation evidence/i],
+    [staleReview, changedResults, /results digest/i],
+  ]) {
+    const fixture = writeFixture({ manifest, results: fixtureResults, qualitative });
+    t.after(() => rmSync(fixture.directory, { recursive: true, force: true }));
+    const result = runScorer(fixture);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, expected);
+    assert.equal(result.stdout, "");
+  }
+});
+
 test("rejects missing, duplicate, extra, or malformed result records", (t) => {
   const cases = [
     ["exactly one result", (results) => results.pop()],
-    ["duplicate result ID", (results) => { results[1].id = results[0].id; }],
-    ["unknown manifest ID", (results) => { results[0].id = "public_meal_999"; }],
+    ["duplicate result ID", (results) => {
+      results[1].id = results[0].id;
+      results[1].interpretationDigest = buildInterpretationDigest({
+        candidate,
+        id: results[1].id,
+        structuredSuccess: results[1].structuredSuccess,
+        dominantFoodInterpretation: results[1].dominantFoodInterpretation,
+      });
+    }],
+    ["unknown manifest ID", (results) => {
+      results[0].id = "public_meal_999";
+      results[0].interpretationDigest = buildInterpretationDigest({
+        candidate,
+        id: results[0].id,
+        structuredSuccess: results[0].structuredSuccess,
+        dominantFoodInterpretation: results[0].dominantFoodInterpretation,
+      });
+    }],
     ["modelVersion", (results) => { results[0].modelVersion = ""; }],
     ["latencyMs", (results) => { results[0].latencyMs = -1; }],
     ["nutrition values", (results) => { results[0].calories = null; }],
@@ -437,6 +574,13 @@ test("rejects missing, duplicate, extra, or malformed result records", (t) => {
       results[0].protein = null;
       results[0].carbs = null;
       results[0].fat = null;
+      results[0].dominantFoodInterpretation = null;
+      results[0].interpretationDigest = buildInterpretationDigest({
+        candidate,
+        id: results[0].id,
+        structuredSuccess: false,
+        dominantFoodInterpretation: null,
+      });
     }],
   ];
 

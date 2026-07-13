@@ -10,10 +10,15 @@ import {
   writeFileSync,
 } from "node:fs";
 import { readFile as readFileFromDisk } from "node:fs/promises";
-import { basename, dirname, isAbsolute, join } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { buildGeminiPayload, callGemini as callProductionGemini } from "../../../cloud/meal-scan-proxy/src/server.js";
-import { validateManifest } from "./evaluation.mjs";
+import {
+  assertEstimateBounds,
+  buildGeminiPayload,
+  callGemini as callProductionGemini,
+} from "../../../cloud/meal-scan-proxy/src/server.js";
+import { buildInterpretationDigest, validateManifest } from "./evaluation.mjs";
 
 export const EVALUATION_PROJECT_ID = "cyclebalance-prod-20260710";
 export const EVALUATION_REGION = "us-central1";
@@ -26,8 +31,18 @@ export const EVALUATION_NORMALIZER_VERSION = "imageio-960-jpeg078-v1";
 export const EVALUATION_TIMEOUT_MS = 12_000;
 
 const MAX_IMAGE_BYTES = 1_500_000;
+const MAX_DOMINANT_FOOD_INTERPRETATION_LENGTH = 1024;
 const IMAGE_MAP_KEYS = Object.freeze(["id", "locale", "mealType", "normalizedImagePath"]);
 const MEAL_TYPES = new Set(["breakfast", "lunch", "dinner", "snack"]);
+const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const CANDIDATE_SOURCE_PATHS = Object.freeze([
+  "cloud/meal-scan-proxy/src",
+  "tools/meal-scan-quality-evaluation/normalize-image.swift",
+  "tools/meal-scan-quality-evaluation/prepare-bundle.mjs",
+  "tools/meal-scan-quality-evaluation/run-evaluation.mjs",
+  "tools/meal-scan-quality-evaluation/score.mjs",
+  "tools/meal-scan-quality-evaluation/src",
+]);
 
 function fail(message) {
   throw new Error(message);
@@ -66,9 +81,49 @@ export function assertPinnedEvaluationCandidate(candidate) {
   return expected;
 }
 
+function readCandidateRepositoryState(execFile) {
+  let status;
+  let sourceCommit;
+  try {
+    status = execFile(
+      "git",
+      ["-C", REPOSITORY_ROOT, "status", "--porcelain", "--untracked-files=all", "--", ...CANDIDATE_SOURCE_PATHS],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+    sourceCommit = execFile(
+      "git",
+      ["-C", REPOSITORY_ROOT, "rev-parse", "--verify", "HEAD^{commit}"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+  } catch {
+    fail("unable to freeze the evaluation candidate from the repository");
+  }
+  if (typeof status !== "string" || status.trim() !== "") {
+    fail("evaluation model, prompt, schema, normalizer, and runner sources must be clean and committed before evaluation");
+  }
+  return pinnedEvaluationCandidate(typeof sourceCommit === "string" ? sourceCommit.trim() : "");
+}
+
+export function loadCurrentEvaluationCandidate(execFile = execFileSync) {
+  return readCandidateRepositoryState(execFile);
+}
+
+export function assertCurrentEvaluationCandidate(candidate, execFile = execFileSync) {
+  const expected = assertPinnedEvaluationCandidate(candidate);
+  const current = readCandidateRepositoryState(execFile);
+  if (current.sourceCommit !== expected.sourceCommit) {
+    fail("manifest candidate source commit does not match the clean current checkout");
+  }
+  return expected;
+}
+
 export function assertSafeProductionService(service, iamPolicy) {
   const environment = service?.spec?.template?.spec?.containers?.[0]?.env;
   if (!Array.isArray(environment)) fail("production service configuration is unavailable");
+  const annotations = [service?.metadata?.annotations, service?.spec?.template?.metadata?.annotations];
+  if (annotations.some((values) => values?.["run.googleapis.com/invoker-iam-disabled"] === "true")) {
+    fail("production service is public because the Cloud Run invoker IAM check is disabled");
+  }
 
   const environmentByName = new Map(environment.map((entry) => [entry?.name, entry]));
   if (environmentByName.get("MEAL_SCAN_ENABLED")?.value !== "false") {
@@ -91,12 +146,64 @@ export function assertSafeProductionService(service, iamPolicy) {
   return { geminiSecretVersion: geminiSecret.valueFrom.secretKeyRef.key };
 }
 
+function assertSafeProductionRevision(revision) {
+  const environment = revision?.spec?.containers?.[0]?.env;
+  if (!Array.isArray(environment)) fail("routed production revision configuration is unavailable");
+  if (revision?.metadata?.annotations?.["run.googleapis.com/invoker-iam-disabled"] === "true") {
+    fail("routed production revision is public because the Cloud Run invoker IAM check is disabled");
+  }
+  const environmentByName = new Map(environment.map((entry) => [entry?.name, entry]));
+  if (environmentByName.get("MEAL_SCAN_ENABLED")?.value !== "false") {
+    fail("every routed production meal scan revision must remain disabled during evaluation");
+  }
+  const geminiSecret = environmentByName.get("GEMINI_API_KEY");
+  if (
+    geminiSecret?.value !== undefined ||
+    geminiSecret?.valueFrom?.secretKeyRef?.name !== EVALUATION_SECRET ||
+    !/^[1-9][0-9]*$/.test(geminiSecret?.valueFrom?.secretKeyRef?.key ?? "")
+  ) {
+    fail("every routed production revision must use a numeric-pinned Gemini Secret Manager version");
+  }
+  return { geminiSecretVersion: geminiSecret.valueFrom.secretKeyRef.key };
+}
+
 function runGcloudJSON(execFile, args, kind) {
   try {
     const output = execFile("gcloud", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     return JSON.parse(output);
   } catch {
     fail(`unable to read the pinned ${kind}`);
+  }
+}
+
+function assertAnonymousTransportPrivate(execFile, serviceURL) {
+  let endpoint;
+  try {
+    const url = new URL(serviceURL);
+    if (url.protocol !== "https:") fail("production Cloud Run service URL must use HTTPS");
+    endpoint = new URL("/v1/meal-scans/estimate", url).href;
+  } catch (error) {
+    if (error instanceof Error && error.message === "production Cloud Run service URL must use HTTPS") throw error;
+    fail("production Cloud Run service URL is unavailable");
+  }
+  let status;
+  try {
+    status = execFile(
+      "curl",
+      [
+        "--silent", "--show-error", "--max-time", "5",
+        "--output", "/dev/null",
+        "--write-out", "%{http_code}",
+        "--request", "POST",
+        endpoint,
+      ],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+  } catch {
+    fail("unable to prove the production Cloud Run anonymous transport is private");
+  }
+  if (typeof status !== "string" || status.trim() !== "403") {
+    fail("production Cloud Run anonymous transport must remain private");
   }
 }
 
@@ -117,7 +224,30 @@ export function preflightPinnedProductionService(execFile = execFileSync) {
     ["run", "services", "get-iam-policy", EVALUATION_SERVICE, ...commonArguments],
     "Cloud Run IAM policy",
   );
-  return assertSafeProductionService(service, iamPolicy);
+  const serviceState = assertSafeProductionService(service, iamPolicy);
+  const routedRevisionNames = [...new Set((service?.status?.traffic ?? [])
+    .filter(({ percent, tag, url }) => (
+      percent === undefined || percent > 0 ||
+      (typeof tag === "string" && tag.length > 0) ||
+      (typeof url === "string" && url.length > 0)
+    ))
+    .map(({ revisionName }) => revisionName))];
+  if (routedRevisionNames.length === 0 || routedRevisionNames.some((name) => typeof name !== "string" || name.length === 0)) {
+    fail("unable to prove every routed production revision is disabled");
+  }
+  for (const revisionName of routedRevisionNames) {
+    const revision = runGcloudJSON(
+      execFile,
+      ["run", "revisions", "describe", revisionName, ...commonArguments],
+      `routed Cloud Run revision ${revisionName}`,
+    );
+    const revisionState = assertSafeProductionRevision(revision);
+    if (revisionState.geminiSecretVersion !== serviceState.geminiSecretVersion) {
+      fail("all routed production revisions must use the same numeric-pinned Gemini secret version");
+    }
+  }
+  assertAnonymousTransportPrivate(execFile, service?.status?.url);
+  return serviceState;
 }
 
 export function requirePaidEvaluationConfirmation(value) {
@@ -244,6 +374,13 @@ function nutritionTotals(estimate) {
   return totals;
 }
 
+function dominantFoodInterpretation(estimate) {
+  const mealName = estimate.meal_name.trim();
+  const itemNames = estimate.items.map(({ display_name: displayName }) => displayName.trim());
+  const interpretation = `${mealName} — ${itemNames.join(", ")}`;
+  return interpretation.slice(0, MAX_DOMINANT_FOOD_INTERPRETATION_LENGTH);
+}
+
 async function prepareBenchmark({ manifest, imageMap, apiKey, readFile }) {
   if (typeof apiKey !== "string" || apiKey.length < 16) fail("Gemini evaluation key is required");
   const manifestRecordsByID = validateManifest(manifest);
@@ -278,6 +415,7 @@ async function evaluateRecords({ records, imageRecordsByID, preparedImages, cand
     };
     const startedAt = clock();
     let totals = null;
+    let interpretation = null;
     try {
       const response = await callGemini({
         modelId: candidate.modelVersion,
@@ -285,14 +423,18 @@ async function evaluateRecords({ records, imageRecordsByID, preparedImages, cand
         timeoutMs: EVALUATION_TIMEOUT_MS,
         apiKey,
       });
+      assertEstimateBounds(response.estimate);
       totals = nutritionTotals(response.estimate);
+      interpretation = dominantFoodInterpretation(response.estimate);
     } catch {
       totals = null;
+      interpretation = null;
     }
     const latencyMs = Math.max(0, clock() - startedAt);
+    const structuredSuccess = totals !== null;
     results.push({
       id: record.id,
-      structuredSuccess: totals !== null,
+      structuredSuccess,
       calories: totals?.calories ?? null,
       protein: totals?.protein ?? null,
       carbs: totals?.carbs ?? null,
@@ -303,6 +445,13 @@ async function evaluateRecords({ records, imageRecordsByID, preparedImages, cand
       normalizerVersion: candidate.normalizerVersion,
       sourceCommit: candidate.sourceCommit,
       latencyMs,
+      dominantFoodInterpretation: interpretation,
+      interpretationDigest: buildInterpretationDigest({
+        candidate,
+        id: record.id,
+        structuredSuccess,
+        dominantFoodInterpretation: interpretation,
+      }),
     });
   }
   return results;

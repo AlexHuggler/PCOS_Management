@@ -17,9 +17,17 @@ const argumentsFixture = [
   "--image-map", "/private/evaluation/image-map.json",
   "--output", "/private/evaluation/results.json",
   "--stability-output", "/private/evaluation/stability-results.json",
+  "--qualitative-template", "/private/evaluation/qualitative-review.json",
 ];
 const toolkitDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const runnerPath = resolve(toolkitDirectory, "run-evaluation.mjs");
+const candidate = Object.freeze({
+  modelVersion: "gemini-3.1-flash-lite",
+  promptVersion: "meal-scan-prompt-v1",
+  schemaVersion: "meal-scan-gemini-v1",
+  normalizerVersion: "imageio-960-jpeg078-v1",
+  sourceCommit: "a".repeat(40),
+});
 
 test("runner arguments require one absolute manifest image map and output path", () => {
   assert.deepEqual(parseRunnerArguments(argumentsFixture), {
@@ -27,6 +35,7 @@ test("runner arguments require one absolute manifest image map and output path",
     imageMapPath: "/private/evaluation/image-map.json",
     outputPath: "/private/evaluation/results.json",
     stabilityOutputPath: "/private/evaluation/stability-results.json",
+    qualitativeTemplatePath: "/private/evaluation/qualitative-review.json",
   });
   assert.throws(() => parseRunnerArguments(argumentsFixture.slice(0, -2)), /usage/i);
   assert.throws(
@@ -44,6 +53,7 @@ test("missing paid confirmation stops before files cloud state or secrets are re
       environment: {},
       readText: () => calls.push("read"),
       validateBundlePaths: () => calls.push("paths"),
+      validateCandidate: () => calls.push("candidate"),
       preflightService: () => calls.push("preflight"),
       loadAPIKey: () => calls.push("secret"),
       evaluate: () => calls.push("evaluate"),
@@ -54,15 +64,16 @@ test("missing paid confirmation stops before files cloud state or secrets are re
   assert.deepEqual(calls, []);
 });
 
-test("preflights the disabled private service before secret access and writes only final results", async () => {
+test("preflights and postflights the disabled private service before publishing final results", async () => {
   const calls = [];
-  const manifest = { version: 1, records: [] };
+  const manifest = { version: 2, candidate, records: [] };
   const imageMap = { version: 1, records: [] };
   const primaryResults = [{ id: "public_meal_001", structuredSuccess: false }];
   const stabilityResults = [
     { id: "public_meal_001", structuredSuccess: false },
     { id: "public_meal_001", structuredSuccess: false },
   ];
+  const qualitativeTemplate = { version: 2, records: [] };
 
   const summary = await runEvaluationCommand({
     argv: argumentsFixture,
@@ -72,7 +83,18 @@ test("preflights the disabled private service before secret access and writes on
       return JSON.stringify(path.includes("image-map") ? imageMap : manifest);
     },
     validateBundlePaths: () => calls.push("paths"),
+    validateCandidate: (actual) => {
+      calls.push("candidate");
+      assert.deepEqual(actual, candidate);
+    },
     preflightService: () => { calls.push("preflight"); return { geminiSecretVersion: "2" }; },
+    postflightService: () => { calls.push("postflight"); return { geminiSecretVersion: "2" }; },
+    buildReviewTemplate: (actualCandidate, actualResults) => {
+      calls.push("review-template");
+      assert.deepEqual(actualCandidate, candidate);
+      assert.deepEqual(actualResults, primaryResults);
+      return qualitativeTemplate;
+    },
     loadAPIKey: (secretVersion) => {
       calls.push("secret");
       assert.equal(secretVersion, "2");
@@ -89,7 +111,9 @@ test("preflights the disabled private service before secret access and writes on
       calls.push(`write:${path}`);
       assert.deepEqual(
         value,
-        path.includes("stability") ? stabilityResults : primaryResults,
+        path.includes("stability")
+          ? stabilityResults
+          : path.includes("qualitative") ? qualitativeTemplate : primaryResults,
       );
     },
   });
@@ -98,19 +122,69 @@ test("preflights the disabled private service before secret access and writes on
     "read:/private/evaluation/manifest.json",
     "read:/private/evaluation/image-map.json",
     "paths",
+    "candidate",
     "preflight",
     "secret",
     "evaluate",
+    "candidate",
+    "postflight",
+    "review-template",
     "write:/private/evaluation/results.json",
     "write:/private/evaluation/stability-results.json",
+    "write:/private/evaluation/qualitative-review.json",
   ]);
   assert.deepEqual(summary, {
     evaluatedRecordCount: 1,
     stabilityRunCount: 2,
     outputPath: "/private/evaluation/results.json",
     stabilityOutputPath: "/private/evaluation/stability-results.json",
+    qualitativeTemplatePath: "/private/evaluation/qualitative-review.json",
   });
   assert.equal(JSON.stringify(summary).includes("secret-value-in-memory"), false);
+});
+
+test("postflight failure publishes no evaluation output", async () => {
+  const calls = [];
+  await assert.rejects(
+    runEvaluationCommand({
+      argv: argumentsFixture,
+      environment: { CONFIRM_PAID_PUBLIC_BENCHMARK: "YES" },
+      readText: (path) => JSON.stringify(path.includes("image-map")
+        ? { version: 1, records: [] }
+        : { version: 2, candidate, records: [] }),
+      validateBundlePaths: () => {},
+      validateCandidate: () => calls.push("candidate"),
+      preflightService: () => ({ geminiSecretVersion: "2" }),
+      postflightService: () => { throw new Error("service changed during benchmark"); },
+      loadAPIKey: () => "secret-value-in-memory",
+      evaluate: async () => ({ primaryResults: [], stabilityResults: [] }),
+      writeResults: () => calls.push("write"),
+    }),
+    /service changed during benchmark/i,
+  );
+  assert.deepEqual(calls, ["candidate", "candidate"]);
+});
+
+test("secret-version drift across the postflight fails closed before publication", async () => {
+  let writes = 0;
+  await assert.rejects(
+    runEvaluationCommand({
+      argv: argumentsFixture,
+      environment: { CONFIRM_PAID_PUBLIC_BENCHMARK: "YES" },
+      readText: (path) => JSON.stringify(path.includes("image-map")
+        ? { version: 1, records: [] }
+        : { version: 2, candidate, records: [] }),
+      validateBundlePaths: () => {},
+      validateCandidate: () => {},
+      preflightService: () => ({ geminiSecretVersion: "2" }),
+      postflightService: () => ({ geminiSecretVersion: "3" }),
+      loadAPIKey: () => "secret-value-in-memory",
+      evaluate: async () => ({ primaryResults: [], stabilityResults: [] }),
+      writeResults: () => { writes += 1; },
+    }),
+    /secret version changed/i,
+  );
+  assert.equal(writes, 0);
 });
 
 test("image map paths are confined to regular non-symlink files in the bundle images directory", (t) => {

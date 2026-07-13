@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  assertCurrentEvaluationCandidate,
   assertSafeProductionService,
   evaluatePublicBenchmark,
   evaluatePublicBenchmarkSuite,
@@ -16,7 +17,7 @@ import {
   validateImageMap,
   writePrivateJSON,
 } from "../src/runner.mjs";
-import { validateManifest } from "../src/evaluation.mjs";
+import { buildInterpretationDigest, validateManifest } from "../src/evaluation.mjs";
 
 const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
 const jpegHash = crypto.createHash("sha256").update(jpeg).digest("hex");
@@ -27,6 +28,30 @@ const candidate = Object.freeze({
   normalizerVersion: "imageio-960-jpeg078-v1",
   sourceCommit: "a".repeat(40),
 });
+
+function estimateFixture({ calories = 500, protein = 20, carbs = 50, fat = 20 } = {}) {
+  return {
+    meal_name: "Benchmark meal",
+    confidence: "medium",
+    warnings: [],
+    items: [{
+      display_name: "Benchmark item",
+      canonical_query: "benchmark item",
+      estimated_grams: 350,
+      confidence: "medium",
+      is_mixed_dish: false,
+      nutrition_fallback: {
+        calories_kcal: calories,
+        protein_grams: protein,
+        carbs_grams: carbs,
+        fat_grams: fat,
+        fiber_grams: 8,
+        sugar_grams: 6,
+        sodium_mg: 500,
+      },
+    }],
+  };
+}
 
 function sourceForIndex(index) {
   if (index < 40) return "Nutrition5k";
@@ -93,8 +118,39 @@ test("requires the production service to remain disabled private and Secret Mana
     /private/i,
   );
   assert.throws(
+    () => assertSafeProductionService({
+      ...service,
+      metadata: { annotations: { "run.googleapis.com/invoker-iam-disabled": "true" } },
+    }, { bindings: [] }),
+    /invoker.*disabled|public/i,
+  );
+  assert.throws(
     () => assertSafeProductionService({ ...service, spec: { template: { spec: { containers: [{ env: [{ name: "MEAL_SCAN_ENABLED", value: "false" }, { name: "GEMINI_API_KEY", value: "plaintext" }] }] } } } }, { bindings: [] }),
     /Secret Manager/i,
+  );
+});
+
+test("binds the paid run to clean candidate sources at the exact manifest commit", () => {
+  const calls = [];
+  assert.deepEqual(assertCurrentEvaluationCandidate(candidate, (command, args, options) => {
+    calls.push({ command, args, options });
+    return args.includes("status") ? "" : `${candidate.sourceCommit}\n`;
+  }), candidate);
+  assert.equal(calls.length, 2);
+  const statusArguments = calls.find(({ args }) => args.includes("status"))?.args ?? [];
+  assert.equal(statusArguments.includes("tools/meal-scan-quality-evaluation/score.mjs"), true);
+  assert.equal(statusArguments.includes("tools/meal-scan-quality-evaluation/prepare-bundle.mjs"), true);
+  assert.throws(
+    () => assertCurrentEvaluationCandidate(candidate, (_command, args) => (
+      args.includes("status") ? " M tools/meal-scan-quality-evaluation/src/runner.mjs\n" : `${candidate.sourceCommit}\n`
+    )),
+    /clean and committed/i,
+  );
+  assert.throws(
+    () => assertCurrentEvaluationCandidate(candidate, (_command, args) => (
+      args.includes("status") ? "" : `${"b".repeat(40)}\n`
+    )),
+    /source commit/i,
   );
 });
 
@@ -121,15 +177,22 @@ test("loads only the deployed numeric production secret version through argument
 test("reads back the pinned Cloud Run service and IAM policy before evaluation", () => {
   const calls = [];
   const service = {
+    metadata: { annotations: {} },
     spec: { template: { spec: { containers: [{ env: [
       { name: "MEAL_SCAN_ENABLED", value: "false" },
       { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
     ] }] } } },
+    status: {
+      url: "https://cyclebalance-meal-scan-proxy.example.run.app",
+      traffic: [{ percent: 100, revisionName: "cyclebalance-meal-scan-proxy-00001" }],
+    },
   };
-  const responses = [JSON.stringify(service), JSON.stringify({ bindings: [] })];
+  const revision = service.spec.template;
+  const responses = [JSON.stringify(service), JSON.stringify({ bindings: [] }), JSON.stringify(revision)];
 
   const preflight = preflightPinnedProductionService((command, args, options) => {
     calls.push({ command, args, options });
+    if (command === "curl") return "403";
     return responses.shift();
   });
 
@@ -154,12 +217,121 @@ test("reads back the pinned Cloud Run service and IAM policy before evaluation",
         "--quiet",
       ],
     },
+    {
+      command: "gcloud",
+      args: [
+        "run", "revisions", "describe", "cyclebalance-meal-scan-proxy-00001",
+        "--project=cyclebalance-prod-20260710",
+        "--region=us-central1",
+        "--format=json",
+        "--quiet",
+      ],
+    },
+    {
+      command: "curl",
+      args: [
+        "--silent", "--show-error", "--max-time", "5",
+        "--output", "/dev/null",
+        "--write-out", "%{http_code}",
+        "--request", "POST",
+        "https://cyclebalance-meal-scan-proxy.example.run.app/v1/meal-scans/estimate",
+      ],
+    },
   ]);
   assert.deepEqual(calls.map(({ options }) => options), [
     { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   ]);
   assert.deepEqual(preflight, { geminiSecretVersion: "2" });
+});
+
+test("preflight requires the Cloud Run IAM boundary to return 403 for anonymous transport", () => {
+  const service = {
+    metadata: { annotations: {} },
+    spec: { template: { spec: { containers: [{ env: [
+      { name: "MEAL_SCAN_ENABLED", value: "false" },
+      { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
+    ] }] } } },
+    status: {
+      url: "https://cyclebalance-meal-scan-proxy.example.run.app",
+      traffic: [{ percent: 100, revisionName: "cyclebalance-meal-scan-proxy-00001" }],
+    },
+  };
+  const revision = service.spec.template;
+  const responses = [JSON.stringify(service), JSON.stringify({ bindings: [] }), JSON.stringify(revision)];
+  for (const anonymousStatus of ["200", "404"]) {
+    const attemptResponses = [...responses];
+    assert.throws(
+      () => preflightPinnedProductionService(
+        (command) => command === "curl" ? anonymousStatus : attemptResponses.shift(),
+      ),
+      /anonymous transport|private/i,
+    );
+  }
+});
+
+test("preflight rejects traffic routed to an older enabled revision", () => {
+  const service = {
+    metadata: { annotations: {} },
+    spec: { template: { spec: { containers: [{ env: [
+      { name: "MEAL_SCAN_ENABLED", value: "false" },
+      { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
+    ] }] } } },
+    status: { traffic: [{ percent: 100, revisionName: "cyclebalance-meal-scan-proxy-older" }] },
+  };
+  const enabledRevision = {
+    spec: { containers: [{ env: [
+      { name: "MEAL_SCAN_ENABLED", value: "true" },
+      { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
+    ] }] },
+  };
+  const responses = [JSON.stringify(service), JSON.stringify({ bindings: [] }), JSON.stringify(enabledRevision)];
+  assert.throws(
+    () => preflightPinnedProductionService(() => responses.shift()),
+    /disabled/i,
+  );
+});
+
+test("preflight rejects an enabled revision exposed only through a zero-percent traffic tag", () => {
+  const service = {
+    metadata: { annotations: {} },
+    spec: { template: { spec: { containers: [{ env: [
+      { name: "MEAL_SCAN_ENABLED", value: "false" },
+      { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
+    ] }] } } },
+    status: {
+      url: "https://cyclebalance-meal-scan-proxy.example.run.app",
+      traffic: [
+        { percent: 100, revisionName: "cyclebalance-meal-scan-proxy-current" },
+        {
+          percent: 0,
+          revisionName: "cyclebalance-meal-scan-proxy-tagged",
+          tag: "review",
+          url: "https://review---cyclebalance-meal-scan-proxy.example.run.app",
+        },
+      ],
+    },
+  };
+  const disabledRevision = service.spec.template;
+  const enabledRevision = {
+    spec: { containers: [{ env: [
+      { name: "MEAL_SCAN_ENABLED", value: "true" },
+      { name: "GEMINI_API_KEY", valueFrom: { secretKeyRef: { name: "cyclebalance-gemini-api-key", key: "2" } } },
+    ] }] },
+  };
+  const responses = [
+    JSON.stringify(service),
+    JSON.stringify({ bindings: [] }),
+    JSON.stringify(disabledRevision),
+    JSON.stringify(enabledRevision),
+  ];
+
+  assert.throws(
+    () => preflightPinnedProductionService((command) => command === "curl" ? "403" : responses.shift()),
+    /disabled/i,
+  );
 });
 
 test("requires explicit paid-run confirmation and writes owner-only results without overwrite", (t) => {
@@ -225,7 +397,7 @@ test("refuses a non-pinned candidate before reading an image or calling Gemini",
   assert.equal(providerCalls, 0);
 });
 
-test("runs a bounded sequential benchmark with the exact production payload and aggregate-only results", async () => {
+test("runs a bounded sequential benchmark with the exact production payload and bounded review evidence", async () => {
   const manifest = manifestFixture();
   const imageMap = imageMapFixture(manifest);
   const payloads = [];
@@ -249,15 +421,7 @@ test("runs a bounded sequential benchmark with the exact production payload and 
       await Promise.resolve();
       activeCalls -= 1;
       return {
-        estimate: {
-          meal_name: "Benchmark meal",
-          confidence: "medium",
-          warnings: [],
-          items: [
-            { nutrition_fallback: { calories_kcal: 300, protein_grams: 12, carbs_grams: 40, fat_grams: 10 } },
-            { nutrition_fallback: { calories_kcal: 200, protein_grams: 8, carbs_grams: 10, fat_grams: 10 } },
-          ],
-        },
+        estimate: estimateFixture(),
         usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50 },
       };
     },
@@ -266,6 +430,7 @@ test("runs a bounded sequential benchmark with the exact production payload and 
   assert.equal(results.length, 80);
   assert.equal(payloads.length, 80);
   assert.equal(maximumActiveCalls, 1);
+  const dominantFoodInterpretation = "Benchmark meal — Benchmark item";
   assert.deepEqual(results[0], {
     id: "public_meal_001",
     structuredSuccess: true,
@@ -279,6 +444,13 @@ test("runs a bounded sequential benchmark with the exact production payload and 
     normalizerVersion: "imageio-960-jpeg078-v1",
     sourceCommit: "a".repeat(40),
     latencyMs: 10,
+    dominantFoodInterpretation,
+    interpretationDigest: buildInterpretationDigest({
+      candidate,
+      id: "public_meal_001",
+      structuredSuccess: true,
+      dominantFoodInterpretation,
+    }),
   });
   assert.equal(payloads[0].modelId, "gemini-3.1-flash-lite");
   assert.equal(payloads[0].timeoutMs, 12_000);
@@ -291,6 +463,40 @@ test("runs a bounded sequential benchmark with the exact production payload and 
   assert.equal(serializedResults.includes("/private/benchmark"), false);
   assert.equal(serializedResults.includes("secret-never-returned"), false);
   assert.equal(serializedResults.includes("nutrition_fallback"), false);
+  assert.equal(results.every(({ dominantFoodInterpretation: value }) => value.length <= 1024), true);
+});
+
+test("marks an estimate as failed when the production response-bounds contract rejects it", async () => {
+  const manifest = manifestFixture();
+  const results = await evaluatePublicBenchmark({
+    manifest,
+    imageMap: imageMapFixture(manifest),
+    apiKey: "secret-never-returned",
+    readFile: async () => jpeg,
+    clock: (() => { let value = 0; return () => value += 1; })(),
+    callGemini: async () => ({
+      estimate: {
+        meal_name: "Looks plausible but is not production-valid",
+        confidence: "medium",
+        warnings: [],
+        items: [{
+          display_name: "Incomplete fallback",
+          canonical_query: "incomplete fallback",
+          estimated_grams: 350,
+          confidence: "medium",
+          is_mixed_dish: false,
+          nutrition_fallback: {
+            calories_kcal: 500,
+            protein_grams: 20,
+            carbs_grams: 50,
+            fat_grams: 20,
+          },
+        }],
+      },
+    }),
+  });
+
+  assert.equal(results.every(({ structuredSuccess }) => structuredSuccess === false), true);
 });
 
 test("records a structured failure without leaking model errors or image paths", async () => {
@@ -311,12 +517,7 @@ test("records a structured failure without leaking model errors or image paths",
       calls += 1;
       if (calls === 1) throw new Error("secret-never-returned /private/benchmark/image.jpg");
       return {
-        estimate: {
-          meal_name: "Meal",
-          confidence: "medium",
-          warnings: [],
-          items: [{ nutrition_fallback: { calories_kcal: 500, protein_grams: 20, carbs_grams: 50, fat_grams: 20 } }],
-        },
+        estimate: estimateFixture(),
       };
     },
   });
@@ -334,6 +535,13 @@ test("records a structured failure without leaking model errors or image paths",
     normalizerVersion: "imageio-960-jpeg078-v1",
     sourceCommit: "a".repeat(40),
     latencyMs: 5,
+    dominantFoodInterpretation: null,
+    interpretationDigest: buildInterpretationDigest({
+      candidate,
+      id: "public_meal_001",
+      structuredSuccess: false,
+      dominantFoodInterpretation: null,
+    }),
   });
   assert.equal(JSON.stringify(results).includes("secret-never-returned"), false);
   assert.equal(JSON.stringify(results).includes("/private/benchmark"), false);
@@ -362,12 +570,7 @@ test("complete suite adds exactly two sequential stability runs for each locked 
       await Promise.resolve();
       activeCalls -= 1;
       return {
-        estimate: {
-          meal_name: "Meal",
-          confidence: "medium",
-          warnings: [],
-          items: [{ nutrition_fallback: { calories_kcal: 500, protein_grams: 20, carbs_grams: 50, fat_grams: 20 } }],
-        },
+        estimate: estimateFixture(),
       };
     },
   });

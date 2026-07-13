@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { parseResultsText, scoreEvaluation } from "./src/evaluation.mjs";
+import { assertCurrentEvaluationCandidate } from "./src/runner.mjs";
 
 const USAGE = "usage: node score.mjs --manifest <manifest.json> --results <results.json|results.jsonl> --stability <results.json|results.jsonl> --qualitative <qualitative-review.json>";
 
@@ -51,10 +52,12 @@ function readJSON(path, kind) {
 try {
   const options = parseArguments(process.argv.slice(2));
   const manifest = readManifest(options["--manifest"]);
+  assertCurrentEvaluationCandidate(manifest?.candidate);
   const results = parseResultsText(readText(options["--results"], "results"));
   const stabilityResults = parseResultsText(readText(options["--stability"], "stability panel"), "stability panel");
   const qualitativeReview = readJSON(options["--qualitative"], "qualitative review");
   const report = scoreEvaluation(manifest, results, stabilityResults, qualitativeReview);
+  assertCurrentEvaluationCandidate(manifest?.candidate);
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   if (!report.gates.allPassed) process.exitCode = 1;
 } catch (error) {

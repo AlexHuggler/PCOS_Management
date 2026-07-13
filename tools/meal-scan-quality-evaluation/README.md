@@ -11,7 +11,7 @@ The included `sample-manifest.json` is a schema fixture only. Its reserved `exam
 - Exactly 20 records marked as locked holdouts with `holdout: true`
 - One primary result for every manifest ID
 - Exactly two additional structured-success stability runs for every locked holdout, and no other IDs
-- One qualitative decision for every record, with at least 72 acceptable dominant-food interpretations and zero severe or uneditable failures
+- One completed, runner-generated qualitative review record for every result, with at least 72 acceptable dominant-food interpretations and zero severe or uneditable failures
 - macOS/Xcode command-line tools for the production-equivalent image normalizer
 - Authenticated `gcloud` access to `cyclebalance-prod-20260710` for the paid runner
 - Python 3 and approximately 2.03 GB of network transfer for the optional one-pass SNAPMe acquirer
@@ -93,20 +93,21 @@ npm run prepare -- \
 
 Preparation validates every source record before opening an image. Every indexed image must be a regular, non-symlink file whose resolved path remains inside `--source-root`; validation finishes before the native normalizer is compiled or the output directory is created. It compiles the checked-in ImageIO normalizer once, applies the app's 960-pixel long-edge, white-background, JPEG 0.78 pipeline without copying source metadata, and writes owner-only normalized JPEGs. It computes each normalized hash, produces a provenance-only `manifest.json`, and keeps local paths in a separate `image-map.json`. Holdouts are assigned before model execution by a deterministic hash policy with 10 Nutrition5k, 7 SNAPMe, and 3 MFDS records.
 
-Bundle preparation also freezes the candidate before inference. It refuses to run while the production model/prompt/schema sources, evaluator runner, or image normalizer differ from the current Git commit. The manifest records the full source commit together with the pinned model, prompt, schema, and normalizer versions. Unrelated working-tree changes do not affect this check.
+Bundle preparation also freezes the candidate before inference. It refuses to run while the production model/prompt/schema sources, evaluator entry points (including the scorer), or image normalizer differ from the current Git commit. The manifest records the full source commit together with the pinned model, prompt, schema, and normalizer versions. Unrelated working-tree changes do not affect this check.
 
 ## Run The Paid Evaluation
 
-The runner is pinned to project `cyclebalance-prod-20260710`, service `cyclebalance-meal-scan-proxy`, secret `cyclebalance-gemini-api-key`, region `us-central1`, and model `gemini-3.1-flash-lite`. It refuses to read the secret unless Cloud Run is still private, `MEAL_SCAN_ENABLED=false`, and the deployed key remains a numeric-pinned Secret Manager reference. It reads that exact deployed version, never `latest`.
+The runner is pinned to project `cyclebalance-prod-20260710`, service `cyclebalance-meal-scan-proxy`, secret `cyclebalance-gemini-api-key`, region `us-central1`, and model `gemini-3.1-flash-lite`. It refuses to read the secret unless the service and every traffic-routed or traffic-tagged revision remain disabled, the Cloud Run invoker IAM check is enabled, no public IAM member exists, an anonymous request is rejected by that IAM boundary with HTTP 403, and every reachable revision uses the same numeric-pinned Secret Manager version. It reads that exact deployed version, never `latest`.
 
-It validates all 80 normalized JPEGs, hashes, and size limits before the first model call. The private bundle's `images` directory and every indexed JPEG must be regular, non-symlink filesystem entries confined to that bundle. A complete run makes exactly 120 sequential calls: 80 primary calls plus two additional calls for each locked holdout. Calls use the production prompt builder, response schema, model, and 12-second timeout. Output files are published with an atomic no-overwrite operation and mode `0600`.
+It also requires the frozen source commit to match the clean current checkout before cloud preflight or secret access and checks it again after inference. It validates all 80 normalized JPEGs, hashes, and size limits before the first model call. The private bundle's `images` directory and every indexed JPEG must be regular, non-symlink filesystem entries confined to that bundle. A complete run makes exactly 120 sequential calls: 80 primary calls plus two additional calls for each locked holdout. Calls use the production prompt builder, response schema, model, response-bounds validator, and 12-second timeout. Before publishing anything, the runner repeats the complete Cloud Run, IAM, anonymous-transport, revision, and pinned-secret proof and rejects any secret-version drift. The primary, stability, and qualitative-review-template files are then published with atomic no-overwrite operations and mode `0600`.
 
 ```sh
 CONFIRM_PAID_PUBLIC_BENCHMARK=YES npm run evaluate -- \
   --manifest /absolute/private/cyclebalance-public-benchmark/manifest.json \
   --image-map /absolute/private/cyclebalance-public-benchmark/image-map.json \
   --output /absolute/private/cyclebalance-public-benchmark/results.json \
-  --stability-output /absolute/private/cyclebalance-public-benchmark/stability-results.json
+  --stability-output /absolute/private/cyclebalance-public-benchmark/stability-results.json \
+  --qualitative-template /absolute/private/cyclebalance-public-benchmark/qualitative-review.json
 ```
 
 The runner never sends benchmark traffic through the customer endpoint and never prints or writes the API key, raw model response, source path, or model error. Nutrition totals are the sum of each model item's structured `nutrition_fallback`, deliberately excluding the app's local food-database correction so the benchmark remains a conservative model-quality floor.
@@ -167,20 +168,33 @@ Results can be a JSON array or JSONL with one object per line. Each primary reco
   "schemaVersion": "meal-scan-gemini-v1",
   "normalizerVersion": "imageio-960-jpeg078-v1",
   "sourceCommit": "0123456789abcdef0123456789abcdef01234567",
-  "latencyMs": 842
+  "latencyMs": 842,
+  "dominantFoodInterpretation": "Rice bowl — rice, grilled chicken, broccoli",
+  "interpretationDigest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }
 ```
 
-For `structuredSuccess: true`, all four nutrition values must be finite and non-negative. For `structuredSuccess: false`, all four must be `null`. Every result must repeat the exact frozen candidate provenance; mixed model, prompt, schema, normalizer, or source-commit results are rejected. `latencyMs` must be finite and non-negative.
+For `structuredSuccess: true`, all four nutrition values must be finite and non-negative and `dominantFoodInterpretation` is a non-empty string capped at 1,024 characters. For `structuredSuccess: false`, all four nutrition values and the interpretation must be `null`. `interpretationDigest` binds the record ID, success state, bounded interpretation, and frozen candidate. Every result must repeat the exact frozen candidate provenance; mixed model, prompt, schema, normalizer, or source-commit results are rejected. `latencyMs` must be finite and non-negative.
 
-The qualitative-review file uses schema version 1 and contains exactly one decision for every manifest ID:
+The paid runner creates an owner-only schema-version-2 qualitative-review template. Review the corresponding private normalized image and the bounded interpretation, then replace each decision's `null` values with booleans. Do not create a new review file by hand or reuse a review from another run: the candidate, complete primary-results digest, and per-record interpretation digest are mandatory bindings.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
+  "candidate": {
+    "modelVersion": "gemini-3.1-flash-lite",
+    "promptVersion": "meal-scan-prompt-v1",
+    "schemaVersion": "meal-scan-gemini-v1",
+    "normalizerVersion": "imageio-960-jpeg078-v1",
+    "sourceCommit": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "resultsDigest": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
   "records": [
     {
       "id": "nutrition5k_001",
+      "structuredSuccess": true,
+      "dominantFoodInterpretation": "Rice bowl — rice, grilled chicken, broccoli",
+      "interpretationDigest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
       "acceptableDominantFoodInterpretation": true,
       "severeOrUneditableFailure": false
     }
@@ -199,7 +213,7 @@ node score.mjs \
   > /absolute/private/cyclebalance-public-benchmark/report.json
 ```
 
-Stability and qualitative inputs are mandatory. The scorer writes the aggregate report and exits nonzero whenever any numerical, source, stability, provenance, or qualitative gate fails. The report never echoes source URLs, licenses, image hashes, ground truth, sampling reasons, reference types, or image paths.
+Stability and qualitative inputs are mandatory. The scorer independently requires its source and the frozen candidate sources to be clean at the manifest commit before and after scoring. It rejects a qualitative file whose candidate, complete results digest, or interpretation evidence differs from the primary results. It writes the aggregate report and exits nonzero whenever any numerical, source, stability, provenance, or qualitative gate fails. The report never echoes source URLs, licenses, image hashes, ground truth, sampling reasons, reference types, image paths, or qualitative interpretation text.
 
 ## Metrics
 

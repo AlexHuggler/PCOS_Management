@@ -1,9 +1,12 @@
+import crypto from "node:crypto";
+
 const REQUIRED_RECORD_COUNT = 80;
 const REQUIRED_HOLDOUT_COUNT = 20;
 const SOURCE_COUNTS = Object.freeze({ Nutrition5k: 40, SNAPMe: 30, MFDS: 10 });
 const SOURCES = Object.freeze(Object.keys(SOURCE_COUNTS));
 const NUTRIENTS = Object.freeze(["calories", "protein", "carbs", "fat"]);
 const MACROS = Object.freeze(["protein", "carbs", "fat"]);
+const MAX_DOMINANT_FOOD_INTERPRETATION_LENGTH = 1024;
 const CANDIDATE_KEYS = Object.freeze([
   "modelVersion",
   "normalizerVersion",
@@ -35,11 +38,16 @@ const RESULT_KEYS = Object.freeze([
   "schemaVersion",
   "sourceCommit",
   "structuredSuccess",
+  "dominantFoodInterpretation",
+  "interpretationDigest",
 ]);
 const QUALITATIVE_RECORD_KEYS = Object.freeze([
   "acceptableDominantFoodInterpretation",
+  "dominantFoodInterpretation",
   "id",
+  "interpretationDigest",
   "severeOrUneditableFailure",
+  "structuredSuccess",
 ]);
 
 function fail(message) {
@@ -153,6 +161,37 @@ export function validateCandidate(candidate) {
   return candidate;
 }
 
+function sha256JSON(value) {
+  return crypto.createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex");
+}
+
+function canonicalCandidate(candidate) {
+  return Object.fromEntries(CANDIDATE_KEYS.map((key) => [key, candidate?.[key]]));
+}
+
+export function buildInterpretationDigest({
+  candidate,
+  id,
+  structuredSuccess,
+  dominantFoodInterpretation,
+} = {}) {
+  return sha256JSON({
+    version: 1,
+    candidate: canonicalCandidate(candidate),
+    id,
+    structuredSuccess,
+    dominantFoodInterpretation,
+  });
+}
+
+export function buildPrimaryResultsDigest(results) {
+  if (!Array.isArray(results)) fail("primary results digest input must be an array");
+  const canonicalResults = [...results]
+    .sort((left, right) => String(left?.id).localeCompare(String(right?.id)))
+    .map((result) => Object.fromEntries(RESULT_KEYS.map((key) => [key, result?.[key]])));
+  return sha256JSON({ version: 1, results: canonicalResults });
+}
+
 export function validateManifest(manifest) {
   if (!hasExactKeys(manifest, ["candidate", "version", "records"]) || manifest.version !== 2 || !Array.isArray(manifest.records)) {
     fail("manifest must use schema version 2 with one frozen candidate and a records array");
@@ -222,12 +261,58 @@ function validateResultShape(result, kind, candidate) {
   if (!isNonNegativeNumber(result.latencyMs)) fail(`${kind} latencyMs must be non-negative`);
 
   if (result.structuredSuccess) {
+    if (!isNonEmptyString(result.dominantFoodInterpretation) ||
+        result.dominantFoodInterpretation.length > MAX_DOMINANT_FOOD_INTERPRETATION_LENGTH) {
+      fail(`${kind} dominant-food interpretation must be a bounded non-empty string after structured success`);
+    }
+  } else if (result.dominantFoodInterpretation !== null) {
+    fail(`${kind} dominant-food interpretation must be null after structured failure`);
+  }
+  const expectedInterpretationDigest = buildInterpretationDigest({
+    candidate,
+    id: result.id,
+    structuredSuccess: result.structuredSuccess,
+    dominantFoodInterpretation: result.dominantFoodInterpretation,
+  });
+  if (typeof result.interpretationDigest !== "string" ||
+      !/^[a-f0-9]{64}$/.test(result.interpretationDigest) ||
+      result.interpretationDigest !== expectedInterpretationDigest) {
+    fail(`${kind} interpretation digest must bind the frozen candidate and dominant-food interpretation`);
+  }
+
+  if (result.structuredSuccess) {
     if (NUTRIENTS.some((nutrient) => !isNonNegativeNumber(result[nutrient]))) {
       fail(`${kind} nutrition values must be non-negative numbers after structured success`);
     }
   } else if (NUTRIENTS.some((nutrient) => result[nutrient] !== null)) {
     fail(`${kind} structured failure nutrition values must all be null`);
   }
+}
+
+export function createQualitativeReviewTemplate(candidate, primaryResults) {
+  validateCandidate(candidate);
+  if (!Array.isArray(primaryResults) || primaryResults.length !== REQUIRED_RECORD_COUNT) {
+    fail("qualitative review template requires all 80 primary results");
+  }
+  const reviewedIDs = new Set();
+  for (const result of primaryResults) {
+    validateResultShape(result, "result", candidate);
+    if (reviewedIDs.has(result.id)) fail(`duplicate result ID ${result.id}`);
+    reviewedIDs.add(result.id);
+  }
+  return {
+    version: 2,
+    candidate: { ...candidate },
+    resultsDigest: buildPrimaryResultsDigest(primaryResults),
+    records: primaryResults.map((result) => ({
+      id: result.id,
+      structuredSuccess: result.structuredSuccess,
+      dominantFoodInterpretation: result.dominantFoodInterpretation,
+      interpretationDigest: result.interpretationDigest,
+      acceptableDominantFoodInterpretation: null,
+      severeOrUneditableFailure: null,
+    })),
+  };
 }
 
 export function validatePrimaryResults(results, manifestRecordsByID, candidate) {
@@ -277,10 +362,18 @@ export function validateStabilityResults(results, manifestRecordsByID, candidate
   return resultsByID;
 }
 
-export function scoreQualitativeReview(qualitativeReview, manifestRecordsByID) {
-  if (!hasExactKeys(qualitativeReview, ["records", "version"]) ||
-      qualitativeReview.version !== 1 || !Array.isArray(qualitativeReview.records)) {
-    fail("qualitative review must use schema version 1 with a records array");
+export function scoreQualitativeReview(qualitativeReview, manifestRecordsByID, candidate, primaryResultsByID) {
+  if (!hasExactKeys(qualitativeReview, ["candidate", "records", "resultsDigest", "version"]) ||
+      qualitativeReview.version !== 2 || !Array.isArray(qualitativeReview.records)) {
+    fail("qualitative review must use schema version 2 with frozen candidate, results digest, and records");
+  }
+  validateCandidate(qualitativeReview.candidate);
+  if (CANDIDATE_KEYS.some((key) => qualitativeReview.candidate[key] !== candidate[key])) {
+    fail("qualitative review candidate must match the frozen manifest candidate");
+  }
+  const primaryResults = [...primaryResultsByID.values()];
+  if (qualitativeReview.resultsDigest !== buildPrimaryResultsDigest(primaryResults)) {
+    fail("qualitative review results digest does not match the primary results");
   }
   if (qualitativeReview.records.length !== REQUIRED_RECORD_COUNT) {
     fail("qualitative review must contain exactly one review for all 80 manifest records");
@@ -292,6 +385,12 @@ export function scoreQualitativeReview(qualitativeReview, manifestRecordsByID) {
     if (!hasExactKeys(record, QUALITATIVE_RECORD_KEYS)) fail("qualitative review record fields are invalid");
     if (!manifestRecordsByID.has(record.id)) fail(`qualitative review contains unknown manifest ID ${record.id}`);
     if (reviewedIDs.has(record.id)) fail(`duplicate qualitative review ID ${record.id}`);
+    const primaryResult = primaryResultsByID.get(record.id);
+    if (record.structuredSuccess !== primaryResult?.structuredSuccess ||
+        record.dominantFoodInterpretation !== primaryResult?.dominantFoodInterpretation ||
+        record.interpretationDigest !== primaryResult?.interpretationDigest) {
+      fail(`qualitative review interpretation evidence does not match primary result ID ${record.id}`);
+    }
     if (typeof record.acceptableDominantFoodInterpretation !== "boolean" ||
         typeof record.severeOrUneditableFailure !== "boolean") {
       fail("qualitative review decisions must be boolean");
@@ -476,7 +575,12 @@ export function scoreEvaluation(manifest, primaryResults, stabilityResults, qual
   const stabilityPanel = scoreStabilityPanel(
     validateStabilityResults(stabilityResults, manifestRecordsByID, manifest.candidate),
   );
-  const qualitativeReview = scoreQualitativeReview(qualitativeReviewInput, manifestRecordsByID);
+  const qualitativeReview = scoreQualitativeReview(
+    qualitativeReviewInput,
+    manifestRecordsByID,
+    manifest.candidate,
+    resultsByID,
+  );
 
   return {
     version: 1,

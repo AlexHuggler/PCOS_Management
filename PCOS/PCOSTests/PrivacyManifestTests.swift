@@ -298,12 +298,23 @@ struct AppStoreConfigTests {
             "enableGeminiFallbackModel",
             "enableSimilarMealSuggestions",
         ] {
-            let pattern = "\\b\(NSRegularExpression.escapedPattern(for: flag)): boolValue\\([^\\n]*releaseDefault: false\\)"
+            let escapedFlag = NSRegularExpression.escapedPattern(for: flag)
+            let pattern = "\\b\(escapedFlag): (?:boolValue\\([^\\n]*releaseDefault: false\\)|releaseLockedFalseValue\\()"
             let expression = try NSRegularExpression(pattern: pattern)
             let range = NSRange(flagsSource.startIndex..., in: flagsSource)
             #expect(
                 expression.firstMatch(in: flagsSource, range: range) != nil,
                 "\(flag) must remain false in non-Debug builds"
+            )
+        }
+
+        if flagsSource.contains("releaseLockedFalseValue(") {
+            let lockedHelperPattern = "private static func releaseLockedFalseValue[\\s\\S]*?#else\\s+false\\s+#endif"
+            let lockedHelper = try NSRegularExpression(pattern: lockedHelperPattern)
+            let range = NSRange(flagsSource.startIndex..., in: flagsSource)
+            #expect(
+                lockedHelper.firstMatch(in: flagsSource, range: range) != nil,
+                "releaseLockedFalseValue must return false outside Debug"
             )
         }
     }

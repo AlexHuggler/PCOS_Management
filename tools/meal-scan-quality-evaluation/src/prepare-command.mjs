@@ -7,23 +7,14 @@ import {
   realpathSync,
   rmSync,
 } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, isAbsolute, join, sep } from "node:path";
 
 import { buildEvaluationBundle } from "./bundle.mjs";
 import { compileSwiftImageNormalizer } from "./normalizer.mjs";
-import { pinnedEvaluationCandidate, writePrivateJSON } from "./runner.mjs";
+import { loadCurrentEvaluationCandidate, writePrivateJSON } from "./runner.mjs";
 
 const USAGE = "usage: node prepare-bundle.mjs --source-index <absolute-source-index.json> --source-root <absolute-dataset-directory> --output-dir <new-absolute-directory>";
-const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const CANDIDATE_SOURCE_PATHS = Object.freeze([
-  "cloud/meal-scan-proxy/src",
-  "tools/meal-scan-quality-evaluation/normalize-image.swift",
-  "tools/meal-scan-quality-evaluation/run-evaluation.mjs",
-  "tools/meal-scan-quality-evaluation/src",
-]);
 
 function fail(message) {
   throw new Error(message);
@@ -47,27 +38,8 @@ export function parsePrepareArguments(argumentsList) {
   };
 }
 
-export function loadFrozenEvaluationCandidate(execFile = execFileSync) {
-  let status;
-  let sourceCommit;
-  try {
-    status = execFile(
-      "git",
-      ["-C", REPOSITORY_ROOT, "status", "--porcelain", "--untracked-files=all", "--", ...CANDIDATE_SOURCE_PATHS],
-      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-    );
-    sourceCommit = execFile(
-      "git",
-      ["-C", REPOSITORY_ROOT, "rev-parse", "--verify", "HEAD^{commit}"],
-      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-    );
-  } catch {
-    fail("unable to freeze the evaluation candidate from the repository");
-  }
-  if (typeof status !== "string" || status.trim() !== "") {
-    fail("evaluation model, prompt, schema, normalizer, and runner sources must be clean and committed before bundle preparation");
-  }
-  return pinnedEvaluationCandidate(typeof sourceCommit === "string" ? sourceCommit.trim() : "");
+export function loadFrozenEvaluationCandidate(execFile) {
+  return loadCurrentEvaluationCandidate(execFile);
 }
 
 export function assertSourceImagePaths({ sourceIndex, sourceRoot } = {}) {
