@@ -21,7 +21,14 @@ test("README documents the active StoreKit rolling quota and cost contract", () 
   assert.match(readme, /60 fresh dispatches\/minute[\s\S]*1,000 fresh dispatches\/rolling 24 hours/i);
   assert.match(readme, /6760353511/);
   assert.match(readme, /TTL/);
-  assert.doesNotMatch(readme, /REVENUECAT|RevenueCat/);
+  assert.match(readme, /RevenueCat API v2/);
+  assert.match(readme, /store_subscription_identifier/);
+  assert.match(readme, /proj8da4e000/);
+  assert.match(readme, /CycleBalance Unlimited/);
+  assert.match(readme, /customer_information:subscriptions:read/);
+  assert.match(readme, /Apple remains authoritative[^.]*principal[^.]*tier/i);
+  assert.match(readme, /REVENUECAT_SECRET_API_KEY/);
+  assert.match(readme, /REVENUECAT_SECRET_VERSION/);
   assert.doesNotMatch(readme, /remainingToday|remainingTrial|mealScanDailyQuota/);
 });
 

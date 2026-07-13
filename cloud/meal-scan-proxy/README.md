@@ -13,9 +13,10 @@ The request path is deliberately ordered:
 3. Verify `signedTransactionJWS` with Apple's signed-data verifier and bundled Apple root certificates. Production and Sandbox verification are kept separate.
 4. Derive the HMAC purchase principal only from the verified Apple environment and original transaction ID, then enforce 3 attempts/minute and 30 attempts/rolling 24 hours in a durable ledger before any current-status network lookup or image decoding.
 5. Query the App Store Server API for current subscription status. Captured evidence is not enough: only an unrevoked, unexpired active or billing-grace-period transaction for the pinned bundle, app, environment, and product is accepted.
-6. Check the result cache. A valid cache hit is free and remains available in budget-disabled mode.
-7. In one Firestore transaction, reserve idempotency, principal rolling quota, a one-call-per-principal in-flight lease, and the durable global provider allowance. The global immutable ceilings are 60 fresh dispatches/minute and 1,000 fresh dispatches/rolling 24 hours. A global denial does not debit principal quota, and cache hits bypass this reservation.
-8. Acquire the short result lease and call the allowlisted Gemini model. Completion, unknown outcome, or pre-dispatch failure releases the principal lease; crash recovery uses its bounded expiry.
+6. Corroborate that current Apple transaction through the RevenueCat API v2 search endpoint using only `store_subscription_identifier=<verified current transactionId>`. The response must be one unpaginated `app_store` subscription in the same Apple environment, return that exact identifier, have `gives_access=true`, map the `CycleBalance Unlimited` entitlement lookup key, and map its current product to an allowlisted monthly or annual App Store identifier. No client RevenueCat app user ID is accepted, and raw JWS is never sent to RevenueCat. Apple remains authoritative for both principal and tier; RevenueCat is a strict secondary yes-or-no check and cannot override either value.
+7. Check the result cache. A valid cache hit is free and remains available in budget-disabled mode.
+8. In one Firestore transaction, reserve idempotency, principal rolling quota, a one-call-per-principal in-flight lease, and the durable global provider allowance. The global immutable ceilings are 60 fresh dispatches/minute and 1,000 fresh dispatches/rolling 24 hours. A global denial does not debit principal quota, and cache hits bypass this reservation.
+9. Acquire the short result lease and call the allowlisted Gemini model. Completion, unknown outcome, or pre-dispatch failure releases the principal lease; crash recovery uses its bounded expiry.
 
 The service never stores raw image bytes. Cache records contain only validated structured output and hashes. The maximum HTTP body is 2,200,000 bytes (2.2 MB), the decoded JPEG maximum is 1,500,000 bytes, the pixel maximum is 12,000,000, and the canonicalized JPEG maximum is 750,000 bytes.
 
@@ -94,15 +95,17 @@ Required production values include:
 - `APPLE_IAP_PRIVATE_KEY` from a numerically pinned Secret Manager version.
 - `APPLE_IAP_KEY_ID` and `APPLE_IAP_ISSUER_ID` for the App Store Server API.
 - `APPLE_BUNDLE_ID=alex.PCOS`, `APPLE_APP_ID=6760353511`, and exactly `cyclebalance.premium.monthly,cyclebalance.premium.annual`; enabled production startup rejects any other Apple identity.
+- `REVENUECAT_SECRET_API_KEY` from the numerically pinned `REVENUECAT_SECRET_VERSION`. Create this as a secret RevenueCat API v2 key with only `customer_information:subscriptions:read`; never use a public SDK key.
+- `REVENUECAT_PROJECT_ID=proj8da4e000` and `REVENUECAT_ENTITLEMENT_ID=CycleBalance Unlimited`. Enabled production startup rejects any other project or entitlement lookup key, and the RevenueCat product mappings must use the same monthly and annual App Store identifiers as the Apple allowlist.
 - `FIREBASE_APP_ID`, `APP_CHECK_REQUIRED=true`, and Firestore backends for quota, idempotency, the coarse abuse shield, verified-principal attempts, cache, and budget control.
 
-Apple trust roots are version-controlled in `certs/` with source URLs and SHA-256 provenance; deployment does not accept an unpinned root-certificate environment secret. Network, timeout, HTTP 429, HTTP 5xx, and retryable online-certificate-check failures are temporary `503` errors. Invalid signatures, claims, products, revoked purchases, and expired purchases are non-retryable authorization failures.
+Apple trust roots are version-controlled in `certs/` with source URLs and SHA-256 provenance; deployment does not accept an unpinned root-certificate environment secret. Network, timeout, HTTP 429, HTTP 5xx, and retryable online-certificate-check failures are temporary `503` errors. A RevenueCat timeout, unavailable response, malformed or oversized response, or zero-result synchronization lag also fails closed as `503`; a returned subscription, identifier, environment, entitlement, or product mismatch is a non-retryable authorization denial. Invalid Apple signatures, claims, products, revoked purchases, and expired purchases remain non-retryable authorization failures.
 
-Operational defaults include a 5-second App Check timeout, 5-second App Store status timeout, 12-second Gemini timeout, 30-second idempotency/lease interval, and a 24-hour result-cache TTL. The lease interval must exceed the provider timeout by at least five seconds.
+Operational defaults include a 5-second App Check timeout, 5-second App Store status timeout, 3-second RevenueCat timeout, 12-second Gemini timeout, 30-second idempotency/lease interval, and a 24-hour result-cache TTL. RevenueCat JSON is capped at 256,000 bytes and pagination or multiple subscription matches are rejected. The lease interval must exceed the provider timeout by at least five seconds.
 
 ## Deployment and activation
 
-`scripts/bootstrap-gcp.sh` provisions the runtime identities, server-only Firestore policy, required secrets, and TTL policies. `scripts/deploy-cloud-run.sh` re-verifies the deny-all rules, requires pinned secret versions, deploys, and verifies ingress state. Neither script should be run as part of a local test.
+`scripts/bootstrap-gcp.sh` provisions the runtime identities, server-only Firestore policy, required secrets, least-privilege per-secret access, and TTL policies. `scripts/deploy-cloud-run.sh` re-verifies the deny-all rules, requires numeric pinned versions including `REVENUECAT_SECRET_VERSION`, deploys, and verifies ingress state. Neither script should be run as part of a local test.
 
 Every deployment defaults to both gates closed:
 
