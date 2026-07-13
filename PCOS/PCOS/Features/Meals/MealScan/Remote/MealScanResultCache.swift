@@ -3,7 +3,23 @@ import Foundation
 import SwiftData
 
 @MainActor
-final class MealScanResultCache {
+protocol MealScanResultCaching: AnyObject {
+    func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String?
+
+    func saveResponseJSON(
+        _ responseJSON: String,
+        cacheKey: String,
+        modelID: String,
+        schemaVersion: String,
+        promptVersion: String,
+        confidenceScore: Double,
+        sourceImageHash: String,
+        now: Date
+    ) throws
+}
+
+@MainActor
+final class MealScanResultCache: MealScanResultCaching {
     private let modelContext: ModelContext
     private let ttl: TimeInterval
 
@@ -17,6 +33,7 @@ final class MealScanResultCache {
         schemaVersion: String,
         promptVersion: String,
         normalizedImageData: Data,
+        mealType: MealType,
         localeIdentifier: String,
         appBuild: String?
     ) -> String {
@@ -26,6 +43,7 @@ final class MealScanResultCache {
             schemaVersion,
             promptVersion,
             imageHash,
+            mealType.rawValue,
             localeIdentifier,
             appBuild ?? "unknown",
         ].joined(separator: "|")

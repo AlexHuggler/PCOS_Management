@@ -13,17 +13,26 @@ protocol MealScanImageNormalizing: Sendable {
     func normalizeJPEGData(from image: UIImage) throws -> NormalizedMealScanImage
 }
 
-enum MealScanImageNormalizationError: LocalizedError {
+enum MealScanImageNormalizationError: LocalizedError, Equatable {
     case cannotRender
+    case exceedsMaximumBytes(actualBytes: Int, maximumBytes: Int)
 
     var errorDescription: String? {
-        "CycleBalance could not prepare this meal photo for a cloud estimate."
+        switch self {
+        case .cannotRender:
+            "CycleBalance could not prepare this meal photo for a cloud estimate."
+        case .exceedsMaximumBytes:
+            "CycleBalance could not reduce this photo to the secure upload limit."
+        }
     }
 }
 
 struct MealScanImageNormalizer: MealScanImageNormalizing {
+    static let maximumJPEGBytes = 1_500_000
+
     var maxLongEdge: CGFloat = 960
     var compressionQuality: CGFloat = 0.78
+    var maximumJPEGBytes: Int = Self.maximumJPEGBytes
 
     func normalizeJPEGData(from image: UIImage) throws -> NormalizedMealScanImage {
         let sourceSize = image.size.width > 0 && image.size.height > 0
@@ -44,8 +53,23 @@ struct MealScanImageNormalizer: MealScanImageNormalizing {
             image.draw(in: CGRect(origin: .zero, size: targetSize))
         }
 
-        guard let jpegData = rendered.jpegData(compressionQuality: compressionQuality) else {
+        guard var jpegData = rendered.jpegData(compressionQuality: compressionQuality) else {
             throw MealScanImageNormalizationError.cannotRender
+        }
+        if jpegData.count > maximumJPEGBytes {
+            for quality in [CGFloat(0.65), 0.5, 0.4, 0.3] where quality < compressionQuality {
+                guard let candidate = rendered.jpegData(compressionQuality: quality) else {
+                    throw MealScanImageNormalizationError.cannotRender
+                }
+                jpegData = candidate
+                if jpegData.count <= maximumJPEGBytes { break }
+            }
+        }
+        guard jpegData.count <= maximumJPEGBytes else {
+            throw MealScanImageNormalizationError.exceedsMaximumBytes(
+                actualBytes: jpegData.count,
+                maximumBytes: maximumJPEGBytes
+            )
         }
 
         return NormalizedMealScanImage(

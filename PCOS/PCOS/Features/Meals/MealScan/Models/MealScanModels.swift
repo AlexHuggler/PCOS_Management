@@ -8,6 +8,7 @@ enum NutritionDataSource: String, Codable, CaseIterable, Sendable {
     case nutritionLabelOCR
     case userManual
     case appFixture
+    case aiEstimate = "ai_estimate"
 }
 
 enum NutritionConfidence: String, Codable, CaseIterable, Sendable {

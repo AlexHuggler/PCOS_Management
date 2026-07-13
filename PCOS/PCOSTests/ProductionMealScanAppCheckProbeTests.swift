@@ -9,7 +9,7 @@ private let shouldRunProductionMealScanIntegration =
 @Suite("Production Meal Scan App Check Probe", .serialized)
 @MainActor
 struct ProductionMealScanAppCheckProbeTests {
-    private static let probeAppUserID = "cyclebalance-appcheck-probe-no-entitlement"
+    private static let invalidProbeTransactionJWS = "eyJhbGciOiJFUzI1NiJ9.eyJwcm9iZSI6dHJ1ZX0.invalid-signature"
 
     @Test(
         "physical App Check probe rejects an account without entitlement",
@@ -20,8 +20,7 @@ struct ProductionMealScanAppCheckProbeTests {
     )
     func physicalAppCheckProbeRejectsNoEntitlementUser() async throws {
         guard let configuration = GeminiRemoteMealScanConfiguration.from(
-            bundle: Bundle(identifier: "alex.PCOS") ?? .main,
-            revenueCatAppUserID: Self.probeAppUserID
+            bundle: Bundle(identifier: "alex.PCOS") ?? .main
         ), let endpointURL = configuration.proxyEndpointURL else {
             Issue.record("The Release app must contain a complete production meal-scan proxy URL.")
             return
@@ -37,14 +36,14 @@ struct ProductionMealScanAppCheckProbeTests {
         // Do not log or otherwise expose the limited-use App Check token.
         let limitedUseToken = try await FirebaseMealScanAppCheckTokenProvider().limitedUseToken()
         let request = RemoteMealScanRequest(
+            requestID: UUID(),
+            signedTransactionJWS: Self.invalidProbeTransactionJWS,
             normalizedImageJPEGData: normalized.jpegData,
             sourceImageHash: normalized.sourceImageHash,
             mealType: .lunch,
             localeIdentifier: "en_US",
-            modelID: GeminiRemoteMealScanConfiguration.defaultModelID,
             schemaVersion: GeminiRemoteMealScanConfiguration.schemaVersion,
             promptVersion: GeminiRemoteMealScanConfiguration.promptVersion,
-            revenueCatAppUserID: Self.probeAppUserID,
             firebaseAppCheckToken: limitedUseToken
         )
 

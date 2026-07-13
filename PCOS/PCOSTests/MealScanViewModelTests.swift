@@ -84,8 +84,26 @@ struct MealScanViewModelTests {
         #expect(viewModel.canAddManualFood)
     }
 
-    @Test("remote scan failure keeps local Meal Scan V2 fallback available")
-    func remoteScanFailureUsesLocalPipeline() async throws {
+    @Test("image preparation errors stay typed and disclose no quota use")
+    func imagePreparationErrorStaysTyped() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let viewModel = MealScanViewModel(
+            mealType: .dinner,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            imageNormalizer: ThrowingMealScanImageNormalizer()
+        )
+
+        await viewModel.scanWithFallback(image: UIImage())
+
+        #expect(viewModel.phase == .manualFallback)
+        #expect(viewModel.errorMessage?.localizedCaseInsensitiveContains("secure upload limit") == true)
+        #expect(viewModel.errorMessage?.localizedCaseInsensitiveContains("no fresh AI photo analysis was used") == true)
+        #expect(viewModel.lastScanResult == nil)
+    }
+
+    @Test("remote scan failure fails closed without synthesizing a local estimate")
+    func remoteScanFailureDoesNotUseLocalPipeline() async throws {
         let container = try TestHelpers.makeModelContainer()
         let service = GeminiRemoteMealScanService(
             remoteEstimator: ThrowingRemoteMealScanEstimator(),
@@ -94,9 +112,9 @@ struct MealScanViewModelTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: GeminiRemoteMealScanConfiguration(
-                proxyEndpointURL: URL(string: "https://example.com/v1/meal-scans/estimate"),
-                revenueCatAppUserID: "$RCAnonymousID:test"
-            )
+                proxyEndpointURL: URL(string: "https://example.com/v1/meal-scans/estimate")
+            ),
+            storeKitEvidenceProvider: ViewModelFixedStoreKitEvidenceProvider()
         )
         let viewModel = MealScanViewModel(
             mealType: .lunch,
@@ -105,11 +123,15 @@ struct MealScanViewModelTests {
             remoteMealScanService: service
         )
 
-        try await viewModel.scan(image: UIImage())
+        try await viewModel.prepareSelectedImage(UIImage())
 
-        #expect(viewModel.phase == .review)
-        #expect(viewModel.lastScanResult?.modelVersion == "mock-food-fixtures")
-        #expect(viewModel.draftItems.isEmpty == false)
+        #expect(viewModel.phase == .remoteConsent)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+
+        #expect(viewModel.phase == .manualFallback)
+        #expect(viewModel.lastScanResult == nil)
+        #expect(viewModel.draftItems.isEmpty)
     }
 
     @Test("remote quota errors show quota message instead of local mock estimate")
@@ -122,9 +144,9 @@ struct MealScanViewModelTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: GeminiRemoteMealScanConfiguration(
-                proxyEndpointURL: URL(string: "https://example.com/v1/meal-scans/estimate"),
-                revenueCatAppUserID: "$RCAnonymousID:test"
-            )
+                proxyEndpointURL: URL(string: "https://example.com/v1/meal-scans/estimate")
+            ),
+            storeKitEvidenceProvider: ViewModelFixedStoreKitEvidenceProvider()
         )
         let viewModel = MealScanViewModel(
             mealType: .lunch,
@@ -135,11 +157,223 @@ struct MealScanViewModelTests {
 
         await viewModel.scanWithFallback(image: UIImage())
 
+        #expect(viewModel.phase == .remoteConsent)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+
         #expect(viewModel.phase == .manualFallback)
-        #expect(viewModel.errorMessage?.localizedCaseInsensitiveContains("photo estimate limit") == true)
+        #expect(viewModel.errorMessage?.localizedCaseInsensitiveContains("rolling 24-hour") == true)
         #expect(viewModel.lastScanResult == nil)
         #expect(viewModel.draftItems.isEmpty)
         #expect(viewModel.canAddManualFood)
+        #expect(viewModel.mealScanQuota?.remaining == 0)
+        #expect(viewModel.canStartFreshAnalysis == false)
+    }
+
+    @Test("ambiguous outcome preserves one request ID until explicit new-analysis confirmation")
+    func ambiguousOutcomePreservesRequestIDUntilExplicitConfirmation() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let remote = SpyRemoteMealScanService(
+            result: makeScanResult(),
+            throwsOutcomeUnknown: true
+        )
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        let originalRequestID = try #require(viewModel.pendingRequestID)
+        try await viewModel.confirmRemotePhotoEstimate()
+
+        #expect(viewModel.phase == .ambiguousOutcome)
+        #expect(remote.receivedRequestIDs == [originalRequestID])
+
+        try await viewModel.retryAmbiguousOutcome()
+        #expect(viewModel.phase == .ambiguousOutcome)
+        #expect(remote.receivedRequestIDs == [originalRequestID, originalRequestID])
+        #expect(viewModel.canRetryAmbiguousOutcome == false)
+
+        viewModel.requestNewAnalysisAfterAmbiguousOutcome()
+        #expect(viewModel.phase == .newAttemptConfirmation)
+        #expect(viewModel.pendingRequestID == originalRequestID)
+
+        try await viewModel.confirmNewAnalysisAfterAmbiguousOutcome()
+        let newRequestID = try #require(viewModel.pendingRequestID)
+        #expect(newRequestID != originalRequestID)
+        #expect(remote.receivedRequestIDs == [originalRequestID, originalRequestID, newRequestID])
+    }
+
+    @Test("fresh outcome retains exact rolling quota and warns at two remaining")
+    func freshOutcomeRetainsRollingQuota() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let quota = MealScanQuota(
+            tier: "paid",
+            used: 8,
+            limit: 10,
+            remaining: 2,
+            windowSeconds: 86_400,
+            resetAt: "2026-07-14T01:02:03.000Z",
+            retryAfterSeconds: nil
+        )
+        let remote = SpyRemoteMealScanService(result: makeScanResult(), quota: quota)
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
+
+        #expect(viewModel.mealScanQuota == quota)
+        #expect(viewModel.mealScanCacheDisposition == .fresh)
+        #expect(viewModel.shouldWarnAboutRemainingAnalyses)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let resetDate = try #require(formatter.date(from: "2026-07-14T01:02:03.000Z"))
+        #expect(viewModel.quotaResetAtLocalText == resetDate.formatted(date: .abbreviated, time: .shortened))
+    }
+
+    @Test("quota zero still permits exact local structured-cache reuse")
+    func quotaZeroStillPermitsLocalCacheReuse() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let quota = MealScanQuota(
+            tier: "paid",
+            used: 10,
+            limit: 10,
+            remaining: 0,
+            windowSeconds: 86_400,
+            resetAt: "2026-07-14T01:02:03.000Z",
+            retryAfterSeconds: 120
+        )
+        let remote = SpyRemoteMealScanService(result: makeScanResult(), quota: quota)
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
+        #expect(viewModel.canStartFreshAnalysis == false)
+
+        remote.cachedOutcomeResult = MealScanOutcome(
+            result: makeScanResult(mealName: "Local cached meal"),
+            quota: nil,
+            cacheDisposition: .local
+        )
+        viewModel.retake()
+        try await viewModel.prepareSelectedImage(UIImage())
+
+        #expect(viewModel.phase == .review)
+        #expect(viewModel.mealName == "Local cached meal")
+        #expect(viewModel.mealScanCacheDisposition == .local)
+        #expect(remote.callCount == 1)
+        #expect(remote.cachedOutcomeCallCount == 2)
+    }
+
+    @Test("quota zero still permits a free server-cache check")
+    func quotaZeroStillPermitsServerCacheCheck() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let quota = MealScanQuota(
+            tier: "paid",
+            used: 10,
+            limit: 10,
+            remaining: 0,
+            windowSeconds: 86_400,
+            resetAt: "2026-07-14T01:02:03.000Z",
+            retryAfterSeconds: 120
+        )
+        let remote = SpyRemoteMealScanService(result: makeScanResult(), quota: quota)
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
+        #expect(viewModel.canStartFreshAnalysis == false)
+
+        remote.cacheDisposition = .server
+        viewModel.retake()
+        try await viewModel.prepareSelectedImage(UIImage())
+        #expect(viewModel.phase == .remoteConsent)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+        #expect(viewModel.phase == .review)
+        #expect(viewModel.mealScanCacheDisposition == .server)
+        #expect(remote.callCount == 2)
+    }
+
+    @Test("unknown then pending then complete uses one request ID and two bounded checks")
+    func unknownPendingCompleteKeepsOneRequestID() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let remote = SpyRemoteMealScanService(
+            result: makeScanResult(),
+            queuedErrors: [
+                .outcomeUnknown(requestID: UUID()),
+                .requestPending(requestID: UUID(), retryAfterSeconds: 0)
+            ]
+        )
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        let requestID = try #require(viewModel.pendingRequestID)
+        remote.rewriteQueuedErrorRequestIDs(to: requestID)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+        #expect(viewModel.phase == .ambiguousOutcome)
+        #expect(viewModel.isRequestPending == false)
+
+        try await viewModel.retryAmbiguousOutcome()
+        #expect(viewModel.phase == .ambiguousOutcome)
+        #expect(viewModel.isRequestPending)
+        #expect(viewModel.canRetryAmbiguousOutcome)
+
+        try await viewModel.retryAmbiguousOutcome()
+        #expect(viewModel.phase == .review)
+        #expect(remote.receivedRequestIDs == [requestID, requestID, requestID])
+        #expect(viewModel.canRetryAmbiguousOutcome == false)
+    }
+
+    @Test("manual fallback starts with blank user-entered nutrition")
+    func manualFallbackStartsBlank() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let viewModel = MealScanViewModel(
+            mealType: .dinner,
+            modelContext: container.mainContext,
+            pipeline: .mock()
+        )
+
+        viewModel.continueWithManualEntry()
+
+        let item = try #require(viewModel.draftItems.first)
+        #expect(item.canonicalFoodId == "manual-food")
+        #expect(item.nutritionSource == .userManual)
+        #expect(item.nutrition == NutritionSnapshot())
+        #expect(viewModel.totalNutrition == NutritionSnapshot())
     }
 
     @Test("matching photo offers repeat meal before any remote scan")
@@ -164,6 +398,33 @@ struct MealScanViewModelTests {
         #expect(viewModel.repeatMealSuggestion == suggestion)
         #expect(repeatCache.suggestionCallCount == 1)
         #expect(remote.callCount == 0)
+    }
+
+    @Test("fresh remote photo waits for explicit consent before upload")
+    func freshRemotePhotoWaitsForConsent() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let normalized = makeNormalizedImage()
+        let repeatCache = SpyMealScanRepeatCache(suggestion: nil)
+        let remote = SpyRemoteMealScanService(result: makeScanResult(mealName: "Fresh remote meal"))
+        let viewModel = makeRepeatEnabledViewModel(
+            context: container.mainContext,
+            normalized: normalized,
+            fingerprint: makeFingerprint(for: normalized),
+            repeatCache: repeatCache,
+            remote: remote
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+
+        #expect(viewModel.phase == .remoteConsent)
+        #expect(remote.callCount == 0)
+        #expect(viewModel.selectedImageData == normalized.jpegData)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+
+        #expect(remote.callCount == 1)
+        #expect(remote.receivedImages == [normalized])
+        #expect(viewModel.phase == .review)
     }
 
     @Test("using previous meal restores reviewed fields with fresh IDs")
@@ -201,8 +462,8 @@ struct MealScanViewModelTests {
         #expect(repeatCache.reusedRecordIDs == [suggestion.recordID])
     }
 
-    @Test("scan as new bypasses repeat lookup and scans normalized image once")
-    func scanAsNewBypassesRepeatLookupOnce() async throws {
+    @Test("scan as new bypasses repeat lookup but still requires upload consent")
+    func scanAsNewRequiresConsentBeforeRemoteCall() async throws {
         let container = try TestHelpers.makeModelContainer()
         let normalized = makeNormalizedImage()
         let repeatCache = SpyMealScanRepeatCache(suggestion: makeRepeatSuggestion())
@@ -220,12 +481,70 @@ struct MealScanViewModelTests {
         try await viewModel.scanPendingImageAsNew()
 
         #expect(repeatCache.suggestionCallCount == 1)
+        #expect(remote.callCount == 0)
+        #expect(viewModel.phase == .remoteConsent)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+
         #expect(remote.callCount == 1)
         #expect(remote.receivedImages == [normalized])
         #expect(viewModel.phase == .review)
         #expect(viewModel.mealName == remoteResult.mealName)
         #expect(viewModel.repeatMealSuggestion == nil)
         #expect(viewModel.confirmedMeal().repeatSourceRecordID == nil)
+    }
+
+    @Test("manual entry from consent discards the photo without a remote call")
+    func manualEntryFromConsentDiscardsPendingPhoto() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let normalized = makeNormalizedImage()
+        let remote = SpyRemoteMealScanService(result: makeScanResult())
+        let viewModel = makeRepeatEnabledViewModel(
+            context: container.mainContext,
+            normalized: normalized,
+            fingerprint: makeFingerprint(for: normalized),
+            repeatCache: SpyMealScanRepeatCache(suggestion: nil),
+            remote: remote
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        viewModel.continueWithManualEntry()
+
+        #expect(remote.callCount == 0)
+        #expect(viewModel.phase == .review)
+        #expect(viewModel.selectedImage == nil)
+        #expect(viewModel.selectedImageData == nil)
+        #expect(viewModel.draftItems.count == 1)
+        #expect(viewModel.draftItems.first?.detectionSource == "manual")
+    }
+
+    @Test("retaking from consent clears the photo and requires a fresh consent step")
+    func retakeRequiresFreshConsent() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let normalized = makeNormalizedImage()
+        let remote = SpyRemoteMealScanService(result: makeScanResult())
+        let viewModel = makeRepeatEnabledViewModel(
+            context: container.mainContext,
+            normalized: normalized,
+            fingerprint: makeFingerprint(for: normalized),
+            repeatCache: SpyMealScanRepeatCache(suggestion: nil),
+            remote: remote
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        #expect(viewModel.phase == .remoteConsent)
+
+        viewModel.retake()
+
+        #expect(viewModel.phase == .camera)
+        #expect(viewModel.selectedImage == nil)
+        #expect(viewModel.selectedImageData == nil)
+        #expect(remote.callCount == 0)
+
+        try await viewModel.prepareSelectedImage(UIImage())
+
+        #expect(viewModel.phase == .remoteConsent)
+        #expect(remote.callCount == 0)
     }
 
     @Test("local fingerprint failure continues with normal remote scan")
@@ -250,6 +569,11 @@ struct MealScanViewModelTests {
         try await viewModel.prepareSelectedImage(UIImage())
 
         #expect(repeatCache.suggestionCallCount == 0)
+        #expect(remote.callCount == 0)
+        #expect(viewModel.phase == .remoteConsent)
+
+        try await viewModel.confirmRemotePhotoEstimate()
+
         #expect(remote.callCount == 1)
         #expect(viewModel.phase == .review)
     }
@@ -270,6 +594,7 @@ struct MealScanViewModelTests {
             mealRepository: mealRepository
         )
         try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
         viewModel.mealName = "Final reviewed bowl"
         events.values.removeAll()
 
@@ -300,6 +625,7 @@ struct MealScanViewModelTests {
             mealRepository: mealRepository
         )
         try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
 
         await #expect(throws: ViewModelRepeatTestError.repositorySaveFailed) {
             try await viewModel.save()
@@ -327,6 +653,7 @@ struct MealScanViewModelTests {
             mealRepository: mealRepository
         )
         try await viewModel.prepareSelectedImage(UIImage())
+        try await viewModel.confirmRemotePhotoEstimate()
 
         try await viewModel.save()
 
@@ -480,20 +807,82 @@ private struct ThrowingRepeatMealFingerprinter: MealImageFingerprinting {
     }
 }
 
+private struct ThrowingMealScanImageNormalizer: MealScanImageNormalizing {
+    func normalizeJPEGData(from image: UIImage) throws -> NormalizedMealScanImage {
+        throw MealScanImageNormalizationError.exceedsMaximumBytes(
+            actualBytes: 1_600_000,
+            maximumBytes: 1_500_000
+        )
+    }
+}
+
 @MainActor
 private final class SpyRemoteMealScanService: RemoteMealScanServing {
     let result: MealScanResult
+    var quota: MealScanQuota?
+    var cacheDisposition: MealScanCacheDisposition
+    let throwsOutcomeUnknown: Bool
+    private var queuedErrors: [MealScanRemoteError]
     private(set) var callCount = 0
     private(set) var receivedImages: [NormalizedMealScanImage] = []
+    private(set) var receivedRequestIDs: [UUID] = []
+    var cachedOutcomeResult: MealScanOutcome?
+    private(set) var cachedOutcomeCallCount = 0
 
-    init(result: MealScanResult) {
+    init(
+        result: MealScanResult,
+        quota: MealScanQuota? = nil,
+        cacheDisposition: MealScanCacheDisposition = .fresh,
+        throwsOutcomeUnknown: Bool = false,
+        queuedErrors: [MealScanRemoteError] = []
+    ) {
         self.result = result
+        self.quota = quota
+        self.cacheDisposition = cacheDisposition
+        self.throwsOutcomeUnknown = throwsOutcomeUnknown
+        self.queuedErrors = queuedErrors
     }
 
-    func scan(normalizedImage: NormalizedMealScanImage, mealType: MealType) async throws -> MealScanResult {
+    func cachedOutcome(
+        normalizedImage: NormalizedMealScanImage,
+        mealType: MealType
+    ) async throws -> MealScanOutcome? {
+        cachedOutcomeCallCount += 1
+        return cachedOutcomeResult
+    }
+
+    func scan(
+        normalizedImage: NormalizedMealScanImage,
+        mealType: MealType,
+        requestID: UUID
+    ) async throws -> MealScanOutcome {
         callCount += 1
         receivedImages.append(normalizedImage)
-        return result
+        receivedRequestIDs.append(requestID)
+        if !queuedErrors.isEmpty {
+            throw queuedErrors.removeFirst()
+        }
+        if throwsOutcomeUnknown {
+            throw MealScanRemoteError.outcomeUnknown(requestID: requestID)
+        }
+        return MealScanOutcome(
+            result: result,
+            quota: quota,
+            cacheDisposition: cacheDisposition
+        )
+    }
+
+    func rewriteQueuedErrorRequestIDs(to requestID: UUID) {
+        queuedErrors = queuedErrors.map { error in
+            switch error {
+            case .outcomeUnknown:
+                .outcomeUnknown(requestID: requestID)
+            case .requestPending(_, let retryAfterSeconds):
+                .requestPending(requestID: requestID, retryAfterSeconds: retryAfterSeconds)
+            default:
+                error
+            }
+        }
     }
 }
 
@@ -595,20 +984,26 @@ private final class QuotaExceededRemoteMealScanEstimator: RemoteMealScanEstimati
     func estimateMeal(request: RemoteMealScanRequest) async throws -> RemoteMealScanEstimate {
         throw GeminiMealScanProxyError(
             statusCode: 429,
-            error: "daily_scan_quota_exceeded",
-            reason: "trial_quota_exceeded",
-            quota: RemoteMealScanQuota(
-                accessTier: "trial",
-                used: 25,
+            error: "rolling_scan_quota_exceeded",
+            reason: "rolling_quota_exceeded",
+            quota: MealScanQuota(
+                tier: "paid",
+                used: 5,
                 limit: 5,
-                softLimit: 5,
-                remainingToday: 0,
-                trialUsed: 25,
-                trialLimit: 25,
-                remainingTrial: 0
+                remaining: 0,
+                windowSeconds: 86_400,
+                resetAt: "2026-07-14T01:02:03.000Z",
+                retryAfterSeconds: 120
             ),
             retryable: nil
         )
+    }
+}
+
+@MainActor
+private struct ViewModelFixedStoreKitEvidenceProvider: MealScanStoreKitEvidenceProviding {
+    func signedTransactionJWS() async throws -> String {
+        "eyJhbGciOiJFUzI1NiJ9.eyJ0eCI6InRlc3QifQ.signature"
     }
 }
 

@@ -50,12 +50,27 @@ struct NutritionIntegrationTests {
 
     @Test("USDA fallback is disabled without a local API key")
     func usdaFallbackIsDisabledWithoutKey() async throws {
-        let service = USDAFoodDataCentralLookupService(apiKey: nil)
+        let service = USDAFoodDataCentralLookupService()
 
         #expect(service.isEnabled == false)
         await #expect(throws: FoodLookupError.apiKeyMissing) {
             _ = try await service.lookupBarcode("737628064502")
         }
+    }
+
+    @Test("Release Info.plist has no USDA API-key path")
+    func releaseInfoPlistOmitsUSDAKey() throws {
+        let sourceFile = URL(fileURLWithPath: #filePath)
+        let projectRoot = sourceFile
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let infoPlist = try String(
+            contentsOf: projectRoot.appendingPathComponent("PCOS/PCOS/Info.plist"),
+            encoding: .utf8
+        )
+
+        #expect(infoPlist.contains("USDA_FDC_API_KEY") == false)
     }
 
     @Test("Nutrition candidate saves a reviewed import and linked meal metadata")

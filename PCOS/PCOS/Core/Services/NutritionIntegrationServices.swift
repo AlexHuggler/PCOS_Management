@@ -333,7 +333,7 @@ struct USDAFoodDataCentralLookupService: FoodProductLookupProviding {
         return !key.isEmpty
     }
 
-    init(apiKey: String? = FoodDataCentralConfiguration.apiKey(), session: URLSession = .shared) {
+    init(apiKey: String? = nil, session: URLSession = .shared) {
         self.apiKey = apiKey
         self.session = session
     }
@@ -453,18 +453,6 @@ enum USDAFoodDataCentralNormalizer {
             }
         }
         return nil
-    }
-}
-
-enum FoodDataCentralConfiguration {
-    static func apiKey(bundle: Bundle = .main) -> String? {
-        let rawValue = bundle.object(forInfoDictionaryKey: "USDA_FDC_API_KEY") as? String
-        guard let value = rawValue?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !value.isEmpty,
-              !value.contains("$(") else {
-            return nil
-        }
-        return value
     }
 }
 

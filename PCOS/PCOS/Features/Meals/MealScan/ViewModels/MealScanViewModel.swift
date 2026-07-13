@@ -11,6 +11,9 @@ final class MealScanViewModel {
         case camera
         case processing
         case repeatSuggestion
+        case remoteConsent
+        case ambiguousOutcome
+        case newAttemptConfirmation
         case review
         case manualFallback
         case saved
@@ -30,6 +33,12 @@ final class MealScanViewModel {
     private var pendingNormalizedImage: NormalizedMealScanImage?
     private var pendingFingerprint: MealImageFingerprint?
     private var repeatSourceRecordID: UUID?
+    private(set) var pendingRequestID: UUID?
+    private var unknownRetryCount = 0
+    private var sameRequestRecheckCount = 0
+    private var pendingRetryAvailableAt: Date?
+    private(set) var pendingRetryAfterSeconds: Int?
+    private(set) var isRequestPending = false
 
     var phase: Phase = .entry
     var mealType: MealType
@@ -46,8 +55,36 @@ final class MealScanViewModel {
     var selectedImageData: Data?
     var lastScanResult: MealScanResult?
     var repeatMealSuggestion: RepeatMealSuggestion?
+    private(set) var mealScanQuota: MealScanQuota?
+    private(set) var mealScanCacheDisposition: MealScanCacheDisposition?
 
     var canAddManualFood: Bool { true }
+    var canStartFreshAnalysis: Bool { mealScanQuota?.remaining != 0 }
+    var canRetryAmbiguousOutcome: Bool {
+        canRetryAmbiguousOutcome(at: Date())
+    }
+    func canRetryAmbiguousOutcome(at now: Date) -> Bool {
+        guard phase == .ambiguousOutcome,
+              sameRequestRecheckCount < 2,
+              isRequestPending || unknownRetryCount < 1 else {
+            return false
+        }
+        return pendingRetryAvailableAt.map { now >= $0 } ?? true
+    }
+    var pendingRetryAvailableAtLocalText: String? {
+        pendingRetryAvailableAt?.formatted(date: .omitted, time: .shortened)
+    }
+    var shouldWarnAboutRemainingAnalyses: Bool {
+        mealScanCacheDisposition == .fresh && (mealScanQuota?.remaining ?? .max) <= 2
+    }
+    var quotaResetAtLocalText: String? {
+        guard let resetAt = mealScanQuota?.resetAt,
+              let date = Self.parseISO8601(resetAt)
+        else {
+            return nil
+        }
+        return date.formatted(date: .abbreviated, time: .shortened)
+    }
 
     init(
         mealType: MealType,
@@ -98,7 +135,7 @@ final class MealScanViewModel {
         do {
             try await prepareSelectedImage(image)
         } catch {
-            errorMessage = "No food was confidently detected. You can retake the photo or add the meal manually."
+            errorMessage = "\(error.localizedDescription) No fresh AI photo analysis was used."
             phase = .manualFallback
         }
     }
@@ -115,6 +152,8 @@ final class MealScanViewModel {
         phase = .processing
         let normalizedImage = try imageNormalizer.normalizeJPEGData(from: image)
         pendingNormalizedImage = normalizedImage
+        pendingRequestID = UUID()
+        resetAmbiguousRequestState()
         selectedImageData = normalizedImage.jpegData
         pendingFingerprint = nil
 
@@ -186,8 +225,88 @@ final class MealScanViewModel {
     }
 
     func scanPendingImageAsNew() async throws {
-        guard let image = selectedImage,
-              let normalizedImage = pendingNormalizedImage else {
+        repeatMealSuggestion = nil
+        repeatSourceRecordID = nil
+
+        if let remoteMealScanService,
+           let normalizedImage = pendingNormalizedImage {
+            if let cachedOutcome = try? await remoteMealScanService.cachedOutcome(
+                normalizedImage: normalizedImage,
+                mealType: mealType
+            ) {
+                mealScanCacheDisposition = cachedOutcome.cacheDisposition
+                apply(result: cachedOutcome.result)
+                phase = .review
+                return
+            }
+
+            phase = .remoteConsent
+            return
+        }
+
+        try await performPendingImageScan()
+    }
+
+    func confirmRemotePhotoEstimate() async throws {
+        guard phase == .remoteConsent,
+              remoteMealScanService != nil else {
+            throw MealScanViewModelError.remoteConsentRequired
+        }
+
+        try await performPendingImageScan()
+    }
+
+    func retryAmbiguousOutcome() async throws {
+        guard canRetryAmbiguousOutcome,
+              pendingRequestID != nil else {
+            throw MealScanViewModelError.ambiguousOutcomeRequired
+        }
+        let startedFromUnknown = !isRequestPending
+        sameRequestRecheckCount += 1
+        if startedFromUnknown {
+            unknownRetryCount += 1
+        }
+        pendingRetryAfterSeconds = nil
+        pendingRetryAvailableAt = nil
+        try await performPendingImageScan(startedFromUnknownRecheck: startedFromUnknown)
+    }
+
+    func requestNewAnalysisAfterAmbiguousOutcome() {
+        guard phase == .ambiguousOutcome, canStartFreshAnalysis else { return }
+        phase = .newAttemptConfirmation
+    }
+
+    func cancelNewAnalysisConfirmation() {
+        guard phase == .newAttemptConfirmation else { return }
+        phase = .ambiguousOutcome
+    }
+
+    func confirmNewAnalysisAfterAmbiguousOutcome() async throws {
+        guard phase == .newAttemptConfirmation,
+              pendingNormalizedImage != nil,
+              canStartFreshAnalysis else {
+            throw MealScanViewModelError.newAttemptConfirmationRequired
+        }
+        pendingRequestID = UUID()
+        resetAmbiguousRequestState()
+        try await performPendingImageScan()
+    }
+
+    func continueWithManualEntry() {
+        selectedImage = nil
+        selectedImageData = nil
+        pendingNormalizedImage = nil
+        pendingRequestID = nil
+        resetAmbiguousRequestState()
+        pendingFingerprint = nil
+        repeatMealSuggestion = nil
+        repeatSourceRecordID = nil
+        errorMessage = nil
+        addManualFood(named: "Manual food")
+    }
+
+    private func performPendingImageScan(startedFromUnknownRecheck: Bool = false) async throws {
+        guard let normalizedImage = pendingNormalizedImage else {
             throw MealScanViewModelError.missingPendingImage
         }
 
@@ -196,20 +315,68 @@ final class MealScanViewModel {
         phase = .processing
         let result: MealScanResult
         if let remoteMealScanService {
+            guard let requestID = pendingRequestID else {
+                throw MealScanViewModelError.missingRequestID
+            }
             do {
-                result = try await remoteMealScanService.scan(
+                let outcome = try await remoteMealScanService.scan(
                     normalizedImage: normalizedImage,
-                    mealType: mealType
+                    mealType: mealType,
+                    requestID: requestID
                 )
-            } catch let error as GeminiMealScanProxyError where error.shouldShowManualFallbackWithoutLocalEstimate {
+                result = outcome.result
+                mealScanQuota = outcome.quota ?? mealScanQuota
+                mealScanCacheDisposition = outcome.cacheDisposition
+                resetAmbiguousRequestState()
+            } catch let error as MealScanRemoteError {
+                errorMessage = error.errorDescription
+                switch error {
+                case .outcomeUnknown(let unknownRequestID):
+                    pendingRequestID = unknownRequestID
+                    isRequestPending = false
+                    pendingRetryAfterSeconds = nil
+                    pendingRetryAvailableAt = nil
+                    phase = .ambiguousOutcome
+                case .requestPending(let pendingRequestID, let retryAfterSeconds):
+                    self.pendingRequestID = pendingRequestID
+                    isRequestPending = true
+                    pendingRetryAfterSeconds = retryAfterSeconds
+                    pendingRetryAvailableAt = retryAfterSeconds.map {
+                        Date().addingTimeInterval(TimeInterval($0))
+                    }
+                    if startedFromUnknownRecheck {
+                        unknownRetryCount = max(0, unknownRetryCount - 1)
+                    }
+                    phase = .ambiguousOutcome
+                default:
+                    phase = .manualFallback
+                }
+                return
+            } catch let error as GeminiMealScanProxyError {
+                mealScanQuota = error.quota ?? mealScanQuota
                 errorMessage = error.errorDescription
                 phase = .manualFallback
                 return
             } catch {
-                result = try await pipeline.scan(image: image, mealType: mealType)
+                errorMessage = L10n.string(
+                    "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
+                    defaultValue: "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually."
+                )
+                phase = .manualFallback
+                return
             }
-        } else {
+        } else if featureFlags.enableMockMealScanData,
+                  let image = selectedImage {
             result = try await pipeline.scan(image: image, mealType: mealType)
+            mealScanQuota = nil
+            mealScanCacheDisposition = nil
+        } else {
+            errorMessage = L10n.string(
+                "Photo estimates are not configured. Scan a barcode or enter the meal manually.",
+                defaultValue: "Photo estimates are not configured. Scan a barcode or enter the meal manually."
+            )
+            phase = .manualFallback
+            return
         }
         apply(result: result)
         phase = .review
@@ -259,17 +426,15 @@ final class MealScanViewModel {
         recalculate()
     }
 
-    func addManualFood(named name: String = "Food", grams: Double = 100) {
-        let food = SampleNutritionFixtures.records.first { $0.id == "rice-white-cooked" }
-        let nutrition = food.map { calculator.calculateItemNutrition(food: $0, grams: grams) } ?? NutritionSnapshot()
+    func addManualFood(named name: String = "Food", grams: Double = 0) {
         draftItems.append(
             MealFoodItemDraft(
                 displayName: name,
-                canonicalFoodId: food?.id ?? "manual-food",
-                nutritionSource: food?.source ?? .userManual,
+                canonicalFoodId: "manual-food",
+                nutritionSource: .userManual,
                 estimatedGrams: grams,
-                servingDescription: food?.servingDescription,
-                nutrition: nutrition,
+                servingDescription: nil,
+                nutrition: NutritionSnapshot(),
                 confidence: .unknown,
                 detectionSource: "manual",
                 portionEstimationMethod: .manualUserInput,
@@ -389,11 +554,21 @@ final class MealScanViewModel {
         selectedImage = nil
         selectedImageData = nil
         pendingNormalizedImage = nil
+        pendingRequestID = nil
+        resetAmbiguousRequestState()
         pendingFingerprint = nil
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
         errorMessage = nil
         phase = .camera
+    }
+
+    private func resetAmbiguousRequestState() {
+        unknownRetryCount = 0
+        sameRequestRecheckCount = 0
+        pendingRetryAfterSeconds = nil
+        pendingRetryAvailableAt = nil
+        isRequestPending = false
     }
 
     private func recalculate() {
@@ -443,9 +618,7 @@ final class MealScanViewModel {
         featureFlags: MealScanFeatureFlags
     ) -> (any RemoteMealScanServing)? {
         guard featureFlags.enableGeminiMealScan,
-              let configuration = GeminiRemoteMealScanConfiguration.from(
-                revenueCatAppUserID: SubscriptionManager.shared.revenueCatAppUserID
-              ),
+              let configuration = GeminiRemoteMealScanConfiguration.from(),
               let endpointURL = configuration.proxyEndpointURL
         else {
             return nil
@@ -458,7 +631,8 @@ final class MealScanViewModel {
             nutritionLookupService: nutritionRepository,
             calculator: calculator,
             configuration: configuration,
-            appCheckTokenProvider: FirebaseMealScanAppCheckTokenProvider()
+            appCheckTokenProvider: FirebaseMealScanAppCheckTokenProvider(),
+            storeKitEvidenceProvider: StoreKitMealScanEvidenceProvider()
         )
     }
 
@@ -471,6 +645,15 @@ final class MealScanViewModel {
         }
         #endif
         return VisionRepeatMealImageFingerprinter()
+    }
+
+    private static func parseISO8601(_ value: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: value) {
+            return date
+        }
+        return ISO8601DateFormatter().date(from: value)
     }
 }
 
@@ -495,15 +678,8 @@ private struct UITestRepeatMealImageFingerprinter: MealImageFingerprinting {
 
 private enum MealScanViewModelError: Error {
     case missingPendingImage
-}
-
-private extension GeminiMealScanProxyError {
-    var shouldShowManualFallbackWithoutLocalEstimate: Bool {
-        switch error {
-        case "daily_scan_quota_exceeded", "premium_entitlement_required", "app_integrity_required":
-            true
-        default:
-            false
-        }
-    }
+    case missingRequestID
+    case remoteConsentRequired
+    case ambiguousOutcomeRequired
+    case newAttemptConfirmationRequired
 }

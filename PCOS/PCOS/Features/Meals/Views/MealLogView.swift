@@ -26,6 +26,7 @@ struct MealLogView: View {
     @State private var mealGlucoseReadiness: MealGlucoseReadiness?
     @State private var showingBarcodeImport = false
     @State private var showingMealScan = false
+    @State private var launchBarcodeAfterMealScan = false
     @FocusState private var focusedField: FocusedField?
 
     private enum FocusedField: Hashable {
@@ -149,9 +150,22 @@ struct MealLogView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingMealScan) {
+            .sheet(isPresented: $showingMealScan, onDismiss: {
+                guard launchBarcodeAfterMealScan else { return }
+                launchBarcodeAfterMealScan = false
+                showingBarcodeImport = true
+            }) {
                 if let viewModel {
-                    MealScanFlowView(mealType: viewModel.mealType)
+                    MealScanFlowView(
+                        mealType: viewModel.mealType,
+                        onChooseBarcode: {
+                            launchBarcodeAfterMealScan = true
+                            showingMealScan = false
+                        },
+                        onChooseManual: {
+                            showingMealScan = false
+                        }
+                    )
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -2121,7 +2135,7 @@ private struct BarcodeMealImportSheet: View {
             Form {
                 if !hasAcknowledgedConsent {
                     Section {
-                        Text("UPC codes are sent to Open Food Facts. USDA lookup is used only when a local API key is configured.")
+                        Text("UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal.")
                             .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

@@ -30,8 +30,6 @@
 	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights. The app does not write to Apple Health.</string>
-	<key>USDA_FDC_API_KEY</key>
-	<string>$(USDA_FDC_API_KEY)</string>
 	<key>MEAL_SCAN_PROXY_BASE_URL</key>
 	<string>$(MEAL_SCAN_PROXY_BASE_URL)</string>
 	<key>REVENUECAT_ENTITLEMENT_ID</key>

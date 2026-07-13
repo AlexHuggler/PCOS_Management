@@ -7,8 +7,20 @@ struct MealScanFlowView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     let mealType: MealType
+    var onChooseBarcode: (() -> Void)?
+    var onChooseManual: (() -> Void)?
 
     @State private var viewModel: MealScanViewModel?
+
+    init(
+        mealType: MealType,
+        onChooseBarcode: (() -> Void)? = nil,
+        onChooseManual: (() -> Void)? = nil
+    ) {
+        self.mealType = mealType
+        self.onChooseBarcode = onChooseBarcode
+        self.onChooseManual = onChooseManual
+    }
 
     var body: some View {
         NavigationStack {
@@ -16,7 +28,7 @@ struct MealScanFlowView: View {
                 if let viewModel {
                     switch viewModel.phase {
                     case .entry:
-                        MealScanEntryView(viewModel: viewModel)
+                        MealScanEntryView(viewModel: viewModel, onChooseManual: chooseManual)
                     case .camera:
                         MealCameraView(viewModel: viewModel)
                     case .processing:
@@ -42,10 +54,31 @@ struct MealScanFlowView: View {
                         } else {
                             MealScanProcessingView()
                         }
+                    case .remoteConsent:
+                        MealScanRemoteConsentView(
+                            viewModel: viewModel,
+                            onChooseManual: chooseManual
+                        )
+                    case .ambiguousOutcome:
+                        MealScanAmbiguousOutcomeView(
+                            viewModel: viewModel,
+                            onChooseBarcode: chooseBarcode,
+                            onChooseManual: chooseManual
+                        )
+                    case .newAttemptConfirmation:
+                        MealScanNewAttemptConfirmationView(
+                            viewModel: viewModel,
+                            onChooseBarcode: chooseBarcode,
+                            onChooseManual: chooseManual
+                        )
                     case .review:
                         MealScanReviewView(viewModel: viewModel)
                     case .manualFallback:
-                        MealScanManualFallbackView(viewModel: viewModel)
+                        MealScanManualFallbackView(
+                            viewModel: viewModel,
+                            onChooseBarcode: chooseBarcode,
+                            onChooseManual: chooseManual
+                        )
                     case .saved:
                         MealScanSavedView()
                     }
@@ -82,10 +115,183 @@ struct MealScanFlowView: View {
         }
         .accessibilityIdentifier("screen.meal_scan")
     }
+
+    private func chooseBarcode() {
+        onChooseBarcode?()
+        dismiss()
+    }
+
+    private func chooseManual() {
+        onChooseManual?()
+        dismiss()
+    }
+}
+
+struct MealScanRemoteConsentView: View {
+    let viewModel: MealScanViewModel
+    let onChooseManual: () -> Void
+    @State private var isSubmitting = false
+
+    var body: some View {
+        ZStack {
+            BotanicalScreenBackground(style: AppTheme.usesPremiumEditorStyling ? .quiet : .dashboard)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppTheme.spacing20) {
+                    if let image = viewModel.selectedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 168)
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
+                            .accessibilityHidden(true)
+                    }
+
+                    VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                        Label(
+                            L10n.string("Photo estimate", defaultValue: "Photo estimate"),
+                            systemImage: "lock.shield"
+                        )
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+
+                        Text(L10n.string(
+                            "Send this photo to Google Gemini?",
+                            defaultValue: "Send this photo to Google Gemini?"
+                        ))
+                        .appFont(.title2, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
+                            defaultValue: "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients."
+                        ))
+                        .appFont(.body)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
+                            defaultValue: "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server."
+                        ))
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "You will review and edit the estimate before anything is added to your meal log.",
+                            defaultValue: "You will review and edit the estimate before anything is added to your meal log."
+                        ))
+                        .appFont(.caption, weight: .medium)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
+                            defaultValue: "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call."
+                        ))
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        Text(L10n.string(
+                            "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis.",
+                            defaultValue: "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis."
+                        ))
+                        .appFont(.caption, weight: .medium)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        if viewModel.mealScanQuota?.remaining == 0 {
+                            Label(
+                                L10n.string(
+                                    "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis.",
+                                    defaultValue: "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis."
+                                ),
+                                systemImage: "hourglass"
+                            )
+                            .appFont(.caption, weight: .semibold)
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                            if let resetText = viewModel.quotaResetAtLocalText {
+                                Text("Next rolling-window reset in your local time: \(resetText).")
+                                    .appFont(.caption)
+                                    .foregroundStyle(AppTheme.secondaryText)
+                            }
+                        }
+                    }
+
+                    VStack(spacing: AppTheme.spacing12) {
+                        Button {
+                            isSubmitting = true
+                            Task {
+                                defer { isSubmitting = false }
+                                do {
+                                    try await viewModel.confirmRemotePhotoEstimate()
+                                } catch {
+                                    viewModel.errorMessage = L10n.string(
+                                        "The photo estimate could not start. You can try another photo or enter the meal manually.",
+                                        defaultValue: "The photo estimate could not start. You can try another photo or enter the meal manually."
+                                    )
+                                    viewModel.phase = .manualFallback
+                                }
+                            }
+                        } label: {
+                            Label(
+                                viewModel.canStartFreshAnalysis
+                                    ? L10n.string("Send to Google Gemini", defaultValue: "Send to Google Gemini")
+                                    : L10n.string("Check for cached result", defaultValue: "Check for cached result"),
+                                systemImage: viewModel.canStartFreshAnalysis ? "arrow.up.circle.fill" : "clock.arrow.circlepath"
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(AppTheme.premiumEditorAccentColor)
+                        .disabled(isSubmitting)
+                        .accessibilityIdentifier("meal_scan.remote_consent.continue")
+
+                        Button(action: onChooseManual) {
+                            Label(
+                                L10n.string("Enter Manually", defaultValue: "Enter Manually"),
+                                systemImage: "square.and.pencil"
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(AppTheme.accentColor)
+                        .disabled(isSubmitting)
+                        .accessibilityIdentifier("meal_scan.remote_consent.manual")
+
+                        Button {
+                            viewModel.retake()
+                        } label: {
+                            Label(
+                                L10n.string("Choose Another Photo", defaultValue: "Choose Another Photo"),
+                                systemImage: "photo.on.rectangle"
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .disabled(isSubmitting)
+                        .accessibilityIdentifier("meal_scan.remote_consent.retake")
+                    }
+                }
+                .frame(maxWidth: 560, alignment: .leading)
+                .padding(AppTheme.spacing20)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .accessibilityIdentifier("meal_scan.remote_consent")
+    }
 }
 
 struct MealScanEntryView: View {
     let viewModel: MealScanViewModel
+    let onChooseManual: () -> Void
 
     var body: some View {
         if AppTheme.usesPremiumEditorStyling {
@@ -124,9 +330,7 @@ struct MealScanEntryView: View {
                         .accessibilityIdentifier("meal_scan.scan_button")
                         .accessibilityLabel("Scan meal")
 
-                        Button {
-                            viewModel.addManualFood(named: "Manual food")
-                        } label: {
+                        Button(action: onChooseManual) {
                             Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
                                 .frame(maxWidth: .infinity)
                         }
@@ -214,9 +418,7 @@ struct MealScanEntryView: View {
                         .accessibilityIdentifier("meal_scan.scan_button")
                         .accessibilityLabel(L10n.string("Scan meal", defaultValue: "Scan meal"))
 
-                        Button {
-                            viewModel.addManualFood(named: "Manual food")
-                        } label: {
+                        Button(action: onChooseManual) {
                             lunarActionRow(
                                 title: L10n.string("Enter manually", defaultValue: "Enter manually"),
                                 subtitle: L10n.string("Build an editable estimate yourself", defaultValue: "Build an editable estimate yourself"),
@@ -501,6 +703,38 @@ struct MealScanReviewView: View {
                 Text("Review estimate")
             }
 
+            if let disposition = viewModel.mealScanCacheDisposition {
+                Section {
+                    if disposition == .fresh, let quota = viewModel.mealScanQuota {
+                        Text("\(quota.remaining) of \(quota.limit) fresh AI photo analyses remain in your rolling 24-hour \(quota.tier) allowance.")
+                            .appFont(.subheadline, weight: .medium)
+
+                        if let resetText = viewModel.quotaResetAtLocalText {
+                            Text("This rolling window resets as earlier analyses age out; the next reset is shown in your local time: \(resetText).")
+                                .appFont(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if viewModel.shouldWarnAboutRemainingAnalyses {
+                            Label(
+                                "Only \(quota.remaining) fresh AI photo analyses remain in this rolling window.",
+                                systemImage: "exclamationmark.triangle.fill"
+                            )
+                            .appFont(.caption, weight: .semibold)
+                            .foregroundStyle(.orange)
+                        }
+                    } else {
+                        Label(
+                            "Cached result — no fresh AI photo analysis was used.",
+                            systemImage: "clock.arrow.circlepath"
+                        )
+                        .appFont(.subheadline, weight: .medium)
+                    }
+                } header: {
+                    Text("AI photo allowance")
+                }
+            }
+
             Section {
                 Picker("Was this cooked with oil, butter, dressing, or sauce?", selection: $viewModel.hiddenIngredientEstimate) {
                     ForEach(HiddenIngredientEstimate.allCases) { estimate in
@@ -760,6 +994,15 @@ private struct MealScanFoodItemRow: View {
 
 struct MealScanManualFallbackView: View {
     let viewModel: MealScanViewModel
+    let onChooseBarcode: () -> Void
+    let onChooseManual: () -> Void
+
+    private var title: String {
+        if viewModel.mealScanQuota?.remaining == 0 {
+            return L10n.string("Fresh AI photo allowance used", defaultValue: "Fresh AI photo allowance used")
+        }
+        return L10n.string("Photo analysis unavailable", defaultValue: "Photo analysis unavailable")
+    }
 
     var body: some View {
         if AppTheme.usesPremiumEditorStyling {
@@ -771,23 +1014,37 @@ struct MealScanManualFallbackView: View {
                         .foregroundStyle(AppTheme.premiumEditorAccentGradient)
 
                     VStack(spacing: AppTheme.spacing8) {
-                        Text(L10n.string("No food confidently detected", defaultValue: "No food confidently detected"))
+                        Text(title)
                             .appFont(.title3, weight: .semibold)
                             .foregroundStyle(AppTheme.primaryText)
                         Text(viewModel.errorMessage ?? L10n.string("You can retake the photo or add the meal manually.", defaultValue: "You can retake the photo or add the meal manually."))
                             .appFont(.subheadline)
                             .foregroundStyle(AppTheme.secondaryText)
                             .multilineTextAlignment(.center)
+
+                        if viewModel.mealScanQuota?.remaining == 0,
+                           let resetText = viewModel.quotaResetAtLocalText {
+                            Text("Next rolling-window reset in your local time: \(resetText).")
+                                .appFont(.caption, weight: .medium)
+                                .foregroundStyle(AppTheme.primaryText)
+                                .multilineTextAlignment(.center)
+                        }
                     }
 
-                    Button {
-                        viewModel.addManualFood(named: "Manual food")
-                    } label: {
-                        Label(L10n.string("Add manually", defaultValue: "Add manually"), systemImage: "plus")
+                    Button(action: onChooseManual) {
+                        Label(L10n.string("Enter nutrition manually", defaultValue: "Enter nutrition manually"), systemImage: "square.and.pencil")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(AppTheme.premiumEditorAccentColor)
+
+                    Button(action: onChooseBarcode) {
+                        Label(L10n.string("Scan a barcode", defaultValue: "Scan a barcode"), systemImage: "barcode.viewfinder")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(AppTheme.premiumEditorSecondaryAccentColor)
+                    .accessibilityIdentifier("meal_scan.fallback.barcode")
 
                     Button {
                         viewModel.retake()
@@ -807,26 +1064,193 @@ struct MealScanManualFallbackView: View {
         } else {
             VStack(spacing: AppTheme.spacing16) {
                 AppEmptyStateView(
-                    title: "No food confidently detected",
-                    message: viewModel.errorMessage ?? "You can retake the photo or add the meal manually.",
+                    title: title,
+                    message: viewModel.errorMessage ?? L10n.string("You can retake the photo or add the meal manually.", defaultValue: "You can retake the photo or add the meal manually."),
                     systemImage: "fork.knife.circle"
                 )
-                Button {
-                    viewModel.addManualFood(named: "Manual food")
-                } label: {
-                    Label("Add manually", systemImage: "plus")
+                if viewModel.mealScanQuota?.remaining == 0,
+                   let resetText = viewModel.quotaResetAtLocalText {
+                    Text("Next rolling-window reset in your local time: \(resetText).")
+                        .appFont(.caption, weight: .medium)
+                        .multilineTextAlignment(.center)
+                }
+                Button(action: onChooseManual) {
+                    Label(L10n.string("Enter nutrition manually", defaultValue: "Enter nutrition manually"), systemImage: "square.and.pencil")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(AppTheme.sage)
 
+                Button(action: onChooseBarcode) {
+                    Label(L10n.string("Scan a barcode", defaultValue: "Scan a barcode"), systemImage: "barcode.viewfinder")
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("meal_scan.fallback.barcode")
+
                 Button {
                     viewModel.retake()
                 } label: {
-                    Label("Retake photo", systemImage: "camera")
+                    Label(L10n.string("Retake photo", defaultValue: "Retake photo"), systemImage: "camera")
                 }
             }
             .padding()
         }
+    }
+}
+
+struct MealScanAmbiguousOutcomeView: View {
+    let viewModel: MealScanViewModel
+    let onChooseBarcode: () -> Void
+    let onChooseManual: () -> Void
+    @State private var isChecking = false
+
+    var body: some View {
+        ZStack {
+            BotanicalScreenBackground(style: AppTheme.usesPremiumEditorStyling ? .quiet : .dashboard)
+            ScrollView {
+                VStack(spacing: AppTheme.spacing16) {
+                    Image(systemName: "questionmark.diamond.fill")
+                        .font(.system(size: 46, weight: .semibold))
+                        .foregroundStyle(.orange)
+
+                    Text(viewModel.isRequestPending
+                        ? L10n.string("Analysis still processing", defaultValue: "Analysis still processing")
+                        : L10n.string("Analysis status unknown", defaultValue: "Analysis status unknown"))
+                        .appFont(.title3, weight: .semibold)
+                        .foregroundStyle(AppTheme.primaryText)
+
+                    Text(viewModel.errorMessage ?? "CycleBalance could not confirm whether the previous analysis completed.")
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+
+                    Text("Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.")
+                        .appFont(.caption, weight: .medium)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .multilineTextAlignment(.center)
+
+                    if let retryTime = viewModel.pendingRetryAvailableAtLocalText {
+                        Text("The server asked CycleBalance to wait before checking again. Next check: \(retryTime).")
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Button {
+                            isChecking = true
+                            Task {
+                                defer { isChecking = false }
+                                try? await viewModel.retryAmbiguousOutcome()
+                            }
+                        } label: {
+                            Label("Check the same request", systemImage: "arrow.clockwise")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isChecking || !viewModel.canRetryAmbiguousOutcome(at: context.date))
+                        .accessibilityIdentifier("meal_scan.unknown.retry_same_request")
+                    }
+
+                    if !viewModel.canRetryAmbiguousOutcome,
+                       viewModel.pendingRetryAvailableAtLocalText == nil {
+                        Text("The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.")
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    Button {
+                        viewModel.requestNewAnalysisAfterAmbiguousOutcome()
+                    } label: {
+                        Label("Consider a new analysis", systemImage: "plus.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(isChecking || !viewModel.canStartFreshAnalysis)
+                    .accessibilityIdentifier("meal_scan.unknown.request_new")
+
+                    Button(action: onChooseBarcode) {
+                        Label("Scan a barcode", systemImage: "barcode.viewfinder")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(action: onChooseManual) {
+                        Label("Enter manually", systemImage: "square.and.pencil")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(AppTheme.spacing24)
+                .frame(maxWidth: 560)
+            }
+        }
+        .accessibilityIdentifier("meal_scan.unknown_outcome")
+    }
+}
+
+struct MealScanNewAttemptConfirmationView: View {
+    let viewModel: MealScanViewModel
+    let onChooseBarcode: () -> Void
+    let onChooseManual: () -> Void
+    @State private var isSubmitting = false
+
+    var body: some View {
+        ZStack {
+            BotanicalScreenBackground(style: AppTheme.usesPremiumEditorStyling ? .quiet : .dashboard)
+            VStack(spacing: AppTheme.spacing16) {
+                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                    .font(.system(size: 42, weight: .semibold))
+                    .foregroundStyle(.orange)
+
+                Text("Start a separate analysis?")
+                    .appFont(.title3, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+
+                Text("The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.")
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    isSubmitting = true
+                    Task {
+                        defer { isSubmitting = false }
+                        try? await viewModel.confirmNewAnalysisAfterAmbiguousOutcome()
+                    }
+                } label: {
+                    Label("Start a new billable analysis", systemImage: "arrow.up.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .disabled(isSubmitting || !viewModel.canStartFreshAnalysis)
+                .accessibilityIdentifier("meal_scan.unknown.confirm_new")
+
+                Button(action: onChooseBarcode) {
+                    Label("Scan a barcode", systemImage: "barcode.viewfinder")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isSubmitting)
+
+                Button(action: onChooseManual) {
+                    Label("Enter manually", systemImage: "square.and.pencil")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .disabled(isSubmitting)
+
+                Button("Go back") {
+                    viewModel.cancelNewAnalysisConfirmation()
+                }
+                .buttonStyle(.bordered)
+                .disabled(isSubmitting)
+            }
+            .padding(AppTheme.spacing24)
+            .frame(maxWidth: 560)
+        }
+        .accessibilityIdentifier("meal_scan.new_attempt_confirmation")
     }
 }
 
