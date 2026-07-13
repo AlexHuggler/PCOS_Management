@@ -1352,7 +1352,11 @@ test("kill switch disables scans before entitlement quota or Gemini calls", asyn
 test("production defaults to disabled when the meal scan flag is absent", async () => {
   const calls = [];
   const server = createServer({
-    environment: { NODE_ENV: "production" },
+    environment: {
+      NODE_ENV: "production",
+      REVENUECAT_PROJECT_ID: "proj8da4e000",
+      REVENUECAT_ENTITLEMENT_ID: "CycleBalance Unlimited",
+    },
     verifyAppIntegrity: async () => {
       calls.push("integrity");
       return true;
@@ -1426,6 +1430,9 @@ test("production-enabled startup accepts the complete durable security configura
     APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
     APPLE_IAP_KEY_ID: "TESTKEY123",
     APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
+    REVENUECAT_SECRET_API_KEY: "sk_test_server_key_with_adequate_length",
+    REVENUECAT_PROJECT_ID: "proj8da4e000",
+    REVENUECAT_ENTITLEMENT_ID: "CycleBalance Unlimited",
     MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
     GEMINI_API_KEY: "test-gemini-key",
     MEAL_SCAN_QUOTA_STORE: "firestore",
@@ -1439,7 +1446,7 @@ test("production-enabled startup accepts the complete durable security configura
   const server = createServer({
     environment,
     appCheckVerifier: async () => ({ allowed: true }),
-    verifyRevenueCatEntitlement: async () => ({ allowed: true, accessTier: "paid" }),
+    revenueCatSubscriptionVerifier: { check: async () => ({ allowed: true }) },
     requestGate: { checkAndConsume: async () => ({ allowed: true }) },
     quotaStore: allowQuotaStore(),
     resultCache: { get: async () => null, set: async () => true },
@@ -1462,6 +1469,9 @@ test("production-enabled startup rejects invalid body and lease limits", () => {
     APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
     APPLE_IAP_KEY_ID: "TESTKEY123",
     APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
+    REVENUECAT_SECRET_API_KEY: "sk_test_server_key_with_adequate_length",
+    REVENUECAT_PROJECT_ID: "proj8da4e000",
+    REVENUECAT_ENTITLEMENT_ID: "CycleBalance Unlimited",
     MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
     GEMINI_API_KEY: "test-gemini-key",
     MEAL_SCAN_QUOTA_STORE: "firestore",
@@ -1475,6 +1485,10 @@ test("production-enabled startup rejects invalid body and lease limits", () => {
   assert.throws(
     () => createServer({ environment: { ...baseEnvironment, MAX_BODY_BYTES: "invalid" } }),
     /MAX_BODY_BYTES must be a positive integer/
+  );
+  assert.throws(
+    () => createServer({ environment: { ...baseEnvironment, REVENUECAT_TIMEOUT_MS: "5001" } }),
+    /REVENUECAT_TIMEOUT_MS must be a positive integer no greater than 5000/
   );
   assert.throws(
     () => createServer({
@@ -2432,6 +2446,7 @@ test("current Apple status rejects a captured pre-revocation or pre-expiry JWS",
   ]) {
     await t.test(scenario.name, async () => {
       let sharpCalls = 0;
+      let revenueCatCalls = 0;
       const server = createHardenedServer({
         storeKitVerifier: {
           verifyAndDecodeTransaction: async () => activeStoreKitTransaction({
@@ -2441,6 +2456,12 @@ test("current Apple status rejects a captured pre-revocation or pre-expiry JWS",
         },
         currentSubscriptionChecker: {
           check: async () => ({ allowed: false, reason: scenario.reason }),
+        },
+        revenueCatSubscriptionVerifier: {
+          check: async () => {
+            revenueCatCalls += 1;
+            return { allowed: true };
+          },
         },
         processImage: async ({ bytes }) => {
           sharpCalls += 1;
@@ -2453,6 +2474,7 @@ test("current Apple status rejects a captured pre-revocation or pre-expiry JWS",
       assert.equal(response.status, 403);
       assert.equal(response.body.reason, scenario.reason);
       assert.equal(sharpCalls, 0);
+      assert.equal(revenueCatCalls, 0);
     });
   }
 });
@@ -2484,6 +2506,190 @@ test("current Apple status tier is authoritative for quota selection", async () 
   assert.equal(response.body.quota.tier, "trial");
 });
 
+test("RevenueCat corroboration runs after current Apple status using only its verified transaction and cannot change tier", async () => {
+  const captured = activeStoreKitTransaction({ transactionId: "1000000111111111" });
+  const current = activeStoreKitTransaction({ transactionId: "1000000999999999" });
+  const calls = [];
+  let revenueCatInput;
+  let quotaInput;
+  const server = createHardenedServer({
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => captured,
+    },
+    currentSubscriptionChecker: {
+      check: async () => {
+        calls.push("apple_current_status");
+        return { allowed: true, tier: "trial", transaction: current };
+      },
+    },
+    revenueCatSubscriptionVerifier: {
+      check: async (input) => {
+        calls.push("revenuecat");
+        revenueCatInput = input;
+        return { allowed: true, tier: "paid", customerId: "must-be-ignored" };
+      },
+    },
+    quotaStore: {
+      checkAndConsume: async (input) => {
+        quotaInput = input;
+        return rollingQuota({ tier: input.tier, limit: input.limit });
+      },
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls.slice(0, 2), ["apple_current_status", "revenuecat"]);
+  assert.deepEqual(revenueCatInput, {
+    transaction: {
+      transactionId: current.transactionId,
+      environment: current.environment,
+    },
+  });
+  assert.equal(JSON.stringify(revenueCatInput).includes(hardenedPayload.signedTransactionJWS), false);
+  assert.equal(Object.hasOwn(revenueCatInput, "appUserId"), false);
+  assert.equal(quotaInput.tier, "trial");
+  assert.equal(quotaInput.limit, 5);
+  assert.equal(response.body.quota.tier, "trial");
+});
+
+test("RevenueCat corroboration never falls back to the captured JWS transaction without current Apple status", async () => {
+  let revenueCatCalls = 0;
+  const server = createHardenedServer({
+    currentSubscriptionChecker: null,
+    revenueCatSubscriptionVerifier: {
+      check: async () => {
+        revenueCatCalls += 1;
+        return { allowed: true };
+      },
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(response.body, {
+    error: "meal_scan_unavailable",
+    reason: "subscription_status_unconfigured",
+    retryable: false,
+  });
+  assert.equal(revenueCatCalls, 0);
+});
+
+test("RevenueCat mismatch denies access before image decoding quota or Gemini", async () => {
+  const calls = [];
+  const current = activeStoreKitTransaction({ transactionId: "1000000777777777" });
+  const server = createHardenedServer({
+    currentSubscriptionChecker: {
+      check: async () => ({ allowed: true, tier: "paid", transaction: current }),
+    },
+    revenueCatSubscriptionVerifier: {
+      check: async () => ({ allowed: false, reason: "revenuecat_subscription_mismatch" }),
+    },
+    processImage: async () => {
+      calls.push("sharp");
+      throw new Error("must not decode");
+    },
+    quotaStore: {
+      checkAndConsume: async () => {
+        calls.push("quota");
+        return rollingQuota();
+      },
+    },
+    callGemini: async () => {
+      calls.push("gemini");
+      return successGeminiResponse();
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(response.body, {
+    error: "premium_entitlement_required",
+    reason: "revenuecat_subscription_mismatch",
+  });
+  assert.deepEqual(calls, []);
+});
+
+test("RevenueCat synchronization lag returns a retryable unavailable response before image processing", async () => {
+  let sharpCalls = 0;
+  const server = createHardenedServer({
+    currentSubscriptionChecker: {
+      check: async () => ({
+        allowed: true,
+        tier: "paid",
+        transaction: activeStoreKitTransaction({ transactionId: "1000000666666666" }),
+      }),
+    },
+    revenueCatSubscriptionVerifier: {
+      check: async () => ({
+        allowed: false,
+        reason: "revenuecat_subscription_not_synced",
+        retryable: true,
+      }),
+    },
+    processImage: async () => {
+      sharpCalls += 1;
+      throw new Error("must not decode");
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(response.body, {
+    error: "meal_scan_unavailable",
+    reason: "revenuecat_subscription_not_synced",
+    retryable: true,
+  });
+  assert.equal(sharpCalls, 0);
+});
+
+test("RevenueCat failures remain generic and do not leak transactions upstream bodies or secret values", async (t) => {
+  for (const retryable of [true, false]) {
+    await t.test(retryable ? "retryable" : "non-retryable", async () => {
+      const events = [];
+      const secret = "sk_sensitive_revenuecat_key_must_not_log";
+      const upstreamBody = "sensitive-revenuecat-response-must-not-log";
+      const transactionId = retryable ? "1000000555555555" : "1000000444444444";
+      const error = new Error(`${secret}:${upstreamBody}`);
+      error.code = `${secret}:${upstreamBody}`;
+      error.retryable = retryable;
+      const server = createHardenedServer({
+        currentSubscriptionChecker: {
+          check: async () => ({
+            allowed: true,
+            tier: "paid",
+            transaction: activeStoreKitTransaction({ transactionId }),
+          }),
+        },
+        revenueCatSubscriptionVerifier: {
+          check: async () => { throw error; },
+        },
+        logger: collectingLogger(events),
+      });
+
+      const response = await request(server, hardenedPayload);
+
+      assert.equal(response.status, 503);
+      assert.deepEqual(response.body, {
+        error: "meal_scan_unavailable",
+        reason: "revenuecat_subscription_unavailable",
+        retryable,
+      });
+      const serialized = JSON.stringify(events);
+      assert.equal(serialized.includes(secret), false);
+      assert.equal(serialized.includes(upstreamBody), false);
+      assert.equal(serialized.includes(transactionId), false);
+      const rejection = scannerEvent(events, "authorization_rejection");
+      assert.equal(rejection.metadata.control, "revenuecat_subscription");
+      assert.equal(rejection.metadata.reason, "revenuecat_subscription_unavailable");
+    });
+  }
+});
+
 test("production startup fails closed without App Store Server API credentials", () => {
   const environment = {
     NODE_ENV: "production",
@@ -2510,6 +2716,31 @@ test("production startup fails closed without App Store Server API credentials",
     }),
     /APPLE_IAP_PRIVATE_KEY|APPLE_IAP_KEY_ID|APPLE_IAP_ISSUER_ID/
   );
+});
+
+test("production startup fails closed without exact RevenueCat secondary-verification configuration", () => {
+  const environment = productionEnvironmentFixture();
+  for (const key of [
+    "REVENUECAT_SECRET_API_KEY",
+    "REVENUECAT_PROJECT_ID",
+    "REVENUECAT_ENTITLEMENT_ID",
+  ]) {
+    const missing = { ...environment };
+    delete missing[key];
+    assert.throws(
+      () => createServer({ environment: missing }),
+      new RegExp(key)
+    );
+  }
+  for (const [key, value] of [
+    ["REVENUECAT_PROJECT_ID", "proj_other"],
+    ["REVENUECAT_ENTITLEMENT_ID", "Other Entitlement"],
+  ]) {
+    assert.throws(
+      () => createServer({ environment: { ...environment, [key]: value } }),
+      /pinned CycleBalance RevenueCat configuration/
+    );
+  }
 });
 
 test("server uses the atomic Firestore reservation path after a cache miss", async () => {
@@ -2710,6 +2941,33 @@ function createHardenedServer(overrides = {}) {
     logger: { info() {}, warn() {}, error() {} },
     ...overrides,
   });
+}
+
+function productionEnvironmentFixture(overrides = {}) {
+  return {
+    NODE_ENV: "production",
+    MEAL_SCAN_ENABLED: "true",
+    APP_CHECK_REQUIRED: "true",
+    FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "6760353511",
+    APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+    APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
+    APPLE_IAP_KEY_ID: "TESTKEY123",
+    APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
+    REVENUECAT_SECRET_API_KEY: "sk_test_server_key_with_adequate_length",
+    REVENUECAT_PROJECT_ID: "proj8da4e000",
+    REVENUECAT_ENTITLEMENT_ID: "CycleBalance Unlimited",
+    MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    GEMINI_API_KEY: "test-gemini-key",
+    MEAL_SCAN_QUOTA_STORE: "firestore",
+    MEAL_SCAN_RESULT_CACHE: "firestore",
+    MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
+    MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE: "firestore",
+    MEAL_SCAN_BUDGET_STORE: "firestore",
+    ...overrides,
+  };
 }
 
 function activeStoreKitTransaction(overrides = {}) {

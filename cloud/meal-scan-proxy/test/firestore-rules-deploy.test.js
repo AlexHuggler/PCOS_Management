@@ -64,10 +64,20 @@ test("bootstrap provisions every deployed secret and TTL-managed active collecti
 
   assert.match(bootstrapSource, /PRINCIPAL_HMAC_SECRET_NAME="\$\{PRINCIPAL_HMAC_SECRET_NAME:-cyclebalance-meal-scan-principal-hmac\}"/);
   assert.match(bootstrapSource, /APPLE_IAP_PRIVATE_KEY_SECRET_NAME="\$\{APPLE_IAP_PRIVATE_KEY_SECRET_NAME:-cyclebalance-app-store-iap-private-key\}"/);
+  assert.match(bootstrapSource, /REVENUECAT_SECRET_NAME="\$\{REVENUECAT_SECRET_NAME:-cyclebalance-revenuecat-secret-api-key\}"/);
   assert.match(bootstrapSource, /add_secret_version_from_prompt "\$PRINCIPAL_HMAC_SECRET_NAME"/);
   assert.match(bootstrapSource, /add_secret_version_from_file_prompt "\$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"/);
+  assert.match(bootstrapSource, /ensure_secret "\$REVENUECAT_SECRET_NAME"/);
+  assert.match(
+    bootstrapSource,
+    /for secret_name in[\s\S]*"\$REVENUECAT_SECRET_NAME"[\s\S]*roles\/secretmanager\.secretAccessor/
+  );
+  assert.match(
+    bootstrapSource,
+    /add_secret_version_from_prompt "\$REVENUECAT_SECRET_NAME"[^\n]*true/
+  );
   assert.doesNotMatch(bootstrapSource, /add_secret_version_from_prompt "\$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"/);
-  assert.doesNotMatch(bootstrapSource, /RevenueCat|REVENUECAT/);
+  assert.doesNotMatch(bootstrapSource, /add_secret_version_from_file_prompt "\$REVENUECAT_SECRET_NAME"/);
 
   for (const collection of [
     "mealScanRollingQuota",
@@ -107,6 +117,32 @@ test("deploy pins the App Store API private key secret and uses bundled Apple ro
   assert.match(deploySource, /APPLE_IAP_ISSUER_ID=\$\{APPLE_IAP_ISSUER_ID\}/);
   assert.doesNotMatch(deploySource, /APPLE_ROOT_CA_BASE64/);
   assert.doesNotMatch(deploySource, /APPLE_IAP_PRIVATE_KEY=\$\{APPLE_IAP_PRIVATE_KEY\}/);
+});
+
+test("deploy pins the RevenueCat secret and strict secondary-verification identity", () => {
+  const deploySource = readFileSync(cloudRunDeployPath, "utf8");
+
+  assert.match(
+    deploySource,
+    /REVENUECAT_SECRET_NAME="\$\{REVENUECAT_SECRET_NAME:-cyclebalance-revenuecat-secret-api-key\}"/
+  );
+  assert.match(deploySource, /REVENUECAT_SECRET_VERSION="\$\{REVENUECAT_SECRET_VERSION:-\}"/);
+  assert.match(deploySource, /REVENUECAT_PROJECT_ID="\$\{REVENUECAT_PROJECT_ID:-proj8da4e000\}"/);
+  assert.match(
+    deploySource,
+    /REVENUECAT_ENTITLEMENT_ID="\$\{REVENUECAT_ENTITLEMENT_ID:-CycleBalance Unlimited\}"/
+  );
+  assert.match(deploySource, /REVENUECAT_SECRET_VERSION.+numeric pinned version/s);
+  assert.match(deploySource, /pinned CycleBalance RevenueCat configuration/);
+  assert.match(
+    deploySource,
+    /REVENUECAT_SECRET_API_KEY=\$\{REVENUECAT_SECRET_NAME\}:\$\{REVENUECAT_SECRET_VERSION\}/
+  );
+  assert.match(deploySource, /REVENUECAT_PROJECT_ID=\$\{REVENUECAT_PROJECT_ID\}/);
+  assert.match(deploySource, /REVENUECAT_ENTITLEMENT_ID=\$\{REVENUECAT_ENTITLEMENT_ID\}/);
+  assert.match(deploySource, /REVENUECAT_TIMEOUT_MS=3000/);
+  assert.doesNotMatch(deploySource, /REVENUECAT_SECRET_API_KEY=\$\{REVENUECAT_SECRET_API_KEY\}/);
+  assert.doesNotMatch(deploySource, /REVENUECAT_SECRET_VERSION:-latest/);
 });
 
 test("Cloud Run image copies the bundled Apple trust anchors required at startup", () => {

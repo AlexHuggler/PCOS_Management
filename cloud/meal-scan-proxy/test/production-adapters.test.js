@@ -355,6 +355,431 @@ test("current subscription checker binds the current product to the submitted tr
   assert.deepEqual(result, { allowed: false, reason: "storekit_transaction_mismatch" });
 });
 
+test("RevenueCat corroboration searches by the verified Apple transaction and accepts one exact mapped subscription", async () => {
+  assert.equal(typeof proxyModule.createRevenueCatSubscriptionVerifier, "function");
+  const transactionId = "1000000987654321";
+  let request;
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set([
+      "cyclebalance.premium.monthly",
+      "cyclebalance.premium.annual",
+    ]),
+    timeoutMs: 3_000,
+    fetchImpl: async (url, options) => {
+      request = { url: String(url), options };
+      return new Response(JSON.stringify({
+        object: "list",
+        items: [{
+          object: "subscription",
+          product_id: "prod_monthly",
+          gives_access: true,
+          entitlements: {
+            object: "list",
+            next_page: null,
+            items: [{
+              object: "entitlement",
+              lookup_key: "CycleBalance Unlimited",
+              products: {
+                object: "list",
+                next_page: null,
+                items: [{
+                  object: "product",
+                  id: "prod_monthly",
+                  store_identifier: "cyclebalance.premium.monthly",
+                }],
+              },
+            }],
+          },
+          environment: "production",
+          store: "app_store",
+          store_subscription_identifier: transactionId,
+        }],
+        next_page: null,
+        url: "/v2/projects/proj8da4e000/subscriptions",
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json", "content-length": "1024" },
+      });
+    },
+  });
+
+  const result = await verifier.check({
+    transaction: { transactionId, environment: "Production" },
+  });
+
+  assert.deepEqual(result, { allowed: true });
+  assert.equal(
+    request.url,
+    `https://api.revenuecat.com/v2/projects/proj8da4e000/subscriptions?store_subscription_identifier=${transactionId}`
+  );
+  assert.equal(request.options.headers.authorization, "Bearer sk_test_server_key");
+  assert.equal(request.options.headers.accept, "application/json");
+  assert.equal(request.options.method, "GET");
+});
+
+test("RevenueCat corroboration treats an empty synchronized search as retryable ingestion lag", async () => {
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    timeoutMs: 3_000,
+    fetchImpl: async () => new Response(JSON.stringify({
+      object: "list",
+      items: [],
+      next_page: null,
+      url: "/v2/projects/proj8da4e000/subscriptions",
+    }), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+
+  const result = await verifier.check({
+    transaction: { transactionId: "1000000987654321", environment: "Production" },
+  });
+
+  assert.deepEqual(result, {
+    allowed: false,
+    reason: "revenuecat_subscription_not_synced",
+    retryable: true,
+  });
+});
+
+test("RevenueCat corroboration rejects a response for a different store subscription identifier", async () => {
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    fetchImpl: async () => new Response(JSON.stringify(revenueCatSubscriptionList({
+      store_subscription_identifier: "1000000000000000",
+    })), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+
+  const result = await verifier.check({
+    transaction: { transactionId: "1000000987654321", environment: "Production" },
+  });
+
+  assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
+});
+
+test("RevenueCat corroboration requires one exact App Store environment entitlement and current product mapping", async () => {
+  const mutations = [
+    (item) => { item.store = "play_store"; },
+    (item) => { item.environment = "sandbox"; },
+    (item) => { item.gives_access = false; },
+    (item) => { item.entitlements.items[0].lookup_key = "Other Entitlement"; },
+    (item) => { item.entitlements.items[0].products.items[0].store_identifier = "attacker.product"; },
+    (item) => { item.entitlements.items[0].products.items[0].id = "prod_other"; },
+    (item) => { item.entitlements.items.push(structuredClone(item.entitlements.items[0])); },
+    (item) => { item.entitlements.items[0].products.items.push(structuredClone(item.entitlements.items[0].products.items[0])); },
+  ];
+  for (const mutate of mutations) {
+    const body = revenueCatSubscriptionList();
+    mutate(body.items[0]);
+    const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+      apiKey: "sk_test_server_key",
+      projectId: "proj8da4e000",
+      entitlementLookupKey: "CycleBalance Unlimited",
+      allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+      fetchImpl: async () => new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    });
+
+    const result = await verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    });
+
+    assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
+  }
+});
+
+test("RevenueCat corroboration rejects paginated or multiple subscription matches", async () => {
+  for (const body of [
+    { ...revenueCatSubscriptionList(), next_page: "/v2/projects/proj8da4e000/subscriptions?starting_after=sub2" },
+    (() => {
+      const value = revenueCatSubscriptionList();
+      value.items[0].entitlements.next_page = "/v2/projects/proj8da4e000/subscriptions/sub1/entitlements?starting_after=ent2";
+      return value;
+    })(),
+    (() => {
+      const value = revenueCatSubscriptionList();
+      value.items[0].entitlements.items[0].products.next_page = "/v2/projects/proj8da4e000/entitlements/ent1/products?starting_after=prod2";
+      return value;
+    })(),
+    (() => {
+      const value = revenueCatSubscriptionList();
+      value.items.push({ ...value.items[0], id: "sub_duplicate" });
+      return value;
+    })(),
+  ]) {
+    const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+      apiKey: "sk_test_server_key",
+      projectId: "proj8da4e000",
+      entitlementLookupKey: "CycleBalance Unlimited",
+      allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+      fetchImpl: async () => new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    });
+
+    const result = await verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    });
+
+    assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
+  }
+});
+
+test("RevenueCat corroboration fails closed on malformed JSON without exposing upstream content", async () => {
+  const upstreamContent = "sensitive-revenuecat-response-must-not-leak";
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    fetchImpl: async () => new Response(`{"unexpected":"${upstreamContent}"`, {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+  });
+
+  await assert.rejects(
+    () => verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    }),
+    (error) => {
+      assert.equal(error.code, "REVENUECAT_RESPONSE_INVALID");
+      assert.equal(error.retryable, true);
+      assert.equal(error.message.includes(upstreamContent), false);
+      return true;
+    }
+  );
+});
+
+test("RevenueCat corroboration treats a malformed list envelope as an invalid response rather than synchronization lag", async () => {
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    fetchImpl: async () => new Response(JSON.stringify({
+      object: "unexpected",
+      items: [],
+      next_page: null,
+    }), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+
+  await assert.rejects(
+    () => verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    }),
+    (error) => error.code === "REVENUECAT_RESPONSE_INVALID" && error.retryable === true
+  );
+});
+
+test("RevenueCat corroboration cancels an oversized streamed JSON response at the byte bound", async () => {
+  let pulls = 0;
+  let cancelled = false;
+  const body = new ReadableStream({
+    pull(controller) {
+      pulls += 1;
+      controller.enqueue(new Uint8Array(64 * 1_024));
+      if (pulls === 10) controller.close();
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    fetchImpl: async () => new Response(body, {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+  });
+
+  await assert.rejects(
+    () => verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    }),
+    (error) => error.code === "REVENUECAT_RESPONSE_INVALID" && error.retryable === true
+  );
+  assert.equal(cancelled, true);
+  assert.equal(pulls <= 5, true, `read ${pulls} chunks before enforcing the bound`);
+});
+
+test("RevenueCat corroboration classifies non-success responses without exposing the API key or body", async () => {
+  const apiKey = "sk_sensitive_server_key_must_not_leak";
+  const upstreamBody = "sensitive-upstream-error-must-not-leak";
+  for (const [status, retryable] of [[401, false], [429, true], [503, true]]) {
+    const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+      apiKey,
+      projectId: "proj8da4e000",
+      entitlementLookupKey: "CycleBalance Unlimited",
+      allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+      fetchImpl: async () => new Response(upstreamBody, { status }),
+    });
+
+    await assert.rejects(
+      () => verifier.check({
+        transaction: { transactionId: "1000000987654321", environment: "Production" },
+      }),
+      (error) => {
+        assert.equal(error.code, "REVENUECAT_UNAVAILABLE");
+        assert.equal(error.retryable, retryable);
+        assert.equal(error.message.includes(apiKey), false);
+        assert.equal(error.message.includes(upstreamBody), false);
+        return true;
+      }
+    );
+  }
+});
+
+test("RevenueCat corroboration converts a short timeout to a retryable secret-safe failure", async () => {
+  const apiKey = "sk_sensitive_timeout_key_must_not_leak";
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey,
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    timeoutMs: 10,
+    fetchImpl: async (_url, { signal }) => new Promise((resolve, reject) => {
+      signal.addEventListener("abort", () => reject(new Error(apiKey)), { once: true });
+    }),
+  });
+
+  await assert.rejects(
+    () => verifier.check({
+      transaction: { transactionId: "1000000987654321", environment: "Production" },
+    }),
+    (error) => {
+      assert.equal(error.code, "REVENUECAT_UNAVAILABLE");
+      assert.equal(error.retryable, true);
+      assert.equal(error.message.includes(apiKey), false);
+      return true;
+    }
+  );
+});
+
+test("RevenueCat corroboration applies its short timeout while reading the response body", async () => {
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_sensitive_body_timeout_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    timeoutMs: 10,
+    fetchImpl: async () => new Response(new ReadableStream({ start() {} }), { status: 200 }),
+  });
+
+  let guardTimeout;
+  try {
+    await assert.rejects(
+      Promise.race([
+        verifier.check({
+          transaction: { transactionId: "1000000987654321", environment: "Production" },
+        }),
+        new Promise((_, reject) => {
+          guardTimeout = setTimeout(() => reject(new Error("body read hung")), 250);
+        }),
+      ]),
+      (error) => error.code === "REVENUECAT_UNAVAILABLE" && error.retryable === true
+    );
+  } finally {
+    clearTimeout(guardTimeout);
+  }
+});
+
+test("RevenueCat corroboration refuses empty project entitlement key and product allowlist configuration", () => {
+  const base = {
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+  };
+  for (const override of [
+    { apiKey: "" },
+    { apiKey: " ".repeat(16) },
+    { projectId: "" },
+    { entitlementLookupKey: "" },
+    { allowedProductIds: [] },
+    { allowedProductIds: new Set() },
+    { allowedProductIds: new Set([" "]) },
+  ]) {
+    assert.throws(
+      () => proxyModule.createRevenueCatSubscriptionVerifier({ ...base, ...override }),
+      /RevenueCat verifier configuration is invalid/
+    );
+  }
+});
+
+test("RevenueCat corroboration refuses an invalid verified transaction before network access", async () => {
+  let fetchCalls = 0;
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set(["cyclebalance.premium.monthly"]),
+    fetchImpl: async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify(revenueCatSubscriptionList()));
+    },
+  });
+
+  for (const transaction of [
+    { transactionId: "", environment: "Production" },
+    { transactionId: "1000000987654321", environment: "Staging" },
+    { transactionId: "x".repeat(256), environment: "Sandbox" },
+  ]) {
+    assert.deepEqual(await verifier.check({ transaction }), {
+      allowed: false,
+      reason: "revenuecat_subscription_mismatch",
+    });
+  }
+  assert.equal(fetchCalls, 0);
+});
+
+function revenueCatSubscriptionList(subscriptionOverrides = {}) {
+  return {
+    object: "list",
+    items: [{
+      object: "subscription",
+      product_id: "prod_monthly",
+      gives_access: true,
+      entitlements: {
+        object: "list",
+        next_page: null,
+        items: [{
+          object: "entitlement",
+          lookup_key: "CycleBalance Unlimited",
+          products: {
+            object: "list",
+            next_page: null,
+            items: [{
+              object: "product",
+              id: "prod_monthly",
+              store_identifier: "cyclebalance.premium.monthly",
+            }],
+          },
+        }],
+      },
+      environment: "production",
+      store: "app_store",
+      store_subscription_identifier: "1000000987654321",
+      ...subscriptionOverrides,
+    }],
+    next_page: null,
+    url: "/v2/projects/proj8da4e000/subscriptions",
+  };
+}
+
 class TransactionalFirestore {
   #documents = new Map();
   #queue = Promise.resolve();

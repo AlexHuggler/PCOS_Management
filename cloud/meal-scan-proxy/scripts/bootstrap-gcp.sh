@@ -9,6 +9,7 @@ SERVICE_ACCOUNT_NAME="${SERVICE_ACCOUNT_NAME:-cyclebalance-meal-scan-proxy}"
 GEMINI_SECRET_NAME="${GEMINI_SECRET_NAME:-cyclebalance-gemini-api-key}"
 PRINCIPAL_HMAC_SECRET_NAME="${PRINCIPAL_HMAC_SECRET_NAME:-cyclebalance-meal-scan-principal-hmac}"
 APPLE_IAP_PRIVATE_KEY_SECRET_NAME="${APPLE_IAP_PRIVATE_KEY_SECRET_NAME:-cyclebalance-app-store-iap-private-key}"
+REVENUECAT_SECRET_NAME="${REVENUECAT_SECRET_NAME:-cyclebalance-revenuecat-secret-api-key}"
 QUOTA_COLLECTION_NAME="${QUOTA_COLLECTION_NAME:-mealScanRollingQuota}"
 IDEMPOTENCY_COLLECTION_NAME="${IDEMPOTENCY_COLLECTION_NAME:-mealScanIdempotency}"
 REQUEST_GATE_COLLECTION_NAME="${REQUEST_GATE_COLLECTION_NAME:-mealScanRequestGate}"
@@ -125,8 +126,9 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 ensure_secret "$GEMINI_SECRET_NAME"
 ensure_secret "$PRINCIPAL_HMAC_SECRET_NAME"
 ensure_secret "$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"
+ensure_secret "$REVENUECAT_SECRET_NAME"
 
-for secret_name in "$GEMINI_SECRET_NAME" "$PRINCIPAL_HMAC_SECRET_NAME" "$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"; do
+for secret_name in "$GEMINI_SECRET_NAME" "$PRINCIPAL_HMAC_SECRET_NAME" "$APPLE_IAP_PRIVATE_KEY_SECRET_NAME" "$REVENUECAT_SECRET_NAME"; do
   gcloud secrets add-iam-policy-binding "$secret_name" \
     --project "$PROJECT_ID" \
     --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
@@ -175,11 +177,12 @@ echo "Secret values go directly to Secret Manager, not to this repo."
 add_secret_version_from_prompt "$GEMINI_SECRET_NAME" "Gemini API key" true
 add_secret_version_from_prompt "$PRINCIPAL_HMAC_SECRET_NAME" "Random principal HMAC secret (at least 32 characters)" true
 add_secret_version_from_file_prompt "$APPLE_IAP_PRIVATE_KEY_SECRET_NAME" "Path to the App Store Connect In-App Purchase private key (.p8)"
+add_secret_version_from_prompt "$REVENUECAT_SECRET_NAME" "RevenueCat API v2 secret key with customer_information:subscriptions:read only" true
 
 echo
 echo "Bootstrap complete."
 echo "Project: $PROJECT_ID"
 echo "Region: $REGION"
 echo "Service account: $SERVICE_ACCOUNT_EMAIL"
-echo "Secrets: $GEMINI_SECRET_NAME, $PRINCIPAL_HMAC_SECRET_NAME, $APPLE_IAP_PRIVATE_KEY_SECRET_NAME"
+echo "Secrets: $GEMINI_SECRET_NAME, $PRINCIPAL_HMAC_SECRET_NAME, $APPLE_IAP_PRIVATE_KEY_SECRET_NAME, $REVENUECAT_SECRET_NAME"
 echo "Firestore: (default) in $FIRESTORE_LOCATION"

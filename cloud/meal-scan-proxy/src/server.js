@@ -49,6 +49,11 @@ const PINNED_APPLE_PRODUCT_IDS = new Set([
   "cyclebalance.premium.monthly",
   "cyclebalance.premium.annual",
 ]);
+const PINNED_REVENUECAT_PROJECT_ID = "proj8da4e000";
+const PINNED_REVENUECAT_ENTITLEMENT_ID = "CycleBalance Unlimited";
+const DEFAULT_REVENUECAT_TIMEOUT_MS = 3_000;
+const MAX_REVENUECAT_TIMEOUT_MS = 5_000;
+const MAX_REVENUECAT_RESPONSE_BYTES = 256_000;
 const MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE = 3;
 const MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS = 30;
 const MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE = 60;
@@ -116,6 +121,10 @@ const SAFE_SCANNER_REASONS = new Set([
   "request_control_unavailable",
   "request_limit_exceeded",
   "request_too_large",
+  "revenuecat_subscription_mismatch",
+  "revenuecat_subscription_not_synced",
+  "revenuecat_subscription_unavailable",
+  "revenuecat_subscription_unconfigured",
   "rolling_quota_exceeded",
   "rolling_scan_quota_exceeded",
   "shared_secret_unconfigured",
@@ -193,6 +202,12 @@ export function createServer(overrides = {}) {
   const idempotencyPendingTtlMs = positiveInteger(environment.MEAL_SCAN_IDEMPOTENCY_PENDING_TTL_MS, 30_000);
   const geminiTimeoutMs = positiveInteger(environment.GEMINI_TIMEOUT_MS, 12_000);
   const appleStatusTimeoutMs = positiveInteger(environment.APPLE_STATUS_TIMEOUT_MS, 5_000);
+  const revenueCatTimeoutMs = boundedPositiveInteger(
+    environment.REVENUECAT_TIMEOUT_MS,
+    DEFAULT_REVENUECAT_TIMEOUT_MS,
+    MAX_REVENUECAT_TIMEOUT_MS,
+    "REVENUECAT_TIMEOUT_MS"
+  );
   const principalAttemptMinuteLimit = boundedPositiveInteger(
     environment.MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT,
     MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE,
@@ -253,6 +268,7 @@ export function createServer(overrides = {}) {
       idempotencyPendingTtlMs,
       geminiTimeoutMs,
       appleStatusTimeoutMs,
+      revenueCatTimeoutMs,
       paidLimit,
       trialLimit,
       trialLifetimeLimit,
@@ -280,6 +296,13 @@ export function createServer(overrides = {}) {
     currentSubscriptionChecker: Object.hasOwn(overrides, "currentSubscriptionChecker")
       ? overrides.currentSubscriptionChecker
       : createConfiguredCurrentSubscriptionChecker(environment, storeKitVerifier),
+    revenueCatSubscriptionVerifier: Object.hasOwn(overrides, "revenueCatSubscriptionVerifier")
+      ? overrides.revenueCatSubscriptionVerifier
+      : createConfiguredRevenueCatSubscriptionVerifier({
+        environment,
+        allowedProductIds,
+        timeoutMs: revenueCatTimeoutMs,
+      }),
     processImage: overrides.processImage ?? processCanonicalJPEG,
     quotaStore: overrides.quotaStore ?? createConfiguredQuotaStore(environment),
     idempotencyStore:
@@ -610,6 +633,7 @@ export function createServer(overrides = {}) {
       });
 
       let authoritativeTier = transactionAccess.tier;
+      let currentVerifiedTransaction = null;
       if (dependencies.currentSubscriptionChecker) {
         let currentAccess;
         try {
@@ -668,7 +692,11 @@ export function createServer(overrides = {}) {
           });
         }
         authoritativeTier = currentAccess.tier;
-      } else if (environment.NODE_ENV === "production") {
+        currentVerifiedTransaction = currentAccess.transaction;
+      } else if (
+        environment.NODE_ENV === "production" ||
+        dependencies.revenueCatSubscriptionVerifier
+      ) {
         scannerEvent({
           eventType: "authorization_rejection",
           outcome: "unavailable",
@@ -678,6 +706,82 @@ export function createServer(overrides = {}) {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
           reason: "subscription_status_unconfigured",
+          retryable: false,
+        });
+      }
+
+      if (dependencies.revenueCatSubscriptionVerifier) {
+        if (
+          !boundedString(currentVerifiedTransaction?.transactionId, 1, 255) ||
+          !new Set([Environment.PRODUCTION, Environment.SANDBOX]).has(
+            currentVerifiedTransaction?.environment
+          )
+        ) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "revenuecat_subscription",
+            reason: "revenuecat_subscription_mismatch",
+          });
+          return sendJSON(response, 403, {
+            error: "premium_entitlement_required",
+            reason: "revenuecat_subscription_mismatch",
+          });
+        }
+
+        let revenueCatAccess;
+        try {
+          revenueCatAccess = await withTimeout(
+            dependencies.revenueCatSubscriptionVerifier.check({
+              transaction: {
+                transactionId: currentVerifiedTransaction.transactionId,
+                environment: currentVerifiedTransaction.environment,
+              },
+            }),
+            revenueCatTimeoutMs,
+            "REVENUECAT_TIMEOUT"
+          );
+        } catch (error) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "unavailable",
+            control: "revenuecat_subscription",
+            reason: "revenuecat_subscription_unavailable",
+          });
+          return sendJSON(response, 503, {
+            error: "meal_scan_unavailable",
+            reason: "revenuecat_subscription_unavailable",
+            retryable: error?.retryable !== false,
+          });
+        }
+
+        if (!revenueCatAccess?.allowed) {
+          const retryable = revenueCatAccess?.retryable === true;
+          const reason = retryable && revenueCatAccess?.reason === "revenuecat_subscription_not_synced"
+            ? "revenuecat_subscription_not_synced"
+            : retryable
+              ? "revenuecat_subscription_unavailable"
+              : "revenuecat_subscription_mismatch";
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: retryable ? "unavailable" : "rejected",
+            control: "revenuecat_subscription",
+            reason,
+          });
+          return sendJSON(response, retryable ? 503 : 403, retryable
+            ? { error: "meal_scan_unavailable", reason, retryable: true }
+            : { error: "premium_entitlement_required", reason });
+        }
+      } else if (environment.NODE_ENV === "production") {
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "unavailable",
+          control: "revenuecat_subscription",
+          reason: "revenuecat_subscription_unconfigured",
+        });
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "revenuecat_subscription_unconfigured",
           retryable: false,
         });
       }
@@ -1233,6 +1337,17 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
       "production meal scan configuration violates the pinned CycleBalance Apple identity"
     );
   }
+  if (
+    (environment.REVENUECAT_PROJECT_ID &&
+      environment.REVENUECAT_PROJECT_ID !== PINNED_REVENUECAT_PROJECT_ID) ||
+    (environment.REVENUECAT_ENTITLEMENT_ID &&
+      environment.REVENUECAT_ENTITLEMENT_ID !== PINNED_REVENUECAT_ENTITLEMENT_ID)
+  ) {
+    throw new Error(
+      "production meal scan configuration violates the pinned CycleBalance RevenueCat configuration " +
+      "(REVENUECAT_PROJECT_ID, REVENUECAT_ENTITLEMENT_ID)"
+    );
+  }
 
   const missing = [];
   if (environment.APP_CHECK_REQUIRED !== "true") missing.push("APP_CHECK_REQUIRED=true");
@@ -1244,6 +1359,15 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
   if (!boundedString(environment.APPLE_IAP_KEY_ID, 4, 128)) missing.push("APPLE_IAP_KEY_ID");
   if (!/^[0-9a-fA-F-]{36}$/.test(environment.APPLE_IAP_ISSUER_ID ?? "")) {
     missing.push("APPLE_IAP_ISSUER_ID");
+  }
+  if (!boundedString(environment.REVENUECAT_SECRET_API_KEY, 16, 4096)) {
+    missing.push("REVENUECAT_SECRET_API_KEY");
+  }
+  if (!boundedString(environment.REVENUECAT_PROJECT_ID, 1, 255)) {
+    missing.push("REVENUECAT_PROJECT_ID");
+  }
+  if (!boundedString(environment.REVENUECAT_ENTITLEMENT_ID, 1, 200)) {
+    missing.push("REVENUECAT_ENTITLEMENT_ID");
   }
   if (!boundedString(environment.MEAL_SCAN_PRINCIPAL_HMAC_SECRET, 32, 4096)) {
     missing.push("MEAL_SCAN_PRINCIPAL_HMAC_SECRET");
@@ -1283,6 +1407,7 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
     "MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT",
     "APP_CHECK_TIMEOUT_MS",
     "APPLE_STATUS_TIMEOUT_MS",
+    "REVENUECAT_TIMEOUT_MS",
     "GEMINI_TIMEOUT_MS",
   ];
   const invalid = numericEnvironmentKeys.filter((key) => {
@@ -1545,6 +1670,24 @@ function createConfiguredCurrentSubscriptionChecker(environment, storeKitVerifie
   });
 }
 
+function createConfiguredRevenueCatSubscriptionVerifier({
+  environment,
+  allowedProductIds,
+  timeoutMs,
+}) {
+  const apiKey = environment.REVENUECAT_SECRET_API_KEY;
+  const projectId = environment.REVENUECAT_PROJECT_ID;
+  const entitlementLookupKey = environment.REVENUECAT_ENTITLEMENT_ID;
+  if (!apiKey) return null;
+  return createRevenueCatSubscriptionVerifier({
+    apiKey,
+    projectId,
+    entitlementLookupKey,
+    allowedProductIds,
+    timeoutMs,
+  });
+}
+
 export function createCurrentSubscriptionChecker({
   clients,
   storeKitVerifier,
@@ -1611,6 +1754,192 @@ export function createCurrentSubscriptionChecker({
       return { allowed: false, reason: revoked ? "transaction_revoked" : "subscription_expired" };
     },
   };
+}
+
+export function createRevenueCatSubscriptionVerifier({
+  apiKey,
+  projectId,
+  entitlementLookupKey,
+  allowedProductIds,
+  timeoutMs = 3_000,
+  fetchImpl = fetch,
+}) {
+  if (
+    !boundedString(apiKey, 16, 4096) ||
+    apiKey.trim() !== apiKey ||
+    !/^proj[A-Za-z0-9]{1,251}$/.test(projectId ?? "") ||
+    !boundedString(entitlementLookupKey, 1, 200) ||
+    entitlementLookupKey.trim() !== entitlementLookupKey ||
+    !(allowedProductIds instanceof Set) ||
+    allowedProductIds.size === 0 ||
+    allowedProductIds.size > 10 ||
+    [...allowedProductIds].some((value) => (
+      !boundedString(value, 1, 200) || value.trim() !== value
+    )) ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs <= 0 ||
+    timeoutMs > MAX_REVENUECAT_TIMEOUT_MS ||
+    typeof fetchImpl !== "function"
+  ) {
+    throw new Error("RevenueCat verifier configuration is invalid");
+  }
+  return {
+    async check({ transaction }) {
+      if (
+        !boundedString(transaction?.transactionId, 1, 255) ||
+        !new Set([Environment.PRODUCTION, Environment.SANDBOX]).has(transaction?.environment)
+      ) {
+        return { allowed: false, reason: "revenuecat_subscription_mismatch" };
+      }
+      const url = new URL(
+        `https://api.revenuecat.com/v2/projects/${encodeURIComponent(projectId)}/subscriptions`
+      );
+      url.searchParams.set("store_subscription_identifier", transaction.transactionId);
+      const startedAt = Date.now();
+      let response;
+      try {
+        response = await fetchWithTimeout(
+          url,
+          {
+            method: "GET",
+            headers: {
+              authorization: `Bearer ${apiKey}`,
+              accept: "application/json",
+            },
+          },
+          timeoutMs,
+          fetchImpl,
+          "REVENUECAT_TIMEOUT"
+        );
+      } catch {
+        throw revenueCatVerificationError("REVENUECAT_UNAVAILABLE", true);
+      }
+      if (!response.ok) {
+        await response.body?.cancel?.();
+        throw revenueCatVerificationError(
+          "REVENUECAT_UNAVAILABLE",
+          response.status === 429 || response.status >= 500
+        );
+      }
+      const remainingTimeoutMs = Math.max(1, timeoutMs - (Date.now() - startedAt));
+      const text = await readBoundedRevenueCatResponse(response, remainingTimeoutMs);
+      let body;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+      }
+      if (!isPlainObject(body) || body.object !== "list" || !Array.isArray(body.items)) {
+        throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+      }
+      const subscriptions = body.items;
+      if (body.next_page !== null) {
+        return { allowed: false, reason: "revenuecat_subscription_mismatch" };
+      }
+      if (subscriptions.length === 0) {
+        return {
+          allowed: false,
+          reason: "revenuecat_subscription_not_synced",
+          retryable: true,
+        };
+      }
+      if (subscriptions.length !== 1) {
+        return { allowed: false, reason: "revenuecat_subscription_mismatch" };
+      }
+      const subscription = subscriptions[0];
+      const expectedEnvironment = transaction.environment === Environment.PRODUCTION
+        ? "production"
+        : transaction.environment === Environment.SANDBOX
+          ? "sandbox"
+          : null;
+      const entitlements = Array.isArray(subscription?.entitlements?.items)
+        ? subscription.entitlements.items
+        : [];
+      const matchingEntitlements = entitlements.filter((item) => item?.lookup_key === entitlementLookupKey);
+      const entitlement = matchingEntitlements[0];
+      const products = Array.isArray(entitlement?.products?.items)
+        ? entitlement.products.items
+        : [];
+      const matchingProducts = products.filter((product) => (
+        product?.id === subscription?.product_id &&
+        allowedProductIds.has(product?.store_identifier)
+      ));
+      if (
+        expectedEnvironment === null ||
+        subscription?.object !== "subscription" ||
+        subscription?.store !== "app_store" ||
+        subscription?.environment !== expectedEnvironment ||
+        subscription?.store_subscription_identifier !== transaction.transactionId ||
+        subscription?.gives_access !== true ||
+        subscription?.entitlements?.object !== "list" ||
+        subscription?.entitlements?.next_page !== null ||
+        matchingEntitlements.length !== 1 ||
+        entitlement?.products?.object !== "list" ||
+        entitlement?.products?.next_page !== null ||
+        matchingProducts.length !== 1
+      ) {
+        return { allowed: false, reason: "revenuecat_subscription_mismatch" };
+      }
+      return { allowed: true };
+    },
+  };
+}
+
+function revenueCatVerificationError(code, retryable) {
+  const error = new Error("RevenueCat subscription verification failed");
+  error.code = code;
+  error.retryable = retryable;
+  return error;
+}
+
+async function readBoundedRevenueCatResponse(response, timeoutMs) {
+  const declaredLength = Number(response.headers?.get?.("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_REVENUECAT_RESPONSE_BYTES) {
+    await response.body?.cancel?.();
+    throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+  }
+  const reader = response.body?.getReader?.();
+  if (!reader) throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+  const chunks = [];
+  let byteCount = 0;
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    try {
+      reader.cancel().catch(() => {});
+    } catch {
+      // The standardized unavailable result below remains authoritative.
+    }
+  }, timeoutMs);
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!(value instanceof Uint8Array)) {
+        await reader.cancel();
+        throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+      }
+      byteCount += value.byteLength;
+      if (byteCount > MAX_REVENUECAT_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw revenueCatVerificationError("REVENUECAT_RESPONSE_INVALID", true);
+      }
+      chunks.push(Buffer.from(value));
+    }
+    if (timedOut) throw revenueCatVerificationError("REVENUECAT_UNAVAILABLE", true);
+  } catch (error) {
+    if (
+      error?.code === "REVENUECAT_RESPONSE_INVALID" ||
+      error?.code === "REVENUECAT_UNAVAILABLE"
+    ) {
+      throw error;
+    }
+    throw revenueCatVerificationError("REVENUECAT_UNAVAILABLE", true);
+  } finally {
+    clearTimeout(timeout);
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks, byteCount).toString("utf8");
 }
 
 function isRetryableAppleInfrastructureError(error) {
