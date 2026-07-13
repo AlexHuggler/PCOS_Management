@@ -1384,6 +1384,25 @@ test("production defaults to disabled when the meal scan flag is absent", async 
   assert.deepEqual(calls, []);
 });
 
+test("disabled production starts when a RevenueCat secret is mounted without verifier metadata", async () => {
+  const server = createServer({
+    environment: {
+      NODE_ENV: "production",
+      MEAL_SCAN_ENABLED: "false",
+      REVENUECAT_SECRET_API_KEY: "sk_test_server_key_with_adequate_length",
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(response.body, {
+    error: "meal_scan_unavailable",
+    reason: "feature_disabled",
+    retryable: false,
+  });
+});
+
 test("production-enabled startup fails closed without durable security backends", () => {
   assert.throws(
     () => createServer({
@@ -2545,6 +2564,7 @@ test("RevenueCat corroboration runs after current Apple status using only its ve
     transaction: {
       transactionId: current.transactionId,
       environment: current.environment,
+      productId: current.productId,
     },
   });
   assert.equal(JSON.stringify(revenueCatInput).includes(hardenedPayload.signedTransactionJWS), false);
