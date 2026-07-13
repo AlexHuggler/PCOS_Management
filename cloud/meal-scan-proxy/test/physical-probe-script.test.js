@@ -12,9 +12,28 @@ const repositoryRoot = path.resolve(proxyDirectory, "../..");
 const scriptPath = path.join(proxyDirectory, "scripts/run-physical-app-check-probe.sh");
 const deployScriptPath = path.join(proxyDirectory, "scripts/deploy-cloud-run.sh");
 const projectPath = path.join(repositoryRoot, "project.yml");
+const productionProbeTestPath = path.join(
+  repositoryRoot,
+  "PCOS/PCOSTests/ProductionMealScanAppCheckProbeTests.swift"
+);
+const productionSetupPath = path.join(repositoryRoot, "docs/meal_scan_flash_lite_production_setup.md");
+const deviceRolloutPlanPath = path.join(
+  repositoryRoot,
+  "docs/superpowers/plans/2026-07-11-meal-scan-device-review-rollout.md"
+);
+const appStoreReadinessPath = path.join(repositoryRoot, "AppStoreReadinessChecklist.md");
+const appStoreReviewPacketPath = path.join(
+  repositoryRoot,
+  "docs/app_store_meal_scan_review_packet_2026-07-11.md"
+);
 const scriptSource = readFileSync(scriptPath, "utf8");
 const deployScriptSource = readFileSync(deployScriptPath, "utf8");
 const projectSource = readFileSync(projectPath, "utf8");
+const productionProbeTestSource = readFileSync(productionProbeTestPath, "utf8");
+const productionSetupSource = readFileSync(productionSetupPath, "utf8");
+const deviceRolloutPlanSource = readFileSync(deviceRolloutPlanPath, "utf8");
+const appStoreReadinessSource = readFileSync(appStoreReadinessPath, "utf8");
+const appStoreReviewPacketSource = readFileSync(appStoreReviewPacketPath, "utf8");
 
 function runScript(environment = {}) {
   return spawnSync("bash", [scriptPath], {
@@ -343,65 +362,56 @@ test("Release proxy URL must equal the verified service URL except for trailing 
   assert.notEqual(repeatedSlash.status, 0);
 });
 
-test("quota snapshots preserve existence, update time, and complete document data", () => {
-  const quotaStart = scriptSource.indexOf("quota_snapshot() {");
-  const quotaEnd = scriptSource.indexOf("\nservice_json() {", quotaStart);
-  const quotaFunction = scriptSource.slice(quotaStart, quotaEnd);
-  assert.match(quotaFunction, /exists:/);
-  assert.match(quotaFunction, /updateTime:/);
-  assert.match(quotaFunction, /data:/);
-  assert.match(quotaFunction, /\.fields/);
-  assert.doesNotMatch(quotaFunction, /\.fields\.used/);
-});
-
-test("physical evidence requires exactly one isolated post-integrity request-gate advance", () => {
-  const absent = JSON.stringify({ exists: false, updateTime: null, requestCount: 0 });
-  const firstRequest = JSON.stringify({
-    exists: true,
-    updateTime: "2026-07-13T05:24:20.309744Z",
-    requestCount: 1,
-  });
-  const secondRequest = JSON.stringify({
-    exists: true,
-    updateTime: "2026-07-13T05:25:20.309744Z",
-    requestCount: 2,
-  });
-
-  const firstAdvance = callSourcedFunction(
-    'request_gate_advanced_once "$BEFORE_GATE" "$AFTER_GATE"',
-    { BEFORE_GATE: absent, AFTER_GATE: firstRequest }
-  );
-  assert.equal(firstAdvance.status, 0, firstAdvance.stderr);
-
-  const repeatedAdvance = callSourcedFunction(
-    'request_gate_advanced_once "$BEFORE_GATE" "$AFTER_GATE"',
-    { BEFORE_GATE: firstRequest, AFTER_GATE: secondRequest }
-  );
-  assert.equal(repeatedAdvance.status, 0, repeatedAdvance.stderr);
-
-  for (const invalidAfter of [absent, firstRequest, JSON.stringify({
-    exists: true,
-    updateTime: "2026-07-13T05:25:20.309744Z",
-    requestCount: 3,
-  })]) {
-    const rejected = callSourcedFunction(
-      'request_gate_advanced_once "$BEFORE_GATE" "$AFTER_GATE"',
-      { BEFORE_GATE: firstRequest, AFTER_GATE: invalidAfter }
-    );
-    assert.notEqual(rejected.status, 0, `invalid gate transition passed: ${invalidAfter}`);
-  }
+test("rolling quota snapshot is complete, paginated, and principal independent", () => {
+  assert.match(scriptSource, /MEAL_SCAN_ROLLING_QUOTA_COLLECTION="mealScanRollingQuota"/);
+  assert.match(scriptSource, /MAX_FIRESTORE_SNAPSHOT_PAGES/);
+  assert.match(scriptSource, /firestore_collection_snapshot\(\)/);
+  const snapshotStart = scriptSource.indexOf("firestore_collection_snapshot() {");
+  const snapshotEnd = scriptSource.indexOf("\nrolling_quota_snapshot() {", snapshotStart);
+  const snapshotFunction = scriptSource.slice(snapshotStart, snapshotEnd);
+  assert.match(snapshotFunction, /pageSize=/);
+  assert.match(snapshotFunction, /nextPageToken/);
+  assert.match(snapshotFunction, /pageToken=/);
+  assert.match(snapshotFunction, /sort_by\(\.name\)/);
 
   const probeFunction = scriptSource.slice(
     scriptSource.indexOf("run_probe_and_verify_side_effects() {"),
     scriptSource.indexOf("\nmain() {")
   );
-  assert.match(probeFunction, /request_gate_snapshot/);
-  assert.match(probeFunction, /request_gate_advanced_once/);
-  assert.match(probeFunction, /MEAL_SCAN_REQUEST_GATE_COLLECTION/);
+  assert.match(probeFunction, /before_rolling_quota="\$\(rolling_quota_snapshot\)"/);
+  assert.match(probeFunction, /after_rolling_quota="\$\(rolling_quota_snapshot\)"/);
+  assert.match(probeFunction, /require_unchanged "\$after_rolling_quota" "\$before_rolling_quota"/);
   assert.match(probeFunction, /PROBE_REVISION/);
   assert.match(probeFunction, /date -u -v\+2S/);
   assert.match(probeFunction, /sleep 10/);
-  assert.doesNotMatch(probeFunction, /hash_prefix/);
+  assert.doesNotMatch(scriptSource, /PROBE_USER_ID/);
+  assert.doesNotMatch(scriptSource, /mealScanDailyQuota/);
+  assert.doesNotMatch(scriptSource, /probe_app_user_hash/);
+  assert.doesNotMatch(scriptSource, /request_gate_snapshot/);
+  assert.doesNotMatch(scriptSource, /request_gate_advanced_once/);
+  assert.doesNotMatch(scriptSource, /isolated request-gate advance/);
+});
+
+test("negative probe forbids provider activity without closing the positive sandbox gate", () => {
+  const probeFunction = scriptSource.slice(
+    scriptSource.indexOf("run_probe_and_verify_side_effects() {"),
+    scriptSource.indexOf("\nmain() {")
+  );
+  assert.match(probeFunction, /provider_call/);
+  assert.match(probeFunction, /meal_scan_estimate/);
+  assert.match(probeFunction, /Probe must not create a provider call event/);
+  assert.match(probeFunction, /Probe must not create a Gemini estimate event/);
+
+  for (const [label, source] of [
+    ["probe script", scriptSource],
+    ["production setup", productionSetupSource],
+    ["device rollout plan", deviceRolloutPlanSource],
+    ["App Store readiness", appStoreReadinessSource],
+    ["App Store review packet", appStoreReviewPacketSource],
+  ]) {
+    assert.match(source, /positive sandbox-JWS real-device TestFlight gate/i, `${label} omits the positive gate`);
+    assert.match(source, /does not satisfy|remains open/i, `${label} incorrectly closes the positive gate`);
+  }
 });
 
 test("physical probe retains a result bundle and redacted console diagnostics on failure", () => {
@@ -535,4 +545,20 @@ test("dedicated Release scheme is the only scheme that injects the production pr
   assert.match(probeScheme, /name: PCOSProductionProbeTests/);
   assert.match(probeScheme, /RUN_PRODUCTION_MEAL_SCAN_INTEGRATION:[\s\S]*?(1|"1")/);
   assert.match(scriptSource, /PCOSProductionProbeTests\/ProductionMealScanAppCheckProbeTests/);
+});
+
+test("invalid StoreKit probe contract is consistent across test, script, and documentation", () => {
+  assert.match(productionProbeTestSource, /invalidProbeTransactionJWS/);
+  assert.match(productionProbeTestSource, /error\.reason == "storekit_transaction_invalid"/);
+  assert.doesNotMatch(productionProbeTestSource, /image hash prefix|print\(/i);
+
+  for (const [label, source] of [
+    ["probe test", productionProbeTestSource],
+    ["probe script", scriptSource],
+    ["production setup", productionSetupSource],
+    ["device rollout plan", deviceRolloutPlanSource],
+  ]) {
+    assert.match(source, /storekit_transaction_invalid/, `${label} omits the current rejection reason`);
+    assert.doesNotMatch(source, /entitlement_inactive/, `${label} retains the legacy rejection reason`);
+  }
 });

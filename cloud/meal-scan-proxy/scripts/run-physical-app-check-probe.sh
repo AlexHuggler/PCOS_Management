@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs one deliberately non-entitled physical-device request. The normal path is dry-run only.
+# Runs one physical-device request with a deliberately invalid StoreKit transaction JWS.
+# The normal path is dry-run only.
 set -euo pipefail
 
 readonly PINNED_PROJECT_ID="cyclebalance-prod-20260710"
@@ -16,8 +17,9 @@ CONFIRM_TEMPORARY_PUBLIC_PROBE="${CONFIRM_TEMPORARY_PUBLIC_PROBE:-}"
 
 readonly APP_BUNDLE_ID="alex.PCOS"
 readonly PROBE_TEST="PCOSProductionProbeTests/ProductionMealScanAppCheckProbeTests"
-readonly PROBE_USER_ID="cyclebalance-appcheck-probe-no-entitlement"
-readonly MEAL_SCAN_REQUEST_GATE_COLLECTION="mealScanRequestGate"
+readonly MEAL_SCAN_ROLLING_QUOTA_COLLECTION="mealScanRollingQuota"
+readonly FIRESTORE_SNAPSHOT_PAGE_SIZE=100
+readonly MAX_FIRESTORE_SNAPSHOT_PAGES=100
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROXY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly REPOSITORY_ROOT="$(cd "$PROXY_DIR/../.." && pwd)"
@@ -53,6 +55,13 @@ require_equal() {
   local expected="$2"
   local description="$3"
   [[ "$actual" == "$expected" ]] || die "$description (expected $expected, found $actual)"
+}
+
+require_unchanged() {
+  local after="$1"
+  local before="$2"
+  local description="$3"
+  [[ "$after" == "$before" ]] || die "$description"
 }
 
 private_invoker_gate_rejects_status() {
@@ -293,8 +302,9 @@ print_dry_run() {
   note "7. Arm rollback before any cloud mutation."
   note "8. Temporarily deploy MEAL_SCAN_ENABLED=true with unauthenticated ingress using deploy-cloud-run.sh."
   note "9. Run only $PROBE_TEST through the dedicated opt-in Release scheme on the named device."
-  note "10. Require HTTP 403 premium_entitlement_required / entitlement_inactive, exactly one isolated request-gate advance, an unchanged full billable-quota snapshot, and no Gemini estimate log on the probe revision."
-  note "11. Always redeploy disabled/private, verify the transport and kill switch, and remove a transient probe app when CycleBalance was initially absent."
+  note "10. Require HTTP 403 premium_entitlement_required / storekit_transaction_invalid, prove the complete $MEAL_SCAN_ROLLING_QUOTA_COLLECTION collection is unchanged, and prove the probe revision emits no provider_call or meal_scan_estimate event."
+  note "11. Record that this negative probe does not satisfy the positive sandbox-JWS real-device TestFlight gate; that gate remains open."
+  note "12. Always redeploy disabled/private, verify the transport and kill switch, and remove a transient probe app when CycleBalance was initially absent."
 }
 
 firestore_document_json() {
@@ -322,6 +332,101 @@ firestore_document_json() {
   esac
 }
 
+firestore_collection_snapshot() {
+  local collection="$1"
+  local access_token auth_config documents_file response_file status
+  local page_count page_token encoded_page_token query_url next_page_token snapshot
+
+  access_token="$(gcloud auth print-access-token)" || return 1
+  auth_config="$(mktemp "$TEMP_ROOT/firestore-collection-auth.XXXXXX")" || return 1
+  documents_file="$(mktemp "$TEMP_ROOT/firestore-collection-documents.XXXXXX")" || {
+    rm -f "$auth_config"
+    return 1
+  }
+  chmod 600 "$auth_config" "$documents_file" || {
+    rm -f "$auth_config" "$documents_file"
+    return 1
+  }
+  printf 'header = "Authorization: Bearer %s"\n' "$access_token" >"$auth_config" || {
+    unset access_token
+    rm -f "$auth_config" "$documents_file"
+    return 1
+  }
+  unset access_token
+
+  page_count=0
+  page_token=""
+  while true; do
+    page_count=$((page_count + 1))
+    if (( page_count > MAX_FIRESTORE_SNAPSHOT_PAGES )); then
+      rm -f "$auth_config" "$documents_file"
+      return 1
+    fi
+
+    query_url="https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/$collection?pageSize=$FIRESTORE_SNAPSHOT_PAGE_SIZE&orderBy=__name__"
+    if [[ -n "$page_token" ]]; then
+      encoded_page_token="$(jq -rn --arg page_token "$page_token" '$page_token | @uri')" || {
+        rm -f "$auth_config" "$documents_file"
+        return 1
+      }
+      query_url="${query_url}&pageToken=$encoded_page_token"
+    fi
+
+    response_file="$(mktemp "$TEMP_ROOT/firestore-collection-response.XXXXXX")" || {
+      rm -f "$auth_config" "$documents_file"
+      return 1
+    }
+    if ! status="$(curl --silent --show-error \
+      --config "$auth_config" \
+      --output "$response_file" \
+      --write-out '%{http_code}' \
+      "$query_url")"; then
+      rm -f "$auth_config" "$documents_file" "$response_file"
+      return 1
+    fi
+    if [[ "$status" != "200" ]] || ! jq -e '
+      ((.documents // []) | type == "array") and
+      ((.nextPageToken // "") | type == "string")
+    ' "$response_file" >/dev/null; then
+      rm -f "$auth_config" "$documents_file" "$response_file"
+      return 1
+    fi
+    if ! jq -c '
+      (.documents // [])[] |
+      {
+        name,
+        createTime: (.createTime // null),
+        updateTime: (.updateTime // null),
+        data: (.fields // {})
+      }
+    ' "$response_file" >>"$documents_file"; then
+      rm -f "$auth_config" "$documents_file" "$response_file"
+      return 1
+    fi
+    next_page_token="$(jq -r '.nextPageToken // ""' "$response_file")" || {
+      rm -f "$auth_config" "$documents_file" "$response_file"
+      return 1
+    }
+    rm -f "$response_file"
+
+    if [[ -z "$next_page_token" ]]; then
+      break
+    fi
+    page_token="$next_page_token"
+  done
+
+  snapshot="$(jq -cs 'sort_by(.name)' "$documents_file")" || {
+    rm -f "$auth_config" "$documents_file"
+    return 1
+  }
+  rm -f "$auth_config" "$documents_file"
+  printf '%s\n' "$snapshot"
+}
+
+rolling_quota_snapshot() {
+  firestore_collection_snapshot "$MEAL_SCAN_ROLLING_QUOTA_COLLECTION"
+}
+
 effective_budget_mode_from_json() {
   jq -er '
     def rank:
@@ -342,56 +447,6 @@ read_budget_mode() {
   local document
   document="$(firestore_document_json "mealScanControls" "global")" || return 1
   effective_budget_mode_from_json <<<"$document"
-}
-
-quota_snapshot() {
-  local app_user_hash day document
-  app_user_hash="$(probe_app_user_hash)" || return 1
-  day="$(date -u +%Y-%m-%d)"
-  document="$(firestore_document_json "mealScanDailyQuota" "${app_user_hash}_${day}")" || return 1
-
-  if jq -e '.__notFound == true' <<<"$document" >/dev/null; then
-    jq -cnS '{exists: false, updateTime: null, data: null}'
-  else
-    jq -cS '{exists: true, updateTime: (.updateTime // null), data: (.fields // {})}' <<<"$document"
-  fi
-}
-
-probe_app_user_hash() {
-  node -e '
-    const crypto = require("node:crypto");
-    process.stdout.write(crypto.createHash("sha256").update(process.argv[1]).digest("hex").slice(0, 16));
-  ' "$PROBE_USER_ID"
-}
-
-request_gate_snapshot() {
-  local document_id="$1"
-  local document
-  document="$(firestore_document_json "$MEAL_SCAN_REQUEST_GATE_COLLECTION" "$document_id")" || return 1
-
-  if jq -e '.__notFound == true' <<<"$document" >/dev/null; then
-    jq -cnS '{exists: false, updateTime: null, requestCount: 0, expiresAt: null}'
-  else
-    jq -cS '{
-      exists: true,
-      updateTime: (.updateTime // null),
-      requestCount: ((.fields.requestCount.integerValue // "0") | tonumber),
-      expiresAt: (.fields.expiresAt.timestampValue // null)
-    }' <<<"$document"
-  fi
-}
-
-request_gate_advanced_once() {
-  local before="$1"
-  local after="$2"
-  jq -en --argjson before "$before" --argjson after "$after" '
-    ($after.exists == true) and
-    (($after.requestCount | type) == "number") and
-    ($after.requestCount == (($before.requestCount // 0) + 1)) and
-    (($after.updateTime | type) == "string") and
-    (($after.updateTime | length) > 0) and
-    (($before.updateTime == null) or ($after.updateTime != $before.updateTime))
-  ' >/dev/null
 }
 
 service_json() {
@@ -573,18 +628,9 @@ verify_private_disabled_state() {
 }
 
 run_probe_and_verify_side_effects() {
-  local before_quota after_quota test_log estimate_logs
-  local app_user_hash day user_gate_id global_gate_id
-  local before_user_gate before_global_gate after_user_gate after_global_gate
-  before_quota="$(quota_snapshot)" || die "Unable to read the probe quota document before test execution"
-  app_user_hash="$(probe_app_user_hash)" || die "Unable to hash the probe App User ID"
-  day="$(date -u +%Y-%m-%d)"
-  user_gate_id="${app_user_hash}_${day}"
-  global_gate_id="global_${day}"
-  before_user_gate="$(request_gate_snapshot "$user_gate_id")" \
-    || die "Unable to read the probe request gate before test execution"
-  before_global_gate="$(request_gate_snapshot "$global_gate_id")" \
-    || die "Unable to read the global request gate before test execution"
+  local before_rolling_quota after_rolling_quota test_log provider_logs estimate_logs
+  before_rolling_quota="$(rolling_quota_snapshot)" \
+    || die "Unable to read the complete rolling quota collection before test execution"
   test_log="$TEMP_ROOT/physical-probe-test.log"
   START_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   note "Running the opt-in Release test on the physical device."
@@ -600,25 +646,26 @@ run_probe_and_verify_side_effects() {
     -only-testing:"$PROBE_TEST" | tee "$test_log"
 
   END_UTC="$(date -u -v+2S +%Y-%m-%dT%H:%M:%SZ)"
-  after_quota="$(quota_snapshot)" || die "Unable to read the probe quota document after test execution"
-  require_equal "$after_quota" "$before_quota" "Probe must not write or consume quota"
-  after_user_gate="$(request_gate_snapshot "$user_gate_id")" \
-    || die "Unable to read the probe request gate after test execution"
-  after_global_gate="$(request_gate_snapshot "$global_gate_id")" \
-    || die "Unable to read the global request gate after test execution"
-  request_gate_advanced_once "$before_user_gate" "$after_user_gate" \
-    || die "Probe must advance the isolated user request gate exactly once"
-  request_gate_advanced_once "$before_global_gate" "$after_global_gate" \
-    || die "Probe must advance the isolated global request gate exactly once"
+  after_rolling_quota="$(rolling_quota_snapshot)" \
+    || die "Unable to read the complete rolling quota collection after test execution"
+  require_unchanged "$after_rolling_quota" "$before_rolling_quota" \
+    "Probe must leave the complete $MEAL_SCAN_ROLLING_QUOTA_COLLECTION collection unchanged"
 
   sleep 10
+  provider_logs="$(gcloud logging read \
+    "resource.type=\"cloud_run_revision\" AND resource.labels.revision_name=\"$PROBE_REVISION\" AND timestamp>=\"$START_UTC\" AND timestamp<=\"$END_UTC\" AND \"meal_scan_scanner_event\" AND \"provider_call\"" \
+    --project "$PROJECT_ID" \
+    --limit=1 \
+    --format='value(insertId)')"
+  [[ -z "$provider_logs" ]] || die "Probe must not create a provider call event on $PROBE_REVISION"
   estimate_logs="$(gcloud logging read \
     "resource.type=\"cloud_run_revision\" AND resource.labels.revision_name=\"$PROBE_REVISION\" AND timestamp>=\"$START_UTC\" AND timestamp<=\"$END_UTC\" AND \"meal_scan_estimate\"" \
     --project "$PROJECT_ID" \
     --limit=1 \
     --format='value(insertId)')"
   [[ -z "$estimate_logs" ]] || die "Probe must not create a Gemini estimate event on $PROBE_REVISION"
-  note "Physical App Check evidence passed in $MEAL_SCAN_REQUEST_GATE_COLLECTION: one isolated request-gate advance, unchanged billable quota, and no Gemini estimate event."
+  note "Negative physical App Check evidence passed: storekit_transaction_invalid, complete $MEAL_SCAN_ROLLING_QUOTA_COLLECTION collection unchanged, and no provider_call or meal_scan_estimate event on $PROBE_REVISION."
+  note "This negative probe does not satisfy the positive sandbox-JWS real-device TestFlight gate; that gate remains open."
 }
 
 main() {

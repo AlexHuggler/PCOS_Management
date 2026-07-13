@@ -2,12 +2,12 @@
 
 Date: 2026-07-13
 
-Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump; it has not been archived, uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, standard 55-day disclosure, durable lifetime quota, model selection, and limited Gemini funding. The current-contract physical probes, App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy correction, and final screenshot gates below remain incomplete. The production service is private and disabled; Release keeps Photo Estimate hidden until every gate passes.
+Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump; it has not been archived, uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, standard 55-day disclosure, durable lifetime quota, model selection, and limited Gemini funding. The negative invalid-JWS physical production App Attest probe is complete, but it does not satisfy the positive sandbox-JWS real-device TestFlight gate, which remains open. The App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy correction, and final screenshot gates below also remain incomplete. The production service is private and disabled; Release keeps Photo Estimate hidden until every gate passes.
 
 ## Submission Gates
 
 - Use local target `1.0.5 (18)`. Build `18` was verified unused, but this packet does not authorize an archive upload, TestFlight distribution, App Store Connect mutation, or submission.
-- Complete the current-contract negative App Check probe and the later positive sandbox-JWS TestFlight path before making the scanner available to App Review.
+- Pass the positive sandbox-JWS real-device TestFlight gate and complete the exact 80-image/120-call quality benchmark before making the scanner available to App Review. The completed negative invalid-JWS probe does not satisfy that positive gate.
 - Verify the production proxy remains App Check protected, entitlement gated, quota limited, budget controlled, and private/disabled outside the narrowly reviewed probe window.
 - Add an explicit pre-upload confirmation that names Google Gemini as the third-party AI processor. Returning from the camera or photo picker must not begin a fresh remote estimate until the user affirmatively continues; exact local reuse must remain network-free.
 - Keep Google's standard 55-day abuse-monitoring disclosure consistent in the app, privacy policy, App Privacy answers, and review notes. Do not claim Zero Data Retention unless the production project later receives verified approval and every surface is updated together.

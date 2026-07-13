@@ -161,7 +161,9 @@ cloud/meal-scan-proxy/scripts/run-physical-app-check-probe.sh
 
 Before any temporary Cloud Run change, the script verifies the pinned project/service, disabled/private service posture, normal budget mode, owner-controlled device state, non-empty app-data backup, Release bundle ID, production App Attest entitlement, and the app's proxy URL. The app URL must equal the verified Cloud Run `SERVICE_URL` exactly; only trailing slashes are ignored. The build command does not permit automatic provisioning-profile updates.
 
-The expected negative probe result is HTTP `403` with `error=premium_entitlement_required` and `reason=storekit_transaction_invalid`. Before and after the request, evidence captures a bounded snapshot of the complete rolling-quota collection; the snapshots must be identical. Logging evidence must also show no provider call or estimate event on the probe revision, proving that neither quota consumption nor model dispatch occurred.
+The expected probe result is HTTP `403` with `error=premium_entitlement_required` and `reason=storekit_transaction_invalid`. Before and after the request, the script takes a bounded, paginated, canonical snapshot of the complete `mealScanRollingQuota` collection; both snapshots must be identical. Revision- and time-scoped logging evidence must also show no `provider_call` scanner event and no `meal_scan_estimate` event, proving that the rejected request neither changed rolling quota nor reached Gemini.
+
+This is a negative invalid-JWS probe only. It proves that production App Check reaches the StoreKit rejection path, but it does not satisfy the positive sandbox-JWS real-device TestFlight gate; that gate remains open and requires a later successful, entitled sandbox transaction on the release candidate.
 
 The rollback trap is armed immediately before the first cloud mutation and runs on success, failure, interrupt, or termination. It redeploys `MEAL_SCAN_ENABLED=false` with private IAM, then requires an unauthenticated `403` and an authenticated `503` body with `error=meal_scan_unavailable` and `reason=feature_disabled`. Any rollback deploy or verification failure is fatal and requires immediate owner investigation of the Cloud Run service.
 
@@ -196,6 +198,8 @@ Required before enabling users:
 - [ ] Configure and deploy the owner notification channel and production monitoring policies.
 - [ ] Approve the public Cloud Run IAM change and production rollout.
 - [ ] Approve internal TestFlight distribution and, only after the 24-hour pass with no binary or metadata changes, submission of that same build for App Review.
+
+After every gate above is recorded as passed, activate the iOS release candidate as follows. Change only `MEAL_SCAN_RELEASE_UI_ENABLED` and `MEAL_SCAN_RELEASE_GEMINI_ENABLED` from `NO` to `YES` in the `PCOS` target's Release settings in `project.yml`. Then regenerate `PCOS.xcodeproj` with `xcodegen generate`, create a fresh Release archive, and read back `MealScanReleaseUIEnabled=true` and `MealScanReleaseGeminiEnabled=true` from the archived app's signed `Info.plist`. Mock data, debug-direct transport, fallback-model routing, and visual similarity remain hard-disabled in Release; do not change their `NO` settings or try to enable them with launch arguments or `UserDefaults`.
 
 ## Official References
 

@@ -40,6 +40,7 @@ targets:
           - "**/.gitkeep"
           - "**/README.md"
           - "Resources/Assets.xcassets"
+          - "Info.Release.plist"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: alex.PCOS
@@ -64,8 +65,11 @@ targets:
           SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
           SWIFT_COMPILATION_MODE: wholemodule
           CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements
-          # Audited archive policy. Runtime release defaults in MealScanFeatureFlags
-          # mirror these values and remain fail-closed until benchmark approval.
+          INFOPLIST_FILE: PCOS/PCOS/Info.Release.plist
+          INFOPLIST_PREPROCESS: "YES"
+          INFOPLIST_PREPROCESSOR_DEFINITIONS: "$(inherited) MEAL_SCAN_RELEASE_UI_ENABLED_$(MEAL_SCAN_RELEASE_UI_ENABLED)=1 MEAL_SCAN_RELEASE_GEMINI_ENABLED_$(MEAL_SCAN_RELEASE_GEMINI_ENABLED)=1"
+          # Audited archive policy. Only UI and Gemini are signed runtime gates;
+          # both remain fail-closed until every documented release gate passes.
           MEAL_SCAN_RELEASE_UI_ENABLED: "NO"
           MEAL_SCAN_RELEASE_GEMINI_ENABLED: "NO"
           MEAL_SCAN_RELEASE_MOCK_DATA_ENABLED: "NO"

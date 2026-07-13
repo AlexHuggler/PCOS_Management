@@ -12,13 +12,13 @@ struct ProductionMealScanAppCheckProbeTests {
     private static let invalidProbeTransactionJWS = "eyJhbGciOiJFUzI1NiJ9.eyJwcm9iZSI6dHJ1ZX0.invalid-signature"
 
     @Test(
-        "physical App Check probe rejects an account without entitlement",
+        "physical App Check probe rejects an invalid StoreKit transaction",
         .enabled(
             if: shouldRunProductionMealScanIntegration,
             "Set RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1 only from the reviewed physical-device probe scheme."
         )
     )
-    func physicalAppCheckProbeRejectsNoEntitlementUser() async throws {
+    func physicalAppCheckProbeRejectsInvalidStoreKitTransaction() async throws {
         guard let configuration = GeminiRemoteMealScanConfiguration.from(
             bundle: Bundle(identifier: "alex.PCOS") ?? .main
         ), let endpointURL = configuration.proxyEndpointURL else {
@@ -29,9 +29,6 @@ struct ProductionMealScanAppCheckProbeTests {
         let normalized = try MealScanImageNormalizer().normalizeJPEGData(from: Self.probeImage)
         #expect(normalized.jpegData.count > 2)
         #expect(normalized.jpegData.starts(with: Data([0xFF, 0xD8])))
-
-        let hashPrefix = String(normalized.sourceImageHash.prefix(12))
-        print("Production meal-scan App Check probe image hash prefix: \(hashPrefix)")
 
         // Do not log or otherwise expose the limited-use App Check token.
         let limitedUseToken = try await FirebaseMealScanAppCheckTokenProvider().limitedUseToken()
@@ -49,13 +46,13 @@ struct ProductionMealScanAppCheckProbeTests {
 
         do {
             _ = try await GeminiMealScanProxyClient(endpointURL: endpointURL).estimateMeal(request: request)
-            Issue.record("The no-entitlement probe must never return 200 or reach quota/model processing.")
+            Issue.record("The invalid-transaction probe must never return 200 or reach quota/model processing.")
         } catch let error as GeminiMealScanProxyError {
             #expect(error.statusCode == 403)
             #expect(error.error == "premium_entitlement_required")
-            #expect(error.reason == "entitlement_inactive")
+            #expect(error.reason == "storekit_transaction_invalid")
         } catch {
-            Issue.record("Expected entitlement rejection, received \(String(describing: error))")
+            Issue.record("Expected invalid-transaction rejection, received \(String(describing: error))")
         }
     }
 
