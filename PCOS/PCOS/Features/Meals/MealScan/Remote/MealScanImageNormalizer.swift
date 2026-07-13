@@ -20,9 +20,15 @@ enum MealScanImageNormalizationError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .cannotRender:
-            "CycleBalance could not prepare this meal photo for a cloud estimate."
+            L10n.string(
+                "CycleBalance could not prepare this meal photo for a cloud estimate.",
+                defaultValue: "CycleBalance could not prepare this meal photo for a cloud estimate."
+            )
         case .exceedsMaximumBytes:
-            "CycleBalance could not reduce this photo to the secure upload limit."
+            L10n.string(
+                "CycleBalance could not reduce this photo to the secure upload limit.",
+                defaultValue: "CycleBalance could not reduce this photo to the secure upload limit."
+            )
         }
     }
 }

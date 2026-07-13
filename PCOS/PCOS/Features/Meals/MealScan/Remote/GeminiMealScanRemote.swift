@@ -10,9 +10,15 @@ enum GeminiMealScanParsingError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidJSON:
-            "Gemini returned a meal estimate CycleBalance could not read."
+            L10n.string(
+                "Gemini returned a meal estimate CycleBalance could not read.",
+                defaultValue: "Gemini returned a meal estimate CycleBalance could not read."
+            )
         case .emptyEstimate:
-            "Gemini did not return any foods to review."
+            L10n.string(
+                "Gemini did not return any foods to review.",
+                defaultValue: "Gemini did not return any foods to review."
+            )
         }
     }
 }
@@ -23,7 +29,11 @@ enum GeminiMealScanMappingError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .missingNutritionEstimate(let itemName):
-            "CycleBalance did not receive complete nutrition for \(itemName). Nothing was added to your meal log."
+            L10n.format(
+                "CycleBalance did not receive complete nutrition for %@. Nothing was added to your meal log.",
+                defaultValue: "CycleBalance did not receive complete nutrition for %@. Nothing was added to your meal log.",
+                itemName
+            )
         }
     }
 }
@@ -180,7 +190,10 @@ struct GeminiMealScanResultMapper {
             servingDescription: item.servingDescription,
             nutrition: nutrition,
             confidence: .low,
-            warning: item.warning ?? "Gemini estimate only; review and edit before saving.",
+            warning: item.warning ?? L10n.string(
+                "Gemini estimate only; review and edit before saving.",
+                defaultValue: "Gemini estimate only; review and edit before saving."
+            ),
             detectionSource: "gemini_cloud_estimate",
             portionEstimationMethod: .servingSizeHeuristic,
             isMixedDish: item.isMixedDish
@@ -218,7 +231,10 @@ enum MealScanStoreKitEvidenceError: LocalizedError, Equatable, Sendable {
     case noVerifiedActiveSubscription
 
     var errorDescription: String? {
-        "CycleBalance could not find a verified active monthly or annual subscription."
+        L10n.string(
+            "CycleBalance could not find a verified active monthly or annual subscription.",
+            defaultValue: "CycleBalance could not find a verified active monthly or annual subscription."
+        )
     }
 }
 
@@ -279,6 +295,19 @@ struct MealScanQuota: Codable, Equatable, Sendable {
     var windowSeconds: Int
     var resetAt: String?
     var retryAfterSeconds: Int?
+
+    var localizedTierDisplayName: String {
+        switch tier.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "paid", "subscriber":
+            L10n.string("paid", defaultValue: "paid")
+        case "trial":
+            L10n.string("trial", defaultValue: "trial")
+        case "sandbox", "test":
+            L10n.string("sandbox", defaultValue: "sandbox")
+        default:
+            L10n.string("standard", defaultValue: "standard")
+        }
+    }
 }
 
 struct MealScanOutcome: Equatable, Sendable {
@@ -313,10 +342,24 @@ struct GeminiMealScanProxyError: LocalizedError, Equatable, Sendable {
     var errorDescription: String? {
         switch error {
         case "rolling_scan_quota_exceeded":
-            if let quota {
-                return "You've used all \(quota.limit) fresh AI photo analyses in the current rolling 24-hour \(quota.tier) allowance. Scan a barcode or enter the meal manually while the window resets."
+            if reason == "trial_lifetime_quota_exceeded" {
+                return L10n.string(
+                    "You've used the lifetime trial AI photo analysis allowance. Scan a barcode or enter the meal manually.",
+                    defaultValue: "You've used the lifetime trial AI photo analysis allowance. Scan a barcode or enter the meal manually."
+                )
             }
-            return "You've used all fresh AI photo analyses in the current rolling 24-hour allowance. Scan a barcode or enter the meal manually while the window resets."
+            if let quota {
+                return L10n.format(
+                    "You've used all %lld fresh AI photo analyses in the current rolling 24-hour %@ allowance. Scan a barcode or enter the meal manually while the window resets.",
+                    defaultValue: "You've used all %lld fresh AI photo analyses in the current rolling 24-hour %@ allowance. Scan a barcode or enter the meal manually while the window resets.",
+                    Int64(quota.limit),
+                    quota.localizedTierDisplayName
+                )
+            }
+            return L10n.string(
+                "You've used all fresh AI photo analyses in the current rolling 24-hour allowance. Scan a barcode or enter the meal manually while the window resets.",
+                defaultValue: "You've used all fresh AI photo analyses in the current rolling 24-hour allowance. Scan a barcode or enter the meal manually while the window resets."
+            )
         case "premium_entitlement_required":
             return L10n.string("Photo meal estimates require an active trial or subscription.", defaultValue: "Photo meal estimates require an active trial or subscription.")
         case "app_integrity_required":
@@ -352,18 +395,37 @@ enum MealScanRemoteError: LocalizedError, Equatable, Sendable {
     var errorDescription: String? {
         switch self {
         case .imageTooLarge:
-            "That photo could not be reduced to the secure upload limit. Try another photo or enter the meal manually."
+            L10n.string(
+                "That photo could not be reduced to the secure upload limit. Try another photo or enter the meal manually.",
+                defaultValue: "That photo could not be reduced to the secure upload limit. Try another photo or enter the meal manually."
+            )
         case .requestBodyTooLarge:
-            "That photo request is too large to send. Try another photo or enter the meal manually."
+            L10n.string(
+                "That photo request is too large to send. Try another photo or enter the meal manually.",
+                defaultValue: "That photo request is too large to send. Try another photo or enter the meal manually."
+            )
         case .subscriptionEvidenceUnavailable:
-            "CycleBalance could not verify an active App Store subscription for this analysis."
+            L10n.string(
+                "CycleBalance could not verify an active App Store subscription for this analysis.",
+                defaultValue: "CycleBalance could not verify an active App Store subscription for this analysis."
+            )
         case .outcomeUnknown:
-            "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis."
+            L10n.string(
+                "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis.",
+                defaultValue: "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis."
+            )
         case .requestPending(_, let retryAfterSeconds):
             if let retryAfterSeconds {
-                "This analysis is still processing. Check the same request again in about \(retryAfterSeconds) seconds."
+                L10n.format(
+                    "This analysis is still processing. Check the same request again in about %lld seconds.",
+                    defaultValue: "This analysis is still processing. Check the same request again in about %lld seconds.",
+                    Int64(retryAfterSeconds)
+                )
             } else {
-                "This analysis is still processing. Check the same request again shortly."
+                L10n.string(
+                    "This analysis is still processing. Check the same request again shortly.",
+                    defaultValue: "This analysis is still processing. Check the same request again shortly."
+                )
             }
         }
     }

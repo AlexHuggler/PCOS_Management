@@ -801,6 +801,53 @@ struct GeminiMealScanTests {
         }
     }
 
+    @Test("trial lifetime quota error does not promise a rolling reset")
+    func trialLifetimeQuotaErrorDoesNotPromiseRollingReset() {
+        let error = GeminiMealScanProxyError(
+            statusCode: 429,
+            error: "rolling_scan_quota_exceeded",
+            reason: "trial_lifetime_quota_exceeded",
+            quota: MealScanQuota(
+                tier: "trial",
+                used: 5,
+                limit: 5,
+                remaining: 0,
+                windowSeconds: 86_400,
+                resetAt: "2026-07-14T12:00:00.000Z",
+                retryAfterSeconds: 86_400
+            ),
+            retryable: false
+        )
+
+        #expect(
+            error.errorDescription == "You've used the lifetime trial AI photo analysis allowance. Scan a barcode or enter the meal manually."
+        )
+        #expect(error.errorDescription?.localizedCaseInsensitiveContains("rolling") == false)
+        #expect(error.errorDescription?.localizedCaseInsensitiveContains("reset") == false)
+    }
+
+    @Test("quota tiers expose localized display labels and hide unknown backend tokens")
+    func quotaTiersExposeLocalizedDisplayLabels() {
+        func quota(tier: String) -> MealScanQuota {
+            MealScanQuota(
+                tier: tier,
+                used: 0,
+                limit: 10,
+                remaining: 10,
+                windowSeconds: 86_400,
+                resetAt: nil,
+                retryAfterSeconds: nil
+            )
+        }
+
+        #expect(quota(tier: "paid").localizedTierDisplayName == "paid")
+        #expect(quota(tier: "subscriber").localizedTierDisplayName == "paid")
+        #expect(quota(tier: "trial").localizedTierDisplayName == "trial")
+        #expect(quota(tier: "sandbox").localizedTierDisplayName == "sandbox")
+        #expect(quota(tier: "future-backend-value").localizedTierDisplayName == "standard")
+        #expect(quota(tier: "future-backend-value").localizedTierDisplayName != "future-backend-value")
+    }
+
     private static let simpleResponseJSON = """
     {
       "meal_name": "Rice bowl",

@@ -2135,7 +2135,12 @@ private struct BarcodeMealImportSheet: View {
             Form {
                 if !hasAcknowledgedConsent {
                     Section {
-                        Text("UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal.")
+                        Text(
+                            L10n.string(
+                                "UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal.",
+                                defaultValue: "UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal."
+                            )
+                        )
                             .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

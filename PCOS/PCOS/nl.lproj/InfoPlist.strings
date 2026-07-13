@@ -5,7 +5,7 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance gebruikt je camera om voedselbarcodes te scannen, maaltijdfoto's voor AI-analyse te maken en voortgangsfoto's van haargroei of haarverlies vast te leggen.";
+"NSCameraUsageDescription" = "CycleBalance gebruikt je camera om voedselbarcodes te scannen, maaltijden te fotograferen voor voedingsschattingen en foto's toe te voegen aan je haar- of huiddagboek.";
 
 /* Privacy - Health Share Usage Description */
 "NSHealthShareUsageDescription" = "CycleBalance leest Apple Health-gegevens die u toestaat, zoals voeding, glucose, cyclus, symptomen, slaap, activiteit, hart- en lichaamscontext, om lokale logs en inzichten te vullen.";
@@ -14,4 +14,4 @@
 "NSHealthUpdateUsageDescription" = "CycleBalance leest Apple Health-gegevens die u toestaat, zoals voeding, glucose, cyclus, symptomen, slaap, activiteit, hart- en lichaamscontext, om lokale logs en inzichten te vullen. De app schrijft niet naar Apple Health.";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance gebruikt je fotobibliotheek om maaltijdfoto's voor AI-analyse te selecteren en voortgangsfoto's van haargroei of haarverlies op te slaan of te vergelijken.";
+"NSPhotoLibraryUsageDescription" = "CycleBalance gebruikt je fotobibliotheek wanneer je maaltijdfoto's kiest voor voedingsschattingen of foto's toevoegt aan je haar- en huiddagboek.";

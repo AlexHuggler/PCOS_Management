@@ -217,7 +217,13 @@ struct MealScanRemoteConsentView: View {
                             .fixedSize(horizontal: false, vertical: true)
 
                             if let resetText = viewModel.quotaResetAtLocalText {
-                                Text("Next rolling-window reset in your local time: \(resetText).")
+                                Text(
+                                    L10n.format(
+                                        "Next rolling-window reset in your local time: %@.",
+                                        defaultValue: "Next rolling-window reset in your local time: %@.",
+                                        resetText
+                                    )
+                                )
                                     .appFont(.caption)
                                     .foregroundStyle(AppTheme.secondaryText)
                             }
@@ -706,18 +712,36 @@ struct MealScanReviewView: View {
             if let disposition = viewModel.mealScanCacheDisposition {
                 Section {
                     if disposition == .fresh, let quota = viewModel.mealScanQuota {
-                        Text("\(quota.remaining) of \(quota.limit) fresh AI photo analyses remain in your rolling 24-hour \(quota.tier) allowance.")
+                        Text(
+                            L10n.format(
+                                "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
+                                defaultValue: "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
+                                Int64(quota.remaining),
+                                Int64(quota.limit),
+                                quota.localizedTierDisplayName
+                            )
+                        )
                             .appFont(.subheadline, weight: .medium)
 
                         if let resetText = viewModel.quotaResetAtLocalText {
-                            Text("This rolling window resets as earlier analyses age out; the next reset is shown in your local time: \(resetText).")
+                            Text(
+                                L10n.format(
+                                    "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
+                                    defaultValue: "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
+                                    resetText
+                                )
+                            )
                                 .appFont(.caption)
                                 .foregroundStyle(.secondary)
                         }
 
                         if viewModel.shouldWarnAboutRemainingAnalyses {
                             Label(
-                                "Only \(quota.remaining) fresh AI photo analyses remain in this rolling window.",
+                                L10n.format(
+                                    "Only %lld fresh AI photo analyses remain in this rolling window.",
+                                    defaultValue: "Only %lld fresh AI photo analyses remain in this rolling window.",
+                                    Int64(quota.remaining)
+                                ),
                                 systemImage: "exclamationmark.triangle.fill"
                             )
                             .appFont(.caption, weight: .semibold)
@@ -725,13 +749,16 @@ struct MealScanReviewView: View {
                         }
                     } else {
                         Label(
-                            "Cached result — no fresh AI photo analysis was used.",
+                            L10n.string(
+                                "Cached result — no fresh AI photo analysis was used.",
+                                defaultValue: "Cached result — no fresh AI photo analysis was used."
+                            ),
                             systemImage: "clock.arrow.circlepath"
                         )
                         .appFont(.subheadline, weight: .medium)
                     }
                 } header: {
-                    Text("AI photo allowance")
+                    Text(L10n.string("AI photo allowance", defaultValue: "AI photo allowance"))
                 }
             }
 
@@ -1024,7 +1051,13 @@ struct MealScanManualFallbackView: View {
 
                         if viewModel.mealScanQuota?.remaining == 0,
                            let resetText = viewModel.quotaResetAtLocalText {
-                            Text("Next rolling-window reset in your local time: \(resetText).")
+                            Text(
+                                L10n.format(
+                                    "Next rolling-window reset in your local time: %@.",
+                                    defaultValue: "Next rolling-window reset in your local time: %@.",
+                                    resetText
+                                )
+                            )
                                 .appFont(.caption, weight: .medium)
                                 .foregroundStyle(AppTheme.primaryText)
                                 .multilineTextAlignment(.center)
@@ -1070,7 +1103,13 @@ struct MealScanManualFallbackView: View {
                 )
                 if viewModel.mealScanQuota?.remaining == 0,
                    let resetText = viewModel.quotaResetAtLocalText {
-                    Text("Next rolling-window reset in your local time: \(resetText).")
+                    Text(
+                        L10n.format(
+                            "Next rolling-window reset in your local time: %@.",
+                            defaultValue: "Next rolling-window reset in your local time: %@.",
+                            resetText
+                        )
+                    )
                         .appFont(.caption, weight: .medium)
                         .multilineTextAlignment(.center)
                 }
@@ -1118,18 +1157,34 @@ struct MealScanAmbiguousOutcomeView: View {
                         .appFont(.title3, weight: .semibold)
                         .foregroundStyle(AppTheme.primaryText)
 
-                    Text(viewModel.errorMessage ?? "CycleBalance could not confirm whether the previous analysis completed.")
+                    Text(
+                        viewModel.errorMessage ?? L10n.string(
+                            "CycleBalance could not confirm whether the previous analysis completed.",
+                            defaultValue: "CycleBalance could not confirm whether the previous analysis completed."
+                        )
+                    )
                         .appFont(.subheadline)
                         .foregroundStyle(AppTheme.secondaryText)
                         .multilineTextAlignment(.center)
 
-                    Text("Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.")
+                    Text(
+                        L10n.string(
+                            "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.",
+                            defaultValue: "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis."
+                        )
+                    )
                         .appFont(.caption, weight: .medium)
                         .foregroundStyle(AppTheme.primaryText)
                         .multilineTextAlignment(.center)
 
                     if let retryTime = viewModel.pendingRetryAvailableAtLocalText {
-                        Text("The server asked CycleBalance to wait before checking again. Next check: \(retryTime).")
+                        Text(
+                            L10n.format(
+                                "The server asked CycleBalance to wait before checking again. Next check: %@.",
+                                defaultValue: "The server asked CycleBalance to wait before checking again. Next check: %@.",
+                                retryTime
+                            )
+                        )
                             .appFont(.caption)
                             .foregroundStyle(AppTheme.secondaryText)
                             .multilineTextAlignment(.center)
@@ -1143,7 +1198,10 @@ struct MealScanAmbiguousOutcomeView: View {
                                 try? await viewModel.retryAmbiguousOutcome()
                             }
                         } label: {
-                            Label("Check the same request", systemImage: "arrow.clockwise")
+                            Label(
+                                L10n.string("Check the same request", defaultValue: "Check the same request"),
+                                systemImage: "arrow.clockwise"
+                            )
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
@@ -1153,7 +1211,12 @@ struct MealScanAmbiguousOutcomeView: View {
 
                     if !viewModel.canRetryAmbiguousOutcome,
                        viewModel.pendingRetryAvailableAtLocalText == nil {
-                        Text("The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.")
+                        Text(
+                            L10n.string(
+                                "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.",
+                                defaultValue: "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later."
+                            )
+                        )
                             .appFont(.caption)
                             .foregroundStyle(AppTheme.secondaryText)
                             .multilineTextAlignment(.center)
@@ -1162,7 +1225,10 @@ struct MealScanAmbiguousOutcomeView: View {
                     Button {
                         viewModel.requestNewAnalysisAfterAmbiguousOutcome()
                     } label: {
-                        Label("Consider a new analysis", systemImage: "plus.circle")
+                        Label(
+                            L10n.string("Consider a new analysis", defaultValue: "Consider a new analysis"),
+                            systemImage: "plus.circle"
+                        )
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -1170,13 +1236,19 @@ struct MealScanAmbiguousOutcomeView: View {
                     .accessibilityIdentifier("meal_scan.unknown.request_new")
 
                     Button(action: onChooseBarcode) {
-                        Label("Scan a barcode", systemImage: "barcode.viewfinder")
+                        Label(
+                            L10n.string("Scan a barcode", defaultValue: "Scan a barcode"),
+                            systemImage: "barcode.viewfinder"
+                        )
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
 
                     Button(action: onChooseManual) {
-                        Label("Enter manually", systemImage: "square.and.pencil")
+                        Label(
+                            L10n.string("Enter manually", defaultValue: "Enter manually"),
+                            systemImage: "square.and.pencil"
+                        )
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
@@ -1203,11 +1275,16 @@ struct MealScanNewAttemptConfirmationView: View {
                     .font(.system(size: 42, weight: .semibold))
                     .foregroundStyle(.orange)
 
-                Text("Start a separate analysis?")
+                Text(L10n.string("Start a separate analysis?", defaultValue: "Start a separate analysis?"))
                     .appFont(.title3, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
 
-                Text("The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.")
+                Text(
+                    L10n.string(
+                        "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.",
+                        defaultValue: "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed."
+                    )
+                )
                     .appFont(.subheadline)
                     .foregroundStyle(AppTheme.secondaryText)
                     .multilineTextAlignment(.center)
@@ -1219,7 +1296,10 @@ struct MealScanNewAttemptConfirmationView: View {
                         try? await viewModel.confirmNewAnalysisAfterAmbiguousOutcome()
                     }
                 } label: {
-                    Label("Start a new billable analysis", systemImage: "arrow.up.circle.fill")
+                    Label(
+                        L10n.string("Start a new billable analysis", defaultValue: "Start a new billable analysis"),
+                        systemImage: "arrow.up.circle.fill"
+                    )
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -1228,20 +1308,26 @@ struct MealScanNewAttemptConfirmationView: View {
                 .accessibilityIdentifier("meal_scan.unknown.confirm_new")
 
                 Button(action: onChooseBarcode) {
-                    Label("Scan a barcode", systemImage: "barcode.viewfinder")
+                    Label(
+                        L10n.string("Scan a barcode", defaultValue: "Scan a barcode"),
+                        systemImage: "barcode.viewfinder"
+                    )
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
                 .disabled(isSubmitting)
 
                 Button(action: onChooseManual) {
-                    Label("Enter manually", systemImage: "square.and.pencil")
+                    Label(
+                        L10n.string("Enter manually", defaultValue: "Enter manually"),
+                        systemImage: "square.and.pencil"
+                    )
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
                 .disabled(isSubmitting)
 
-                Button("Go back") {
+                Button(L10n.string("Go back", defaultValue: "Go back")) {
                     viewModel.cancelNewAnalysisConfirmation()
                 }
                 .buttonStyle(.bordered)

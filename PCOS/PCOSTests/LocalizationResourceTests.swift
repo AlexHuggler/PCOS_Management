@@ -70,6 +70,19 @@ private func loadSourceFile(
     return try String(contentsOf: fileURL, encoding: .utf8)
 }
 
+private func printfPlaceholders(in value: String) -> [String] {
+    let expression = try? NSRegularExpression(pattern: #"%(?:\d+\$)?(?:lld|ld|d|@|(?:\.\d+)?f)"#)
+    let range = NSRange(value.startIndex..., in: value)
+    return expression?.matches(in: value, range: range).compactMap { match in
+        guard let range = Range(match.range, in: value) else { return nil }
+        return value[range].replacingOccurrences(
+            of: #"^%\d+\$"#,
+            with: "%",
+            options: .regularExpression
+        )
+    } ?? []
+}
+
 private func makeTemporaryLocalizedAppBundle(from appDirectory: URL) throws -> URL {
     let infoPlistURL = appDirectory.appendingPathComponent("Info.plist")
     let tempBundleRoot = FileManager.default.temporaryDirectory
@@ -100,6 +113,74 @@ struct LocalizationResourceTests {
         "Use Previous Meal",
         "Scan as New",
         "last logged %@",
+    ]
+    private let scannerReleaseLocalizationKeys = [
+        "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
+        "AI photo allowance",
+        "Analysis status unknown",
+        "Analysis still processing",
+        "Cached result — no fresh AI photo analysis was used.",
+        "Check for cached result",
+        "Check the same request",
+        "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.",
+        "Choose Another Photo",
+        "Consider a new analysis",
+        "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis.",
+        "CycleBalance could not confirm whether the previous analysis completed.",
+        "CycleBalance could not find a verified active monthly or annual subscription.",
+        "CycleBalance could not prepare this meal photo for a cloud estimate.",
+        "CycleBalance could not reduce this photo to the secure upload limit.",
+        "CycleBalance could not verify an active App Store subscription for this analysis.",
+        "CycleBalance could not verify this app install. Update the app and try again.",
+        "CycleBalance did not receive complete nutrition for %@. Nothing was added to your meal log.",
+        "Enter Manually",
+        "Enter manually",
+        "Enter nutrition manually",
+        "Fresh AI photo allowance used",
+        "Gemini did not return any foods to review.",
+        "Gemini estimate only; review and edit before saving.",
+        "Gemini returned a meal estimate CycleBalance could not read.",
+        "Go back",
+        "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
+        "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
+        "Next rolling-window reset in your local time: %@.",
+        "No fresh AI photo analysis was used.",
+        "Only %lld fresh AI photo analyses remain in this rolling window.",
+        "Photo analysis unavailable",
+        "Photo estimate",
+        "Photo estimates are not configured. Scan a barcode or enter the meal manually.",
+        "Photo estimates are temporarily unavailable. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "Photo estimates are unavailable right now. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
+        "Photo meal estimates require an active trial or subscription.",
+        "paid",
+        "Scan a barcode",
+        "sandbox",
+        "Send this photo to Google Gemini?",
+        "Send to Google Gemini",
+        "standard",
+        "Start a new billable analysis",
+        "Start a separate analysis?",
+        "That photo is too large to estimate. Try another photo or enter the meal manually.",
+        "That photo could not be reduced to the secure upload limit. Try another photo or enter the meal manually.",
+        "That photo request is too large to send. Try another photo or enter the meal manually.",
+        "The photo estimate could not start. You can try another photo or enter the meal manually.",
+        "The photo estimate timed out. Try again, close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.",
+        "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.",
+        "The server asked CycleBalance to wait before checking again. Next check: %@.",
+        "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis.",
+        "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
+        "This analysis is still processing. Check the same request again in about %lld seconds.",
+        "This analysis is still processing. Check the same request again shortly.",
+        "trial",
+        "UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal.",
+        "You will review and edit the estimate before anything is added to your meal log.",
+        "You've used all %lld fresh AI photo analyses in the current rolling 24-hour %@ allowance. Scan a barcode or enter the meal manually while the window resets.",
+        "You've used all fresh AI photo analyses in the current rolling 24-hour allowance. Scan a barcode or enter the meal manually while the window resets.",
+        "You've used the lifetime trial AI photo analysis allowance. Scan a barcode or enter the meal manually.",
+        "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis.",
+        "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
     ]
     private let representativeLocalizableKeys = [
         "Spotting",
@@ -760,6 +841,65 @@ struct LocalizationResourceTests {
                 #expect(value != key, "Previous-meal localized value for '\(key)' in \(languageIdentifier) fell back to English.")
             }
         }
+    }
+
+    @Test("Scanner release strings are translated for all supported languages")
+    func scannerReleaseStringsAreTranslated() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
+            Issue.record("Unable to locate the localized app resource directory from the test bundle.")
+            return
+        }
+
+        for languageIdentifier in L10n.supportedLanguageIdentifiers {
+            guard let table = loadStringsTable(named: "Localizable", languageIdentifier: languageIdentifier, appDirectory: appDirectory) else {
+                Issue.record("Unable to load Localizable.strings for \(languageIdentifier).")
+                continue
+            }
+
+            for key in scannerReleaseLocalizationKeys {
+                let value = table[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                #expect(!value.isEmpty, "Missing scanner localized value for '\(key)' in \(languageIdentifier).")
+                #expect(value != key, "Scanner localized value for '\(key)' in \(languageIdentifier) fell back to English.")
+                #expect(
+                    printfPlaceholders(in: value) == printfPlaceholders(in: key),
+                    "Scanner placeholders for '\(key)' do not match in \(languageIdentifier): '\(value)'."
+                )
+            }
+        }
+    }
+
+    @Test("Scanner release source routes user-visible copy through L10n")
+    func scannerReleaseSourceUsesLocalizationHelpers() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
+            Issue.record("Unable to locate the localized app resource directory from the test bundle.")
+            return
+        }
+        let projectRoot = appDirectory.deletingLastPathComponent().deletingLastPathComponent()
+        let sourcePaths = [
+            "PCOS/PCOS/Features/Meals/MealScan/Remote/GeminiMealScanRemote.swift",
+            "PCOS/PCOS/Features/Meals/MealScan/Remote/MealScanImageNormalizer.swift",
+            "PCOS/PCOS/Features/Meals/MealScan/ViewModels/MealScanViewModel.swift",
+            "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift",
+            "PCOS/PCOS/Features/Meals/Views/MealLogView.swift",
+        ]
+        let source = try sourcePaths
+            .map { try loadSourceFile(relativePath: $0, projectRoot: projectRoot) }
+            .joined(separator: "\n")
+
+        for key in scannerReleaseLocalizationKeys {
+            let quotedKey = NSRegularExpression.escapedPattern(for: "\"\(key)\"")
+            let localizedCallPattern = #"L10n\.(?:string|format)\s*\(\s*"# + quotedKey
+            #expect(
+                source.range(of: localizedCallPattern, options: .regularExpression) != nil,
+                "Scanner release key is not routed through L10n.string or L10n.format: '\(key)'."
+            )
+        }
+        #expect(
+            !source.contains("quota.tier"),
+            "Scanner UI must format a localized tier display label, not the raw backend tier token."
+        )
     }
 
     @Test("Insight explanation strings are translated for all supported languages")

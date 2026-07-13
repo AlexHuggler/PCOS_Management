@@ -135,7 +135,10 @@ final class MealScanViewModel {
         do {
             try await prepareSelectedImage(image)
         } catch {
-            errorMessage = "\(error.localizedDescription) No fresh AI photo analysis was used."
+            errorMessage = error.localizedDescription + " " + L10n.string(
+                "No fresh AI photo analysis was used.",
+                defaultValue: "No fresh AI photo analysis was used."
+            )
             phase = .manualFallback
         }
     }
