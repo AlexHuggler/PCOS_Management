@@ -387,6 +387,408 @@ test("does not log pseudonymous app user identifiers or meal content", async () 
   assert.equal(JSON.stringify(estimateEvent).includes("Rice bowl"), false);
 });
 
+test("structured scanner events cover fresh dispatch without logging identifiers or content", async () => {
+  const events = [];
+  const appCheckToken = "app-check-token-must-never-log";
+  const apiKey = "api-key-must-never-log";
+  const originalTransactionId = "sensitive-original-transaction-id";
+  const transactionId = "sensitive-current-transaction-id";
+  const principalSecret = "task-1b-principal-secret-with-adequate-entropy";
+  const signedTransactionJWS = "sensitive-jws-header.sensitive-jws-payload.sensitive-jws-signature";
+  const payload = { ...hardenedPayload, signedTransactionJWS };
+  const purchasePrincipal = proxyModule.derivePurchasePrincipal({
+    originalTransactionId,
+    environment: "Production",
+    secret: principalSecret,
+  });
+  let submittedEvidenceKey;
+  const server = createHardenedServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "true",
+      APPLE_BUNDLE_ID: "alex.PCOS",
+      APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      GEMINI_API_KEY: apiKey,
+    },
+    principalSecret,
+    requireAppCheck: true,
+    verifyAppIntegrity: async ({ token }) => ({ allowed: token === appCheckToken }),
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({
+        originalTransactionId,
+        transactionId,
+      }),
+    },
+    requestGate: {
+      checkAndConsume: async ({ appUserId }) => {
+        submittedEvidenceKey = appUserId;
+        return { allowed: true };
+      },
+    },
+    idempotencyStore: {
+      inspect: async () => ({ state: "missing", acquired: false }),
+      claimAndConsumeQuota: async ({ requestId, requestHash, quota }) => ({
+        requestId,
+        requestHash,
+        documentId: "idempotency-document",
+        claimId: "claim-id",
+        principal: quota.principal,
+        state: "pending",
+        acquired: true,
+        quota: rollingQuota(),
+      }),
+      complete: async () => {},
+      markUnknown: async () => {},
+      abandon: async () => {},
+    },
+    resultCache: { get: async () => null, set: async () => true },
+    logger: collectingLogger(events),
+  });
+
+  const response = await request(server, payload, { "x-firebase-appcheck": appCheckToken });
+  const scannerEvents = events.filter((event) => event.name === "meal_scan_scanner_event");
+  const eventTypes = new Set(scannerEvents.map((event) => event.metadata.eventType));
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(
+    [...eventTypes].sort(),
+    [
+      "budget_state",
+      "cache_decision",
+      "global_dispatch_decision",
+      "provider_call",
+      "quota_decision",
+      "request_gate_decision",
+      "request_result",
+    ].sort()
+  );
+  assert.ok(scannerEvents.every((event) => event.metadata.schemaVersion === "cyclebalance.meal_scan.operation.v1"));
+  const cacheEvent = scannerEvents.find((event) => event.metadata.eventType === "cache_decision");
+  assert.equal(cacheEvent.metadata.cacheDisposition, "fresh_dispatch");
+  assert.equal(cacheEvent.metadata.localCacheDisposition, "not_observed");
+  const quotaEvent = scannerEvents.find((event) => event.metadata.eventType === "quota_decision");
+  assert.equal(quotaEvent.metadata.outcome, "allowed");
+  assert.equal(quotaEvent.metadata.quotaUsed, 1);
+  assert.equal(quotaEvent.metadata.quotaLimit, 10);
+  const dispatchEvent = scannerEvents.find(
+    (event) => event.metadata.eventType === "global_dispatch_decision"
+  );
+  assert.equal(dispatchEvent.metadata.outcome, "allowed");
+  const providerEvents = scannerEvents.filter((event) => event.metadata.eventType === "provider_call");
+  assert.deepEqual(providerEvents.map((event) => event.metadata.outcome), ["started", "completed"]);
+  assert.equal(providerEvents[1].metadata.inputTokens, 2448);
+  assert.equal(providerEvents[1].metadata.outputTokens, 750);
+  assert.equal(providerEvents[1].metadata.estimatedCostUSD, 0.001737);
+  assert.ok(providerEvents[1].metadata.latencyMs >= 0);
+  const resultEvent = scannerEvents.find((event) => event.metadata.eventType === "request_result");
+  assert.equal(resultEvent.metadata.statusCode, 200);
+  assert.equal(resultEvent.metadata.statusClass, "2xx");
+  assert.ok(resultEvent.metadata.latencyMs >= 0);
+
+  const serializedEvents = JSON.stringify(events);
+  for (const forbidden of [
+    payload.requestId,
+    signedTransactionJWS,
+    originalTransactionId,
+    transactionId,
+    purchasePrincipal,
+    submittedEvidenceKey,
+    payload.image.sha256,
+    payload.image.base64,
+    appCheckToken,
+    apiKey,
+    "Rice bowl",
+    payload.mealType,
+    payload.locale,
+  ]) {
+    assert.equal(serializedEvents.includes(forbidden), false, `logs must exclude ${forbidden}`);
+  }
+  const forbiddenKeys = new Set([
+    "requestId",
+    "signedTransactionJWS",
+    "originalTransactionId",
+    "transactionId",
+    "principal",
+    "appUserId",
+    "imageHash",
+    "image",
+    "token",
+    "apiKey",
+    "payload",
+    "estimate",
+    "mealType",
+    "locale",
+    "content",
+  ]);
+  assert.deepEqual(findForbiddenKeys(scannerEvents, forbiddenKeys), []);
+});
+
+test("structured scanner events sanitize App Check and StoreKit JWS rejection reasons", async (t) => {
+  await t.test("App Check", async () => {
+    const events = [];
+    const token = "rejected-app-check-token-must-never-log";
+    const server = createHardenedServer({
+      requireAppCheck: true,
+      verifyAppIntegrity: async () => ({ allowed: false, reason: "app_check_rejected" }),
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, hardenedPayload, { "x-firebase-appcheck": token });
+    const rejection = scannerEvent(events, "authorization_rejection");
+
+    assert.equal(response.status, 401);
+    assert.equal(rejection.metadata.control, "app_check");
+    assert.equal(rejection.metadata.reason, "app_check_rejected");
+    assert.equal(JSON.stringify(events).includes(token), false);
+  });
+
+  await t.test("StoreKit JWS", async () => {
+    const events = [];
+    const signedTransactionJWS = "forged-secret-header.forged-secret-payload.forged-secret-signature";
+    const server = createHardenedServer({
+      storeKitVerifier: {
+        verifyAndDecodeTransaction: async () => { throw new Error("do not log this verifier detail"); },
+      },
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, { ...hardenedPayload, signedTransactionJWS });
+    const rejection = scannerEvent(events, "authorization_rejection");
+
+    assert.equal(response.status, 403);
+    assert.equal(rejection.metadata.control, "storekit_jws");
+    assert.equal(rejection.metadata.reason, "storekit_transaction_invalid");
+    assert.equal(JSON.stringify(events).includes(signedTransactionJWS), false);
+    assert.equal(JSON.stringify(events).includes("do not log this verifier detail"), false);
+  });
+
+  await t.test("malformed JWS envelope", async () => {
+    const events = [];
+    const malformedJWS = "malformed-jws-must-never-log";
+    const server = createHardenedServer({ logger: collectingLogger(events) });
+
+    const response = await request(server, {
+      ...hardenedPayload,
+      signedTransactionJWS: malformedJWS,
+    });
+    const rejection = scannerEvent(events, "authorization_rejection");
+
+    assert.equal(response.status, 400);
+    assert.equal(rejection.metadata.control, "storekit_jws");
+    assert.equal(rejection.metadata.reason, "storekit_transaction_invalid");
+    assert.equal(JSON.stringify(events).includes(malformedJWS), false);
+  });
+
+  await t.test("unknown request-gate reason", async () => {
+    const events = [];
+    const attackerControlledReason = "customer@example.com supplied private content";
+    const server = createHardenedServer({
+      requestGate: {
+        checkAndConsume: async () => ({ allowed: false, reason: attackerControlledReason }),
+      },
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, hardenedPayload);
+    const decision = scannerEvent(events, "request_gate_decision");
+
+    assert.equal(response.status, 429);
+    assert.equal(decision.metadata.outcome, "rejected");
+    assert.equal(decision.metadata.reason, "other");
+    assert.equal(JSON.stringify(events).includes(attackerControlledReason), false);
+  });
+});
+
+test("structured scanner events expose quota global-dispatch and server-cache decisions", async (t) => {
+  await t.test("quota denied", async () => {
+    const events = [];
+    const server = createHardenedServer({
+      quotaStore: {
+        checkAndConsume: async () => rollingQuota({
+          allowed: false,
+          reason: "rolling_quota_exceeded",
+          used: 10,
+          limit: 10,
+          remaining: 0,
+        }),
+      },
+      resultCache: { get: async () => null },
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, hardenedPayload);
+    const quota = scannerEvent(events, "quota_decision");
+
+    assert.equal(response.status, 429);
+    assert.equal(quota.metadata.outcome, "rejected");
+    assert.equal(quota.metadata.reason, "rolling_quota_exceeded");
+  });
+
+  await t.test("global dispatch denied", async () => {
+    const events = [];
+    const server = createHardenedServer({
+      idempotencyStore: {
+        inspect: async () => ({ state: "missing", acquired: false }),
+        claimAndConsumeQuota: async () => ({
+          state: "provider_limit_denied",
+          acquired: false,
+          reason: "global_provider_minute_limit_exceeded",
+          retryAfterSeconds: 60,
+        }),
+        completeFromCache: async () => { throw new Error("cache completion must not run"); },
+      },
+      resultCache: { get: async () => null },
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, hardenedPayload);
+    const dispatch = scannerEvent(events, "global_dispatch_decision");
+
+    assert.equal(response.status, 429);
+    assert.equal(dispatch.metadata.outcome, "rejected");
+    assert.equal(dispatch.metadata.reason, "global_provider_minute_limit_exceeded");
+  });
+
+  await t.test("server cache hit", async () => {
+    const events = [];
+    const cached = {
+      estimate: { meal_name: "Cached meal", confidence: "medium", warnings: [], items: [] },
+      rawEstimateJSON: "{}",
+      usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, estimatedCostUSD: 0.0001 },
+      usageMetadata: null,
+      quota: rollingQuota(),
+    };
+    const server = createHardenedServer({
+      resultCache: { get: async () => cached },
+      logger: collectingLogger(events),
+    });
+
+    const response = await request(server, hardenedPayload);
+    const cache = scannerEvent(events, "cache_decision");
+
+    assert.equal(response.status, 200);
+    assert.equal(cache.metadata.cacheDisposition, "server_hit");
+    assert.equal(cache.metadata.localCacheDisposition, "not_observed");
+    assert.equal(
+      events.some(
+        (event) => event.name === "meal_scan_scanner_event" &&
+          event.metadata.eventType === "provider_call"
+      ),
+      false
+    );
+  });
+});
+
+test("the exported production response-bounds validator rejects items missing required fields", () => {
+  assert.equal(typeof proxyModule.assertEstimateBounds, "function");
+  assert.throws(
+    () => proxyModule.assertEstimateBounds({
+      meal_name: "Incomplete response",
+      confidence: "medium",
+      warnings: [],
+      items: [{
+        display_name: "Rice",
+        estimated_grams: 100,
+        confidence: "medium",
+        is_mixed_dish: false,
+      }],
+    }),
+    /public response contract/
+  );
+});
+
+test("the exported production response-bounds validator requires one through twenty items", () => {
+  const validItem = {
+    display_name: "Rice",
+    canonical_query: "cooked white rice",
+    estimated_grams: 100,
+    confidence: "medium",
+    is_mixed_dish: false,
+  };
+  const estimate = {
+    meal_name: "Rice",
+    confidence: "medium",
+    warnings: [],
+    items: [],
+  };
+
+  assert.throws(() => proxyModule.assertEstimateBounds(estimate), /public response contract/);
+  assert.doesNotThrow(() => proxyModule.assertEstimateBounds({
+    ...estimate,
+    items: [validItem],
+  }));
+  assert.doesNotThrow(() => proxyModule.assertEstimateBounds({
+    ...estimate,
+    items: Array.from({ length: 20 }, () => ({ ...validItem })),
+  }));
+  assert.throws(
+    () => proxyModule.assertEstimateBounds({
+      ...estimate,
+      items: Array.from({ length: 21 }, () => ({ ...validItem })),
+    }),
+    /public response contract/
+  );
+});
+
+test("the exported production response-bounds validator enforces complete bounded nutrition fallback values", () => {
+  const ranges = {
+    calories_kcal: [0, 10_000],
+    protein_grams: [0, 1_000],
+    carbs_grams: [0, 2_000],
+    fat_grams: [0, 1_000],
+    fiber_grams: [0, 500],
+    sugar_grams: [0, 1_000],
+    sodium_mg: [0, 100_000],
+  };
+  const validFallback = Object.fromEntries(
+    Object.entries(ranges).map(([field, [minimum]]) => [field, minimum])
+  );
+  const estimateWithFallback = (nutritionFallback) => ({
+    meal_name: "Rice",
+    confidence: "medium",
+    warnings: [],
+    items: [{
+      display_name: "Rice",
+      canonical_query: "cooked white rice",
+      estimated_grams: 100,
+      confidence: "medium",
+      is_mixed_dish: false,
+      nutrition_fallback: nutritionFallback,
+    }],
+  });
+
+  assert.doesNotThrow(() => proxyModule.assertEstimateBounds(estimateWithFallback(null)));
+  assert.doesNotThrow(() => proxyModule.assertEstimateBounds(estimateWithFallback(validFallback)));
+  assert.throws(
+    () => proxyModule.assertEstimateBounds(estimateWithFallback([])),
+    /public response contract/
+  );
+
+  for (const [field, [minimum, maximum]] of Object.entries(ranges)) {
+    const missing = { ...validFallback };
+    delete missing[field];
+    assert.throws(
+      () => proxyModule.assertEstimateBounds(estimateWithFallback(missing)),
+      /public response contract/,
+      `${field} must be required`
+    );
+    for (const invalidValue of [Number.NaN, Number.POSITIVE_INFINITY, minimum - 1, maximum + 1]) {
+      assert.throws(
+        () => proxyModule.assertEstimateBounds(estimateWithFallback({
+          ...validFallback,
+          [field]: invalidValue,
+        })),
+        /public response contract/,
+        `${field} must be finite and within ${minimum}...${maximum}`
+      );
+    }
+    assert.doesNotThrow(() => proxyModule.assertEstimateBounds(estimateWithFallback({
+      ...validFallback,
+      [field]: maximum,
+    })));
+  }
+});
+
 test("reuses a successful image hash without consuming quota or calling Gemini twice", async () => {
   let quotaConsumeCalls = 0;
   let quotaSnapshotCalls = 0;
@@ -991,6 +1393,25 @@ test("production-enabled startup fails closed without durable security backends"
     }),
     /production meal scan configuration is incomplete/
   );
+});
+
+test("Firestore budget control marks a state older than twenty four hours as stale", async () => {
+  const now = Date.parse("2026-07-13T12:00:00.000Z");
+  const provider = createFirestoreBudgetStateProvider({
+    environment: {},
+    now: () => now,
+    readControl: async () => ({
+      manualMode: "normal",
+      billingMode: "normal",
+      spendUsd: 1,
+      updatedAt: new Date(now - 86_400_001),
+    }),
+  });
+
+  const state = await provider();
+
+  assert.equal(state.stale, true);
+  assert.equal(state.stateAgeSeconds, 86_400.001);
 });
 
 test("production-enabled startup accepts the complete durable security configuration", () => {
@@ -1679,8 +2100,21 @@ test("bounds Gemini structured output and rejects an oversized provider result",
   assert.equal(providerPayload.generationConfig.maxOutputTokens, 1_600);
   assert.equal(schema.properties.meal_name.maxLength, 120);
   assert.equal(schema.properties.warnings.maxItems, 8);
+  assert.equal(schema.properties.items.minItems, 1);
   assert.equal(schema.properties.items.maxItems, 20);
   assert.equal(schema.properties.items.items.properties.estimated_grams.maximum, 5_000);
+  assert.deepEqual(
+    schema.properties.items.items.properties.nutrition_fallback.required,
+    [
+      "calories_kcal",
+      "protein_grams",
+      "carbs_grams",
+      "fat_grams",
+      "fiber_grams",
+      "sugar_grams",
+      "sodium_mg",
+    ]
+  );
 
   const server = createHardenedServer({
     callGemini: async () => ({
@@ -2369,7 +2803,13 @@ function successGeminiResponse() {
       meal_name: "Rice bowl",
       confidence: "medium",
       warnings: [],
-      items: [],
+      items: [{
+        display_name: "Rice",
+        canonical_query: "cooked white rice",
+        estimated_grams: 225,
+        confidence: "medium",
+        is_mixed_dish: false,
+      }],
     },
     usageMetadata: {
       promptTokenCount: 2448,
@@ -2377,6 +2817,37 @@ function successGeminiResponse() {
       totalTokenCount: 3198,
     },
   };
+}
+
+function collectingLogger(events) {
+  const capture = (level) => (name, metadata) => events.push({ level, name, metadata });
+  return {
+    info: capture("info"),
+    warn: capture("warn"),
+    error: capture("error"),
+  };
+}
+
+function scannerEvent(events, eventType) {
+  const event = events.find(
+    (candidate) => candidate.name === "meal_scan_scanner_event" &&
+      candidate.metadata?.eventType === eventType
+  );
+  assert.ok(event, `expected structured scanner event ${eventType}`);
+  return event;
+}
+
+function findForbiddenKeys(value, forbiddenKeys, path = "$") {
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) => findForbiddenKeys(item, forbiddenKeys, `${path}[${index}]`));
+  }
+  if (!value || typeof value !== "object") return [];
+  const findings = [];
+  for (const [key, nested] of Object.entries(value)) {
+    if (forbiddenKeys.has(key)) findings.push(`${path}.${key}`);
+    findings.push(...findForbiddenKeys(nested, forbiddenKeys, `${path}.${key}`));
+  }
+  return findings;
 }
 
 async function request(server, payload, headers = {}) {

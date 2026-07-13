@@ -53,6 +53,90 @@ const MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE = 3;
 const MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS = 30;
 const MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE = 60;
 const MAX_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS = 1_000;
+const DEFAULT_BUDGET_STATE_MAX_AGE_SECONDS = 86_400;
+const NUTRITION_FALLBACK_BOUNDS = Object.freeze([
+  ["calories_kcal", 0, 10_000],
+  ["protein_grams", 0, 1_000],
+  ["carbs_grams", 0, 2_000],
+  ["fat_grams", 0, 1_000],
+  ["fiber_grams", 0, 500],
+  ["sugar_grams", 0, 1_000],
+  ["sodium_mg", 0, 100_000],
+]);
+const SCANNER_EVENT_SCHEMA_VERSION = "cyclebalance.meal_scan.operation.v1";
+const SCANNER_RESPONSE_OBSERVER = Symbol("cyclebalanceScannerResponseObserver");
+const SAFE_SCANNER_REASONS = new Set([
+  "app_check_app_mismatch",
+  "app_check_rejected",
+  "app_check_required",
+  "app_check_token_replayed",
+  "app_check_verifier_unconfigured",
+  "app_integrity_required",
+  "body_size_limit",
+  "budget_control_unavailable",
+  "cache_control_unavailable",
+  "duplicate_request_in_progress",
+  "feature_disabled",
+  "global_provider_dispatch_limit_exceeded",
+  "global_provider_minute_limit_exceeded",
+  "global_provider_rolling_limit_exceeded",
+  "global_request_limit_exceeded",
+  "idempotency_conflict",
+  "integrity_failed",
+  "integrity_service_timeout",
+  "invalid_json",
+  "invalid_request",
+  "meal_scan_in_progress",
+  "meal_scan_outcome_unknown",
+  "meal_scan_parse_error",
+  "meal_scan_provider_error",
+  "meal_scan_proxy_error",
+  "meal_scan_request_rate_limited",
+  "meal_scan_unavailable",
+  "monthly_budget_exceeded",
+  "not_found",
+  "other",
+  "premium_entitlement_required",
+  "previous_dispatch_outcome_unknown",
+  "principal_attempt_control_unavailable",
+  "principal_attempt_limit_exceeded",
+  "principal_attempt_minute_limit_exceeded",
+  "principal_attempt_rolling_limit_exceeded",
+  "principal_dispatch_in_progress",
+  "provider_dispatch_outcome_unknown",
+  "provider_dispatch_rate_limited",
+  "provider_request_failed",
+  "provider_response_invalid",
+  "provider_response_out_of_bounds",
+  "provider_timeout",
+  "quota_control_unavailable",
+  "quota_exceeded",
+  "request_body_invalid",
+  "request_body_mismatch",
+  "request_control_unavailable",
+  "request_limit_exceeded",
+  "request_too_large",
+  "rolling_quota_exceeded",
+  "rolling_scan_quota_exceeded",
+  "shared_secret_unconfigured",
+  "storekit_app_mismatch",
+  "storekit_environment_invalid",
+  "storekit_product_mismatch",
+  "storekit_product_type_invalid",
+  "storekit_transaction_invalid",
+  "storekit_transaction_mismatch",
+  "storekit_verification_unavailable",
+  "storekit_verifier_unconfigured",
+  "subscription_expired",
+  "subscription_inactive",
+  "subscription_status_invalid",
+  "subscription_status_unavailable",
+  "subscription_status_unconfigured",
+  "subscription_upgraded",
+  "transaction_revoked",
+  "trial_dispatch_disabled_by_budget",
+  "trial_lifetime_quota_exceeded",
+]);
 const BUNDLED_APPLE_ROOT_CERTIFICATES = [
   {
     name: "AppleIncRootCertificate.cer.base64",
@@ -222,11 +306,39 @@ export function createServer(overrides = {}) {
     logger: overrides.logger ?? console,
   };
 
+  let lastObservedBudgetMode = null;
   const server = http.createServer(async (request, response) => {
+    const requestStartedAt = Date.now();
     let idempotencyContext = null;
     let providerDispatched = false;
+    let providerEventCompleted = false;
+    let providerStartedAt = null;
     let lease = null;
     let cacheInput = null;
+    let cacheDisposition = null;
+    const scannerEvent = (fields) => emitIdentifierFreeScannerEvent(dependencies.logger, fields);
+    const recordCacheDisposition = (disposition, outcome = "observed") => {
+      cacheDisposition = disposition;
+      scannerEvent({
+        eventType: "cache_decision",
+        outcome,
+        cacheDisposition: disposition,
+        localCacheDisposition: "not_observed",
+      });
+    };
+    response[SCANNER_RESPONSE_OBSERVER] = (status, body) => {
+      const rejected = status >= 400;
+      scannerEvent({
+        eventType: "request_result",
+        outcome: status >= 500 ? "failed" : rejected ? "rejected" : "completed",
+        reason: rejected ? body?.reason ?? body?.error : null,
+        statusCode: status,
+        statusClass: `${Math.floor(status / 100)}xx`,
+        latencyMs: Math.max(0, Date.now() - requestStartedAt),
+        cacheDisposition,
+        localCacheDisposition: "not_observed",
+      });
+    };
 
     const abandonIdempotency = async () => {
       if (!idempotencyContext?.acquired || typeof dependencies.idempotencyStore.abandon !== "function") return;
@@ -253,6 +365,12 @@ export function createServer(overrides = {}) {
 
       const integrityToken = headerValue(request.headers["x-firebase-appcheck"]);
       if (requireAppCheck && !integrityToken) {
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "rejected",
+          control: "app_check",
+          reason: "app_check_required",
+        });
         return sendJSON(response, 401, {
           error: "app_integrity_required",
           reason: "app_check_required",
@@ -263,6 +381,12 @@ export function createServer(overrides = {}) {
           await dependencies.verifyAppIntegrity({ token: integrityToken })
         );
         if (!integrityResult.allowed) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "app_check",
+            reason: integrityResult.reason ?? "integrity_failed",
+          });
           return sendJSON(response, 401, {
             error: "app_integrity_required",
             reason: integrityResult.reason ?? "integrity_failed",
@@ -273,6 +397,14 @@ export function createServer(overrides = {}) {
       const payload = await readJSONBody(request, maxBodyBytes);
       const validation = validatePayload(payload, { maxImageBytes });
       if (!validation.ok) {
+        if (validation.detail === "signedTransactionJWS is invalid") {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "storekit_jws",
+            reason: "storekit_transaction_invalid",
+          });
+        }
         return sendJSON(response, 400, { error: "invalid_request", detail: validation.detail });
       }
 
@@ -281,6 +413,12 @@ export function createServer(overrides = {}) {
           await dependencies.verifyAppIntegrity({ token: integrityToken, payload })
         );
         if (!integrityResult.allowed) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "app_check",
+            reason: integrityResult.reason ?? "integrity_failed",
+          });
           return sendJSON(response, 401, {
             error: "app_integrity_required",
             reason: integrityResult.reason ?? "integrity_failed",
@@ -304,6 +442,12 @@ export function createServer(overrides = {}) {
       try {
         requestGateResult = await dependencies.requestGate.checkAndConsume({ appUserId: submittedEvidenceKey });
       } catch {
+        scannerEvent({
+          eventType: "request_gate_decision",
+          outcome: "unavailable",
+          control: "pre_verification",
+          reason: "request_control_unavailable",
+        });
         dependencies.logger.error?.("meal_scan_request_control_unavailable");
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -312,6 +456,12 @@ export function createServer(overrides = {}) {
         });
       }
       if (!requestGateResult.allowed) {
+        scannerEvent({
+          eventType: "request_gate_decision",
+          outcome: "rejected",
+          control: "pre_verification",
+          reason: requestGateResult.reason ?? "request_limit_exceeded",
+        });
         return sendJSON(response, 429, {
           error: "meal_scan_request_rate_limited",
           reason: requestGateResult.reason ?? "request_limit_exceeded",
@@ -319,11 +469,21 @@ export function createServer(overrides = {}) {
           retryAfterSeconds: numberOrNull(requestGateResult.retryAfterSeconds),
         });
       }
+      scannerEvent({
+        eventType: "request_gate_decision",
+        outcome: "allowed",
+        control: "pre_verification",
+      });
 
       let budget;
       try {
         budget = normalizeBudgetState(await dependencies.getBudgetState(), environment);
       } catch {
+        scannerEvent({
+          eventType: "budget_state",
+          outcome: "unavailable",
+          reason: "budget_control_unavailable",
+        });
         dependencies.logger.error?.("meal_scan_budget_control_unavailable");
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -331,6 +491,18 @@ export function createServer(overrides = {}) {
           retryable: true,
         });
       }
+      const budgetOutcome = budget.stale
+        ? "stale"
+        : lastObservedBudgetMode !== null && lastObservedBudgetMode !== budget.mode
+          ? "transitioned"
+          : "observed";
+      lastObservedBudgetMode = budget.mode;
+      scannerEvent({
+        eventType: "budget_state",
+        outcome: budgetOutcome,
+        budgetMode: budget.mode,
+        stateAgeSeconds: budget.stateAgeSeconds,
+      });
       if (!dependencies.storeKitVerifier) {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -346,18 +518,31 @@ export function createServer(overrides = {}) {
         );
       } catch (error) {
         if (isRetryableAppleInfrastructureError(error)) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "unavailable",
+            control: "storekit_jws",
+            reason: "storekit_verification_unavailable",
+          });
           return sendJSON(response, 503, {
             error: "meal_scan_unavailable",
             reason: "storekit_verification_unavailable",
             retryable: true,
           });
         }
+        const storeKitReason =
+          error?.status === VerificationStatus.INVALID_APP_IDENTIFIER
+            ? "storekit_app_mismatch"
+            : "storekit_transaction_invalid";
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "rejected",
+          control: "storekit_jws",
+          reason: storeKitReason,
+        });
         return sendJSON(response, 403, {
           error: "premium_entitlement_required",
-          reason:
-            error?.status === VerificationStatus.INVALID_APP_IDENTIFIER
-              ? "storekit_app_mismatch"
-              : "storekit_transaction_invalid",
+          reason: storeKitReason,
         });
       }
 
@@ -367,6 +552,12 @@ export function createServer(overrides = {}) {
         now: Date.now(),
       });
       if (!transactionAccess.allowed) {
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "rejected",
+          control: "storekit_jws",
+          reason: transactionAccess.reason,
+        });
         return sendJSON(response, 403, {
           error: "premium_entitlement_required",
           reason: transactionAccess.reason,
@@ -383,6 +574,12 @@ export function createServer(overrides = {}) {
       try {
         principalAttempt = await dependencies.principalAttemptGate.checkAndConsume({ principal });
       } catch (error) {
+        scannerEvent({
+          eventType: "request_gate_decision",
+          outcome: "unavailable",
+          control: "principal_attempt",
+          reason: "principal_attempt_control_unavailable",
+        });
         dependencies.logger.error?.("meal_scan_principal_attempt_control_unavailable", {
           code: safeErrorCode(error),
         });
@@ -393,6 +590,12 @@ export function createServer(overrides = {}) {
         });
       }
       if (!principalAttempt?.allowed) {
+        scannerEvent({
+          eventType: "request_gate_decision",
+          outcome: "rejected",
+          control: "principal_attempt",
+          reason: principalAttempt?.reason ?? "principal_attempt_limit_exceeded",
+        });
         return sendJSON(response, 429, {
           error: "meal_scan_request_rate_limited",
           reason: principalAttempt?.reason ?? "principal_attempt_limit_exceeded",
@@ -400,6 +603,11 @@ export function createServer(overrides = {}) {
           retryAfterSeconds: numberOrNull(principalAttempt?.retryAfterSeconds),
         });
       }
+      scannerEvent({
+        eventType: "request_gate_decision",
+        outcome: "allowed",
+        control: "principal_attempt",
+      });
 
       let authoritativeTier = transactionAccess.tier;
       if (dependencies.currentSubscriptionChecker) {
@@ -412,24 +620,48 @@ export function createServer(overrides = {}) {
           );
         } catch (error) {
           if (isRetryableAppleInfrastructureError(error)) {
+            scannerEvent({
+              eventType: "authorization_rejection",
+              outcome: "unavailable",
+              control: "storekit_jws",
+              reason: "subscription_status_unavailable",
+            });
             return sendJSON(response, 503, {
               error: "meal_scan_unavailable",
               reason: "subscription_status_unavailable",
               retryable: true,
             });
           }
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "storekit_jws",
+            reason: "subscription_status_invalid",
+          });
           return sendJSON(response, 403, {
             error: "premium_entitlement_required",
             reason: "subscription_status_invalid",
           });
         }
         if (!currentAccess?.allowed) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "storekit_jws",
+            reason: currentAccess?.reason ?? "subscription_inactive",
+          });
           return sendJSON(response, 403, {
             error: "premium_entitlement_required",
             reason: currentAccess?.reason ?? "subscription_inactive",
           });
         }
         if (!new Set(["trial", "paid"]).has(currentAccess.tier)) {
+          scannerEvent({
+            eventType: "authorization_rejection",
+            outcome: "rejected",
+            control: "storekit_jws",
+            reason: "subscription_status_invalid",
+          });
           return sendJSON(response, 403, {
             error: "premium_entitlement_required",
             reason: "subscription_status_invalid",
@@ -437,6 +669,12 @@ export function createServer(overrides = {}) {
         }
         authoritativeTier = currentAccess.tier;
       } else if (environment.NODE_ENV === "production") {
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "unavailable",
+          control: "storekit_jws",
+          reason: "subscription_status_unconfigured",
+        });
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
           reason: "subscription_status_unconfigured",
@@ -520,6 +758,7 @@ export function createServer(overrides = {}) {
         });
       }
       if (idempotencyContext.state === "completed") {
+        recordCacheDisposition("idempotency_replay");
         return sendJSON(response, 200, idempotencyContext.response);
       }
       if (idempotencyContext.state === "unknown") {
@@ -595,6 +834,7 @@ export function createServer(overrides = {}) {
       try {
         cachedResult = await dependencies.resultCache.get(cacheInput);
       } catch (error) {
+        recordCacheDisposition("server_unavailable", "unavailable");
         await abandonIdempotency();
         dependencies.logger.warn?.("meal_scan_cache_read_error", { code: safeErrorCode(error) });
         return sendJSON(response, 503, {
@@ -604,6 +844,7 @@ export function createServer(overrides = {}) {
         });
       }
       if (cachedResult) {
+        recordCacheDisposition("server_hit");
         let quota = cachedResult.quota;
         if (typeof dependencies.quotaStore.current === "function") {
           try {
@@ -627,6 +868,7 @@ export function createServer(overrides = {}) {
       }
 
       if (budget.mode === "disabled") {
+        recordCacheDisposition("server_miss");
         await abandonIdempotency();
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -636,6 +878,7 @@ export function createServer(overrides = {}) {
         });
       }
       if (budget.mode === "degraded" && tier === "trial") {
+        recordCacheDisposition("server_miss");
         await abandonIdempotency();
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -649,6 +892,7 @@ export function createServer(overrides = {}) {
         try {
           lease = await dependencies.resultCache.acquireLease(cacheInput);
         } catch (error) {
+          recordCacheDisposition("server_unavailable", "unavailable");
           await abandonIdempotency();
           dependencies.logger.warn?.("meal_scan_cache_lease_error", { code: safeErrorCode(error) });
           return sendJSON(response, 503, {
@@ -658,6 +902,7 @@ export function createServer(overrides = {}) {
           });
         }
         if (lease.value) {
+          recordCacheDisposition("server_hit_after_lease");
           const body = buildSuccessBody(lease.value, lease.value.quota, true);
           const completion = await completeCacheHit(body);
           if (completion.state !== "completed") return sendCacheCompletionFailure(completion);
@@ -666,11 +911,13 @@ export function createServer(overrides = {}) {
         if (!lease.acquired) {
           const completedResult = await waitForCachedResult(dependencies.resultCache, cacheInput);
           if (completedResult) {
+            recordCacheDisposition("server_hit_after_wait");
             const body = buildSuccessBody(completedResult, completedResult.quota, true);
             const completion = await completeCacheHit(body);
             if (completion.state !== "completed") return sendCacheCompletionFailure(completion);
             return sendJSON(response, 200, completion.response);
           }
+          recordCacheDisposition("server_miss_in_progress");
           await abandonIdempotency();
           return sendJSON(response, 409, {
             error: "meal_scan_in_progress",
@@ -698,6 +945,7 @@ export function createServer(overrides = {}) {
             });
           }
           if (reservation.state === "completed") {
+            recordCacheDisposition("idempotency_replay");
             return sendJSON(response, 200, reservation.response);
           }
           if (reservation.state === "unknown") {
@@ -718,6 +966,11 @@ export function createServer(overrides = {}) {
             });
           }
           if (reservation.state === "provider_limit_denied") {
+            scannerEvent({
+              eventType: "global_dispatch_decision",
+              outcome: "rejected",
+              reason: reservation.reason ?? "global_provider_dispatch_limit_exceeded",
+            });
             return sendJSON(response, 429, {
               error: "provider_dispatch_rate_limited",
               reason: reservation.reason ?? "global_provider_dispatch_limit_exceeded",
@@ -738,11 +991,20 @@ export function createServer(overrides = {}) {
           } else {
             idempotencyContext = reservation;
             quota = reservation.quota;
+            scannerEvent({
+              eventType: "global_dispatch_decision",
+              outcome: "allowed",
+            });
           }
         } else {
           quota = await dependencies.quotaStore.checkAndConsume(quotaInput);
         }
       } catch (error) {
+        scannerEvent({
+          eventType: "quota_decision",
+          outcome: "unavailable",
+          reason: "quota_control_unavailable",
+        });
         await abandonIdempotency();
         dependencies.logger.error?.("meal_scan_quota_control_unavailable", { code: safeErrorCode(error) });
         return sendJSON(response, 503, {
@@ -752,6 +1014,16 @@ export function createServer(overrides = {}) {
         });
       }
       if (!quota.allowed) {
+        scannerEvent({
+          eventType: "quota_decision",
+          outcome: "rejected",
+          reason: quota.reason ?? "quota_exceeded",
+          tier,
+          quotaUsed: quota.used,
+          quotaLimit: quota.limit,
+          quotaRemaining: quota.remaining ?? quota.remainingToday,
+        });
+        if (cacheDisposition === null) recordCacheDisposition("server_miss");
         await abandonIdempotency();
         return sendJSON(response, 429, {
           error: "rolling_scan_quota_exceeded",
@@ -760,6 +1032,15 @@ export function createServer(overrides = {}) {
           quota: quotaResponse(quota, tier),
         });
       }
+      scannerEvent({
+        eventType: "quota_decision",
+        outcome: "allowed",
+        tier,
+        quotaUsed: quota.used,
+        quotaLimit: quota.limit,
+        quotaRemaining: quota.remaining ?? quota.remainingToday,
+      });
+      if (cacheDisposition === null) recordCacheDisposition("fresh_dispatch");
 
       const providerPayload = buildGeminiPayload({
         ...payload,
@@ -769,6 +1050,13 @@ export function createServer(overrides = {}) {
           sha256: canonicalImageHash,
         },
       });
+      providerStartedAt = Date.now();
+      scannerEvent({
+        eventType: "provider_call",
+        outcome: "started",
+        providerId: PROVIDER_ID,
+        modelId: DEFAULT_MODEL_ID,
+      });
       providerDispatched = true;
       const geminiResponse = await dependencies.callGemini({
         modelId: DEFAULT_MODEL_ID,
@@ -777,6 +1065,18 @@ export function createServer(overrides = {}) {
       });
       assertEstimateBounds(geminiResponse.estimate);
       const usage = usageResponse(geminiResponse.usageMetadata, MODEL_CONFIGS[DEFAULT_MODEL_ID]);
+      scannerEvent({
+        eventType: "provider_call",
+        outcome: "completed",
+        providerId: PROVIDER_ID,
+        modelId: DEFAULT_MODEL_ID,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        totalTokens: usage.totalTokens,
+        estimatedCostUSD: usage.estimatedCostUSD,
+        latencyMs: Math.max(0, Date.now() - providerStartedAt),
+      });
+      providerEventCompleted = true;
       const rawEstimateJSON = JSON.stringify(geminiResponse.estimate);
       const result = {
         estimate: geminiResponse.estimate,
@@ -805,6 +1105,16 @@ export function createServer(overrides = {}) {
       }));
       return sendJSON(response, 200, body);
     } catch (error) {
+      if (providerDispatched && !providerEventCompleted) {
+        scannerEvent({
+          eventType: "provider_call",
+          outcome: "failed",
+          reason: providerFailureReason(error),
+          providerId: PROVIDER_ID,
+          modelId: DEFAULT_MODEL_ID,
+          latencyMs: providerStartedAt === null ? null : Math.max(0, Date.now() - providerStartedAt),
+        });
+      }
       if (providerDispatched && idempotencyContext?.acquired) {
         try {
           await dependencies.idempotencyStore.markUnknown(idempotencyContext);
@@ -873,6 +1183,12 @@ export function createServer(overrides = {}) {
         });
       }
       if (error?.code === "APP_CHECK_TIMEOUT") {
+        scannerEvent({
+          eventType: "authorization_rejection",
+          outcome: "unavailable",
+          control: "app_check",
+          reason: "integrity_service_timeout",
+        });
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
           reason: "integrity_service_timeout",
@@ -1054,6 +1370,7 @@ function mealEstimateSchema() {
       },
       items: {
         type: "array",
+        minItems: 1,
         maxItems: 20,
         items: {
           type: "object",
@@ -1068,15 +1385,13 @@ function mealEstimateSchema() {
             nutrition_fallback: {
               type: "object",
               nullable: true,
-              properties: {
-                calories_kcal: { type: "number", minimum: 0, maximum: 10_000 },
-                protein_grams: { type: "number", minimum: 0, maximum: 1_000 },
-                carbs_grams: { type: "number", minimum: 0, maximum: 2_000 },
-                fat_grams: { type: "number", minimum: 0, maximum: 1_000 },
-                fiber_grams: { type: "number", minimum: 0, maximum: 500 },
-                sugar_grams: { type: "number", minimum: 0, maximum: 1_000 },
-                sodium_mg: { type: "number", minimum: 0, maximum: 100_000 },
-              },
+              properties: Object.fromEntries(
+                NUTRITION_FALLBACK_BOUNDS.map(([field, minimum, maximum]) => [
+                  field,
+                  { type: "number", minimum, maximum },
+                ])
+              ),
+              required: NUTRITION_FALLBACK_BOUNDS.map(([field]) => field),
             },
           },
           required: ["display_name", "canonical_query", "estimated_grams", "confidence", "is_mixed_dish"],
@@ -1462,7 +1777,7 @@ function fixedModelSelection() {
   };
 }
 
-function assertEstimateBounds(estimate) {
+export function assertEstimateBounds(estimate) {
   const fail = () => {
     const error = new Error("provider response exceeds the public response contract");
     error.code = "PROVIDER_RESPONSE_OUT_OF_BOUNDS";
@@ -1472,7 +1787,7 @@ function assertEstimateBounds(estimate) {
   if (!boundedString(estimate.meal_name, 1, 120)) fail();
   if (!new Set(["low", "medium", "high", "unknown"]).has(estimate.confidence)) fail();
   if (!Array.isArray(estimate.warnings) || estimate.warnings.length > 8) fail();
-  if (!Array.isArray(estimate.items) || estimate.items.length > 20) fail();
+  if (!Array.isArray(estimate.items) || estimate.items.length < 1 || estimate.items.length > 20) fail();
   for (const warning of estimate.warnings) {
     if (
       !isPlainObject(warning) ||
@@ -1493,6 +1808,13 @@ function assertEstimateBounds(estimate) {
       (item.serving_description !== undefined && !boundedString(item.serving_description, 0, 160)) ||
       (item.warning !== undefined && !boundedString(item.warning, 0, 240))
     ) fail();
+    if (item.nutrition_fallback !== undefined && item.nutrition_fallback !== null) {
+      if (!isPlainObject(item.nutrition_fallback)) fail();
+      for (const [field, minimum, maximum] of NUTRITION_FALLBACK_BOUNDS) {
+        const value = item.nutrition_fallback[field];
+        if (!Number.isFinite(value) || value < minimum || value > maximum) fail();
+      }
+    }
   }
   if (Buffer.byteLength(JSON.stringify(estimate), "utf8") > 65_536) fail();
 }
@@ -1510,6 +1832,77 @@ function identifierFreeMetric({ modelId, usage, quota, tier, budget, cacheHit })
     budgetMode: budget.mode,
     cacheHit,
   };
+}
+
+function emitIdentifierFreeScannerEvent(logger, fields) {
+  const event = identifierFreeScannerEvent(fields);
+  try {
+    if (logger === console) {
+      console.info(JSON.stringify(event));
+    } else {
+      logger?.info?.("meal_scan_scanner_event", event);
+    }
+  } catch {
+    // Operational logging must never change the scanner response path.
+  }
+  return event;
+}
+
+function identifierFreeScannerEvent(fields = {}) {
+  const event = {
+    event: "meal_scan_scanner_event",
+    severity: "INFO",
+    schemaVersion: SCANNER_EVENT_SCHEMA_VERSION,
+    eventType: safeScannerDimension(fields.eventType, "other"),
+    outcome: safeScannerDimension(fields.outcome, "other"),
+  };
+  for (const field of [
+    "control",
+    "cacheDisposition",
+    "localCacheDisposition",
+    "providerId",
+    "modelId",
+    "tier",
+    "budgetMode",
+    "statusClass",
+  ]) {
+    if (fields[field] != null) event[field] = safeScannerDimension(fields[field], "other");
+  }
+  if (fields.reason != null) event.reason = safeScannerReason(fields.reason);
+  for (const field of [
+    "statusCode",
+    "latencyMs",
+    "inputTokens",
+    "outputTokens",
+    "totalTokens",
+    "estimatedCostUSD",
+    "quotaUsed",
+    "quotaLimit",
+    "quotaRemaining",
+    "stateAgeSeconds",
+  ]) {
+    const value = numberOrNull(fields[field]);
+    if (value !== null && value >= 0) event[field] = value;
+  }
+  return event;
+}
+
+function safeScannerDimension(value, fallback) {
+  return typeof value === "string" && /^[a-z0-9][a-z0-9_.-]{0,63}$/.test(value)
+    ? value
+    : fallback;
+}
+
+function safeScannerReason(value) {
+  return SAFE_SCANNER_REASONS.has(value) ? value : "other";
+}
+
+function providerFailureReason(error) {
+  if (error?.code === "PROVIDER_RESPONSE_OUT_OF_BOUNDS") return "provider_response_out_of_bounds";
+  if (error?.code === "GEMINI_PARSE_ERROR") return "provider_response_invalid";
+  if (error?.code === "GEMINI_HTTP_ERROR") return "provider_request_failed";
+  if (error?.code === "ETIMEDOUT" || error?.name === "AbortError") return "provider_timeout";
+  return "provider_dispatch_outcome_unknown";
 }
 
 function safeErrorCode(error) {
@@ -2881,6 +3274,10 @@ export function createFirestoreBudgetStateProvider({
   readControl,
 } = {}) {
   const loadControl = readControl ?? createFirestoreControlReader(environment);
+  const maxStateAgeSeconds = positiveInteger(
+    environment.MEAL_SCAN_BUDGET_STATE_MAX_AGE_SECONDS,
+    DEFAULT_BUDGET_STATE_MAX_AGE_SECONDS
+  );
   let cached;
   let cachedUntil = 0;
 
@@ -2912,7 +3309,7 @@ export function createFirestoreBudgetStateProvider({
 
     const billingIsMoreRestrictive =
       manualMode && billingMode && budgetModeRank(billingMode) > budgetModeRank(manualMode);
-    cached = normalizeBudgetState({
+    const normalized = normalizeBudgetState({
       ...control,
       spendUsd,
       mode: mostRestrictiveBudgetMode(manualMode, billingMode),
@@ -2920,6 +3317,15 @@ export function createFirestoreBudgetStateProvider({
         ? "fail_closed_combined_control"
         : (manualMode ? "manual_override" : "cloud_billing_budget"),
     }, environment);
+    const updatedAt = numericTimestamp(control.updatedAt);
+    const stateAgeSeconds = Number.isFinite(updatedAt)
+      ? Math.max(0, (timestamp - updatedAt) / 1_000)
+      : null;
+    cached = {
+      ...normalized,
+      stale: stateAgeSeconds === null || stateAgeSeconds > maxStateAgeSeconds,
+      stateAgeSeconds,
+    };
     cachedUntil = timestamp + ttlMs;
     return cached;
   };
@@ -2984,7 +3390,7 @@ function normalizeBudgetState(input, environment = process.env) {
     ? "fail_closed_spend_control"
     : inputSource;
 
-  return {
+  const state = {
     mode,
     source,
     spendUsd,
@@ -2993,6 +3399,11 @@ function normalizeBudgetState(input, environment = process.env) {
     degradeAtUsd,
     disableAtUsd,
   };
+  if (Object.hasOwn(input ?? {}, "stale")) state.stale = input.stale === true;
+  if (Object.hasOwn(input ?? {}, "stateAgeSeconds")) {
+    state.stateAgeSeconds = numberOrNull(input.stateAgeSeconds);
+  }
+  return state;
 }
 
 export function classifyBudgetSpend(spendUsd) {
@@ -3113,6 +3524,7 @@ async function withTimeout(promise, timeoutMs, timeoutCode) {
 }
 
 function sendJSON(response, status, body) {
+  response[SCANNER_RESPONSE_OBSERVER]?.(status, body);
   response.writeHead(status, {
     "cache-control": "no-store",
     "content-type": "application/json",

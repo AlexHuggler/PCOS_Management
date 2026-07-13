@@ -50,6 +50,35 @@ Scanner spend controls are $15 alert, $20 degraded, and $25 disabled. The proxy 
 
 The budget controller uses the same $15, $20, and $25 defaults. Google Cloud budgets are notifications, not hard caps; this server-side dispatch gate is the enforceable scanner control.
 
+## Identifier-free operations and monitoring
+
+The proxy emits one structured `meal_scan_scanner_event` schema to stdout for Cloud Logging. Its bounded event types are `authorization_rejection`, `request_gate_decision`, `budget_state`, `cache_decision`, `quota_decision`, `global_dispatch_decision`, `provider_call`, and `request_result`. These events expose only operational dimensions: bounded outcomes/reasons, status class, tier, budget mode, cache disposition, provider/model, input/output token counts, estimated request cost, and latency.
+
+Cache events distinguish `server_hit`, lease/wait hits, `fresh_dispatch`, and bounded unavailable/in-progress outcomes. The server cannot observe an on-device lookup, so `localCacheDisposition=not_observed` is explicit rather than inferred. Firestore budget controls older than 24 hours emit a stale signal; missing or invalid control reads emit an unavailable signal and continue to fail closed.
+
+Scanner events never include raw JWS, original transaction IDs, pseudonymous principals, request IDs, image hashes or bytes, App Check tokens, API keys, or user-entered content. Unknown rejection text is reduced to the bounded reason `other`; exception messages are not copied into scanner events.
+
+`scripts/deploy-monitoring-alerts.sh` renders and validates four log-based metrics and alert policies for the pinned production project. The default command is local validation-only and does not invoke a Google Cloud mutation:
+
+```sh
+./scripts/deploy-monitoring-alerts.sh
+```
+
+The staged policies alert on:
+
+- budget-mode transitions, restrictive modes, and stale/unavailable budget state;
+- 60 fresh provider calls per minute or more;
+- a 5xx ratio above 5% for 10 minutes;
+- more than 20 combined App Check and StoreKit/JWS rejections per minute.
+
+The script is idempotent by metric name and alert-policy display name, contains no notification destination or destination secret, and requires explicit approval before this separate mutation command is run:
+
+```sh
+APPLY=true PROJECT_ID=cyclebalance-prod-20260710 ./scripts/deploy-monitoring-alerts.sh
+```
+
+Applying monitoring does not deploy Cloud Run, change ingress, or alter the scanner flag. Keep `MEAL_SCAN_ENABLED=false` and `ALLOW_UNAUTHENTICATED=false` until scanner activation is separately approved.
+
 ## Production configuration
 
 Required production values include:
@@ -91,7 +120,7 @@ From this directory:
 ```sh
 npm test
 npm audit --audit-level=high
-bash -n scripts/bootstrap-gcp.sh scripts/deploy-cloud-run.sh
+bash -n scripts/bootstrap-gcp.sh scripts/deploy-cloud-run.sh scripts/deploy-monitoring-alerts.sh
 ```
 
 The default model is `gemini-3.1-flash-lite`; `gemini-2.5-flash` is evaluation-only. Unknown or retired model IDs are rejected before provider dispatch. The proxy does not use Gemini File API uploads, tools, grounding, or explicit context caching.
