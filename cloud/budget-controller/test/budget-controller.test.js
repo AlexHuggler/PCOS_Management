@@ -20,6 +20,17 @@ test("maps spend into normal alert degraded and disabled budget modes", () => {
   assert.equal(budgetControlFromNotification(notification(120), environment).billingMode, "disabled");
 });
 
+test("defaults to the production scanner $15 $20 $25 controls", () => {
+  assert.equal(budgetControlFromNotification(notification(14.99), {}).billingMode, "normal");
+  assert.equal(budgetControlFromNotification(notification(15), {}).billingMode, "alert");
+  assert.equal(budgetControlFromNotification(notification(20), {}).billingMode, "degraded");
+  const disabled = budgetControlFromNotification(notification(25), {});
+  assert.equal(disabled.billingMode, "disabled");
+  assert.equal(disabled.alertAtUsd, 15);
+  assert.equal(disabled.degradeAtUsd, 20);
+  assert.equal(disabled.disableAtUsd, 25);
+});
+
 test("rejects notifications for another budget", () => {
   assert.throws(
     () => budgetControlFromNotification({ ...notification(120), budgetDisplayName: "Another budget" }, environment),

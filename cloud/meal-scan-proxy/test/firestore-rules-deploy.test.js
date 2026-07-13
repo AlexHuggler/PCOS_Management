@@ -10,6 +10,7 @@ const rulesPath = path.join(proxyDirectory, "firestore.rules");
 const scriptPath = path.join(proxyDirectory, "scripts/deploy-firestore-rules.sh");
 const bootstrapPath = path.join(proxyDirectory, "scripts/bootstrap-gcp.sh");
 const cloudRunDeployPath = path.join(proxyDirectory, "scripts/deploy-cloud-run.sh");
+const dockerfilePath = path.join(proxyDirectory, "Dockerfile");
 
 test("Firestore mobile and web clients are denied all proxy-owned data", () => {
   assert.equal(existsSync(rulesPath), true, "firestore.rules must be version controlled");
@@ -56,6 +57,80 @@ test("request-abuse counters are isolated from billable quota and have TTL clean
     /--collection-group="\$REQUEST_GATE_COLLECTION_NAME"[\s\S]*?--enable-ttl/
   );
   assert.match(deploySource, /MEAL_SCAN_REQUEST_GATE_COLLECTION=mealScanRequestGate/);
+});
+
+test("bootstrap provisions every deployed secret and TTL-managed active collection", () => {
+  const bootstrapSource = readFileSync(bootstrapPath, "utf8");
+
+  assert.match(bootstrapSource, /PRINCIPAL_HMAC_SECRET_NAME="\$\{PRINCIPAL_HMAC_SECRET_NAME:-cyclebalance-meal-scan-principal-hmac\}"/);
+  assert.match(bootstrapSource, /APPLE_IAP_PRIVATE_KEY_SECRET_NAME="\$\{APPLE_IAP_PRIVATE_KEY_SECRET_NAME:-cyclebalance-app-store-iap-private-key\}"/);
+  assert.match(bootstrapSource, /add_secret_version_from_prompt "\$PRINCIPAL_HMAC_SECRET_NAME"/);
+  assert.match(bootstrapSource, /add_secret_version_from_file_prompt "\$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"/);
+  assert.doesNotMatch(bootstrapSource, /add_secret_version_from_prompt "\$APPLE_IAP_PRIVATE_KEY_SECRET_NAME"/);
+  assert.doesNotMatch(bootstrapSource, /RevenueCat|REVENUECAT/);
+
+  for (const collection of [
+    "mealScanRollingQuota",
+    "mealScanIdempotency",
+    "mealScanRequestGate",
+    "mealScanPrincipalAttempts",
+    "mealScanEstimateCache",
+  ]) {
+    assert.match(bootstrapSource, new RegExp(`:-${collection}\\}`));
+  }
+  assert.equal((bootstrapSource.match(/gcloud firestore fields ttls update expiresAt/g) ?? []).length, 5);
+});
+
+test("activation contract explicitly enables public ingress only with the scanner", () => {
+  const deploySource = readFileSync(cloudRunDeployPath, "utf8");
+
+  assert.match(
+    deploySource,
+    /MEAL_SCAN_ENABLED=true ALLOW_UNAUTHENTICATED=true PROJECT_ID=\$PROJECT_ID REGION=\$REGION/
+  );
+  assert.match(deploySource, /MEAL_SCAN_ENABLED="\$\{MEAL_SCAN_ENABLED:-false\}"/);
+  assert.match(deploySource, /ALLOW_UNAUTHENTICATED="\$\{ALLOW_UNAUTHENTICATED:-false\}"/);
+});
+
+test("deploy pins the App Store API private key secret and uses bundled Apple roots", () => {
+  const deploySource = readFileSync(cloudRunDeployPath, "utf8");
+
+  assert.match(deploySource, /APPLE_IAP_PRIVATE_KEY_SECRET_VERSION="\$\{APPLE_IAP_PRIVATE_KEY_SECRET_VERSION:-\}"/);
+  assert.match(deploySource, /APPLE_IAP_KEY_ID="\$\{APPLE_IAP_KEY_ID:-\}"/);
+  assert.match(deploySource, /APPLE_IAP_ISSUER_ID="\$\{APPLE_IAP_ISSUER_ID:-\}"/);
+  assert.match(deploySource, /APPLE_IAP_PRIVATE_KEY_SECRET_VERSION.+numeric pinned version/s);
+  assert.match(
+    deploySource,
+    /APPLE_IAP_PRIVATE_KEY=\$\{APPLE_IAP_PRIVATE_KEY_SECRET_NAME\}:\$\{APPLE_IAP_PRIVATE_KEY_SECRET_VERSION\}/
+  );
+  assert.match(deploySource, /APPLE_IAP_KEY_ID=\$\{APPLE_IAP_KEY_ID\}/);
+  assert.match(deploySource, /APPLE_IAP_ISSUER_ID=\$\{APPLE_IAP_ISSUER_ID\}/);
+  assert.doesNotMatch(deploySource, /APPLE_ROOT_CA_BASE64/);
+  assert.doesNotMatch(deploySource, /APPLE_IAP_PRIVATE_KEY=\$\{APPLE_IAP_PRIVATE_KEY\}/);
+});
+
+test("Cloud Run image copies the bundled Apple trust anchors required at startup", () => {
+  const dockerfileSource = readFileSync(dockerfilePath, "utf8");
+
+  assert.match(dockerfileSource, /COPY --chown=node:node certs \.\/certs/);
+});
+
+test("deploy pins Apple identity and durable attempt and provider ceilings", () => {
+  const deploySource = readFileSync(cloudRunDeployPath, "utf8");
+
+  assert.match(deploySource, /APPLE_BUNDLE_ID="\$\{APPLE_BUNDLE_ID:-alex\.PCOS\}"/);
+  assert.match(deploySource, /APPLE_APP_ID="\$\{APPLE_APP_ID:-6760353511\}"/);
+  assert.match(
+    deploySource,
+    /APPLE_ALLOWED_PRODUCT_IDS="\$\{APPLE_ALLOWED_PRODUCT_IDS:-cyclebalance\.premium\.monthly,cyclebalance\.premium\.annual\}"/
+  );
+  assert.match(deploySource, /pinned CycleBalance Apple identity/);
+  assert.match(deploySource, /MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE=firestore/);
+  assert.match(deploySource, /MEAL_SCAN_PRINCIPAL_ATTEMPT_COLLECTION=mealScanPrincipalAttempts/);
+  assert.match(deploySource, /MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT=3/);
+  assert.match(deploySource, /MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_24_HOURS_LIMIT=30/);
+  assert.match(deploySource, /MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT=60/);
+  assert.match(deploySource, /MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT=1000/);
 });
 
 test("every Cloud Run deployment first deploys and verifies deny-all Firebase Rules", () => {

@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import * as proxyModule from "../src/server.js";
+
+const testDirectory = path.dirname(fileURLToPath(import.meta.url));
+const bundledCertificateDirectory = path.resolve(testDirectory, "../certs");
 
 const {
   createFirestoreBudgetStateProvider,
@@ -127,6 +134,73 @@ test("request abuse counters use a collection isolated from billable scan quota"
     proxyModule.requestGateCollectionName({ MEAL_SCAN_QUOTA_COLLECTION: "customQuota" }),
     "mealScanRequestGate"
   );
+});
+
+test("verified principal attempt ledger enforces rolling minute and twenty four hour windows", async () => {
+  assert.equal(typeof proxyModule.createInMemoryPrincipalAttemptGate, "function");
+  const start = Date.parse("2026-07-13T12:00:00.000Z");
+  let timestamp = start;
+  const minuteGate = proxyModule.createInMemoryPrincipalAttemptGate({
+    minuteLimit: 3,
+    rollingLimit: 30,
+    now: () => timestamp,
+  });
+  for (let index = 0; index < 3; index += 1) {
+    assert.equal((await minuteGate.checkAndConsume({ principal: "principal-a" })).allowed, true);
+  }
+  const minuteDenied = await minuteGate.checkAndConsume({ principal: "principal-a" });
+  assert.equal(minuteDenied.reason, "principal_attempt_minute_limit_exceeded");
+  timestamp = start + 60_000;
+  assert.equal((await minuteGate.checkAndConsume({ principal: "principal-a" })).allowed, true);
+
+  timestamp = start;
+  const rollingGate = proxyModule.createInMemoryPrincipalAttemptGate({
+    minuteLimit: 30,
+    rollingLimit: 2,
+    now: () => timestamp,
+  });
+  assert.equal((await rollingGate.checkAndConsume({ principal: "principal-b" })).allowed, true);
+  timestamp += 60_000;
+  assert.equal((await rollingGate.checkAndConsume({ principal: "principal-b" })).allowed, true);
+  timestamp = start + 86_400_000 - 1;
+  assert.equal(
+    (await rollingGate.checkAndConsume({ principal: "principal-b" })).reason,
+    "principal_attempt_rolling_limit_exceeded"
+  );
+  timestamp += 1;
+  assert.equal((await rollingGate.checkAndConsume({ principal: "principal-b" })).allowed, true);
+});
+
+test("verified HMAC purchase principal is attempt-limited before image decoding", async () => {
+  const calls = [];
+  let attemptedPrincipal;
+  const server = createHardenedServer({
+    currentSubscriptionChecker: {
+      check: async () => {
+        calls.push("current_status");
+        return { allowed: true, tier: "paid" };
+      },
+    },
+    principalAttemptGate: {
+      checkAndConsume: async ({ principal }) => {
+        calls.push("principal_attempt");
+        attemptedPrincipal = principal;
+        return { allowed: false, reason: "principal_attempt_limit_exceeded", retryAfterSeconds: 12 };
+      },
+    },
+    processImage: async ({ bytes }) => {
+      calls.push("sharp");
+      return { data: bytes, sourceWidth: 2, sourceHeight: 2 };
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 429);
+  assert.equal(response.body.reason, "principal_attempt_limit_exceeded");
+  assert.deepEqual(calls, ["principal_attempt"]);
+  assert.match(attemptedPrincipal, /^[a-f0-9]{64}$/);
+  assert.equal(attemptedPrincipal.includes("1000000123456789"), false);
 });
 
 test("rejects an expired verified StoreKit subscription before quota or Gemini calls", async () => {
@@ -653,7 +727,7 @@ test("unavailable budget control fails closed after integrity and before entitle
 
 test("monthly budget degraded mode retains the server-pinned Gemini 3.1 Flash-Lite", async () => {
   const server = createServer({
-    budgetState: { mode: "degraded", spendUsd: 80, degradeAtUsd: 75 },
+    budgetState: { mode: "degraded", spendUsd: 20 },
     verifyAppIntegrity: async () => true,
     verifyRevenueCatEntitlement: async () => true,
     quotaStore: allowQuotaStore(),
@@ -717,6 +791,42 @@ test("Firestore billing hard stop overrides a stale manual normal mode", async (
 
   assert.equal(state.mode, "disabled");
   assert.equal(state.source, "fail_closed_combined_control");
+});
+
+test("Firestore budget control fails closed when authoritative spend is missing", async () => {
+  const provider = createFirestoreBudgetStateProvider({
+    readControl: async () => ({
+      billingMode: "normal",
+      manualMode: "normal",
+    }),
+  });
+
+  await assert.rejects(provider, /spendUsd/);
+});
+
+test("Firestore budget control fails closed when a stored restriction mode is invalid", async () => {
+  const provider = createFirestoreBudgetStateProvider({
+    readControl: async () => ({
+      billingMode: "normal",
+      manualMode: "unexpected-mode",
+      spendUsd: 0,
+    }),
+  });
+
+  await assert.rejects(provider, /manualMode/);
+});
+
+test("Firestore budget control fails closed when deployment thresholds are out of order", async () => {
+  const provider = createFirestoreBudgetStateProvider({
+    environment: {
+      MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD: "20",
+      MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD: "15",
+      MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD: "25",
+    },
+    readControl: async () => ({ billingMode: "normal", spendUsd: 0 }),
+  });
+
+  await assert.rejects(provider, /threshold/);
 });
 
 test("uses Firestore timestamp-compatible dates for quota expiry", () => {
@@ -870,7 +980,15 @@ test("production defaults to disabled when the meal scan flag is absent", async 
 
 test("production-enabled startup fails closed without durable security backends", () => {
   assert.throws(
-    () => createServer({ environment: { NODE_ENV: "production", MEAL_SCAN_ENABLED: "true" } }),
+    () => createServer({
+      environment: {
+        NODE_ENV: "production",
+        MEAL_SCAN_ENABLED: "true",
+        APPLE_BUNDLE_ID: "alex.PCOS",
+        APPLE_APP_ID: "6760353511",
+        APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      },
+    }),
     /production meal scan configuration is incomplete/
   );
 });
@@ -882,15 +1000,18 @@ test("production-enabled startup accepts the complete durable security configura
     APP_CHECK_REQUIRED: "true",
     FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
     APPLE_BUNDLE_ID: "alex.PCOS",
-    APPLE_APP_ID: "1234567890",
+    APPLE_APP_ID: "6760353511",
     APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
-    APPLE_ROOT_CA_BASE64: "dGVzdA==",
+    APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
+    APPLE_IAP_KEY_ID: "TESTKEY123",
+    APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
     MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
     GEMINI_API_KEY: "test-gemini-key",
     MEAL_SCAN_QUOTA_STORE: "firestore",
     MEAL_SCAN_RESULT_CACHE: "firestore",
     MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
     MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE: "firestore",
     MEAL_SCAN_BUDGET_STORE: "firestore",
   };
 
@@ -915,15 +1036,18 @@ test("production-enabled startup rejects invalid body and lease limits", () => {
     APP_CHECK_REQUIRED: "true",
     FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
     APPLE_BUNDLE_ID: "alex.PCOS",
-    APPLE_APP_ID: "1234567890",
+    APPLE_APP_ID: "6760353511",
     APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
-    APPLE_ROOT_CA_BASE64: "dGVzdA==",
+    APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
+    APPLE_IAP_KEY_ID: "TESTKEY123",
+    APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
     MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
     GEMINI_API_KEY: "test-gemini-key",
     MEAL_SCAN_QUOTA_STORE: "firestore",
     MEAL_SCAN_RESULT_CACHE: "firestore",
     MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
     MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE: "firestore",
     MEAL_SCAN_BUDGET_STORE: "firestore",
   };
 
@@ -940,6 +1064,55 @@ test("production-enabled startup rejects invalid body and lease limits", () => {
       },
     }),
     /production meal scan numeric configuration is invalid/
+  );
+});
+
+test("production-enabled startup pins the exact CycleBalance Apple identity", () => {
+  const environment = {
+    NODE_ENV: "production",
+    MEAL_SCAN_ENABLED: "true",
+    APP_CHECK_REQUIRED: "true",
+    FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "6760353511",
+    APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+    APPLE_IAP_PRIVATE_KEY: "test-private-key-material-with-adequate-length",
+    APPLE_IAP_KEY_ID: "TESTKEY123",
+    APPLE_IAP_ISSUER_ID: "12345678-1234-1234-1234-1234567890ab",
+    MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    GEMINI_API_KEY: "test-gemini-key",
+    MEAL_SCAN_QUOTA_STORE: "firestore",
+    MEAL_SCAN_RESULT_CACHE: "firestore",
+    MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
+    MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE: "firestore",
+    MEAL_SCAN_BUDGET_STORE: "firestore",
+  };
+
+  for (const override of [
+    { APPLE_BUNDLE_ID: "com.attacker.app" },
+    { APPLE_APP_ID: "1234567890" },
+    { APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,attacker.product" },
+  ]) {
+    assert.throws(
+      () => createServer({ environment: { ...environment, ...override } }),
+      /pinned CycleBalance Apple identity/
+    );
+  }
+});
+
+test("global provider dispatch ceilings cannot be configured above 60 per minute or 1000 per day", () => {
+  assert.throws(
+    () => createServer({
+      environment: { MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT: "61" },
+    }),
+    /no greater than 60/
+  );
+  assert.throws(
+    () => createServer({
+      environment: { MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT: "1001" },
+    }),
+    /no greater than 1000/
   );
 });
 
@@ -1542,6 +1715,545 @@ test("classifies monthly spend at the exact $15, $20, and $25 boundaries", () =>
     disableAtUsd: 25,
   });
 });
+
+test("Firestore budget spend is authoritative and combines fail closed with stored modes", async () => {
+  const provider = createFirestoreBudgetStateProvider({
+    environment: {
+      MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD: "15",
+      MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD: "20",
+      MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD: "25",
+    },
+    readControl: async () => ({
+      billingMode: "normal",
+      manualMode: "normal",
+      spendUsd: 30,
+      alertAtUsd: 75,
+      degradeAtUsd: 90,
+      disableAtUsd: 120,
+    }),
+  });
+
+  const state = await provider();
+
+  assert.equal(state.mode, "disabled");
+  assert.equal(state.spendUsd, 30);
+  assert.equal(state.alertAtUsd, 15);
+  assert.equal(state.degradeAtUsd, 20);
+  assert.equal(state.disableAtUsd, 25);
+});
+
+test("Firestore cache expiry cleanup cannot delete a concurrently refreshed result", async () => {
+  assert.equal(typeof proxyModule.createFirestoreResultCache, "function");
+  const now = Date.parse("2026-07-13T12:00:00.000Z");
+  const firestore = new CacheRaceFirestore({
+    value: { estimate: { meal_name: "expired" } },
+    expiresAt: new Date(now - 1),
+  }, {
+    value: { estimate: { meal_name: "fresh" } },
+    expiresAt: new Date(now + 60_000),
+  });
+  const cache = proxyModule.createFirestoreResultCache({
+    collectionName: "mealScanEstimateCache",
+    ttlMs: 86_400_000,
+    leaseTtlMs: 30_000,
+    firestore,
+    now: () => now,
+  });
+
+  const result = await cache.get({
+    appUserId: "principal",
+    imageHash: "a".repeat(64),
+    modelId: "gemini-3.1-flash-lite",
+    schemaVersion: "meal-scan-gemini-v1",
+    promptVersion: "meal-scan-prompt-v1",
+    mealType: "lunch",
+    locale: "en_US",
+  });
+
+  assert.equal(result.estimate.meal_name, "fresh");
+  assert.equal(firestore.deletedFreshResult, false);
+  assert.equal(firestore.transactionAttempts, 2);
+});
+
+test("disabled budget mode still serves a free result-cache hit", async () => {
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const cached = {
+    estimate: { meal_name: "Cached meal", confidence: "medium", warnings: [], items: [] },
+    rawEstimateJSON: "{}",
+    usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, estimatedCostUSD: 0.0001 },
+    usageMetadata: null,
+    quota: rollingQuota(),
+  };
+  const server = createHardenedServer({
+    getBudgetState: async () => ({ mode: "normal", spendUsd: 25 }),
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    resultCache: { get: async () => cached },
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return rollingQuota();
+      },
+      current: async () => rollingQuota(),
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.cacheHit, true);
+  assert.equal(response.body.budget.mode, "disabled");
+  assert.equal(quotaCalls, 0);
+  assert.equal(geminiCalls, 0);
+});
+
+test("degraded budget disables fresh trial dispatches", async () => {
+  let quotaCalls = 0;
+  let geminiCalls = 0;
+  const server = createHardenedServer({
+    getBudgetState: async () => ({ mode: "normal", spendUsd: 20 }),
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ environment: "Sandbox" }),
+    },
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "trial" }) },
+    resultCache: { get: async () => null },
+    quotaStore: {
+      checkAndConsume: async () => {
+        quotaCalls += 1;
+        return rollingQuota({ tier: "trial", limit: 5 });
+      },
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.equal(response.body.reason, "trial_dispatch_disabled_by_budget");
+  assert.equal(response.body.retryable, false);
+  assert.equal(quotaCalls, 0);
+  assert.equal(geminiCalls, 0);
+});
+
+test("degraded budget caps paid fresh dispatches at five per rolling day", async () => {
+  let quotaInput;
+  const server = createHardenedServer({
+    getBudgetState: async () => ({ mode: "normal", spendUsd: 20 }),
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    resultCache: { get: async () => null },
+    quotaStore: {
+      checkAndConsume: async (input) => {
+        quotaInput = input;
+        return rollingQuota({ limit: input.limit, remaining: input.limit - 1 });
+      },
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.equal(quotaInput.limit, 5);
+  assert.equal(response.body.quota.limit, 5);
+});
+
+test("raw pseudonymous request gate runs before StoreKit verification and Sharp", async () => {
+  const calls = [];
+  let gateKey;
+  const server = createHardenedServer({
+    getBudgetState: async () => {
+      calls.push("budget");
+      return { mode: "normal", spendUsd: 0 };
+    },
+    requestGate: {
+      checkAndConsume: async ({ appUserId }) => {
+        calls.push("request_gate");
+        gateKey = appUserId;
+        return { allowed: false, reason: "request_limit_exceeded" };
+      },
+    },
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => {
+        calls.push("storekit");
+        return activeStoreKitTransaction();
+      },
+    },
+    processImage: async ({ bytes }) => {
+      calls.push("sharp");
+      return { data: bytes, sourceWidth: 2, sourceHeight: 2 };
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 429);
+  assert.deepEqual(calls, ["request_gate"]);
+  assert.match(gateKey, /^[a-f0-9]{64}$/);
+  assert.equal(gateKey.includes("1000000123456789"), false);
+});
+
+test("trial lifetime exhaustion has no rolling reset and is not retryable", async () => {
+  let timestamp = Date.parse("2026-07-13T12:00:00.000Z");
+  const quota = proxyModule.createInMemoryRollingQuotaStore({ now: () => timestamp });
+  const input = { principal: "trial-principal", tier: "trial", limit: 5, lifetimeLimit: 1 };
+  assert.equal((await quota.checkAndConsume(input)).allowed, true);
+  timestamp += 86_400_000;
+
+  const exhausted = await quota.checkAndConsume(input);
+
+  assert.equal(exhausted.allowed, false);
+  assert.equal(exhausted.reason, "trial_lifetime_quota_exceeded");
+  assert.equal(exhausted.remaining, 0);
+  assert.equal(exhausted.resetAt, null);
+  assert.equal(exhausted.retryAfterSeconds, null);
+
+  const server = createHardenedServer({
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction({ environment: "Sandbox" }),
+    },
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "trial" }) },
+    quotaStore: { checkAndConsume: async () => exhausted },
+  });
+  const response = await request(server, hardenedPayload);
+  assert.equal(response.status, 429);
+  assert.equal(response.body.retryable, false);
+});
+
+test("bundled official Apple roots construct the real verifier and reject an invalid JWS", async () => {
+  assert.equal(typeof proxyModule.loadBundledAppleRootCertificates, "function");
+  assert.equal(typeof proxyModule.createConfiguredStoreKitVerifier, "function");
+  const roots = proxyModule.loadBundledAppleRootCertificates();
+  assert.equal(roots.length, 3);
+  assert.deepEqual(
+    roots.map((root) => new crypto.X509Certificate(root).subject),
+    [
+      "C=US\nO=Apple Inc.\nOU=Apple Certification Authority\nCN=Apple Root CA",
+      "CN=Apple Root CA - G2\nOU=Apple Certification Authority\nO=Apple Inc.\nC=US",
+      "CN=Apple Root CA - G3\nOU=Apple Certification Authority\nO=Apple Inc.\nC=US",
+    ]
+  );
+  const verifier = proxyModule.createConfiguredStoreKitVerifier({
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "6760353511",
+    APPLE_ROOT_CA_BASE64: "dW50cnVzdGVkLW92ZXJyaWRl",
+  });
+  const invalidJWS = [
+    Buffer.from(JSON.stringify({ alg: "ES256" })).toString("base64url"),
+    Buffer.from(JSON.stringify({ bundleId: "alex.PCOS" })).toString("base64url"),
+    "AA",
+  ].join(".");
+
+  await assert.rejects(() => verifier.verifyAndDecodeTransaction(invalidJWS));
+});
+
+test("bundled Apple roots reject a parseable certificate substituted under a pinned filename", () => {
+  const scratchDirectory = mkdtempSync(path.join(tmpdir(), "cyclebalance-apple-roots-"));
+  const certificateNames = [
+    "AppleIncRootCertificate.cer.base64",
+    "AppleRootCA-G2.cer.base64",
+    "AppleRootCA-G3.cer.base64",
+  ];
+  try {
+    for (const name of certificateNames) {
+      copyFileSync(path.join(bundledCertificateDirectory, name), path.join(scratchDirectory, name));
+    }
+    copyFileSync(
+      path.join(bundledCertificateDirectory, "AppleRootCA-G2.cer.base64"),
+      path.join(scratchDirectory, "AppleIncRootCertificate.cer.base64")
+    );
+
+    assert.throws(
+      () => proxyModule.loadBundledAppleRootCertificates(scratchDirectory),
+      /fingerprint/i
+    );
+  } finally {
+    rmSync(scratchDirectory, { recursive: true, force: true });
+  }
+});
+
+test("retryable Apple verifier infrastructure failures return retryable 503", async () => {
+  const verifierError = new Error("OCSP unavailable");
+  verifierError.status = 2;
+  const server = createHardenedServer({
+    storeKitVerifier: { verifyAndDecodeTransaction: async () => { throw verifierError; } },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.equal(response.body.reason, "storekit_verification_unavailable");
+  assert.equal(response.body.retryable, true);
+});
+
+test("current Apple status rejects a captured pre-revocation or pre-expiry JWS", async (t) => {
+  for (const scenario of [
+    { reason: "transaction_revoked", name: "revoked" },
+    { reason: "subscription_expired", name: "expired" },
+  ]) {
+    await t.test(scenario.name, async () => {
+      let sharpCalls = 0;
+      const server = createHardenedServer({
+        storeKitVerifier: {
+          verifyAndDecodeTransaction: async () => activeStoreKitTransaction({
+            expiresDate: Date.now() + 3_600_000,
+            revocationDate: undefined,
+          }),
+        },
+        currentSubscriptionChecker: {
+          check: async () => ({ allowed: false, reason: scenario.reason }),
+        },
+        processImage: async ({ bytes }) => {
+          sharpCalls += 1;
+          return { data: bytes, sourceWidth: 2, sourceHeight: 2 };
+        },
+      });
+
+      const response = await request(server, hardenedPayload);
+
+      assert.equal(response.status, 403);
+      assert.equal(response.body.reason, scenario.reason);
+      assert.equal(sharpCalls, 0);
+    });
+  }
+});
+
+test("current Apple status tier is authoritative for quota selection", async () => {
+  let quotaInput;
+  const server = createHardenedServer({
+    storeKitVerifier: {
+      verifyAndDecodeTransaction: async () => activeStoreKitTransaction(),
+    },
+    currentSubscriptionChecker: {
+      check: async () => ({ allowed: true, tier: "trial" }),
+    },
+    resultCache: { get: async () => null },
+    quotaStore: {
+      checkAndConsume: async (input) => {
+        quotaInput = input;
+        return rollingQuota({ tier: input.tier, limit: input.limit });
+      },
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.equal(quotaInput.tier, "trial");
+  assert.equal(quotaInput.limit, 5);
+  assert.equal(quotaInput.lifetimeLimit, 25);
+  assert.equal(response.body.quota.tier, "trial");
+});
+
+test("production startup fails closed without App Store Server API credentials", () => {
+  const environment = {
+    NODE_ENV: "production",
+    MEAL_SCAN_ENABLED: "true",
+    APP_CHECK_REQUIRED: "true",
+    FIREBASE_APP_ID: "1:947929010052:ios:6e68c8645a6a6b5e3057d1",
+    APPLE_BUNDLE_ID: "alex.PCOS",
+    APPLE_APP_ID: "6760353511",
+    APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+    MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+    GEMINI_API_KEY: "test-gemini-key",
+    MEAL_SCAN_QUOTA_STORE: "firestore",
+    MEAL_SCAN_RESULT_CACHE: "firestore",
+    MEAL_SCAN_IDEMPOTENCY_STORE: "firestore",
+    MEAL_SCAN_REQUEST_GATE: "firestore",
+    MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE: "firestore",
+    MEAL_SCAN_BUDGET_STORE: "firestore",
+  };
+
+  assert.throws(
+    () => createServer({
+      environment,
+      storeKitVerifier: { verifyAndDecodeTransaction: async () => activeStoreKitTransaction() },
+    }),
+    /APPLE_IAP_PRIVATE_KEY|APPLE_IAP_KEY_ID|APPLE_IAP_ISSUER_ID/
+  );
+});
+
+test("server uses the atomic Firestore reservation path after a cache miss", async () => {
+  let atomicReservations = 0;
+  let legacyQuotaCalls = 0;
+  const idempotencyStore = {
+    inspect: async () => ({ state: "missing", acquired: false }),
+    claimAndConsumeQuota: async ({ requestId, requestHash, quota }) => {
+      atomicReservations += 1;
+      return {
+        requestId,
+        requestHash,
+        documentId: "idempotency-document",
+        claimId: "claim-id",
+        state: "pending",
+        acquired: true,
+        quota: rollingQuota({ limit: quota.limit }),
+      };
+    },
+    complete: async () => {},
+    markUnknown: async () => {},
+    abandon: async () => {},
+  };
+  const server = createHardenedServer({
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    idempotencyStore,
+    resultCache: { get: async () => null, set: async () => true },
+    quotaStore: {
+      checkAndConsume: async () => {
+        legacyQuotaCalls += 1;
+        throw new Error("legacy quota transaction must not run");
+      },
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.equal(atomicReservations, 1);
+  assert.equal(legacyQuotaCalls, 0);
+});
+
+test("atomic provider and principal reservations are bypassed by cache hits", async () => {
+  let reservationCalls = 0;
+  const cached = {
+    estimate: { meal_name: "Cached meal", confidence: "medium", warnings: [], items: [] },
+    rawEstimateJSON: "{}",
+    usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, estimatedCostUSD: 0.0001 },
+    usageMetadata: null,
+    quota: rollingQuota(),
+  };
+  const idempotencyStore = {
+    inspect: async () => ({ state: "missing", acquired: false }),
+    claimAndConsumeQuota: async () => {
+      reservationCalls += 1;
+      throw new Error("cache hits must not reserve provider capacity");
+    },
+    completeFromCache: async ({ response }) => ({ state: "completed", response }),
+  };
+  const server = createHardenedServer({
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    idempotencyStore,
+    resultCache: { get: async () => cached },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.cacheHit, true);
+  assert.equal(reservationCalls, 0);
+});
+
+test("a cache hit cannot report success while another request owns the provider claim", async () => {
+  const cached = {
+    estimate: { meal_name: "Cached meal", confidence: "medium", warnings: [], items: [] },
+    rawEstimateJSON: "{}",
+    usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, estimatedCostUSD: 0.0001 },
+    usageMetadata: null,
+    quota: rollingQuota(),
+  };
+  const server = createHardenedServer({
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    idempotencyStore: {
+      inspect: async () => ({ state: "missing", acquired: false }),
+      claimAndConsumeQuota: async () => { throw new Error("provider reservation must not run"); },
+      completeFromCache: async () => ({ state: "pending", acquired: false }),
+    },
+    resultCache: { get: async () => cached },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.error, "meal_scan_in_progress");
+  assert.equal(response.body.idempotency.state, "pending");
+});
+
+test("server denies a durable global provider reservation before principal quota or dispatch", async () => {
+  let geminiCalls = 0;
+  let legacyQuotaCalls = 0;
+  const idempotencyStore = {
+    inspect: async () => ({ state: "missing", acquired: false }),
+    claimAndConsumeQuota: async () => ({
+      state: "provider_limit_denied",
+      acquired: false,
+      reason: "global_provider_rolling_limit_exceeded",
+      retryAfterSeconds: 60,
+    }),
+    completeFromCache: async () => { throw new Error("cache completion should not run"); },
+  };
+  const server = createHardenedServer({
+    currentSubscriptionChecker: { check: async () => ({ allowed: true, tier: "paid" }) },
+    idempotencyStore,
+    resultCache: { get: async () => null },
+    quotaStore: {
+      checkAndConsume: async () => {
+        legacyQuotaCalls += 1;
+        throw new Error("legacy quota must not run");
+      },
+    },
+    callGemini: async () => {
+      geminiCalls += 1;
+      return successGeminiResponse();
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 429);
+  assert.equal(response.body.error, "provider_dispatch_rate_limited");
+  assert.equal(response.body.reason, "global_provider_rolling_limit_exceeded");
+  assert.equal(response.body.retryAfterSeconds, 60);
+  assert.equal(legacyQuotaCalls, 0);
+  assert.equal(geminiCalls, 0);
+});
+
+class CacheRaceFirestore {
+  constructor(expired, fresh) {
+    this.record = expired;
+    this.fresh = fresh;
+    this.version = 1;
+    this.transactionAttempts = 0;
+    this.deletedFreshResult = false;
+  }
+
+  collection() {
+    return { doc: () => ({ path: "cache/result" }) };
+  }
+
+  async runTransaction(callback) {
+    for (;;) {
+      this.transactionAttempts += 1;
+      const readVersion = this.version;
+      let deleteRequested = false;
+      const snapshotRecord = structuredClone(this.record);
+      const result = await callback({
+        get: async () => ({
+          exists: Boolean(snapshotRecord),
+          get: (field) => snapshotRecord?.[field],
+        }),
+        delete: () => {
+          deleteRequested = true;
+        },
+      });
+      if (this.transactionAttempts === 1) {
+        this.record = structuredClone(this.fresh);
+        this.version += 1;
+      }
+      if (readVersion !== this.version) continue;
+      if (deleteRequested) {
+        if (this.record?.value?.estimate?.meal_name === "fresh") this.deletedFreshResult = true;
+        this.record = null;
+        this.version += 1;
+      }
+      return result;
+    }
+  }
+}
 
 function createHardenedServer(overrides = {}) {
   return createServer({

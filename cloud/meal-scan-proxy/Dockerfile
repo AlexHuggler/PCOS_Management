@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --chown=node:node src ./src
+COPY --chown=node:node certs ./certs
 
 ENV NODE_ENV=production
 ENV PORT=8080

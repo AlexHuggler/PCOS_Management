@@ -20,15 +20,15 @@ export function budgetControlFromNotification(notification, environment = proces
   }
 
   const alertAtUsd = finiteNonNegativeNumber(
-    environment.MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD ?? "75",
+    environment.MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD ?? "15",
     "alert threshold"
   );
   const degradeAtUsd = finiteNonNegativeNumber(
-    environment.MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD ?? "90",
+    environment.MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD ?? "20",
     "degrade threshold"
   );
   const disableAtUsd = finitePositiveNumber(
-    environment.MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD ?? "120",
+    environment.MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD ?? "25",
     "disable threshold"
   );
   if (!(alertAtUsd <= degradeAtUsd && degradeAtUsd <= disableAtUsd && disableAtUsd <= budgetUsd)) {

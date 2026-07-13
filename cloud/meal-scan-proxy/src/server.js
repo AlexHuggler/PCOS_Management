@@ -1,7 +1,18 @@
 import http from "node:http";
 import crypto from "node:crypto";
-import { Environment, SignedDataVerifier, VerificationStatus } from "@apple/app-store-server-library";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  AppStoreServerAPIClient,
+  Environment,
+  SignedDataVerifier,
+  Status,
+  VerificationStatus,
+} from "@apple/app-store-server-library";
 import sharp from "sharp";
+
+const MODULE_DIRECTORY = path.dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_MODEL_ID = "gemini-3.1-flash-lite";
 const PROVIDER_ID = "google-gemini";
@@ -32,6 +43,30 @@ const DEFAULT_TRIAL_LIFETIME_LIMIT = 25;
 const DEFAULT_BUDGET_ALERT_USD = 15;
 const DEFAULT_BUDGET_DEGRADE_USD = 20;
 const DEFAULT_BUDGET_DISABLE_USD = 25;
+const PINNED_APPLE_BUNDLE_ID = "alex.PCOS";
+const PINNED_APPLE_APP_ID = 6_760_353_511;
+const PINNED_APPLE_PRODUCT_IDS = new Set([
+  "cyclebalance.premium.monthly",
+  "cyclebalance.premium.annual",
+]);
+const MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE = 3;
+const MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS = 30;
+const MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE = 60;
+const MAX_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS = 1_000;
+const BUNDLED_APPLE_ROOT_CERTIFICATES = [
+  {
+    name: "AppleIncRootCertificate.cer.base64",
+    sha256: "b0b1730ecbc7ff4505142c49f1295e6eda6bcaed7e2c68c5be91b5a11001f024",
+  },
+  {
+    name: "AppleRootCA-G2.cer.base64",
+    sha256: "c2b9b042dd57830e7d117dac55ac8ae19407d38e41d88f3215bc3a890444a050",
+  },
+  {
+    name: "AppleRootCA-G3.cer.base64",
+    sha256: "63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179",
+  },
+];
 
 export function createServer(overrides = {}) {
   const environment = overrides.environment ?? process.env;
@@ -73,6 +108,31 @@ export function createServer(overrides = {}) {
   const resultLeaseTtlMs = positiveInteger(environment.MEAL_SCAN_RESULT_LEASE_TTL_MS, 30_000);
   const idempotencyPendingTtlMs = positiveInteger(environment.MEAL_SCAN_IDEMPOTENCY_PENDING_TTL_MS, 30_000);
   const geminiTimeoutMs = positiveInteger(environment.GEMINI_TIMEOUT_MS, 12_000);
+  const appleStatusTimeoutMs = positiveInteger(environment.APPLE_STATUS_TIMEOUT_MS, 5_000);
+  const principalAttemptMinuteLimit = boundedPositiveInteger(
+    environment.MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT,
+    MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE,
+    MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE,
+    "MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT"
+  );
+  const principalAttemptRollingLimit = boundedPositiveInteger(
+    environment.MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_24_HOURS_LIMIT,
+    MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS,
+    MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS,
+    "MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_24_HOURS_LIMIT"
+  );
+  const globalProviderMinuteLimit = boundedPositiveInteger(
+    environment.MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT,
+    MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE,
+    MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE,
+    "MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT"
+  );
+  const globalProviderRollingLimit = boundedPositiveInteger(
+    environment.MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT,
+    MAX_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS,
+    MAX_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS,
+    "MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT"
+  );
   const scanEnabled =
     overrides.scanEnabled ??
     (environment.NODE_ENV === "production"
@@ -83,10 +143,10 @@ export function createServer(overrides = {}) {
     (environment.NODE_ENV === "production"
       ? environment.APP_CHECK_REQUIRED !== "false"
       : environment.APP_CHECK_REQUIRED === "true");
-  const bundleId = environment.APPLE_BUNDLE_ID ?? "alex.PCOS";
+  const bundleId = environment.APPLE_BUNDLE_ID ?? PINNED_APPLE_BUNDLE_ID;
   const allowedProductIds = new Set(
     (environment.APPLE_ALLOWED_PRODUCT_IDS ??
-      "cyclebalance.premium.monthly,cyclebalance.premium.annual")
+      [...PINNED_APPLE_PRODUCT_IDS].join(","))
       .split(",")
       .map((value) => value.trim())
       .filter(Boolean)
@@ -108,9 +168,14 @@ export function createServer(overrides = {}) {
       resultLeaseTtlMs,
       idempotencyPendingTtlMs,
       geminiTimeoutMs,
+      appleStatusTimeoutMs,
       paidLimit,
       trialLimit,
       trialLifetimeLimit,
+      principalAttemptMinuteLimit,
+      principalAttemptRollingLimit,
+      globalProviderMinuteLimit,
+      globalProviderRollingLimit,
     },
   });
 
@@ -120,17 +185,35 @@ export function createServer(overrides = {}) {
     (overrides.budgetState
       ? () => overrides.budgetState
       : createConfiguredBudgetStateProvider(environment));
+  const storeKitVerifier = Object.hasOwn(overrides, "storeKitVerifier")
+    ? overrides.storeKitVerifier
+    : createConfiguredStoreKitVerifier(environment);
   const dependencies = {
     verifyAppIntegrity:
       overrides.verifyAppIntegrity ??
       ((input) => verifyAppIntegrity(input, { requireAppCheck, appCheckVerifier, environment })),
-    storeKitVerifier: overrides.storeKitVerifier ?? createConfiguredStoreKitVerifier(environment),
+    storeKitVerifier,
+    currentSubscriptionChecker: Object.hasOwn(overrides, "currentSubscriptionChecker")
+      ? overrides.currentSubscriptionChecker
+      : createConfiguredCurrentSubscriptionChecker(environment, storeKitVerifier),
     processImage: overrides.processImage ?? processCanonicalJPEG,
     quotaStore: overrides.quotaStore ?? createConfiguredQuotaStore(environment),
     idempotencyStore:
       overrides.idempotencyStore ??
-      createConfiguredIdempotencyStore({ environment, pendingTtlMs: idempotencyPendingTtlMs }),
+      createConfiguredIdempotencyStore({
+        environment,
+        pendingTtlMs: idempotencyPendingTtlMs,
+        globalProviderMinuteLimit,
+        globalProviderRollingLimit,
+      }),
     requestGate: overrides.requestGate ?? createConfiguredRequestGate(environment),
+    principalAttemptGate:
+      overrides.principalAttemptGate ??
+      createConfiguredPrincipalAttemptGate({
+        environment,
+        minuteLimit: principalAttemptMinuteLimit,
+        rollingLimit: principalAttemptRollingLimit,
+      }),
     resultCache:
       overrides.resultCache ??
       createConfiguredResultCache({ environment, ttlMs: resultCacheTtlMs, leaseTtlMs: resultLeaseTtlMs }),
@@ -205,6 +288,38 @@ export function createServer(overrides = {}) {
         }
       }
 
+      if (!principalSecret) {
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "storekit_verifier_unconfigured",
+          retryable: false,
+        });
+      }
+
+      const submittedEvidenceKey = deriveSubmittedEvidenceGateKey({
+        signedTransactionJWS: payload.signedTransactionJWS,
+        secret: principalSecret,
+      });
+      let requestGateResult;
+      try {
+        requestGateResult = await dependencies.requestGate.checkAndConsume({ appUserId: submittedEvidenceKey });
+      } catch {
+        dependencies.logger.error?.("meal_scan_request_control_unavailable");
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "request_control_unavailable",
+          retryable: true,
+        });
+      }
+      if (!requestGateResult.allowed) {
+        return sendJSON(response, 429, {
+          error: "meal_scan_request_rate_limited",
+          reason: requestGateResult.reason ?? "request_limit_exceeded",
+          retryable: true,
+          retryAfterSeconds: numberOrNull(requestGateResult.retryAfterSeconds),
+        });
+      }
+
       let budget;
       try {
         budget = normalizeBudgetState(await dependencies.getBudgetState(), environment);
@@ -216,16 +331,7 @@ export function createServer(overrides = {}) {
           retryable: true,
         });
       }
-      if (budget.mode === "disabled") {
-        return sendJSON(response, 503, {
-          error: "meal_scan_unavailable",
-          reason: "monthly_budget_exceeded",
-          retryable: false,
-          budget: budgetResponse(budget),
-        });
-      }
-
-      if (!dependencies.storeKitVerifier || !principalSecret) {
+      if (!dependencies.storeKitVerifier) {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
           reason: "storekit_verifier_unconfigured",
@@ -239,6 +345,13 @@ export function createServer(overrides = {}) {
           payload.signedTransactionJWS
         );
       } catch (error) {
+        if (isRetryableAppleInfrastructureError(error)) {
+          return sendJSON(response, 503, {
+            error: "meal_scan_unavailable",
+            reason: "storekit_verification_unavailable",
+            retryable: true,
+          });
+        }
         return sendJSON(response, 403, {
           error: "premium_entitlement_required",
           reason:
@@ -265,6 +378,71 @@ export function createServer(overrides = {}) {
         environment: transaction.environment,
         secret: principalSecret,
       });
+
+      let principalAttempt;
+      try {
+        principalAttempt = await dependencies.principalAttemptGate.checkAndConsume({ principal });
+      } catch (error) {
+        dependencies.logger.error?.("meal_scan_principal_attempt_control_unavailable", {
+          code: safeErrorCode(error),
+        });
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "principal_attempt_control_unavailable",
+          retryable: true,
+        });
+      }
+      if (!principalAttempt?.allowed) {
+        return sendJSON(response, 429, {
+          error: "meal_scan_request_rate_limited",
+          reason: principalAttempt?.reason ?? "principal_attempt_limit_exceeded",
+          retryable: true,
+          retryAfterSeconds: numberOrNull(principalAttempt?.retryAfterSeconds),
+        });
+      }
+
+      let authoritativeTier = transactionAccess.tier;
+      if (dependencies.currentSubscriptionChecker) {
+        let currentAccess;
+        try {
+          currentAccess = await withTimeout(
+            dependencies.currentSubscriptionChecker.check({ transaction }),
+            appleStatusTimeoutMs,
+            "APPLE_STATUS_TIMEOUT"
+          );
+        } catch (error) {
+          if (isRetryableAppleInfrastructureError(error)) {
+            return sendJSON(response, 503, {
+              error: "meal_scan_unavailable",
+              reason: "subscription_status_unavailable",
+              retryable: true,
+            });
+          }
+          return sendJSON(response, 403, {
+            error: "premium_entitlement_required",
+            reason: "subscription_status_invalid",
+          });
+        }
+        if (!currentAccess?.allowed) {
+          return sendJSON(response, 403, {
+            error: "premium_entitlement_required",
+            reason: currentAccess?.reason ?? "subscription_inactive",
+          });
+        }
+        if (!new Set(["trial", "paid"]).has(currentAccess.tier)) {
+          return sendJSON(response, 403, {
+            error: "premium_entitlement_required",
+            reason: "subscription_status_invalid",
+          });
+        }
+        authoritativeTier = currentAccess.tier;
+      } else if (environment.NODE_ENV === "production") {
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "subscription_status_unconfigured",
+          retryable: false,
+        });
+      }
 
       let canonicalImage;
       try {
@@ -301,28 +479,10 @@ export function createServer(overrides = {}) {
       }
       const canonicalImageHash = crypto.createHash("sha256").update(canonicalImage.data).digest("hex");
 
-      let requestGateResult;
-      try {
-        requestGateResult = await dependencies.requestGate.checkAndConsume({ appUserId: principal });
-      } catch {
-        dependencies.logger.error?.("meal_scan_request_control_unavailable");
-        return sendJSON(response, 503, {
-          error: "meal_scan_unavailable",
-          reason: "request_control_unavailable",
-          retryable: true,
-        });
-      }
-      if (!requestGateResult.allowed) {
-        return sendJSON(response, 429, {
-          error: "meal_scan_request_rate_limited",
-          reason: requestGateResult.reason ?? "request_limit_exceeded",
-          retryable: true,
-          retryAfterSeconds: numberOrNull(requestGateResult.retryAfterSeconds),
-        });
-      }
-
-      const tier = transactionAccess.tier;
-      const limit = tier === "paid" ? paidLimit : trialLimit;
+      const tier = authoritativeTier;
+      const limit = tier === "paid"
+        ? (budget.mode === "degraded" ? Math.min(paidLimit, 5) : paidLimit)
+        : trialLimit;
       const lifetimeLimit = tier === "paid" ? null : trialLifetimeLimit;
       const quotaInput = { principal, tier, limit, lifetimeLimit };
       cacheInput = {
@@ -343,7 +503,11 @@ export function createServer(overrides = {}) {
         promptVersion: payload.promptVersion,
       });
 
-      idempotencyContext = await dependencies.idempotencyStore.claim({
+      const usesAtomicQuotaReservation =
+        typeof dependencies.idempotencyStore.claimAndConsumeQuota === "function";
+      idempotencyContext = await dependencies.idempotencyStore[
+        usesAtomicQuotaReservation ? "inspect" : "claim"
+      ]({
         requestId: payload.requestId,
         requestHash,
       });
@@ -366,7 +530,7 @@ export function createServer(overrides = {}) {
           idempotency: { state: "unknown" },
         });
       }
-      if (!idempotencyContext.acquired) {
+      if (idempotencyContext.state !== "missing" && !idempotencyContext.acquired) {
         return sendJSON(response, 409, {
           error: "meal_scan_in_progress",
           reason: "duplicate_request_in_progress",
@@ -388,6 +552,44 @@ export function createServer(overrides = {}) {
         budget: budgetResponse(budget),
         idempotency: { state: "completed" },
       });
+      const completeCacheHit = async (body) => {
+        if (usesAtomicQuotaReservation) {
+          const completion = await dependencies.idempotencyStore.completeFromCache({
+            requestId: payload.requestId,
+            requestHash,
+            response: body,
+          });
+          if (completion.state !== "completed") return completion;
+          idempotencyContext = null;
+          return { state: "completed", response: completion.response ?? body };
+        }
+        await dependencies.idempotencyStore.complete(idempotencyContext, body);
+        return { state: "completed", response: body };
+      };
+      const sendCacheCompletionFailure = (completion) => {
+        if (completion.state === "mismatch") {
+          return sendJSON(response, 409, {
+            error: "idempotency_conflict",
+            reason: "request_body_mismatch",
+            retryable: false,
+            idempotency: { state: "unknown" },
+          });
+        }
+        if (completion.state === "unknown") {
+          return sendJSON(response, 409, {
+            error: "meal_scan_outcome_unknown",
+            reason: "previous_dispatch_outcome_unknown",
+            retryable: false,
+            idempotency: { state: "unknown" },
+          });
+        }
+        return sendJSON(response, 409, {
+          error: "meal_scan_in_progress",
+          reason: "duplicate_request_in_progress",
+          retryable: true,
+          idempotency: { state: "pending" },
+        });
+      };
 
       let cachedResult;
       try {
@@ -411,7 +613,8 @@ export function createServer(overrides = {}) {
           }
         }
         const body = buildSuccessBody(cachedResult, quota, true);
-        await dependencies.idempotencyStore.complete(idempotencyContext, body);
+        const completion = await completeCacheHit(body);
+        if (completion.state !== "completed") return sendCacheCompletionFailure(completion);
         dependencies.logger.info?.("meal_scan_estimate", identifierFreeMetric({
           modelId: DEFAULT_MODEL_ID,
           usage: cachedResult.usage,
@@ -420,7 +623,26 @@ export function createServer(overrides = {}) {
           budget,
           cacheHit: true,
         }));
-        return sendJSON(response, 200, body);
+        return sendJSON(response, 200, completion.response);
+      }
+
+      if (budget.mode === "disabled") {
+        await abandonIdempotency();
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "monthly_budget_exceeded",
+          retryable: false,
+          budget: budgetResponse(budget),
+        });
+      }
+      if (budget.mode === "degraded" && tier === "trial") {
+        await abandonIdempotency();
+        return sendJSON(response, 503, {
+          error: "meal_scan_unavailable",
+          reason: "trial_dispatch_disabled_by_budget",
+          retryable: false,
+          budget: budgetResponse(budget),
+        });
       }
 
       if (typeof dependencies.resultCache.acquireLease === "function") {
@@ -437,15 +659,17 @@ export function createServer(overrides = {}) {
         }
         if (lease.value) {
           const body = buildSuccessBody(lease.value, lease.value.quota, true);
-          await dependencies.idempotencyStore.complete(idempotencyContext, body);
-          return sendJSON(response, 200, body);
+          const completion = await completeCacheHit(body);
+          if (completion.state !== "completed") return sendCacheCompletionFailure(completion);
+          return sendJSON(response, 200, completion.response);
         }
         if (!lease.acquired) {
           const completedResult = await waitForCachedResult(dependencies.resultCache, cacheInput);
           if (completedResult) {
             const body = buildSuccessBody(completedResult, completedResult.quota, true);
-            await dependencies.idempotencyStore.complete(idempotencyContext, body);
-            return sendJSON(response, 200, body);
+            const completion = await completeCacheHit(body);
+            if (completion.state !== "completed") return sendCacheCompletionFailure(completion);
+            return sendJSON(response, 200, completion.response);
           }
           await abandonIdempotency();
           return sendJSON(response, 409, {
@@ -459,7 +683,65 @@ export function createServer(overrides = {}) {
 
       let quota;
       try {
-        quota = await dependencies.quotaStore.checkAndConsume(quotaInput);
+        if (usesAtomicQuotaReservation) {
+          const reservation = await dependencies.idempotencyStore.claimAndConsumeQuota({
+            requestId: payload.requestId,
+            requestHash,
+            quota: quotaInput,
+          });
+          if (reservation.state === "mismatch") {
+            return sendJSON(response, 409, {
+              error: "idempotency_conflict",
+              reason: "request_body_mismatch",
+              retryable: false,
+              idempotency: { state: "unknown" },
+            });
+          }
+          if (reservation.state === "completed") {
+            return sendJSON(response, 200, reservation.response);
+          }
+          if (reservation.state === "unknown") {
+            return sendJSON(response, 409, {
+              error: "meal_scan_outcome_unknown",
+              reason: "previous_dispatch_outcome_unknown",
+              retryable: false,
+              idempotency: { state: "unknown" },
+            });
+          }
+          if (reservation.state === "principal_busy") {
+            return sendJSON(response, 409, {
+              error: "meal_scan_in_progress",
+              reason: reservation.reason ?? "principal_dispatch_in_progress",
+              retryable: true,
+              retryAfterSeconds: numberOrNull(reservation.retryAfterSeconds),
+              idempotency: { state: "pending" },
+            });
+          }
+          if (reservation.state === "provider_limit_denied") {
+            return sendJSON(response, 429, {
+              error: "provider_dispatch_rate_limited",
+              reason: reservation.reason ?? "global_provider_dispatch_limit_exceeded",
+              retryable: true,
+              retryAfterSeconds: numberOrNull(reservation.retryAfterSeconds),
+            });
+          }
+          if (reservation.state === "pending" && !reservation.acquired) {
+            return sendJSON(response, 409, {
+              error: "meal_scan_in_progress",
+              reason: "duplicate_request_in_progress",
+              retryable: true,
+              idempotency: { state: "pending" },
+            });
+          }
+          if (reservation.state === "quota_denied") {
+            quota = reservation.quota;
+          } else {
+            idempotencyContext = reservation;
+            quota = reservation.quota;
+          }
+        } else {
+          quota = await dependencies.quotaStore.checkAndConsume(quotaInput);
+        }
       } catch (error) {
         await abandonIdempotency();
         dependencies.logger.error?.("meal_scan_quota_control_unavailable", { code: safeErrorCode(error) });
@@ -474,7 +756,7 @@ export function createServer(overrides = {}) {
         return sendJSON(response, 429, {
           error: "rolling_scan_quota_exceeded",
           reason: quota.reason ?? "quota_exceeded",
-          retryable: true,
+          retryable: quota.reason !== "trial_lifetime_quota_exceeded",
           quota: quotaResponse(quota, tier),
         });
       }
@@ -531,6 +813,8 @@ export function createServer(overrides = {}) {
             code: safeErrorCode(markError),
           });
         }
+      } else if (idempotencyContext?.acquired) {
+        await abandonIdempotency();
       }
       if (error?.code === "REQUEST_TOO_LARGE") {
         return sendJSON(response, 413, {
@@ -618,13 +902,33 @@ export function createServer(overrides = {}) {
 function validateProductionMealScanConfiguration({ environment, scanEnabled, numericConfiguration }) {
   if (environment.NODE_ENV !== "production" || !scanEnabled) return;
 
+  const configuredProducts = new Set(
+    String(environment.APPLE_ALLOWED_PRODUCT_IDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
+  if (
+    environment.APPLE_BUNDLE_ID !== PINNED_APPLE_BUNDLE_ID ||
+    environment.APPLE_APP_ID !== String(PINNED_APPLE_APP_ID) ||
+    !sameStringSet(configuredProducts, PINNED_APPLE_PRODUCT_IDS)
+  ) {
+    throw new Error(
+      "production meal scan configuration violates the pinned CycleBalance Apple identity"
+    );
+  }
+
   const missing = [];
   if (environment.APP_CHECK_REQUIRED !== "true") missing.push("APP_CHECK_REQUIRED=true");
   if (!boundedString(environment.FIREBASE_APP_ID, 1, 256)) missing.push("FIREBASE_APP_ID");
   if (!boundedString(environment.APPLE_BUNDLE_ID, 1, 256)) missing.push("APPLE_BUNDLE_ID");
   if (!/^\d{5,20}$/.test(environment.APPLE_APP_ID ?? "")) missing.push("APPLE_APP_ID");
   if (!boundedString(environment.APPLE_ALLOWED_PRODUCT_IDS, 1, 1024)) missing.push("APPLE_ALLOWED_PRODUCT_IDS");
-  if (!boundedString(environment.APPLE_ROOT_CA_BASE64, 1, 16_384)) missing.push("APPLE_ROOT_CA_BASE64");
+  if (!boundedString(environment.APPLE_IAP_PRIVATE_KEY, 32, 16_384)) missing.push("APPLE_IAP_PRIVATE_KEY");
+  if (!boundedString(environment.APPLE_IAP_KEY_ID, 4, 128)) missing.push("APPLE_IAP_KEY_ID");
+  if (!/^[0-9a-fA-F-]{36}$/.test(environment.APPLE_IAP_ISSUER_ID ?? "")) {
+    missing.push("APPLE_IAP_ISSUER_ID");
+  }
   if (!boundedString(environment.MEAL_SCAN_PRINCIPAL_HMAC_SECRET, 32, 4096)) {
     missing.push("MEAL_SCAN_PRINCIPAL_HMAC_SECRET");
   }
@@ -633,6 +937,9 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
   if (environment.MEAL_SCAN_RESULT_CACHE !== "firestore") missing.push("MEAL_SCAN_RESULT_CACHE=firestore");
   if (environment.MEAL_SCAN_IDEMPOTENCY_STORE !== "firestore") missing.push("MEAL_SCAN_IDEMPOTENCY_STORE=firestore");
   if (environment.MEAL_SCAN_REQUEST_GATE !== "firestore") missing.push("MEAL_SCAN_REQUEST_GATE=firestore");
+  if (environment.MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE !== "firestore") {
+    missing.push("MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE=firestore");
+  }
   if (environment.MEAL_SCAN_BUDGET_STORE !== "firestore") missing.push("MEAL_SCAN_BUDGET_STORE=firestore");
 
   if (missing.length > 0) {
@@ -654,7 +961,12 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
     "MEAL_SCAN_REQUESTS_PER_DAY_LIMIT",
     "MEAL_SCAN_GLOBAL_REQUESTS_PER_MINUTE_LIMIT",
     "MEAL_SCAN_GLOBAL_REQUESTS_PER_DAY_LIMIT",
+    "MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT",
+    "MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_24_HOURS_LIMIT",
+    "MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT",
+    "MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT",
     "APP_CHECK_TIMEOUT_MS",
+    "APPLE_STATUS_TIMEOUT_MS",
     "GEMINI_TIMEOUT_MS",
   ];
   const invalid = numericEnvironmentKeys.filter((key) => {
@@ -685,6 +997,10 @@ function validateProductionMealScanConfiguration({ environment, scanEnabled, num
   if (invalid.length > 0) {
     throw new Error(`production meal scan numeric configuration is invalid: ${[...new Set(invalid)].join(", ")}`);
   }
+}
+
+function sameStringSet(left, right) {
+  return left.size === right.size && [...left].every((value) => right.has(value));
 }
 
 export function buildGeminiPayload(payload, modelId = DEFAULT_MODEL_ID) {
@@ -829,16 +1145,24 @@ function geminiParseError(message) {
   return error;
 }
 
-function createConfiguredStoreKitVerifier(environment = process.env) {
-  if (!environment.APPLE_ROOT_CA_BASE64) return null;
-  const rootCertificates = environment.APPLE_ROOT_CA_BASE64
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean)
-    .map((value) => Buffer.from(value, "base64"));
-  if (!rootCertificates.length || rootCertificates.some((certificate) => !certificate.length)) {
-    throw new Error("APPLE_ROOT_CA_BASE64 is invalid");
-  }
+export function loadBundledAppleRootCertificates(
+  certificateDirectory = path.resolve(MODULE_DIRECTORY, "../certs")
+) {
+  return BUNDLED_APPLE_ROOT_CERTIFICATES.map(({ name, sha256 }) => {
+    const encoded = readFileSync(path.join(certificateDirectory, name), "utf8").trim();
+    const certificate = Buffer.from(encoded, "base64");
+    // Parsing at construction time proves the bundled trust anchors are valid DER X.509 certificates.
+    new crypto.X509Certificate(certificate);
+    const actualFingerprint = crypto.createHash("sha256").update(certificate).digest("hex");
+    if (actualFingerprint !== sha256) {
+      throw new Error(`bundled Apple root fingerprint mismatch: ${name}`);
+    }
+    return certificate;
+  });
+}
+
+export function createConfiguredStoreKitVerifier(environment = process.env) {
+  const rootCertificates = loadBundledAppleRootCertificates();
   const bundleId = environment.APPLE_BUNDLE_ID;
   if (!bundleId) return null;
   const appAppleId = Number(environment.APPLE_APP_ID);
@@ -871,6 +1195,122 @@ function createConfiguredStoreKitVerifier(environment = process.env) {
       throw firstError ?? new Error("StoreKit transaction verification failed");
     },
   };
+}
+
+function createConfiguredCurrentSubscriptionChecker(environment, storeKitVerifier) {
+  if (
+    !storeKitVerifier ||
+    !environment.APPLE_IAP_PRIVATE_KEY ||
+    !environment.APPLE_IAP_KEY_ID ||
+    !environment.APPLE_IAP_ISSUER_ID ||
+    !environment.APPLE_BUNDLE_ID
+  ) {
+    return null;
+  }
+  const clientOptions = [
+    environment.APPLE_IAP_PRIVATE_KEY,
+    environment.APPLE_IAP_KEY_ID,
+    environment.APPLE_IAP_ISSUER_ID,
+    environment.APPLE_BUNDLE_ID,
+  ];
+  return createCurrentSubscriptionChecker({
+    clients: {
+      production: new AppStoreServerAPIClient(...clientOptions, Environment.PRODUCTION),
+      sandbox: new AppStoreServerAPIClient(...clientOptions, Environment.SANDBOX),
+    },
+    storeKitVerifier,
+    bundleId: environment.APPLE_BUNDLE_ID,
+    appAppleId: Number(environment.APPLE_APP_ID),
+    allowedProductIds: new Set(
+      String(environment.APPLE_ALLOWED_PRODUCT_IDS ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    ),
+  });
+}
+
+export function createCurrentSubscriptionChecker({
+  clients,
+  storeKitVerifier,
+  bundleId,
+  appAppleId,
+  allowedProductIds,
+  now = Date.now,
+}) {
+  return {
+    async check({ transaction }) {
+      const client = transaction.environment === Environment.PRODUCTION
+        ? clients?.production
+        : transaction.environment === Environment.SANDBOX
+          ? clients?.sandbox
+          : null;
+      if (!client) throw new Error("App Store Server API environment is not configured");
+
+      const response = await client.getAllSubscriptionStatuses(transaction.originalTransactionId);
+      if (
+        response?.environment !== transaction.environment ||
+        response?.bundleId !== bundleId ||
+        (transaction.environment === Environment.PRODUCTION && Number(response?.appAppleId) !== appAppleId)
+      ) {
+        return { allowed: false, reason: "storekit_app_mismatch" };
+      }
+
+      const matchingItems = (Array.isArray(response.data) ? response.data : [])
+        .flatMap((group) => Array.isArray(group?.lastTransactions) ? group.lastTransactions : [])
+        .filter((item) => item?.originalTransactionId === transaction.originalTransactionId);
+      if (matchingItems.length === 0) {
+        return { allowed: false, reason: "subscription_inactive" };
+      }
+
+      let revoked = false;
+      for (const item of matchingItems) {
+        if (!boundedString(item.signedTransactionInfo, 3, 32_768)) {
+          throw new Error("current subscription status omitted signed transaction info");
+        }
+        const currentTransaction = await storeKitVerifier.verifyAndDecodeTransaction(item.signedTransactionInfo);
+        if (
+          currentTransaction.originalTransactionId !== transaction.originalTransactionId ||
+          currentTransaction.environment !== transaction.environment ||
+          currentTransaction.bundleId !== transaction.bundleId ||
+          currentTransaction.productId !== transaction.productId
+        ) {
+          return { allowed: false, reason: "storekit_transaction_mismatch" };
+        }
+        const currentAccess = validateStoreKitTransaction(currentTransaction, {
+          bundleId,
+          allowedProductIds,
+          now: numericTimestamp(now()),
+        });
+        if (item.status === Status.REVOKED || currentAccess.reason === "transaction_revoked") {
+          revoked = true;
+          continue;
+        }
+        if (
+          new Set([Status.ACTIVE, Status.BILLING_GRACE_PERIOD]).has(item.status) &&
+          currentAccess.allowed
+        ) {
+          return { allowed: true, tier: currentAccess.tier, transaction: currentTransaction };
+        }
+      }
+      return { allowed: false, reason: revoked ? "transaction_revoked" : "subscription_expired" };
+    },
+  };
+}
+
+function isRetryableAppleInfrastructureError(error) {
+  if (error?.status === VerificationStatus.RETRYABLE_VERIFICATION_FAILURE) return true;
+  if (error?.retryable === true || error?.code === "APPLE_STATUS_TIMEOUT") return true;
+  const httpStatus = Number(error?.httpStatusCode ?? error?.statusCode);
+  if (httpStatus === 429 || httpStatus >= 500) return true;
+  return new Set([
+    "ECONNABORTED",
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "EHOSTUNREACH",
+    "ENETUNREACH",
+    "ETIMEDOUT",
+  ]).has(error?.code);
 }
 
 function validateStoreKitTransaction(transaction, { bundleId, allowedProductIds, now }) {
@@ -924,6 +1364,26 @@ export function derivePurchasePrincipal({ originalTransactionId, environment, se
     .createHmac("sha256", secret)
     .update(`storekit:${environment.toLowerCase()}:${originalTransactionId}`)
     .digest("hex");
+}
+
+export function deriveSubmittedEvidenceGateKey({ signedTransactionJWS, secret }) {
+  if (!boundedString(signedTransactionJWS, 3, 32_768) || !boundedString(secret, 32, 4096)) {
+    throw new Error("submitted StoreKit evidence gate input is invalid");
+  }
+  let stableEvidence = `jws:${crypto.createHash("sha256").update(signedTransactionJWS).digest("hex")}`;
+  try {
+    const payloadSegment = signedTransactionJWS.split(".")[1];
+    const decoded = JSON.parse(Buffer.from(payloadSegment, "base64url").toString("utf8"));
+    if (
+      boundedString(decoded?.originalTransactionId, 1, 128) &&
+      new Set([Environment.PRODUCTION, Environment.SANDBOX]).has(decoded?.environment)
+    ) {
+      stableEvidence = `purchase:${String(decoded.environment).toLowerCase()}:${decoded.originalTransactionId}`;
+    }
+  } catch {
+    // A malformed or forged JWS still receives a bounded pseudonymous key before signature verification.
+  }
+  return crypto.createHmac("sha256", secret).update(`request-gate:${stableEvidence}`).digest("hex");
 }
 
 async function processCanonicalJPEG({ bytes, maxPixels, maxCanonicalBytes, longEdge }) {
@@ -1098,6 +1558,117 @@ function createConfiguredRequestGate(environment = process.env) {
 
 export function requestGateCollectionName(environment = process.env) {
   return environment.MEAL_SCAN_REQUEST_GATE_COLLECTION?.trim() || "mealScanRequestGate";
+}
+
+function createConfiguredPrincipalAttemptGate({ environment, minuteLimit, rollingLimit }) {
+  if (environment.MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE === "firestore") {
+    return createFirestorePrincipalAttemptGate({
+      collectionName:
+        environment.MEAL_SCAN_PRINCIPAL_ATTEMPT_COLLECTION ?? "mealScanPrincipalAttempts",
+      minuteLimit,
+      rollingLimit,
+    });
+  }
+  return createInMemoryPrincipalAttemptGate({ minuteLimit, rollingLimit });
+}
+
+export function createInMemoryPrincipalAttemptGate({
+  minuteLimit = MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE,
+  rollingLimit = MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS,
+  now = Date.now,
+} = {}) {
+  const records = new Map();
+  return {
+    async checkAndConsume({ principal }) {
+      const timestamp = numericTimestamp(now());
+      const decision = principalAttemptDecision({
+        events: records.get(principal) ?? [],
+        timestamp,
+        minuteLimit,
+        rollingLimit,
+      });
+      records.set(principal, decision.events);
+      return decision.response;
+    },
+  };
+}
+
+export function createFirestorePrincipalAttemptGate({
+  collectionName,
+  minuteLimit = MAX_PRINCIPAL_ATTEMPTS_PER_MINUTE,
+  rollingLimit = MAX_PRINCIPAL_ATTEMPTS_PER_24_HOURS,
+  firestore: injectedFirestore,
+  now = Date.now,
+}) {
+  let firestoreClient = injectedFirestore;
+  async function firestore() {
+    if (!firestoreClient) {
+      const { Firestore } = await import("@google-cloud/firestore");
+      firestoreClient = new Firestore();
+    }
+    return firestoreClient;
+  }
+
+  return {
+    async checkAndConsume({ principal }) {
+      const db = await firestore();
+      const document = db.collection(collectionName).doc(principal);
+      return db.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(document);
+        const timestamp = numericTimestamp(now());
+        const decision = principalAttemptDecision({
+          events: snapshot.exists && Array.isArray(snapshot.get("attemptTimestamps"))
+            ? snapshot.get("attemptTimestamps")
+            : [],
+          timestamp,
+          minuteLimit,
+          rollingLimit,
+        });
+        if (decision.response.allowed) {
+          transaction.set(document, {
+            attemptTimestamps: decision.events.map((value) => new Date(value)),
+            minuteLimit,
+            rollingLimit,
+            updatedAt: new Date(timestamp),
+            expiresAt: new Date(timestamp + 3 * ROLLING_WINDOW_SECONDS * 1_000),
+          });
+        }
+        return decision.response;
+      });
+    },
+  };
+}
+
+function principalAttemptDecision({ events, timestamp, minuteLimit, rollingLimit }) {
+  const activeEvents = activeRollingEvents(events, timestamp);
+  const minuteCutoff = timestamp - 60_000;
+  const minuteEvents = activeEvents.filter((value) => value > minuteCutoff);
+  const minuteAllowed = minuteEvents.length < minuteLimit;
+  const rollingAllowed = activeEvents.length < rollingLimit;
+  const allowed = minuteAllowed && rollingAllowed;
+  if (allowed) activeEvents.push(timestamp);
+  const reason = allowed
+    ? null
+    : !rollingAllowed
+      ? "principal_attempt_rolling_limit_exceeded"
+      : "principal_attempt_minute_limit_exceeded";
+  const retryAt = !rollingAllowed
+    ? activeEvents[0] + ROLLING_WINDOW_SECONDS * 1_000
+    : !minuteAllowed
+      ? minuteEvents[0] + 60_000
+      : null;
+  return {
+    events: activeEvents,
+    response: {
+      allowed,
+      reason,
+      remainingMinute: Math.max(0, minuteLimit - minuteEvents.length - (allowed ? 1 : 0)),
+      remaining24Hours: Math.max(0, rollingLimit - activeEvents.length),
+      retryAfterSeconds: retryAt === null
+        ? null
+        : Math.max(1, Math.ceil((retryAt - timestamp) / 1_000)),
+    },
+  };
 }
 
 export function createInMemoryRequestGate({ minuteLimit, dayLimit, globalMinuteLimit, globalDayLimit }) {
@@ -1300,6 +1871,9 @@ export function createInMemoryRollingQuotaStore({ now = Date.now } = {}) {
       return rollingQuotaSnapshot({
         ...input,
         events: activeEvents,
+        lifetimeUsed: allowed && input.lifetimeLimit !== null
+          ? existing.lifetimeUsed + 1
+          : existing.lifetimeUsed,
         timestamp,
         allowed,
         reason: rollingAllowed ? "trial_lifetime_quota_exceeded" : "rolling_quota_exceeded",
@@ -1313,6 +1887,7 @@ export function createInMemoryRollingQuotaStore({ now = Date.now } = {}) {
       return rollingQuotaSnapshot({
         ...input,
         events: activeEvents,
+        lifetimeUsed: existing.lifetimeUsed,
         timestamp,
         allowed: true,
         reason: null,
@@ -1363,6 +1938,7 @@ function createFirestoreRollingQuotaStore({ collectionName }) {
         return rollingQuotaSnapshot({
           ...input,
           events: activeEvents,
+          lifetimeUsed: record.lifetimeUsed,
           timestamp,
           allowed,
           reason: rollingAllowed ? "trial_lifetime_quota_exceeded" : "rolling_quota_exceeded",
@@ -1377,9 +1953,11 @@ function createFirestoreRollingQuotaStore({ collectionName }) {
       const storedEvents = snapshot.exists && Array.isArray(snapshot.get("dispatchTimestamps"))
         ? snapshot.get("dispatchTimestamps")
         : [];
+      const lifetimeUsed = snapshot.exists ? Number(snapshot.get("lifetimeUsed") ?? 0) : 0;
       return rollingQuotaSnapshot({
         ...input,
         events: activeRollingEvents(storedEvents, timestamp),
+        lifetimeUsed,
         timestamp,
         allowed: true,
         reason: null,
@@ -1402,21 +1980,26 @@ function numericTimestamp(value) {
   return date.getTime();
 }
 
-function rollingQuotaSnapshot({ tier, limit, events, timestamp, allowed, reason }) {
+function rollingQuotaSnapshot({ tier, limit, lifetimeLimit, lifetimeUsed = 0, events, timestamp, allowed, reason }) {
   const used = events.length;
   const resetTimestamp = used > 0 ? events[0] + ROLLING_WINDOW_SECONDS * 1_000 : null;
   const exhausted = used >= limit;
+  const lifetimeExhausted = lifetimeLimit !== null && lifetimeUsed >= lifetimeLimit;
+  const rollingRemaining = Math.max(0, limit - used);
+  const remaining = lifetimeLimit === null
+    ? rollingRemaining
+    : Math.min(rollingRemaining, Math.max(0, lifetimeLimit - lifetimeUsed));
   return {
     allowed,
     reason: allowed ? null : reason,
     tier,
     used,
     limit,
-    remaining: Math.max(0, limit - used),
+    remaining,
     windowSeconds: ROLLING_WINDOW_SECONDS,
-    resetAt: resetTimestamp === null ? null : new Date(resetTimestamp).toISOString(),
+    resetAt: lifetimeExhausted || resetTimestamp === null ? null : new Date(resetTimestamp).toISOString(),
     retryAfterSeconds:
-      exhausted && resetTimestamp !== null
+      !lifetimeExhausted && exhausted && resetTimestamp !== null
         ? Math.max(1, Math.ceil((resetTimestamp - timestamp) / 1_000))
         : null,
   };
@@ -1434,11 +2017,19 @@ function retainedExpiry(existingExpiry, fallback) {
   return parsed && Number.isFinite(parsed.getTime()) ? parsed : fallback;
 }
 
-function createConfiguredIdempotencyStore({ environment, pendingTtlMs }) {
+function createConfiguredIdempotencyStore({
+  environment,
+  pendingTtlMs,
+  globalProviderMinuteLimit,
+  globalProviderRollingLimit,
+}) {
   if (environment.MEAL_SCAN_IDEMPOTENCY_STORE === "firestore") {
     return createFirestoreIdempotencyStore({
       collectionName: environment.MEAL_SCAN_IDEMPOTENCY_COLLECTION ?? "mealScanIdempotency",
+      quotaCollectionName: environment.MEAL_SCAN_QUOTA_COLLECTION ?? "mealScanRollingQuota",
       pendingTtlMs,
+      globalProviderMinuteLimit,
+      globalProviderRollingLimit,
     });
   }
   return createInMemoryIdempotencyStore({ pendingTtlMs });
@@ -1496,8 +2087,18 @@ export function createInMemoryIdempotencyStore({ pendingTtlMs = 30_000, now = Da
   };
 }
 
-function createFirestoreIdempotencyStore({ collectionName, pendingTtlMs }) {
-  let firestoreClient;
+export function createFirestoreIdempotencyStore({
+  collectionName,
+  quotaCollectionName = "mealScanRollingQuota",
+  pendingTtlMs,
+  globalProviderMinuteLimit = MAX_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE,
+  globalProviderRollingLimit = MAX_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS,
+  globalProviderDocumentId = "__globalProviderDispatch__",
+  firestore: injectedFirestore,
+  now = Date.now,
+  randomUUID = crypto.randomUUID,
+}) {
+  let firestoreClient = injectedFirestore;
   async function firestore() {
     if (!firestoreClient) {
       const { Firestore } = await import("@google-cloud/firestore");
@@ -1508,12 +2109,32 @@ function createFirestoreIdempotencyStore({ collectionName, pendingTtlMs }) {
   const documentId = (requestId) => crypto.createHash("sha256").update(requestId).digest("hex");
 
   return {
+    async inspect({ requestId, requestHash }) {
+      const db = await firestore();
+      const document = db.collection(collectionName).doc(documentId(requestId));
+      return db.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(document);
+        if (!snapshot.exists) return { state: "missing", acquired: false };
+        if (snapshot.get("requestHash") !== requestHash) {
+          return { state: "mismatch", acquired: false };
+        }
+        let state = snapshot.get("state");
+        const timestamp = numericTimestamp(now());
+        if (state === "pending" && numericTimestamp(snapshot.get("pendingExpiresAt")) <= timestamp) {
+          state = "unknown";
+          transaction.set(document, { state, updatedAt: new Date(timestamp) }, { merge: true });
+        }
+        return state === "completed"
+          ? { state, acquired: false, response: snapshot.get("response") }
+          : { state, acquired: false };
+      });
+    },
     async claim({ requestId, requestHash }) {
       const db = await firestore();
       const document = db.collection(collectionName).doc(documentId(requestId));
       return db.runTransaction(async (transaction) => {
         const snapshot = await transaction.get(document);
-        const timestamp = Date.now();
+        const timestamp = numericTimestamp(now());
         if (snapshot.exists) {
           if (snapshot.get("requestHash") !== requestHash) {
             return { state: "mismatch", acquired: false };
@@ -1528,7 +2149,7 @@ function createFirestoreIdempotencyStore({ collectionName, pendingTtlMs }) {
             ? { state, acquired: false, response: snapshot.get("response") }
             : { state, acquired: false };
         }
-        const claimId = crypto.randomUUID();
+        const claimId = randomUUID();
         transaction.create(document, {
           requestHash,
           claimId,
@@ -1548,52 +2169,236 @@ function createFirestoreIdempotencyStore({ collectionName, pendingTtlMs }) {
         };
       });
     },
+    async claimAndConsumeQuota({ requestId, requestHash, quota }) {
+      const db = await firestore();
+      const idempotencyDocument = db.collection(collectionName).doc(documentId(requestId));
+      const quotaDocument = db.collection(quotaCollectionName).doc(quota.principal);
+      const globalProviderDocument = db.collection(quotaCollectionName).doc(globalProviderDocumentId);
+      return db.runTransaction(async (transaction) => {
+        const existingClaim = await transaction.get(idempotencyDocument);
+        const timestamp = numericTimestamp(now());
+        if (existingClaim.exists) {
+          if (existingClaim.get("requestHash") !== requestHash) {
+            return { state: "mismatch", acquired: false };
+          }
+          let state = existingClaim.get("state");
+          if (state === "pending" && numericTimestamp(existingClaim.get("pendingExpiresAt")) <= timestamp) {
+            state = "unknown";
+            transaction.set(
+              idempotencyDocument,
+              { state, updatedAt: new Date(timestamp) },
+              { merge: true }
+            );
+          }
+          return state === "completed"
+            ? { state, acquired: false, response: existingClaim.get("response") }
+            : { state, acquired: false };
+        }
+
+        const quotaSnapshot = await transaction.get(quotaDocument);
+        const globalProviderSnapshot = await transaction.get(globalProviderDocument);
+        const activeLeaseExpiresAt = numericTimestamp(quotaSnapshot.get("providerLeaseExpiresAt"));
+        if (
+          quotaSnapshot.exists &&
+          boundedString(quotaSnapshot.get("providerLeaseClaimId"), 1, 256) &&
+          Number.isFinite(activeLeaseExpiresAt) &&
+          activeLeaseExpiresAt > timestamp
+        ) {
+          return {
+            state: "principal_busy",
+            acquired: false,
+            reason: "principal_dispatch_in_progress",
+            retryAfterSeconds: Math.max(1, Math.ceil((activeLeaseExpiresAt - timestamp) / 1_000)),
+          };
+        }
+
+        const globalProviderDecision = providerDispatchDecision({
+          events:
+            globalProviderSnapshot.exists &&
+            Array.isArray(globalProviderSnapshot.get("dispatchTimestamps"))
+              ? globalProviderSnapshot.get("dispatchTimestamps")
+              : [],
+          timestamp,
+          minuteLimit: globalProviderMinuteLimit,
+          rollingLimit: globalProviderRollingLimit,
+        });
+        if (!globalProviderDecision.allowed) {
+          return {
+            state: "provider_limit_denied",
+            acquired: false,
+            reason: globalProviderDecision.reason,
+            retryAfterSeconds: globalProviderDecision.retryAfterSeconds,
+          };
+        }
+
+        const storedEvents = quotaSnapshot.exists && Array.isArray(quotaSnapshot.get("dispatchTimestamps"))
+          ? quotaSnapshot.get("dispatchTimestamps")
+          : [];
+        const activeEvents = activeRollingEvents(storedEvents, timestamp);
+        const lifetimeUsed = quotaSnapshot.exists ? Number(quotaSnapshot.get("lifetimeUsed") ?? 0) : 0;
+        const rollingAllowed = activeEvents.length < quota.limit;
+        const lifetimeAllowed = quota.lifetimeLimit === null || lifetimeUsed < quota.lifetimeLimit;
+        const allowed = rollingAllowed && lifetimeAllowed;
+        if (!allowed) {
+          const deniedQuota = rollingQuotaSnapshot({
+            ...quota,
+            events: activeEvents,
+            lifetimeUsed,
+            timestamp,
+            allowed: false,
+            reason: rollingAllowed ? "trial_lifetime_quota_exceeded" : "rolling_quota_exceeded",
+          });
+          return { state: "quota_denied", acquired: false, quota: deniedQuota };
+        }
+
+        activeEvents.push(timestamp);
+        const nextLifetimeUsed = quota.lifetimeLimit === null ? lifetimeUsed : lifetimeUsed + 1;
+        const claimId = randomUUID();
+        transaction.set(
+          quotaDocument,
+          {
+            tier: quota.tier,
+            dispatchTimestamps: activeEvents.map((value) => new Date(value)),
+            lifetimeUsed: nextLifetimeUsed,
+            rollingLimit: quota.limit,
+            lifetimeLimit: quota.lifetimeLimit,
+            providerLeaseRequestId: requestId,
+            providerLeaseClaimId: claimId,
+            providerLeaseExpiresAt: new Date(timestamp + pendingTtlMs),
+            updatedAt: new Date(timestamp),
+            expiresAt: new Date(
+              timestamp + (quota.lifetimeLimit === null ? 3 : 30) * ROLLING_WINDOW_SECONDS * 1_000
+            ),
+          },
+          { merge: true }
+        );
+        transaction.set(
+          globalProviderDocument,
+          {
+            scope: "global_provider_dispatch",
+            dispatchTimestamps: globalProviderDecision.events.map((value) => new Date(value)),
+            minuteLimit: globalProviderMinuteLimit,
+            rollingLimit: globalProviderRollingLimit,
+            updatedAt: new Date(timestamp),
+            expiresAt: new Date(timestamp + 3 * ROLLING_WINDOW_SECONDS * 1_000),
+          },
+          { merge: true }
+        );
+        transaction.create(idempotencyDocument, {
+          requestHash,
+          principal: quota.principal,
+          claimId,
+          state: "pending",
+          quotaReserved: true,
+          createdAt: new Date(timestamp),
+          updatedAt: new Date(timestamp),
+          pendingExpiresAt: new Date(timestamp + pendingTtlMs),
+          expiresAt: new Date(timestamp + 7 * ROLLING_WINDOW_SECONDS * 1_000),
+        });
+        return {
+          requestId,
+          requestHash,
+          documentId: idempotencyDocument.id,
+          principal: quota.principal,
+          claimId,
+          state: "pending",
+          acquired: true,
+          quota: rollingQuotaSnapshot({
+            ...quota,
+            events: activeEvents,
+            lifetimeUsed: nextLifetimeUsed,
+            timestamp,
+            allowed: true,
+            reason: null,
+          }),
+        };
+      });
+    },
+    async completeFromCache({ requestId, requestHash, response }) {
+      const db = await firestore();
+      const document = db.collection(collectionName).doc(documentId(requestId));
+      return db.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(document);
+        if (snapshot.exists && snapshot.get("requestHash") !== requestHash) {
+          return { state: "mismatch", acquired: false };
+        }
+        if (snapshot.exists && snapshot.get("state") === "completed") {
+          return { state: "completed", response: snapshot.get("response"), acquired: false };
+        }
+        if (snapshot.exists) {
+          let state = snapshot.get("state");
+          const timestamp = numericTimestamp(now());
+          if (state === "pending" && numericTimestamp(snapshot.get("pendingExpiresAt")) <= timestamp) {
+            state = "unknown";
+            transaction.set(document, { state, updatedAt: new Date(timestamp) }, { merge: true });
+          }
+          return { state, acquired: false };
+        }
+        const timestamp = numericTimestamp(now());
+        transaction.set(document, {
+          requestHash,
+          state: "completed",
+          response: structuredClone(response),
+          createdAt: new Date(timestamp),
+          updatedAt: new Date(timestamp),
+          expiresAt: new Date(timestamp + 7 * ROLLING_WINDOW_SECONDS * 1_000),
+        });
+        return { state: "completed", response, acquired: false };
+      });
+    },
     async complete(context, response) {
-      await updateFirestoreIdempotencyClaim({
+      await finalizeFirestoreIdempotencyClaim({
         firestore: await firestore(),
         collectionName,
+        quotaCollectionName,
         documentId: context.documentId,
         context,
         update: { state: "completed", response: structuredClone(response) },
+        now,
       });
     },
     async markUnknown(context) {
-      await updateFirestoreIdempotencyClaim({
+      await finalizeFirestoreIdempotencyClaim({
         firestore: await firestore(),
         collectionName,
+        quotaCollectionName,
         documentId: context.documentId,
         context,
         update: { state: "unknown" },
+        now,
       });
     },
     async abandon(context) {
-      const db = await firestore();
-      const document = db.collection(collectionName).doc(context.documentId);
-      await db.runTransaction(async (transaction) => {
-        const snapshot = await transaction.get(document);
-        if (
-          snapshot.exists &&
-          snapshot.get("state") === "pending" &&
-          snapshot.get("claimId") === context.claimId &&
-          snapshot.get("requestHash") === context.requestHash
-        ) {
-          transaction.delete(document);
-        }
+      await finalizeFirestoreIdempotencyClaim({
+        firestore: await firestore(),
+        collectionName,
+        quotaCollectionName,
+        documentId: context.documentId,
+        context,
+        deleteClaim: true,
+        now,
       });
     },
   };
 }
 
-async function updateFirestoreIdempotencyClaim({
+async function finalizeFirestoreIdempotencyClaim({
   firestore,
   collectionName,
+  quotaCollectionName,
   documentId,
   context,
   update,
+  deleteClaim = false,
+  now = Date.now,
 }) {
   const document = firestore.collection(collectionName).doc(documentId);
+  const quotaDocument = context.principal
+    ? firestore.collection(quotaCollectionName).doc(context.principal)
+    : null;
   await firestore.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(document);
+    const quotaSnapshot = quotaDocument ? await transaction.get(quotaDocument) : null;
     if (
       !snapshot.exists ||
       snapshot.get("state") !== "pending" ||
@@ -1602,8 +2407,55 @@ async function updateFirestoreIdempotencyClaim({
     ) {
       throw idempotencyClaimError();
     }
-    transaction.set(document, { ...update, updatedAt: new Date() }, { merge: true });
+    if (deleteClaim) {
+      transaction.delete(document);
+    } else {
+      transaction.set(
+        document,
+        { ...update, updatedAt: new Date(numericTimestamp(now())) },
+        { merge: true }
+      );
+    }
+    if (
+      quotaDocument &&
+      quotaSnapshot?.exists &&
+      quotaSnapshot.get("providerLeaseRequestId") === context.requestId &&
+      quotaSnapshot.get("providerLeaseClaimId") === context.claimId
+    ) {
+      transaction.set(
+        quotaDocument,
+        {
+          providerLeaseRequestId: null,
+          providerLeaseClaimId: null,
+          providerLeaseExpiresAt: null,
+        },
+        { merge: true }
+      );
+    }
   });
+}
+
+function providerDispatchDecision({ events, timestamp, minuteLimit, rollingLimit }) {
+  const activeEvents = activeRollingEvents(events, timestamp);
+  const minuteEvents = activeEvents.filter((value) => value > timestamp - 60_000);
+  const minuteAllowed = minuteEvents.length < minuteLimit;
+  const rollingAllowed = activeEvents.length < rollingLimit;
+  if (!minuteAllowed || !rollingAllowed) {
+    const rollingDenied = !rollingAllowed;
+    const retryAt = rollingDenied
+      ? activeEvents[0] + ROLLING_WINDOW_SECONDS * 1_000
+      : minuteEvents[0] + 60_000;
+    return {
+      allowed: false,
+      events: activeEvents,
+      reason: rollingDenied
+        ? "global_provider_rolling_limit_exceeded"
+        : "global_provider_minute_limit_exceeded",
+      retryAfterSeconds: Math.max(1, Math.ceil((retryAt - timestamp) / 1_000)),
+    };
+  }
+  activeEvents.push(timestamp);
+  return { allowed: true, events: activeEvents, reason: null, retryAfterSeconds: null };
 }
 
 function activeIdempotencyClaim(existing, context) {
@@ -1687,8 +2539,14 @@ function createInMemoryResultCache({ ttlMs, leaseTtlMs }) {
   };
 }
 
-function createFirestoreResultCache({ collectionName, ttlMs, leaseTtlMs }) {
-  let firestoreClient;
+export function createFirestoreResultCache({
+  collectionName,
+  ttlMs,
+  leaseTtlMs,
+  firestore: injectedFirestore,
+  now = Date.now,
+}) {
+  let firestoreClient = injectedFirestore;
   async function firestore() {
     if (!firestoreClient) {
       const { Firestore } = await import("@google-cloud/firestore");
@@ -1701,16 +2559,18 @@ function createFirestoreResultCache({ collectionName, ttlMs, leaseTtlMs }) {
     async get(input) {
       const db = await firestore();
       const document = db.collection(collectionName).doc(resultCacheKey(input));
-      const snapshot = await document.get();
-      if (!snapshot.exists) return null;
+      return db.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(document);
+        if (!snapshot.exists) return null;
 
-      const expiresAtValue = snapshot.get("expiresAt");
-      const expiresAt = expiresAtValue?.toDate?.() ?? new Date(expiresAtValue);
-      if (!Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
-        await document.delete();
-        return null;
-      }
-      return snapshot.get("value") ?? null;
+        const expiresAtValue = snapshot.get("expiresAt");
+        const expiresAt = expiresAtValue?.toDate?.() ?? new Date(expiresAtValue);
+        if (!Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= now()) {
+          transaction.delete(document);
+          return null;
+        }
+        return snapshot.get("value") ?? null;
+      });
     },
     async acquireLease(input) {
       const db = await firestore();
@@ -2034,6 +2894,16 @@ export function createFirestoreBudgetStateProvider({
     if (!control || typeof control !== "object") {
       throw new Error("meal scan budget control is missing");
     }
+    const spendUsd = numberOrNull(control.spendUsd);
+    if (spendUsd === null || spendUsd < 0) {
+      throw new Error("meal scan budget control spendUsd is invalid");
+    }
+    if (control.manualMode != null && !validBudgetMode(control.manualMode)) {
+      throw new Error("meal scan budget control manualMode is invalid");
+    }
+    if (control.billingMode != null && !validBudgetMode(control.billingMode)) {
+      throw new Error("meal scan budget control billingMode is invalid");
+    }
     const manualMode = validBudgetMode(control.manualMode) ? control.manualMode : null;
     const billingMode = validBudgetMode(control.billingMode) ? control.billingMode : null;
     if (!manualMode && !billingMode) {
@@ -2044,11 +2914,12 @@ export function createFirestoreBudgetStateProvider({
       manualMode && billingMode && budgetModeRank(billingMode) > budgetModeRank(manualMode);
     cached = normalizeBudgetState({
       ...control,
+      spendUsd,
       mode: mostRestrictiveBudgetMode(manualMode, billingMode),
       source: billingIsMoreRestrictive
         ? "fail_closed_combined_control"
         : (manualMode ? "manual_override" : "cloud_billing_budget"),
-    });
+    }, environment);
     cachedUntil = timestamp + ttlMs;
     return cached;
   };
@@ -2080,38 +2951,42 @@ function currentBudgetState(environment = process.env) {
 function normalizeBudgetState(input, environment = process.env) {
   const spendUsd = numberOrNull(input?.spendUsd) ?? 0;
   const alertAtUsd =
-    numberOrNull(input?.alertAtUsd) ??
     numberOrNull(environment.MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD) ??
+    numberOrNull(input?.alertAtUsd) ??
     DEFAULT_BUDGET_ALERT_USD;
   const degradeAtUsd =
-    numberOrNull(input?.degradeAtUsd) ??
     numberOrNull(environment.MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD) ??
+    numberOrNull(input?.degradeAtUsd) ??
     DEFAULT_BUDGET_DEGRADE_USD;
   const disableAtUsd =
-    numberOrNull(input?.disableAtUsd) ??
     numberOrNull(environment.MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD) ??
+    numberOrNull(input?.disableAtUsd) ??
     DEFAULT_BUDGET_DISABLE_USD;
-  let mode = input?.mode;
-
-  if (!mode) {
-    if (spendUsd >= disableAtUsd) {
-      mode = "disabled";
-    } else if (spendUsd >= degradeAtUsd) {
-      mode = "degraded";
-    } else if (spendUsd >= alertAtUsd) {
-      mode = "alert";
-    } else {
-      mode = "normal";
-    }
+  if (
+    alertAtUsd < 0 ||
+    degradeAtUsd < alertAtUsd ||
+    disableAtUsd < degradeAtUsd ||
+    disableAtUsd <= 0
+  ) {
+    throw new Error("meal scan budget control thresholds are invalid");
   }
-
-  if (!validBudgetMode(mode)) {
-    mode = "normal";
-  }
+  const storedMode = validBudgetMode(input?.mode) ? input.mode : "normal";
+  const spendMode = spendUsd >= disableAtUsd
+    ? "disabled"
+    : spendUsd >= degradeAtUsd
+      ? "degraded"
+      : spendUsd >= alertAtUsd
+        ? "alert"
+        : "normal";
+  const mode = mostRestrictiveBudgetMode(storedMode, spendMode);
+  const inputSource = typeof input?.source === "string" ? input.source : null;
+  const source = budgetModeRank(spendMode) > budgetModeRank(storedMode) && inputSource !== "static_environment"
+    ? "fail_closed_spend_control"
+    : inputSource;
 
   return {
     mode,
-    source: typeof input?.source === "string" ? input.source : null,
+    source,
     spendUsd,
     budgetUsd: numberOrNull(input?.budgetUsd),
     alertAtUsd,
