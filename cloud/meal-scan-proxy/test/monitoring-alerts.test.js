@@ -37,6 +37,37 @@ test("monitoring deployment is pinned, validation-only by default, and APPLY=tru
   assert.match(scriptSource, /gcloud monitoring policies create/);
 });
 
+test("live alert application requires an owner notification channel before any mutation", () => {
+  assert.match(scriptSource, /NOTIFICATION_CHANNEL_NAME="\$\{NOTIFICATION_CHANNEL_NAME:-\}"/);
+  assert.match(scriptSource, /notificationChannels/);
+  assert.match(scriptSource, /projects\/\$PINNED_PROJECT_ID\/notificationChannels/);
+
+  const scratchDirectory = mkdtempSync(path.join(tmpdir(), "cyclebalance-monitoring-channel-test-"));
+  const markerPath = path.join(scratchDirectory, "gcloud-was-invoked");
+  const fakeGcloudPath = path.join(scratchDirectory, "gcloud");
+  writeFileSync(fakeGcloudPath, `#!/bin/sh\ntouch "${markerPath}"\nexit 99\n`, { mode: 0o700 });
+  chmodSync(fakeGcloudPath, 0o700);
+  try {
+    const result = spawnSync("bash", [scriptPath], {
+      cwd: proxyDirectory,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        APPLY: "true",
+        PROJECT_ID: "cyclebalance-prod-20260710",
+        NOTIFICATION_CHANNEL_NAME: "",
+        PATH: `${scratchDirectory}:${path.dirname(process.execPath)}:${process.env.PATH}`,
+      },
+    });
+
+    assert.notEqual(result.status, 0);
+    assert.equal(existsSync(markerPath), false, "a missing owner channel must fail before gcloud");
+    assert.match(`${result.stdout}\n${result.stderr}`, /notification channel/i);
+  } finally {
+    rmSync(scratchDirectory, { recursive: true, force: true });
+  }
+});
+
 test("monitoring policies encode the exact scanner thresholds and windows", () => {
   assert.match(scriptSource, /PROVIDER_DISPATCH_THRESHOLD_PER_MINUTE=60/);
   assert.match(scriptSource, /ERROR_RATIO_THRESHOLD="0\.05"/);
@@ -139,6 +170,7 @@ test("README documents identifier-free events and approval-gated monitoring depl
   assert.match(readmeSource, /not_observed/);
   assert.match(readmeSource, /deploy-monitoring-alerts\.sh/);
   assert.match(readmeSource, /APPLY=true/);
+  assert.match(readmeSource, /NOTIFICATION_CHANNEL_NAME/);
   assert.match(readmeSource, /60 fresh provider calls per minute/);
   assert.match(readmeSource, /5xx ratio above 5% for 10 minutes/);
   assert.match(readmeSource, /more than 20 combined App Check and StoreKit\/JWS rejections per minute/);

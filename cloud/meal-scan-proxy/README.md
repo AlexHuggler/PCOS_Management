@@ -71,10 +71,16 @@ The staged policies alert on:
 - a 5xx ratio above 5% for 10 minutes;
 - more than 20 combined App Check and StoreKit/JWS rejections per minute.
 
-The script is idempotent by metric name and alert-policy display name, contains no notification destination or destination secret, and requires explicit approval before this separate mutation command is run:
+The script is idempotent by metric name and alert-policy display name and contains no destination secret. A live apply fails before any mutation unless `NOTIFICATION_CHANNEL_NAME` names an existing owner-controlled Cloud Monitoring channel in the pinned production project. Supply the resource name during a dry run first to validate the rendered routing, then obtain explicit approval before the separate mutation command is run:
 
 ```sh
-APPLY=true PROJECT_ID=cyclebalance-prod-20260710 ./scripts/deploy-monitoring-alerts.sh
+NOTIFICATION_CHANNEL_NAME=projects/cyclebalance-prod-20260710/notificationChannels/CHANNEL_ID \
+  ./scripts/deploy-monitoring-alerts.sh
+
+APPLY=true \
+  NOTIFICATION_CHANNEL_NAME=projects/cyclebalance-prod-20260710/notificationChannels/CHANNEL_ID \
+  PROJECT_ID=cyclebalance-prod-20260710 \
+  ./scripts/deploy-monitoring-alerts.sh
 ```
 
 Applying monitoring does not deploy Cloud Run, change ingress, or alter the scanner flag. Keep `MEAL_SCAN_ENABLED=false` and `ALLOW_UNAUTHENTICATED=false` until scanner activation is separately approved.

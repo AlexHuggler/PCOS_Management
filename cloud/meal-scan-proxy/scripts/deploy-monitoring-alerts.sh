@@ -4,6 +4,7 @@ set -euo pipefail
 PINNED_PROJECT_ID="cyclebalance-prod-20260710"
 PROJECT_ID="${PROJECT_ID:-$PINNED_PROJECT_ID}"
 APPLY="${APPLY:-false}"
+NOTIFICATION_CHANNEL_NAME="${NOTIFICATION_CHANNEL_NAME:-}"
 SERVICE_NAME="cyclebalance-meal-scan-proxy"
 PROVIDER_DISPATCH_THRESHOLD_PER_MINUTE=60
 ERROR_RATIO_THRESHOLD="0.05"
@@ -16,6 +17,22 @@ if [[ "$PROJECT_ID" != "$PINNED_PROJECT_ID" ]]; then
 fi
 if [[ "$APPLY" != "true" && "$APPLY" != "false" ]]; then
   echo "APPLY must be exactly true or false" >&2
+  exit 1
+fi
+
+notification_channel_is_valid() {
+  local channel="$1"
+  local prefix="projects/$PINNED_PROJECT_ID/notificationChannels/"
+  local channel_id="${channel#"$prefix"}"
+  [[ "$channel" == "$prefix$channel_id" && "$channel_id" =~ ^[A-Za-z0-9_-]+$ ]]
+}
+
+if [[ -n "$NOTIFICATION_CHANNEL_NAME" ]] && ! notification_channel_is_valid "$NOTIFICATION_CHANNEL_NAME"; then
+  echo "NOTIFICATION_CHANNEL_NAME must be a channel in the pinned production project" >&2
+  exit 1
+fi
+if [[ "$APPLY" == "true" && -z "$NOTIFICATION_CHANNEL_NAME" ]]; then
+  echo "APPLY=true requires an existing owner notification channel in NOTIFICATION_CHANNEL_NAME" >&2
   exit 1
 fi
 
@@ -210,6 +227,20 @@ EOF
 EOF
 }
 
+attach_notification_channel() {
+  local policy_file
+  for policy_file in "$WORK_DIR"/*-policy.json; do
+    node --input-type=module - "$policy_file" "$NOTIFICATION_CHANNEL_NAME" <<'NODE'
+import { readFileSync, writeFileSync } from "node:fs";
+
+const [policyPath, notificationChannelName] = process.argv.slice(2);
+const policy = JSON.parse(readFileSync(policyPath, "utf8"));
+policy.notificationChannels = [notificationChannelName];
+writeFileSync(policyPath, `${JSON.stringify(policy, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+NODE
+  done
+}
+
 validate_json_file() {
   node -e 'const fs=require("node:fs"); JSON.parse(fs.readFileSync(process.argv[1], "utf8"));' "$1"
 }
@@ -263,6 +294,9 @@ upsert_alert_policy() {
 
 write_metric_configs
 write_policy_configs
+if [[ -n "$NOTIFICATION_CHANNEL_NAME" ]]; then
+  attach_notification_channel
+fi
 validate_configs
 
 echo "Validated monitoring resources for $PROJECT_ID:"
@@ -272,7 +306,7 @@ done
 
 if [[ "$APPLY" != "true" ]]; then
   echo "Validation-only dry run complete. No Cloud Logging or Monitoring resources were created or changed."
-  echo "Re-run with APPLY=true only after reviewing notification routing and the rendered policy contract."
+  echo "Re-run with APPLY=true and an existing owner NOTIFICATION_CHANNEL_NAME only after reviewing the rendered policy contract."
   exit 0
 fi
 
