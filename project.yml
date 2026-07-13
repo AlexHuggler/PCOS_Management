@@ -20,8 +20,8 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    MARKETING_VERSION: "1.0.4"
-    CURRENT_PROJECT_VERSION: "17"
+    MARKETING_VERSION: "1.0.5"
+    CURRENT_PROJECT_VERSION: "18"
     DEVELOPMENT_TEAM: 2PW989LA87
     CODE_SIGN_STYLE: Automatic
 
@@ -64,6 +64,15 @@ targets:
           SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
           SWIFT_COMPILATION_MODE: wholemodule
           CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements
+          # Audited archive policy. Runtime release defaults in MealScanFeatureFlags
+          # mirror these values and remain fail-closed until benchmark approval.
+          MEAL_SCAN_RELEASE_UI_ENABLED: "NO"
+          MEAL_SCAN_RELEASE_GEMINI_ENABLED: "NO"
+          MEAL_SCAN_RELEASE_MOCK_DATA_ENABLED: "NO"
+          MEAL_SCAN_RELEASE_DEBUG_DIRECT_ENABLED: "NO"
+          MEAL_SCAN_RELEASE_FALLBACK_MODEL_ENABLED: "NO"
+          MEAL_SCAN_RELEASE_SIMILARITY_ENABLED: "NO"
+          USDA_FDC_API_KEY: ""
     dependencies:
       - package: RevenueCat
         product: RevenueCat

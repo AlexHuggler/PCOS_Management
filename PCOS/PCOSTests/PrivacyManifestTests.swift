@@ -37,6 +37,53 @@ struct PrivacyManifestTests {
         #expect(reasons.contains("CA92.1"))
     }
 
+    @Test("App privacy manifest declares conservative app-functionality data without tracking")
+    func appPrivacyManifestDeclaresCollectedDataWithoutTracking() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        let manifestURL = testFileURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(privacyManifestRelativePath)
+            .standardizedFileURL
+
+        let plistData = try Data(contentsOf: manifestURL)
+        let plistObject = try PropertyListSerialization.propertyList(
+            from: plistData,
+            options: [],
+            format: nil
+        )
+        let manifest = try #require(plistObject as? [String: Any])
+        let collectedTypes = try #require(
+            manifest["NSPrivacyCollectedDataTypes"] as? [[String: Any]]
+        )
+
+        let expectedTypes: Set<String> = [
+            "NSPrivacyCollectedDataTypePhotosorVideos",
+            "NSPrivacyCollectedDataTypeHealth",
+            "NSPrivacyCollectedDataTypeFitness",
+            "NSPrivacyCollectedDataTypePurchaseHistory",
+            "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeProductInteraction",
+            "NSPrivacyCollectedDataTypeOtherDataTypes",
+        ]
+        let actualTypes = Set(collectedTypes.compactMap {
+            $0["NSPrivacyCollectedDataType"] as? String
+        })
+
+        #expect(actualTypes == expectedTypes)
+        for entry in collectedTypes {
+            #expect((entry["NSPrivacyCollectedDataTypeLinked"] as? Bool) == true)
+            #expect((entry["NSPrivacyCollectedDataTypeTracking"] as? Bool) == false)
+            let purposes = try #require(
+                entry["NSPrivacyCollectedDataTypePurposes"] as? [String]
+            )
+            #expect(purposes == ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
+        }
+
+        #expect((manifest["NSPrivacyTracking"] as? Bool) == false)
+        let trackingDomains = try #require(manifest["NSPrivacyTrackingDomains"] as? [String])
+        #expect(trackingDomains.isEmpty)
+    }
+
     @Test("repeat meal implementation stays local and outside export serializers")
     @MainActor
     func repeatMealImplementationStaysLocalAndPrivate() throws {
@@ -213,6 +260,102 @@ struct AppAppearancePolicyTests {
 
 @Suite("App Store Config", .serialized)
 struct AppStoreConfigTests {
+    @Test("Release candidate is 1.0.5 build 18 with fail-closed scanner settings")
+    @MainActor
+    func releaseCandidateUsesFailClosedMealScannerSettings() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let projectSource = try String(
+            contentsOf: projectRoot.appendingPathComponent("project.yml"),
+            encoding: .utf8
+        )
+
+        #expect(projectSource.contains("MARKETING_VERSION: \"1.0.5\""))
+        #expect(projectSource.contains("CURRENT_PROJECT_VERSION: \"18\""))
+        #expect(projectSource.contains("USDA_FDC_API_KEY: \"\""))
+
+        for setting in [
+            "MEAL_SCAN_RELEASE_UI_ENABLED",
+            "MEAL_SCAN_RELEASE_GEMINI_ENABLED",
+            "MEAL_SCAN_RELEASE_MOCK_DATA_ENABLED",
+            "MEAL_SCAN_RELEASE_DEBUG_DIRECT_ENABLED",
+            "MEAL_SCAN_RELEASE_FALLBACK_MODEL_ENABLED",
+            "MEAL_SCAN_RELEASE_SIMILARITY_ENABLED",
+        ] {
+            #expect(projectSource.contains("\(setting): \"NO\""), "\(setting) must be NO")
+        }
+
+        let flagsSource = try String(
+            contentsOf: projectRoot.appendingPathComponent(
+                "PCOS/PCOS/Features/Meals/MealScan/MealScanFeatureFlags.swift"
+            ),
+            encoding: .utf8
+        )
+        for flag in [
+            "enableMealScanV2",
+            "enableGeminiMealScan",
+            "enableMockMealScanData",
+            "enableGeminiMealScanDebugDirect",
+            "enableGeminiFallbackModel",
+            "enableSimilarMealSuggestions",
+        ] {
+            let pattern = "\\b\(NSRegularExpression.escapedPattern(for: flag)): boolValue\\([^\\n]*releaseDefault: false\\)"
+            let expression = try NSRegularExpression(pattern: pattern)
+            let range = NSRange(flagsSource.startIndex..., in: flagsSource)
+            #expect(
+                expression.firstMatch(in: flagsSource, range: range) != nil,
+                "\(flag) must remain false in non-Debug builds"
+            )
+        }
+    }
+
+    @Test("Meal scan review packet documents hardened release limits")
+    @MainActor
+    func mealScanReviewPacketDocumentsHardenedReleaseLimits() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let packet = try String(
+            contentsOf: projectRoot.appendingPathComponent(
+                "docs/app_store_meal_scan_review_packet_2026-07-11.md"
+            ),
+            encoding: .utf8
+        )
+
+        for requiredText in [
+            "StoreKit 2 transaction JWS",
+            "HMAC-derived purchase principal",
+            "10 fresh estimates per rolling 24 hours",
+            "immutable server maximum of 15",
+            "warning at 2 remaining",
+            "5 fresh estimates per rolling 24 hours and 25 lifetime",
+            "$15 alert, $20 degraded, and $25 disabled",
+            "24-hour structured-result cache",
+            "up to 55 days",
+            "manual meal entry and barcode lookup",
+        ] {
+            #expect(packet.contains(requiredText), "Missing review contract: \(requiredText)")
+        }
+
+        #expect(!packet.contains("anonymous RevenueCat App User ID"))
+        #expect(!packet.contains("Daily/trial quota"))
+    }
+
+    @Test("Localized 1.0.5 metadata packet covers every storefront locale")
+    @MainActor
+    func localizedMetadataPacketCoversEveryStorefrontLocale() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let metadataURL = projectRoot.appendingPathComponent(
+            "docs/app_store_1.0.5_localized_metadata.md"
+        )
+        #expect(FileManager.default.fileExists(atPath: metadataURL.path))
+
+        let metadata = try String(contentsOf: metadataURL, encoding: .utf8)
+        for locale in ["en-US", "de-DE", "fr-FR", "it", "ja", "ko", "nl-NL"] {
+            #expect(metadata.contains("## \(locale)"), "Missing \(locale) metadata")
+        }
+        #expect(metadata.components(separatedBy: "### Release Notes").count - 1 == 7)
+        #expect(metadata.components(separatedBy: "### Replacement Description Paragraph").count - 1 == 7)
+        #expect(!metadata.localizedCaseInsensitiveContains("no accounts, no servers, no exceptions"))
+    }
+
     @Test("Info.plist omits CloudKit push background mode")
     func infoPlistOmitsRemoteNotificationBackgroundMode() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
