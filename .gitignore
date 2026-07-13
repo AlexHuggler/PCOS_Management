@@ -50,6 +50,7 @@ fastlane/test_output
 !Config/LocalSecrets.example.xcconfig
 .env
 .superpowers/
+.worktrees/
 build/
 build-release/
 Artifacts/Archives/
