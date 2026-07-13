@@ -39,6 +39,8 @@ final class MealScanViewModel {
     private var pendingRetryAvailableAt: Date?
     private(set) var pendingRetryAfterSeconds: Int?
     private(set) var isRequestPending = false
+    private var pendingPhotoRetryEligible = false
+    private var pendingPhotoRetryAvailableAt: Date?
 
     var phase: Phase = .entry
     var mealType: MealType
@@ -73,6 +75,19 @@ final class MealScanViewModel {
     }
     var pendingRetryAvailableAtLocalText: String? {
         pendingRetryAvailableAt?.formatted(date: .omitted, time: .shortened)
+    }
+    var hasRetryablePendingPhoto: Bool {
+        phase == .manualFallback && pendingPhotoRetryEligible && pendingNormalizedImage != nil && pendingRequestID != nil
+    }
+    var canRetryPendingPhoto: Bool {
+        canRetryPendingPhoto(at: Date())
+    }
+    func canRetryPendingPhoto(at now: Date) -> Bool {
+        guard hasRetryablePendingPhoto, canStartFreshAnalysis else { return false }
+        return pendingPhotoRetryAvailableAt.map { now >= $0 } ?? true
+    }
+    var pendingPhotoRetryAvailableAtLocalText: String? {
+        pendingPhotoRetryAvailableAt?.formatted(date: .omitted, time: .shortened)
     }
     var shouldWarnAboutRemainingAnalyses: Bool {
         mealScanCacheDisposition == .fresh && (mealScanQuota?.remaining ?? .max) <= 2
@@ -157,6 +172,7 @@ final class MealScanViewModel {
         pendingNormalizedImage = normalizedImage
         pendingRequestID = UUID()
         resetAmbiguousRequestState()
+        resetPendingPhotoRetryState()
         selectedImageData = normalizedImage.jpegData
         pendingFingerprint = nil
 
@@ -274,6 +290,13 @@ final class MealScanViewModel {
         try await performPendingImageScan(startedFromUnknownRecheck: startedFromUnknown)
     }
 
+    func retryPendingPhoto() async throws {
+        guard canRetryPendingPhoto else {
+            throw MealScanViewModelError.retryablePhotoRequired
+        }
+        try await performPendingImageScan()
+    }
+
     func requestNewAnalysisAfterAmbiguousOutcome() {
         guard phase == .ambiguousOutcome, canStartFreshAnalysis else { return }
         phase = .newAttemptConfirmation
@@ -301,6 +324,7 @@ final class MealScanViewModel {
         pendingNormalizedImage = nil
         pendingRequestID = nil
         resetAmbiguousRequestState()
+        resetPendingPhotoRetryState()
         pendingFingerprint = nil
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
@@ -316,6 +340,7 @@ final class MealScanViewModel {
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
         phase = .processing
+        resetPendingPhotoRetryState()
         let result: MealScanResult
         if let remoteMealScanService {
             guard let requestID = pendingRequestID else {
@@ -358,6 +383,10 @@ final class MealScanViewModel {
             } catch let error as GeminiMealScanProxyError {
                 mealScanQuota = error.quota ?? mealScanQuota
                 errorMessage = error.errorDescription
+                pendingPhotoRetryEligible = error.retryable == true && canStartFreshAnalysis
+                pendingPhotoRetryAvailableAt = error.retryAfterSeconds.map {
+                    Date().addingTimeInterval(TimeInterval($0))
+                }
                 phase = .manualFallback
                 return
             } catch {
@@ -559,6 +588,7 @@ final class MealScanViewModel {
         pendingNormalizedImage = nil
         pendingRequestID = nil
         resetAmbiguousRequestState()
+        resetPendingPhotoRetryState()
         pendingFingerprint = nil
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
@@ -572,6 +602,11 @@ final class MealScanViewModel {
         pendingRetryAfterSeconds = nil
         pendingRetryAvailableAt = nil
         isRequestPending = false
+    }
+
+    private func resetPendingPhotoRetryState() {
+        pendingPhotoRetryEligible = false
+        pendingPhotoRetryAvailableAt = nil
     }
 
     private func recalculate() {
@@ -684,5 +719,6 @@ private enum MealScanViewModelError: Error {
     case missingRequestID
     case remoteConsentRequired
     case ambiguousOutcomeRequired
+    case retryablePhotoRequired
     case newAttemptConfirmationRequired
 }

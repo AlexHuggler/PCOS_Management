@@ -1,10 +1,10 @@
 # Meal Scan V2
 
-Meal Scan V2 is a local-first AI meal estimate flow for CycleBalance. Pass 1 ships with deterministic mock vision, editable fixture foods, nutrient math, SwiftData persistence, and manual fallback. Pass 2 adds Core ML adapter hooks, depth/portion strategies, local USDA SQLite support, optional barcode/package interfaces, and insight query helpers.
+Meal Scan V2 is CycleBalance's consent-gated photo meal estimate flow. The production path sends a normalized photo through the hardened CycleBalance proxy, returns an editable structured estimate, and fails closed to barcode or manual entry. Deterministic mock vision and fixture foods remain Debug/test-only.
 
 ## Privacy Defaults
 
-- Mock scan data and fixture nutrition run fully on device and require no backend.
+- Debug/test mock scan data and fixture nutrition run fully on device and are never a production fallback.
 - When the user chooses a cloud photo estimate, the app sends one normalized JPEG to the CycleBalance proxy for AI analysis. The proxy does not retain raw image bytes.
 - Meal photos are stored locally only after save and only while `mealScan.enableMealPhotoRetention` remains enabled.
 - Photo-based Meal Scan V2 remains behind `mealScan.enableMealScanV2` in release builds.
@@ -23,9 +23,9 @@ Meal Scan V2 is a local-first AI meal estimate flow for CycleBalance. Pass 1 shi
 - `mealScan.enableGeminiFallbackModel`
 - `mealScan.enableMealScanResultCache`
 
-Debug builds default Meal Scan V2 and mock data on. Release builds keep the photo path off until cloud security and review gates pass. Segmentation and depth are off unless explicitly enabled through launch arguments or `UserDefaults`. The older barcode/Open Food Facts flags document the experimental Meal Scan V2 package interface; the release Meal Log barcode sheet is intentionally available outside the photo-scan feature flag.
+Debug builds default Meal Scan V2 and mock data on. Release archives read only the signed build-time V2 UI and secure-proxy flags; both stay off until cloud security, quality, signing, and review gates pass. Mock, direct-provider, fallback-model, and similarity modes remain hard-disabled in Release. The release Meal Log barcode sheet is intentionally available outside the photo-scan feature flag.
 
-The production proxy defaults to `gemini-2.5-flash-lite` and allowlists `gemini-3.1-flash-lite` for migration evaluation. Do not use retired `gemini-2.0-flash-lite`.
+The production proxy is pinned to `gemini-3.1-flash-lite`; the mobile request cannot select or override the model.
 
 ## Model Assets
 
@@ -35,7 +35,7 @@ Place compiled Core ML models in the app bundle and set names through `MealScanM
 - Food segmentation model: `foodSegmentationModelName`
 - Depth model: `depthModelName`
 
-If a model is missing or incompatible, the adapter falls back to the mock/heuristic service and the scan remains editable.
+Core ML adapters are experimental and not part of the Release cloud estimate path. A missing or incompatible adapter must return a typed failure; production never substitutes mock nutrition.
 
 ## Local Nutrition Database
 

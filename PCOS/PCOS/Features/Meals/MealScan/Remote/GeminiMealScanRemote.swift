@@ -338,6 +338,7 @@ struct GeminiMealScanProxyError: LocalizedError, Equatable, Sendable {
     var reason: String?
     var quota: MealScanQuota?
     var retryable: Bool?
+    var retryAfterSeconds: Int? = nil
 
     var errorDescription: String? {
         switch error {
@@ -590,7 +591,8 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
                 error: payload.error,
                 reason: payload.reason,
                 quota: payload.quota,
-                retryable: payload.retryable
+                retryable: payload.retryable,
+                retryAfterSeconds: payload.retryAfterSeconds
             )
         }
 

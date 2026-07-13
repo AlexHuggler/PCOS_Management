@@ -54,14 +54,14 @@ struct OnboardingMealScanDemoView: View {
                 .foregroundStyle(AppTheme.accentColor)
                 .accessibilityHidden(true)
 
-            Text(L10n.string("Photo meal estimates are coming soon", defaultValue: "Photo meal estimates are coming soon"))
+            Text(L10n.string("Photo meal estimates", defaultValue: "Photo meal estimates"))
                 .appHeadingFont(.title2, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .multilineTextAlignment(.center)
 
             Text(L10n.string(
-                "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now.",
-                defaultValue: "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now."
+                "Take a meal photo to get an editable Google Gemini nutrition estimate after you consent. Fresh analyses use your rolling allowance; barcode scanning and manual meal logging remain available.",
+                defaultValue: "Take a meal photo to get an editable Google Gemini nutrition estimate after you consent. Fresh analyses use your rolling allowance; barcode scanning and manual meal logging remain available."
             ))
             .appFont(.body)
             .foregroundStyle(.secondary)
@@ -137,7 +137,7 @@ struct OnboardingMealScanDemoView: View {
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
 
-                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving."))
+                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Review and edit every estimate before saving. Barcode scanning and manual entry remain available if photo analysis is unavailable or your fresh-analysis allowance is used.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Review and edit every estimate before saving. Barcode scanning and manual entry remain available if photo analysis is unavailable or your fresh-analysis allowance is used."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -170,6 +170,36 @@ struct MealScanViewModelTests {
         #expect(viewModel.canStartFreshAnalysis == false)
     }
 
+    @Test("retryable pre-dispatch failure can explicitly retry the same photo and request")
+    func retryablePreDispatchFailureRetriesSamePhotoAndRequest() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let remote = RetryableThenSuccessfulRemoteMealScanService(result: makeScanResult())
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock(),
+            remoteMealScanService: remote,
+            featureFlags: .passOneDefaults,
+            imageNormalizer: ViewModelStubMealScanImageNormalizer()
+        )
+
+        try await viewModel.prepareSelectedImage(UIImage())
+        let originalRequestID = try #require(viewModel.pendingRequestID)
+        try await viewModel.confirmRemotePhotoEstimate()
+
+        #expect(viewModel.phase == .manualFallback)
+        #expect(viewModel.canRetryPendingPhoto)
+        #expect(remote.callCount == 1)
+
+        try await viewModel.retryPendingPhoto()
+
+        #expect(viewModel.phase == .review)
+        #expect(!viewModel.canRetryPendingPhoto)
+        #expect(remote.receivedRequestIDs == [originalRequestID, originalRequestID])
+        #expect(remote.receivedImages.count == 2)
+        #expect(remote.receivedImages[0] == remote.receivedImages[1])
+    }
+
     @Test("ambiguous outcome preserves one request ID until explicit new-analysis confirmation")
     func ambiguousOutcomePreservesRequestIDUntilExplicitConfirmation() async throws {
         let container = try TestHelpers.makeModelContainer()
@@ -883,6 +913,42 @@ private final class SpyRemoteMealScanService: RemoteMealScanServing {
                 error
             }
         }
+    }
+}
+
+@MainActor
+private final class RetryableThenSuccessfulRemoteMealScanService: RemoteMealScanServing {
+    let result: MealScanResult
+    private(set) var callCount = 0
+    private(set) var receivedImages: [NormalizedMealScanImage] = []
+    private(set) var receivedRequestIDs: [UUID] = []
+
+    init(result: MealScanResult) {
+        self.result = result
+    }
+
+    func scan(
+        normalizedImage: NormalizedMealScanImage,
+        mealType: MealType,
+        requestID: UUID
+    ) async throws -> MealScanOutcome {
+        callCount += 1
+        receivedImages.append(normalizedImage)
+        receivedRequestIDs.append(requestID)
+        if callCount == 1 {
+            throw GeminiMealScanProxyError(
+                statusCode: 503,
+                error: "meal_scan_unavailable",
+                reason: "storekit_verification_unavailable",
+                quota: nil,
+                retryable: true
+            )
+        }
+        return MealScanOutcome(
+            result: result,
+            quota: nil,
+            cacheDisposition: .fresh
+        )
     }
 }
 

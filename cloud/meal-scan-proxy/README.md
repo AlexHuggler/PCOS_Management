@@ -4,7 +4,7 @@ Cloud Run proxy for CycleBalance meal-photo estimates. The iOS app sends a norma
 
 ## Request and trust contract
 
-An accepted JSON request contains `requestId`, `signedTransactionJWS`, `imageBase64`, `mealType`, and `locale`. `modelId` may select only an allowlisted model. Raw customer identifiers and client-asserted entitlement fields are rejected.
+An accepted JSON request contains `requestId`, `signedTransactionJWS`, a bounded `image` object, `mealType`, `locale`, `schemaVersion`, and `promptVersion`. The server rejects a client-supplied `modelId` and pins production to `gemini-3.1-flash-lite`. Raw customer identifiers and client-asserted entitlement fields are rejected.
 
 The request path is deliberately ordered:
 

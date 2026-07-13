@@ -1391,8 +1391,8 @@ struct MealLogView: View {
                         .appFont(.headline)
 
                         Text(L10n.string(
-                            "Use a sample meal for preview, or unlock real photo estimates and review every food before saving.",
-                            defaultValue: "Use a sample meal for preview, or unlock real photo estimates and review every food before saving."
+                            "Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not.",
+                            defaultValue: "Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not."
                         ))
                         .appFont(.caption)
                         .foregroundStyle(.secondary)

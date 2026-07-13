@@ -2566,10 +2566,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "AI meal scanning is coming soon" = "AI 식사 스캔은 곧 제공될 예정입니다";
 "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release." = "사진 기반 식사 추정은 아직 준비 중입니다. 이번 릴리스에서는 바코드를 스캔하거나 영양 정보를 수동으로 입력하세요.";
 "Log a meal or scan a barcode while it is fresh in your mind." = "기억이 생생할 때 식사를 기록하거나 바코드를 스캔하세요.";
-"Photo meal estimates are coming soon" = "사진 식사 추정은 곧 제공됩니다";
-"This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now." = "이 샘플은 향후 사진 흐름을 보여줍니다. 이번 릴리스에서는 바코드 스캔과 수동 식사 기록을 지금 사용할 수 있습니다.";
+"Photo meal estimates" = "사진 식사 추정";
+"Take a meal photo to get an editable Google Gemini nutrition estimate after you consent. Fresh analyses use your rolling allowance; barcode scanning and manual meal logging remain available." = "동의한 후 식사 사진을 찍으면 수정 가능한 Google Gemini 영양 추정을 받을 수 있습니다. 새로운 분석은 이동식 사용 한도를 사용하며, 바코드 스캔과 수동 식사 기록은 계속 이용할 수 있습니다.";
 "Estimated from a sample preview. You would review and edit before saving." = "샘플 미리보기에서 추정되었습니다. 저장하기 전에 검토하고 수정할 수 있습니다.";
-"Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving." = "영양 값은 조리법, 분량, 숨은 기름, 소스 또는 드레싱에 따라 달라질 수 있습니다. 바코드 스캔은 지금 식사 기록에서 사용할 수 있습니다. 사진 기반 추정은 아직 준비 중이며, 모든 식사는 저장 전에 수정할 수 있습니다.";
+"Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Review and edit every estimate before saving. Barcode scanning and manual entry remain available if photo analysis is unavailable or your fresh-analysis allowance is used." = "영양 값은 조리법, 분량, 숨은 기름, 소스 또는 드레싱에 따라 달라질 수 있습니다. 저장하기 전에 모든 추정을 검토하고 수정하세요. 사진 분석을 사용할 수 없거나 새로운 분석 한도를 모두 사용한 경우에도 바코드 스캔과 수동 입력을 이용할 수 있습니다.";
+"That request stopped before AI dispatch, so no fresh analysis was used. Trying again reuses the same request." = "요청이 AI 전송 전에 중단되어 새로운 분석이 사용되지 않았습니다. 다시 시도하면 같은 요청을 재사용합니다.";
+"You can try the same photo again at %@." = "%@에 같은 사진으로 다시 시도할 수 있습니다.";
+"Try the same photo again" = "같은 사진으로 다시 시도";
+"Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not." = "동의 후 수정 가능한 Google Gemini 영양 추정을 받을 수 있습니다. 새로운 분석은 이동식 사용 한도를 사용하지만 캐시된 반복 결과는 사용하지 않습니다.";
 "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in." = "원본 메모를 확인한 다음 바코드를 스캔하거나 다음 식사를 기록해 새 항목이 어떻게 어울리는지 확인하세요.";
 "Choose one quick log, scan a barcode, or enter your next meal manually." = "빠른 기록 하나를 선택하거나, 바코드를 스캔하거나, 다음 식사를 수동으로 입력하세요.";
 "When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device." = "사진 추정을 선택하면 압축된 사진 사본이 분석을 위해 AI 서비스로 안전하게 전송됩니다. CycleBalance는 업로드된 사진을 서버에 보관하지 않습니다. 기본적으로 검토하고 저장한 영양 정보만 식사 기록에 남으며, 설정에서 저장한 식사 사진 보관을 켜면 사진을 이 기기에 로컬로 저장할 수 있습니다.";

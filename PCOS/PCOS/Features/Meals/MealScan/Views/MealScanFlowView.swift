@@ -1023,12 +1023,60 @@ struct MealScanManualFallbackView: View {
     let viewModel: MealScanViewModel
     let onChooseBarcode: () -> Void
     let onChooseManual: () -> Void
+    @State private var isRetryingPhoto = false
 
     private var title: String {
         if viewModel.mealScanQuota?.remaining == 0 {
             return L10n.string("Fresh AI photo allowance used", defaultValue: "Fresh AI photo allowance used")
         }
         return L10n.string("Photo analysis unavailable", defaultValue: "Photo analysis unavailable")
+    }
+
+    @ViewBuilder
+    private var retrySamePhotoControl: some View {
+        if viewModel.hasRetryablePendingPhoto {
+            Text(
+                L10n.string(
+                    "That request stopped before AI dispatch, so no fresh analysis was used. Trying again reuses the same request.",
+                    defaultValue: "That request stopped before AI dispatch, so no fresh analysis was used. Trying again reuses the same request."
+                )
+            )
+                .appFont(.caption, weight: .medium)
+                .foregroundStyle(AppTheme.secondaryText)
+                .multilineTextAlignment(.center)
+
+            if let retryTime = viewModel.pendingPhotoRetryAvailableAtLocalText {
+                Text(
+                    L10n.format(
+                        "You can try the same photo again at %@.",
+                        defaultValue: "You can try the same photo again at %@.",
+                        retryTime
+                    )
+                )
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Button {
+                    isRetryingPhoto = true
+                    Task {
+                        defer { isRetryingPhoto = false }
+                        try? await viewModel.retryPendingPhoto()
+                    }
+                } label: {
+                    Label(
+                        L10n.string("Try the same photo again", defaultValue: "Try the same photo again"),
+                        systemImage: "arrow.clockwise"
+                    )
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isRetryingPhoto || !viewModel.canRetryPendingPhoto(at: context.date))
+                .accessibilityIdentifier("meal_scan.fallback.retry_same_photo")
+            }
+        }
     }
 
     var body: some View {
@@ -1063,6 +1111,8 @@ struct MealScanManualFallbackView: View {
                                 .multilineTextAlignment(.center)
                         }
                     }
+
+                    retrySamePhotoControl
 
                     Button(action: onChooseManual) {
                         Label(L10n.string("Enter nutrition manually", defaultValue: "Enter nutrition manually"), systemImage: "square.and.pencil")
@@ -1113,6 +1163,7 @@ struct MealScanManualFallbackView: View {
                         .appFont(.caption, weight: .medium)
                         .multilineTextAlignment(.center)
                 }
+                retrySamePhotoControl
                 Button(action: onChooseManual) {
                     Label(L10n.string("Enter nutrition manually", defaultValue: "Enter nutrition manually"), systemImage: "square.and.pencil")
                 }
