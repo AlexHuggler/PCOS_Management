@@ -4,7 +4,7 @@
 
 **Goal:** Prove production App Attest reaches the entitlement gate on a physical iPhone without calling Gemini, then prepare complete App Review materials while returning Cloud Run to private and disabled state.
 
-**Architecture:** An opt-in Release integration test obtains a limited-use Firebase App Check token and sends one valid normalized request for a deliberately nonexistent RevenueCat customer. A fail-safe shell orchestrator verifies prerequisites, backs up app data, builds current source, registers rollback before cloud mutation, temporarily enables public ingress, runs the expected rejection probe, verifies no model call, and restores private/disabled production state in a trap.
+**Architecture:** An opt-in Release integration test obtains a limited-use Firebase App Check token and sends one valid normalized request with a deliberately invalid StoreKit transaction JWS. A fail-safe shell orchestrator verifies prerequisites, backs up app data, builds current source, registers rollback before cloud mutation, temporarily enables public ingress, runs the expected rejection probe, verifies no model call, and restores private/disabled production state in a trap.
 
 **Tech Stack:** Swift Testing, Firebase App Check/App Attest, XcodeGen, `xcodebuild`, CoreDevice `devicectl`, Bash, Google Cloud CLI, Cloud Run.
 
@@ -18,6 +18,7 @@
 - Do not use `-allowProvisioningUpdates` in routine verification. If existing signing cannot build, stop and ask the owner before permitting signing-state changes.
 - Do not submit to App Review or increment the build number in this plan.
 - Cloud Run must end private with `MEAL_SCAN_ENABLED=false`, even after any failure.
+- The negative invalid-JWS probe does not satisfy the positive sandbox-JWS real-device TestFlight gate. That separate release-candidate gate remains open until an entitled sandbox transaction succeeds on a physical device.
 
 ### Task 1: Add The Opt-In Physical App Check Test
 
@@ -27,11 +28,11 @@
 
 - [x] **Step 1: Add a test gated by `RUN_PRODUCTION_MEAL_SCAN_INTEGRATION=1`**
 
-The test obtains a limited-use token from `FirebaseMealScanAppCheckTokenProvider`, prepares one valid normalized JPEG, uses `revenueCatAppUserId = "cyclebalance-appcheck-probe-no-entitlement"`, and calls the production proxy without exposing token values.
+The test obtains a limited-use token from `FirebaseMealScanAppCheckTokenProvider`, prepares one valid normalized JPEG, supplies a deliberately invalid StoreKit transaction JWS, and calls the production proxy without exposing token values.
 
-- [x] **Step 2: Assert HTTP `403`, `error = "premium_entitlement_required"`, and `reason = "entitlement_inactive"`**
+- [x] **Step 2: Assert HTTP `403`, `error = "premium_entitlement_required"`, and `reason = "storekit_transaction_invalid"`**
 
-Print only the normalized image-hash prefix needed for safe log correlation. Any `200`, quota write, or Gemini event is a hard failure.
+Do not print the normalized image hash or any request principal. Any `200`, `mealScanRollingQuota` collection change, `provider_call` scanner event, or `meal_scan_estimate` event is a hard failure.
 
 - [x] **Step 3: Add a Release XcodeGen test scheme with the opt-in environment value**
 
@@ -60,7 +61,7 @@ Assert bundle ID `alex.PCOS`, production App Attest entitlement, and the complet
 
 - [ ] **Step 7: Temporarily deploy with `MEAL_SCAN_ENABLED=true` and unauthenticated ingress using the reviewed deploy script**
 
-- [ ] **Step 8: Install/run the Release probe, assert the entitlement rejection, and verify logs contain no Gemini estimate event for the hash prefix**
+- [ ] **Step 8: Install/run the Release probe, assert `storekit_transaction_invalid`, prove the complete `mealScanRollingQuota` collection is unchanged, and verify the probe revision has no `provider_call` or `meal_scan_estimate` event**
 
 - [ ] **Step 9: In the trap, redeploy disabled/private and verify unauthenticated `403` plus authenticated `503 feature_disabled`**
 

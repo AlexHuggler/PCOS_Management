@@ -13,6 +13,11 @@ enum MealLogEntryPoint: String, Sendable {
     case direct = "direct"
 }
 
+enum MealLogInitialDestination: Sendable {
+    case form
+    case barcode
+}
+
 struct MealLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -27,7 +32,16 @@ struct MealLogView: View {
     @State private var showingBarcodeImport = false
     @State private var showingMealScan = false
     @State private var launchBarcodeAfterMealScan = false
+    @State private var pendingInitialDestination: MealLogInitialDestination?
     @FocusState private var focusedField: FocusedField?
+
+    init(
+        entryPoint: MealLogEntryPoint,
+        initialDestination: MealLogInitialDestination = .form
+    ) {
+        self.entryPoint = entryPoint
+        _pendingInitialDestination = State(initialValue: initialDestination)
+    }
 
     private enum FocusedField: Hashable {
         case description
@@ -194,6 +208,7 @@ struct MealLogView: View {
             .onAppear {
                 Logger.meals.info("MealLogView appeared from \(entryPoint.rawValue, privacy: .public)")
                 initializeMealViewModelIfNeeded()
+                consumeInitialDestinationIfNeeded()
                 refreshRoadmapContext()
             }
             .onDisappear {
@@ -212,6 +227,7 @@ struct MealLogView: View {
             .background(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : Color.clear)
             .onAppear {
                 initializeMealViewModelIfNeeded()
+                consumeInitialDestinationIfNeeded()
                 refreshRoadmapContext()
             }
             .accessibilityIdentifier("meal_log.loading")
@@ -1548,6 +1564,18 @@ struct MealLogView: View {
         let vm = MealViewModel(modelContext: modelContext)
         viewModel = vm
         dirtyTracker = FormDirtyTracker(initial: snapshot(for: vm))
+    }
+
+    private func consumeInitialDestinationIfNeeded() {
+        guard viewModel != nil, let destination = pendingInitialDestination else { return }
+        pendingInitialDestination = nil
+
+        switch destination {
+        case .form:
+            break
+        case .barcode:
+            showingBarcodeImport = true
+        }
     }
 
     private func mealTypeSection(viewModel: MealViewModel) -> some View {

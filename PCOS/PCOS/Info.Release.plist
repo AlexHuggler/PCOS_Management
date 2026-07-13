@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleDisplayName</key>
+	<string>CycleBalance</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights. The app does not write to Apple Health.</string>
+	<key>MealScanReleaseUIEnabled</key>
+#if MEAL_SCAN_RELEASE_UI_ENABLED_YES
+	<true/>
+#else
+	<false/>
+#endif
+	<key>MealScanReleaseGeminiEnabled</key>
+#if MEAL_SCAN_RELEASE_GEMINI_ENABLED_YES
+	<true/>
+#else
+	<false/>
+#endif
+	<key>MEAL_SCAN_PROXY_BASE_URL</key>
+	<string>$(MEAL_SCAN_PROXY_BASE_URL)</string>
+	<key>REVENUECAT_ENTITLEMENT_ID</key>
+	<string>$(REVENUECAT_ENTITLEMENT_ID)</string>
+	<key>REVENUECAT_OFFERING_ID</key>
+	<string>$(REVENUECAT_OFFERING_ID)</string>
+	<key>REVENUECAT_PUBLIC_SDK_KEY</key>
+	<string>$(REVENUECAT_PUBLIC_SDK_KEY)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>CormorantGaramond-Regular.ttf</string>
+		<string>CormorantGaramond-SemiBold.ttf</string>
+		<string>CormorantGaramond-Italic.ttf</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

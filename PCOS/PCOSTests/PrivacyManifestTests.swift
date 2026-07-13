@@ -293,18 +293,30 @@ struct AppStoreConfigTests {
         for flag in [
             "enableMealScanV2",
             "enableGeminiMealScan",
+        ] {
+            let escapedFlag = NSRegularExpression.escapedPattern(for: flag)
+            let pattern = "\\b\(escapedFlag): releaseBuildConfiguredValue\\("
+            let expression = try NSRegularExpression(pattern: pattern)
+            let range = NSRange(flagsSource.startIndex..., in: flagsSource)
+            #expect(
+                expression.firstMatch(in: flagsSource, range: range) != nil,
+                "\(flag) must use only the signed Release Info.plist gate"
+            )
+        }
+
+        for flag in [
             "enableMockMealScanData",
             "enableGeminiMealScanDebugDirect",
             "enableGeminiFallbackModel",
             "enableSimilarMealSuggestions",
         ] {
             let escapedFlag = NSRegularExpression.escapedPattern(for: flag)
-            let pattern = "\\b\(escapedFlag): (?:boolValue\\([^\\n]*releaseDefault: false\\)|releaseLockedFalseValue\\()"
+            let pattern = "\\b\(escapedFlag): releaseLockedFalseValue\\("
             let expression = try NSRegularExpression(pattern: pattern)
             let range = NSRange(flagsSource.startIndex..., in: flagsSource)
             #expect(
                 expression.firstMatch(in: flagsSource, range: range) != nil,
-                "\(flag) must remain false in non-Debug builds"
+                "\(flag) must remain hard-false in non-Debug builds"
             )
         }
 

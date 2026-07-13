@@ -463,6 +463,8 @@ struct TrackingHubView: View {
     @State private var showingLogSupplements = false
     @State private var showingLogMeal = false
     @State private var showingMealScan = false
+    @State private var pendingMealLogDestinationAfterScan: MealLogInitialDestination?
+    @State private var activeMealLogDestination: MealLogInitialDestination = .form
     @State private var showingPhotoJournal = false
     @State private var recentShortcut = UserEntryDefaultsStore.shared.lastLoggerShortcut
 
@@ -506,11 +508,28 @@ struct TrackingHubView: View {
             .trackingHubPresentation(isPresented: $showingLogSupplements) {
                 SupplementLogView()
             }
-            .trackingHubPresentation(isPresented: $showingLogMeal) {
-                MealLogView(entryPoint: .trackingHub)
+            .trackingHubPresentation(
+                isPresented: $showingLogMeal,
+                onDismiss: resetMealLogPresentationState
+            ) {
+                MealLogView(
+                    entryPoint: .trackingHub,
+                    initialDestination: activeMealLogDestination
+                )
             }
-            .trackingHubPresentation(isPresented: $showingMealScan) {
-                MealScanFlowView(mealType: .lunch)
+            .trackingHubPresentation(
+                isPresented: $showingMealScan,
+                onDismiss: presentPendingMealLogDestinationAfterScan
+            ) {
+                MealScanFlowView(
+                    mealType: .lunch,
+                    onChooseBarcode: {
+                        routeMealScanFallback(to: .barcode)
+                    },
+                    onChooseManual: {
+                        routeMealScanFallback(to: .form)
+                    }
+                )
             }
             .trackingHubPresentation(isPresented: $showingPhotoJournal) {
                 PhotoGalleryView()
@@ -957,6 +976,8 @@ struct TrackingHubView: View {
                 appState.presentPremiumPaywall()
                 return
             }
+            pendingMealLogDestinationAfterScan = nil
+            activeMealLogDestination = .form
             showingLogMeal = true
             Logger.meals.info("TrackingHubView presenting meal log sheet.")
         case .photo:
@@ -975,8 +996,27 @@ struct TrackingHubView: View {
             return
         }
 
+        pendingMealLogDestinationAfterScan = nil
+        activeMealLogDestination = .form
         Logger.meals.info("TrackingHubView requested AI meal scan.")
         showingMealScan = true
+    }
+
+    private func routeMealScanFallback(to destination: MealLogInitialDestination) {
+        pendingMealLogDestinationAfterScan = destination
+        showingMealScan = false
+    }
+
+    private func presentPendingMealLogDestinationAfterScan() {
+        guard let destination = pendingMealLogDestinationAfterScan else { return }
+        pendingMealLogDestinationAfterScan = nil
+        activeMealLogDestination = destination
+        showingLogMeal = true
+    }
+
+    private func resetMealLogPresentationState() {
+        pendingMealLogDestinationAfterScan = nil
+        activeMealLogDestination = .form
     }
 
     private func openPendingNotificationRouteIfNeeded() {
@@ -1033,12 +1073,13 @@ private extension View {
     @ViewBuilder
     func trackingHubPresentation<Destination: View>(
         isPresented: Binding<Bool>,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder destination: @escaping () -> Destination
     ) -> some View {
         if AppTheme.usesImmersivePresentation {
-            fullScreenCover(isPresented: isPresented, content: destination)
+            fullScreenCover(isPresented: isPresented, onDismiss: onDismiss, content: destination)
         } else {
-            sheet(isPresented: isPresented, content: destination)
+            sheet(isPresented: isPresented, onDismiss: onDismiss, content: destination)
         }
     }
 }
