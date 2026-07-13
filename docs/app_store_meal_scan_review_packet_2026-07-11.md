@@ -1,6 +1,6 @@
 # CycleBalance Meal Scan App Review Packet
 
-Date: 2026-07-11
+Date: 2026-07-13
 
 Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump; it has not been archived, uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, cache/expiry policy, model selection, and limited Gemini funding. The physical production App Attest probe is complete, but the App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy review, and final screenshot gates below remain incomplete. The current production service is private and disabled; Release keeps Photo Estimate hidden rather than advertising an unavailable feature.
 
@@ -24,7 +24,7 @@ Paste the following only for the approved build that enables photo estimates:
 >
 > Photo Estimate is optional and user initiated. CycleBalance first checks on device whether the normalized photo exactly matches a previously reviewed meal. In that case, it offers to reuse the prior editable draft without sending the photo, consuming quota, or calling an AI model. The user can instead choose Scan as New. Before every fresh estimate, CycleBalance identifies Google Gemini as the third-party AI processor and asks the user to confirm the upload. After confirmation, CycleBalance sends one compressed JPEG through its secure meal-analysis service to Google Gemini to create an editable nutrition draft. The CycleBalance proxy does not retain raw uploaded image bytes. CycleBalance stores only nutrition the user reviews and saves in the local meal log, unless the user separately enables local saved-meal-photo retention in Settings.
 >
-> Fresh Photo Estimate access uses a verified StoreKit 2 transaction JWS. The proxy verifies the Apple transaction and current subscription state, then derives an HMAC-derived purchase principal from the verified original transaction identifier; it does not send or trust a RevenueCat App User ID as authorization evidence. RevenueCat remains the in-app paywall, purchase, and restore layer and must be checked separately before release.
+> Fresh Photo Estimate access uses a verified StoreKit 2 transaction JWS. The proxy verifies the Apple transaction and current subscription state, derives an HMAC purchase principal from the verified original transaction identifier, and then asks RevenueCat API v2 to corroborate only that current Apple-verified transaction ID and environment. Apple remains authoritative for identity and tier. The proxy never trusts a RevenueCat App User ID and never sends the raw StoreKit JWS to RevenueCat.
 >
 > Paid access allows 10 fresh estimates per rolling 24 hours, with an immutable server maximum of 15 and an in-app warning at 2 remaining. Trial and sandbox access allows 5 fresh estimates per rolling 24 hours and 25 lifetime. Exact local or server cache hits do not consume AI quota. Monthly budget controls use a $15 alert, $20 degraded, and $25 disabled posture. Photo Estimate is an editable personal-tracking estimate, not medical advice, nutrition counseling, diagnosis, treatment, allergy guidance, or an exact measurement.
 >
@@ -63,7 +63,7 @@ Update App Store Connect App Privacy for the approved cloud-photo build:
 | Identifiers > User ID | App Functionality | Yes | No | The server derives a stable HMAC-derived purchase principal from Apple's verified original transaction identifier. The raw identifier and StoreKit JWS are not used as stored application identifiers. |
 | Usage Data > Product Interaction | App Functionality | Yes | No | Scan attempts, outcomes, quota tier, and cache behavior enforce rolling and lifetime limits and support reliability. |
 | Other Data > Other Data Types | App Functionality | Yes | No | Optional UPC/EAN barcode lookup sends only the barcode chosen by the user to obtain product nutrition. |
-| Purchases > Purchase History | App Functionality | Yes | No | Apple StoreKit establishes current purchase status; RevenueCat supports the in-app paywall, purchase, and restore experience. |
+| Purchases > Purchase History | App Functionality | Yes | No | Apple StoreKit establishes current purchase status and the HMAC quota principal; RevenueCat supports purchase/restore and secondarily corroborates the current Apple-verified transaction. |
 
 The live privacy policy and terms must state all of the following before submission:
 
@@ -98,6 +98,6 @@ The live privacy policy and terms must state all of the following before submiss
 - [ ] Approve the retention posture: verified Google ZDR for the production project, or the standard 55-day abuse-monitoring disclosure.
 - [ ] Decide whether automatic 24-hour/3-day/30-day expiry is sufficient or whether the enabled app must include a self-service cloud meal-scan deletion action.
 - [ ] Enter the approved App Privacy answers and updated reviewer notes in App Store Connect.
-- [ ] Verify the production RevenueCat offering, monthly/annual packages, localized products, pricing, purchase, restore, and receipt synchronization against the exact candidate archive. RevenueCat is not the proxy authorization principal.
+- [ ] Verify the production RevenueCat offering, monthly/annual packages, localized products, pricing, purchase, restore, receipt synchronization, API v2 project/entitlement/product mappings, and the least-privilege `customer_information:subscriptions:read` secret against the exact candidate archive. RevenueCat remains secondary; it is not the quota principal or tier authority.
 - [ ] Publish and verify the live privacy-policy and terms changes.
 - [ ] Upload the approved screenshot set and submit only after the physical-device and quality gates pass.
