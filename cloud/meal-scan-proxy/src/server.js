@@ -713,6 +713,8 @@ export function createServer(overrides = {}) {
       if (dependencies.revenueCatSubscriptionVerifier) {
         if (
           !boundedString(currentVerifiedTransaction?.transactionId, 1, 255) ||
+          !boundedString(currentVerifiedTransaction?.productId, 1, 200) ||
+          !allowedProductIds.has(currentVerifiedTransaction.productId) ||
           !new Set([Environment.PRODUCTION, Environment.SANDBOX]).has(
             currentVerifiedTransaction?.environment
           )
@@ -736,6 +738,7 @@ export function createServer(overrides = {}) {
               transaction: {
                 transactionId: currentVerifiedTransaction.transactionId,
                 environment: currentVerifiedTransaction.environment,
+                productId: currentVerifiedTransaction.productId,
               },
             }),
             revenueCatTimeoutMs,
@@ -1678,7 +1681,7 @@ function createConfiguredRevenueCatSubscriptionVerifier({
   const apiKey = environment.REVENUECAT_SECRET_API_KEY;
   const projectId = environment.REVENUECAT_PROJECT_ID;
   const entitlementLookupKey = environment.REVENUECAT_ENTITLEMENT_ID;
-  if (!apiKey) return null;
+  if (!apiKey || !projectId || !entitlementLookupKey) return null;
   return createRevenueCatSubscriptionVerifier({
     apiKey,
     projectId,
@@ -1787,6 +1790,8 @@ export function createRevenueCatSubscriptionVerifier({
     async check({ transaction }) {
       if (
         !boundedString(transaction?.transactionId, 1, 255) ||
+        !boundedString(transaction?.productId, 1, 200) ||
+        !allowedProductIds.has(transaction.productId) ||
         !new Set([Environment.PRODUCTION, Environment.SANDBOX]).has(transaction?.environment)
       ) {
         return { allowed: false, reason: "revenuecat_subscription_mismatch" };
@@ -1862,8 +1867,10 @@ export function createRevenueCatSubscriptionVerifier({
         : [];
       const matchingProducts = products.filter((product) => (
         product?.id === subscription?.product_id &&
-        allowedProductIds.has(product?.store_identifier)
+        product?.store_identifier === transaction.productId &&
+        allowedProductIds.has(product.store_identifier)
       ));
+      const product = matchingProducts[0];
       if (
         expectedEnvironment === null ||
         subscription?.object !== "subscription" ||
@@ -1874,9 +1881,14 @@ export function createRevenueCatSubscriptionVerifier({
         subscription?.entitlements?.object !== "list" ||
         subscription?.entitlements?.next_page !== null ||
         matchingEntitlements.length !== 1 ||
+        entitlement?.object !== "entitlement" ||
+        entitlement?.state !== "active" ||
+        entitlement?.project_id !== projectId ||
         entitlement?.products?.object !== "list" ||
         entitlement?.products?.next_page !== null ||
-        matchingProducts.length !== 1
+        matchingProducts.length !== 1 ||
+        product?.object !== "product" ||
+        product?.state !== "active"
       ) {
         return { allowed: false, reason: "revenuecat_subscription_mismatch" };
       }
@@ -2652,10 +2664,8 @@ function createFirestoreRollingQuotaStore({ collectionName }) {
           rollingLimit: input.limit,
           lifetimeLimit: input.lifetimeLimit,
           updatedAt: new Date(timestamp),
+          expiresAt: rollingQuotaExpiresAt(input.lifetimeLimit, timestamp),
         };
-        if (input.lifetimeLimit === null) {
-          record.expiresAt = new Date(timestamp + 3 * ROLLING_WINDOW_SECONDS * 1_000);
-        }
         transaction.set(document, record, { merge: true });
         return rollingQuotaSnapshot({
           ...input,
@@ -2694,6 +2704,12 @@ function activeRollingEvents(events, timestamp) {
     .map((value) => numericTimestamp(value))
     .filter((value) => Number.isFinite(value) && value > cutoff && value <= timestamp)
     .sort((left, right) => left - right);
+}
+
+function rollingQuotaExpiresAt(lifetimeLimit, timestamp) {
+  return lifetimeLimit === null
+    ? new Date(timestamp + 3 * ROLLING_WINDOW_SECONDS * 1_000)
+    : null;
 }
 
 function numericTimestamp(value) {
@@ -2988,9 +3004,7 @@ export function createFirestoreIdempotencyStore({
             providerLeaseClaimId: claimId,
             providerLeaseExpiresAt: new Date(timestamp + pendingTtlMs),
             updatedAt: new Date(timestamp),
-            expiresAt: new Date(
-              timestamp + (quota.lifetimeLimit === null ? 3 : 30) * ROLLING_WINDOW_SECONDS * 1_000
-            ),
+            expiresAt: rollingQuotaExpiresAt(quota.lifetimeLimit, timestamp),
           },
           { merge: true }
         );

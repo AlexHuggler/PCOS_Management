@@ -42,6 +42,63 @@ test("Firestore atomically reserves one request and consumes one rolling allowan
   assert.equal(firestore.document("mealScanRollingQuota", "principal-a").dispatchTimestamps.length, 1);
 });
 
+test("Firestore trial lifetime quota records never receive a TTL", async () => {
+  const firestore = new TransactionalFirestore();
+  const store = proxyModule.createFirestoreIdempotencyStore({
+    collectionName: "mealScanIdempotency",
+    quotaCollectionName: "mealScanRollingQuota",
+    pendingTtlMs: 30_000,
+    firestore,
+    now: () => Date.parse("2026-07-13T12:00:00.000Z"),
+  });
+
+  const reservation = await store.claimAndConsumeQuota({
+    requestId: "trial-lifetime-request",
+    requestHash: "trial-lifetime-hash",
+    quota: { principal: "trial-lifetime-principal", tier: "trial", limit: 5, lifetimeLimit: 25 },
+  });
+
+  assert.equal(reservation.acquired, true);
+  const quotaRecord = firestore.document("mealScanRollingQuota", "trial-lifetime-principal");
+  assert.equal(quotaRecord.lifetimeUsed, 1);
+  assert.equal(quotaRecord.lifetimeLimit, 25);
+  assert.equal(quotaRecord.expiresAt, null);
+});
+
+test("Firestore clears a paid quota TTL when the principal transitions to a lifetime trial ledger", async () => {
+  const firestore = new TransactionalFirestore();
+  let timestamp = Date.parse("2026-07-13T12:00:00.000Z");
+  const store = proxyModule.createFirestoreIdempotencyStore({
+    collectionName: "mealScanIdempotency",
+    quotaCollectionName: "mealScanRollingQuota",
+    pendingTtlMs: 30_000,
+    firestore,
+    now: () => timestamp,
+  });
+  const principal = "tier-transition-principal";
+  const paid = await store.claimAndConsumeQuota({
+    requestId: "paid-before-trial-request",
+    requestHash: "paid-before-trial-hash",
+    quota: { principal, tier: "paid", limit: 10, lifetimeLimit: null },
+  });
+  assert.equal(paid.acquired, true);
+  assert.ok(firestore.document("mealScanRollingQuota", principal).expiresAt instanceof Date);
+  await store.complete(paid, { ok: true });
+
+  timestamp += 60_000;
+  const trial = await store.claimAndConsumeQuota({
+    requestId: "trial-after-paid-request",
+    requestHash: "trial-after-paid-hash",
+    quota: { principal, tier: "trial", limit: 5, lifetimeLimit: 25 },
+  });
+
+  assert.equal(trial.acquired, true);
+  const transitionedRecord = firestore.document("mealScanRollingQuota", principal);
+  assert.equal(transitionedRecord.tier, "trial");
+  assert.equal(transitionedRecord.lifetimeUsed, 1);
+  assert.equal(transitionedRecord.expiresAt, null);
+});
+
 test("Firestore reservations cannot exceed the rolling limit after an in-flight call completes", async () => {
   assert.equal(typeof proxyModule.createFirestoreIdempotencyStore, "function");
   const firestore = new TransactionalFirestore();
@@ -380,12 +437,15 @@ test("RevenueCat corroboration searches by the verified Apple transaction and ac
             object: "list",
             next_page: null,
             items: [{
+              state: "active",
               object: "entitlement",
+              project_id: "proj8da4e000",
               lookup_key: "CycleBalance Unlimited",
               products: {
                 object: "list",
                 next_page: null,
                 items: [{
+                  state: "active",
                   object: "product",
                   id: "prod_monthly",
                   store_identifier: "cyclebalance.premium.monthly",
@@ -407,7 +467,7 @@ test("RevenueCat corroboration searches by the verified Apple transaction and ac
   });
 
   const result = await verifier.check({
-    transaction: { transactionId, environment: "Production" },
+    transaction: verifiedRevenueCatTransaction({ transactionId }),
   });
 
   assert.deepEqual(result, { allowed: true });
@@ -436,7 +496,7 @@ test("RevenueCat corroboration treats an empty synchronized search as retryable 
   });
 
   const result = await verifier.check({
-    transaction: { transactionId: "1000000987654321", environment: "Production" },
+    transaction: verifiedRevenueCatTransaction(),
   });
 
   assert.deepEqual(result, {
@@ -458,7 +518,7 @@ test("RevenueCat corroboration rejects a response for a different store subscrip
   });
 
   const result = await verifier.check({
-    transaction: { transactionId: "1000000987654321", environment: "Production" },
+    transaction: verifiedRevenueCatTransaction(),
   });
 
   assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
@@ -469,7 +529,12 @@ test("RevenueCat corroboration requires one exact App Store environment entitlem
     (item) => { item.store = "play_store"; },
     (item) => { item.environment = "sandbox"; },
     (item) => { item.gives_access = false; },
+    (item) => { item.entitlements.items[0].object = "unexpected"; },
+    (item) => { item.entitlements.items[0].state = "archived"; },
+    (item) => { item.entitlements.items[0].project_id = "proj_attacker"; },
     (item) => { item.entitlements.items[0].lookup_key = "Other Entitlement"; },
+    (item) => { item.entitlements.items[0].products.items[0].object = "unexpected"; },
+    (item) => { item.entitlements.items[0].products.items[0].state = "archived"; },
     (item) => { item.entitlements.items[0].products.items[0].store_identifier = "attacker.product"; },
     (item) => { item.entitlements.items[0].products.items[0].id = "prod_other"; },
     (item) => { item.entitlements.items.push(structuredClone(item.entitlements.items[0])); },
@@ -490,11 +555,40 @@ test("RevenueCat corroboration requires one exact App Store environment entitlem
     });
 
     const result = await verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     });
 
     assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
   }
+});
+
+test("RevenueCat corroboration rejects an allowlisted product different from the current Apple product", async () => {
+  const body = revenueCatSubscriptionList();
+  body.items[0].product_id = "prod_annual";
+  body.items[0].entitlements.items[0].products.items[0].id = "prod_annual";
+  body.items[0].entitlements.items[0].products.items[0].store_identifier =
+    "cyclebalance.premium.annual";
+  const verifier = proxyModule.createRevenueCatSubscriptionVerifier({
+    apiKey: "sk_test_server_key",
+    projectId: "proj8da4e000",
+    entitlementLookupKey: "CycleBalance Unlimited",
+    allowedProductIds: new Set([
+      "cyclebalance.premium.monthly",
+      "cyclebalance.premium.annual",
+    ]),
+    fetchImpl: async () => new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+  });
+
+  const result = await verifier.check({
+    transaction: verifiedRevenueCatTransaction({
+      productId: "cyclebalance.premium.monthly",
+    }),
+  });
+
+  assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
 });
 
 test("RevenueCat corroboration rejects paginated or multiple subscription matches", async () => {
@@ -528,7 +622,7 @@ test("RevenueCat corroboration rejects paginated or multiple subscription matche
     });
 
     const result = await verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     });
 
     assert.deepEqual(result, { allowed: false, reason: "revenuecat_subscription_mismatch" });
@@ -550,7 +644,7 @@ test("RevenueCat corroboration fails closed on malformed JSON without exposing u
 
   await assert.rejects(
     () => verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     }),
     (error) => {
       assert.equal(error.code, "REVENUECAT_RESPONSE_INVALID");
@@ -576,7 +670,7 @@ test("RevenueCat corroboration treats a malformed list envelope as an invalid re
 
   await assert.rejects(
     () => verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     }),
     (error) => error.code === "REVENUECAT_RESPONSE_INVALID" && error.retryable === true
   );
@@ -608,7 +702,7 @@ test("RevenueCat corroboration cancels an oversized streamed JSON response at th
 
   await assert.rejects(
     () => verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     }),
     (error) => error.code === "REVENUECAT_RESPONSE_INVALID" && error.retryable === true
   );
@@ -630,7 +724,7 @@ test("RevenueCat corroboration classifies non-success responses without exposing
 
     await assert.rejects(
       () => verifier.check({
-        transaction: { transactionId: "1000000987654321", environment: "Production" },
+        transaction: verifiedRevenueCatTransaction(),
       }),
       (error) => {
         assert.equal(error.code, "REVENUECAT_UNAVAILABLE");
@@ -658,7 +752,7 @@ test("RevenueCat corroboration converts a short timeout to a retryable secret-sa
 
   await assert.rejects(
     () => verifier.check({
-      transaction: { transactionId: "1000000987654321", environment: "Production" },
+      transaction: verifiedRevenueCatTransaction(),
     }),
     (error) => {
       assert.equal(error.code, "REVENUECAT_UNAVAILABLE");
@@ -684,7 +778,7 @@ test("RevenueCat corroboration applies its short timeout while reading the respo
     await assert.rejects(
       Promise.race([
         verifier.check({
-          transaction: { transactionId: "1000000987654321", environment: "Production" },
+          transaction: verifiedRevenueCatTransaction(),
         }),
         new Promise((_, reject) => {
           guardTimeout = setTimeout(() => reject(new Error("body read hung")), 250);
@@ -734,9 +828,11 @@ test("RevenueCat corroboration refuses an invalid verified transaction before ne
   });
 
   for (const transaction of [
-    { transactionId: "", environment: "Production" },
-    { transactionId: "1000000987654321", environment: "Staging" },
-    { transactionId: "x".repeat(256), environment: "Sandbox" },
+    verifiedRevenueCatTransaction({ transactionId: "" }),
+    verifiedRevenueCatTransaction({ environment: "Staging" }),
+    verifiedRevenueCatTransaction({ transactionId: "x".repeat(256), environment: "Sandbox" }),
+    verifiedRevenueCatTransaction({ productId: "" }),
+    verifiedRevenueCatTransaction({ productId: "attacker.product" }),
   ]) {
     assert.deepEqual(await verifier.check({ transaction }), {
       allowed: false,
@@ -757,12 +853,15 @@ function revenueCatSubscriptionList(subscriptionOverrides = {}) {
         object: "list",
         next_page: null,
         items: [{
+          state: "active",
           object: "entitlement",
+          project_id: "proj8da4e000",
           lookup_key: "CycleBalance Unlimited",
           products: {
             object: "list",
             next_page: null,
             items: [{
+              state: "active",
               object: "product",
               id: "prod_monthly",
               store_identifier: "cyclebalance.premium.monthly",
@@ -777,6 +876,15 @@ function revenueCatSubscriptionList(subscriptionOverrides = {}) {
     }],
     next_page: null,
     url: "/v2/projects/proj8da4e000/subscriptions",
+  };
+}
+
+function verifiedRevenueCatTransaction(overrides = {}) {
+  return {
+    transactionId: "1000000987654321",
+    environment: "Production",
+    productId: "cyclebalance.premium.monthly",
+    ...overrides,
   };
 }
 
