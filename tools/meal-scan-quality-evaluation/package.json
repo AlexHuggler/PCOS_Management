@@ -1,0 +1,15 @@
+{
+  "name": "cyclebalance-meal-scan-quality-evaluation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "evaluate": "node run-evaluation.mjs",
+    "prepare": "node prepare-bundle.mjs",
+    "score": "node score.mjs",
+    "test": "node --test test/*.test.mjs && python3 -m unittest discover -s test -p '*_test.py'"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

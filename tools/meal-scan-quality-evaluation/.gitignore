@@ -1,0 +1,8 @@
+/private/
+/manifest.private.json
+/image-map.private.json
+/results.private.json
+/stability-results.private.json
+/report.private.json
+__pycache__/
+*.pyc

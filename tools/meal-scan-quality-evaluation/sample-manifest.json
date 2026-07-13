@@ -1,0 +1,1292 @@
+{
+  "version": 2,
+  "candidate": {
+    "modelVersion": "gemini-3.1-flash-lite",
+    "promptVersion": "meal-scan-prompt-v1",
+    "schemaVersion": "meal-scan-gemini-v1",
+    "normalizerVersion": "imageio-960-jpeg078-v1",
+    "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "records": [
+    {
+      "id": "nutrition5k_001",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_001",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000001",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_002",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_002",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000002",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_003",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_003",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000003",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_004",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_004",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000004",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_005",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_005",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000005",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_006",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_006",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000006",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_007",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_007",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000007",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_008",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_008",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000008",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_009",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_009",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000009",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_010",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_010",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000010",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_011",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_011",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000011",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_012",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_012",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000012",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_013",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_013",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000013",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_014",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_014",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000014",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_015",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_015",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000015",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_016",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_016",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000016",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_017",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_017",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000017",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_018",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_018",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000018",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_019",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_019",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000019",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_020",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_020",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000020",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_021",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_021",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000021",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_022",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_022",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000022",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_023",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_023",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000023",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_024",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_024",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000024",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_025",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_025",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000025",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_026",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_026",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000026",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_027",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_027",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000027",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_028",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_028",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000028",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_029",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_029",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000029",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_030",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_030",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000030",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_031",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_031",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000031",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_032",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_032",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000032",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_033",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_033",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000033",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_034",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_034",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000034",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_035",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_035",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000035",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_036",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_036",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000036",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_037",
+      "source": "Nutrition5k",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_037",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000037",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_038",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_038",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000038",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_039",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_039",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000039",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "nutrition5k_040",
+      "source": "Nutrition5k",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/nutrition5k/nutrition5k_040",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000040",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_001",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_001",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000041",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_002",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_002",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000042",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_003",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_003",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000043",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_004",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_004",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000044",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_005",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_005",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000045",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_006",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_006",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000046",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_007",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_007",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000047",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_008",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_008",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000048",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_009",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_009",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000049",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_010",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_010",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000050",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_011",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_011",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000051",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_012",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_012",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000052",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_013",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_013",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000053",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_014",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_014",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000054",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_015",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_015",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000055",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_016",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_016",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000056",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_017",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_017",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000057",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_018",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_018",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000058",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_019",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_019",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000059",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_020",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_020",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000060",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_021",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_021",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000061",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_022",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_022",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000062",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_023",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_023",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000063",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_024",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_024",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000064",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_025",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_025",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000065",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_026",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_026",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000066",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_027",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_027",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000067",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_028",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_028",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000068",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_029",
+      "source": "SNAPMe",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/snapme/snapme_029",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000069",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "snapme_030",
+      "source": "SNAPMe",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/snapme/snapme_030",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000070",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_001",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_001",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000071",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_002",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_002",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000072",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_003",
+      "source": "MFDS",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/mfds/mfds_003",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000073",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_004",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_004",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000074",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_005",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_005",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000075",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_006",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_006",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000076",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_007",
+      "source": "MFDS",
+      "holdout": true,
+      "sourceUrl": "https://example.invalid/mfds/mfds_007",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000077",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_008",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_008",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000078",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_009",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_009",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000079",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    },
+    {
+      "id": "mfds_010",
+      "source": "MFDS",
+      "holdout": false,
+      "sourceUrl": "https://example.invalid/mfds/mfds_010",
+      "license": "SAMPLE_ONLY_REPLACE_WITH_VERIFIED_RECORD_LICENSE",
+      "imageSha256": "0000000000000000000000000000000000000000000000000000000000000080",
+      "groundTruth": {
+        "calories": 500,
+        "protein": 25,
+        "carbs": 50,
+        "fat": 20
+      },
+      "referenceType": "sample_placeholder_replace_with_verified_reference_type",
+      "samplingReason": "sample schema placeholder; replace with the documented selection rationale"
+    }
+  ]
+}
