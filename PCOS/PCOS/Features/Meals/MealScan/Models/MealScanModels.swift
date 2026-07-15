@@ -28,10 +28,10 @@ enum NutritionConfidence: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .high: "Good estimate"
-        case .medium: "Review suggested"
-        case .low: "Needs confirmation"
-        case .unknown: "Manual estimate"
+        case .high: L10n.string("Good estimate", defaultValue: "Good estimate")
+        case .medium: L10n.string("Review suggested", defaultValue: "Review suggested")
+        case .low: L10n.string("Needs confirmation", defaultValue: "Needs confirmation")
+        case .unknown: L10n.string("Manual estimate", defaultValue: "Manual estimate")
         }
     }
 
@@ -61,11 +61,11 @@ enum HiddenIngredientEstimate: String, Codable, CaseIterable, Identifiable, Send
 
     var displayName: String {
         switch self {
-        case .no: "No"
-        case .aLittle: "A little"
-        case .moderate: "Moderate"
-        case .aLot: "A lot"
-        case .notSure: "Not sure"
+        case .no: L10n.string("No", defaultValue: "No")
+        case .aLittle: L10n.string("A little", defaultValue: "A little")
+        case .moderate: L10n.string("Moderate", defaultValue: "Moderate")
+        case .aLot: L10n.string("A lot", defaultValue: "A lot")
+        case .notSure: L10n.string("Not sure", defaultValue: "Not sure")
         }
     }
 
@@ -89,11 +89,11 @@ enum GlycemicImpactLevel: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .low: "Low"
-        case .moderate: "Moderate"
-        case .moderateHigh: "Moderate-high"
-        case .high: "High"
-        case .unknown: "Unknown"
+        case .low: L10n.string("Low", defaultValue: "Low")
+        case .moderate: L10n.string("Moderate", defaultValue: "Moderate")
+        case .moderateHigh: L10n.string("Moderate-high", defaultValue: "Moderate-high")
+        case .high: L10n.string("High", defaultValue: "High")
+        case .unknown: L10n.string("Unknown", defaultValue: "Unknown")
         }
     }
 
@@ -320,6 +320,155 @@ struct MealFoodItemDraft: Identifiable, Equatable, Codable, Sendable {
     var portionEstimationMethod: PortionEstimationMethod = .mockFixture
     var wasUserEdited: Bool = false
     var isMixedDish: Bool = false
+}
+
+/// Privacy-first content for the post-save scanner share card.
+/// Optional meal details are absent unless the user explicitly enables them.
+struct ScannerShareCard: Equatable, Sendable {
+    struct Options: Equatable, Sendable {
+        var includeFoodNames = false
+        var includePhoto = false
+        var includeMacros = false
+    }
+
+    struct Macros: Equatable, Sendable {
+        var proteinGrams: Double
+        var carbsGrams: Double
+        var fatGrams: Double
+    }
+
+    static let canonicalMealScanURL = URL(string: "https://cyclebalance.app/meal-scan")!
+    private static let appStoreURL = URL(string: "https://apps.apple.com/us/app/cyclebalance/id6760353511")!
+
+    let headline: String
+    let reviewedFoodCount: Int
+    let adjustedPortionCount: Int
+    let brandName: String
+    let destinationURL: URL
+    let foodNames: [String]?
+    let flattenedPhotoPNGData: Data?
+    let macros: Macros?
+
+    @MainActor
+    init(
+        items: [MealFoodItemDraft],
+        nutrition: NutritionSnapshot,
+        sourcePhoto: UIImage?,
+        options: Options = Options(),
+        providerToken: String? = ScannerShareCard.configuredProviderToken
+    ) {
+        headline = L10n.string(
+            "Photo estimate — reviewed by me",
+            defaultValue: "Photo estimate — reviewed by me"
+        )
+        reviewedFoodCount = items.count
+        adjustedPortionCount = items.filter(\.wasUserEdited).count
+        brandName = "CycleBalance"
+        destinationURL = Self.destinationURL(providerToken: providerToken)
+        foodNames = options.includeFoodNames ? items.map(\.displayName) : nil
+        flattenedPhotoPNGData = options.includePhoto
+            ? Self.flattenedPNGData(from: sourcePhoto)
+            : nil
+        macros = options.includeMacros
+            ? Macros(
+                proteinGrams: nutrition.proteinGrams,
+                carbsGrams: nutrition.carbsGrams,
+                fatGrams: nutrition.fatGrams
+            )
+            : nil
+    }
+
+    static func campaignURL(providerToken: String?) -> URL? {
+        guard let providerToken = validatedProviderToken(providerToken) else {
+            return nil
+        }
+        var components = URLComponents(url: appStoreURL, resolvingAgainstBaseURL: false)
+        components?.queryItems = [
+            URLQueryItem(name: "pt", value: providerToken),
+            URLQueryItem(name: "ct", value: "meal_scan_share"),
+            URLQueryItem(name: "mt", value: "8"),
+        ]
+        return components?.url
+    }
+
+    static func destinationURL(providerToken: String?) -> URL {
+        campaignURL(providerToken: providerToken) ?? canonicalMealScanURL
+    }
+
+    private static var configuredProviderToken: String? {
+        Bundle.main.object(forInfoDictionaryKey: "APP_STORE_PROVIDER_TOKEN") as? String
+    }
+
+    private static func validatedProviderToken(_ candidate: String?) -> String? {
+        guard let candidate else { return nil }
+        let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed.count <= 20,
+              trimmed.allSatisfy(\.isNumber) else {
+            return nil
+        }
+        return trimmed
+    }
+
+    var visibleText: String {
+        var lines = [
+            headline,
+            "\(reviewedFoodCount) \(L10n.string("Foods reviewed", defaultValue: "Foods reviewed"))",
+            "\(adjustedPortionCount) \(L10n.string("Adjusted portions", defaultValue: "Adjusted portions"))",
+            brandName,
+        ]
+        if let foodNames {
+            lines.append(contentsOf: foodNames)
+        }
+        if let macros {
+            lines.append(
+                "\(L10n.string("Protein", defaultValue: "Protein")) \(MealNutritionCalculator.displayMacro(macros.proteinGrams)) g"
+            )
+            lines.append(
+                "\(L10n.string("Carbs", defaultValue: "Carbs")) \(MealNutritionCalculator.displayMacro(macros.carbsGrams)) g"
+            )
+            lines.append(
+                "\(L10n.string("Fat", defaultValue: "Fat")) \(MealNutritionCalculator.displayMacro(macros.fatGrams)) g"
+            )
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    @MainActor
+    private static func flattenedPNGData(from sourcePhoto: UIImage?) -> Data? {
+        guard let sourcePhoto, sourcePhoto.size.width > 0, sourcePhoto.size.height > 0 else {
+            return nil
+        }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: sourcePhoto.size, format: format)
+            .image { _ in
+                UIColor.systemBackground.setFill()
+                UIRectFill(CGRect(origin: .zero, size: sourcePhoto.size))
+                sourcePhoto.draw(in: CGRect(origin: .zero, size: sourcePhoto.size))
+            }
+            .pngData()
+    }
+}
+
+/// Presentation-only state. A cancelled share never mutates the saved meal or
+/// increments completion state.
+struct ScannerSharePresentationState: Equatable, Sendable {
+    private(set) var isPresented = false
+    private(set) var completedShareCount = 0
+
+    mutating func begin() {
+        isPresented = true
+    }
+
+    mutating func finish(completed: Bool) {
+        guard isPresented else { return }
+        isPresented = false
+        if completed {
+            completedShareCount += 1
+        }
+    }
 }
 
 struct MealMetabolicProfile: Codable, Equatable, Sendable {

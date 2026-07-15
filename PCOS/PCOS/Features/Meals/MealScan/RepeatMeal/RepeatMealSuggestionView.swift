@@ -6,48 +6,38 @@ struct RepeatMealSuggestionView: View {
     let onScanAsNew: () -> Void
 
     var body: some View {
-        ZStack {
-            BotanicalScreenBackground(style: .quiet)
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppTheme.spacing20) {
-                    VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-                        header
-                        suggestionCard
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(accessibilitySummary)
-                    .accessibilityIdentifier("meal_scan.repeat_suggestion.summary")
-
-                    VStack(spacing: AppTheme.spacing12) {
-                        Button(action: onUsePrevious) {
-                            Text(L10n.string("Use Previous Meal", defaultValue: "Use Previous Meal"))
-                                .appFont(.headline, weight: .semibold)
-                                .frame(maxWidth: .infinity, minHeight: 48)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(primaryActionColor)
-                        .accessibilityIdentifier("meal_scan.repeat_suggestion.use_previous")
-
-                        Button(action: onScanAsNew) {
-                            Text(L10n.string("Scan as New", defaultValue: "Scan as New"))
-                                .appFont(.headline, weight: .semibold)
-                                .frame(maxWidth: .infinity, minHeight: 48)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(secondaryActionColor)
-                        .accessibilityIdentifier("meal_scan.repeat_suggestion.scan_as_new")
-                    }
-                    .controlSize(.large)
-                }
-                .padding(.horizontal, AppTheme.spacing16)
-                .padding(.top, AppTheme.spacing20)
-                .padding(.bottom, AppTheme.spacing24)
+        VStack(alignment: .leading, spacing: AppTheme.spacing20) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                header
+                suggestionCard
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilitySummary)
+            .accessibilityIdentifier("meal_scan.repeat_suggestion.summary")
+
+            VStack(spacing: AppTheme.spacing12) {
+                Button(action: onUsePrevious) {
+                    Text(L10n.string("Use Previous Meal", defaultValue: "Use Previous Meal"))
+                        .appFont(.headline, weight: .semibold)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(primaryActionColor)
+                .accessibilityIdentifier("meal_scan.repeat_suggestion.use_previous")
+
+                Button(action: onScanAsNew) {
+                    Text(L10n.string("Scan as New", defaultValue: "Scan as New"))
+                        .appFont(.headline, weight: .semibold)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .buttonStyle(.bordered)
+                .tint(secondaryActionColor)
+                .accessibilityIdentifier("meal_scan.repeat_suggestion.scan_as_new")
+            }
+            .controlSize(.large)
         }
-        .background(AppTheme.usesPremiumEditorStyling ? AppTheme.premiumEditorBackground : AppTheme.groupedBackground)
         .accessibilityIdentifier("meal_scan.repeat_suggestion")
     }
 
@@ -88,7 +78,7 @@ struct RepeatMealSuggestionView: View {
                 Text(MealNutritionCalculator.displayCalories(suggestion.snapshot.nutrition.caloriesKcal))
                     .appFont(.title2, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
-                Text("kcal")
+                Text(L10n.string("kcal", defaultValue: "kcal"))
                     .appFont(.subheadline, weight: .medium)
                     .foregroundStyle(AppTheme.secondaryText)
             }

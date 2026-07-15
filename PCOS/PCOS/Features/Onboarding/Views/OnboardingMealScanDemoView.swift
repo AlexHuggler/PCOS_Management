@@ -97,7 +97,7 @@ struct OnboardingMealScanDemoView: View {
             }
 
             Label(
-                L10n.string("Cycle note: pairing protein with carbs can support steadier energy during sensitive days.", defaultValue: "Cycle note: pairing protein with carbs can support steadier energy during sensitive days."),
+                L10n.string("Editable draft: check foods, portions, and hidden ingredients before saving.", defaultValue: "Editable draft: check foods, portions, and hidden ingredients before saving."),
                 systemImage: "leaf.fill"
             )
             .appFont(.caption)

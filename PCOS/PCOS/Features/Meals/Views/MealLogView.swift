@@ -16,6 +16,7 @@ enum MealLogEntryPoint: String, Sendable {
 enum MealLogInitialDestination: Sendable {
     case form
     case barcode
+    case afterMealContext
 }
 
 private func localizedNutritionSourceLabel(_ sourceLabel: String) -> String {
@@ -182,6 +183,10 @@ struct MealLogView: View {
                         },
                         onChooseManual: {
                             showingMealScan = false
+                        },
+                        onAddContext: {
+                            showingMealScan = false
+                            focusedField = .postMealNote
                         }
                     )
                 }
@@ -1521,6 +1526,8 @@ struct MealLogView: View {
             break
         case .barcode:
             showingBarcodeImport = true
+        case .afterMealContext:
+            focusedField = .postMealNote
         }
     }
 

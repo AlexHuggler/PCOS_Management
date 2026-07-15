@@ -104,20 +104,20 @@ struct MealMetabolicProfileService {
         let explanation: String
         switch impact {
         case .low:
-            explanation = "This meal may have a low glucose impact. Protein and fiber may help balance the meal."
+            explanation = L10n.string("This meal may have a low glucose impact. Protein and fiber may help balance the meal.", defaultValue: "This meal may have a low glucose impact. Protein and fiber may help balance the meal.")
         case .moderate:
-            explanation = "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal."
+            explanation = L10n.string("This meal may have a moderate glucose impact. Protein and fiber may help balance the meal.", defaultValue: "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal.")
         case .moderateHigh:
-            explanation = "This meal may have a moderate-high glucose impact, mostly from visible carbs."
+            explanation = L10n.string("This meal may have a moderate-high glucose impact, mostly from visible carbs.", defaultValue: "This meal may have a moderate-high glucose impact, mostly from visible carbs.")
         case .high:
-            explanation = "This meal may have a higher glucose impact, mostly from visible carbs and lower fiber."
+            explanation = L10n.string("This meal may have a higher glucose impact, mostly from visible carbs and lower fiber.", defaultValue: "This meal may have a higher glucose impact, mostly from visible carbs and lower fiber.")
         case .unknown:
-            explanation = "This meal needs review before CycleBalance can estimate glucose impact."
+            explanation = L10n.string("This meal needs review before CycleBalance can estimate glucose impact.", defaultValue: "This meal needs review before CycleBalance can estimate glucose impact.")
         }
 
         let caution: String?
         if hiddenIngredientEstimate != .no || confidence.rank <= NutritionConfidence.medium.rank || !visibleWarnings.isEmpty {
-            caution = "Nutrition values are estimates and can vary with preparation, ingredients, oil, dressing, sauces, and portion size. CycleBalance is not a medical device."
+            caution = L10n.string("Nutrition values are estimates and can vary with preparation, ingredients, oil, dressing, sauces, and portion size. CycleBalance is not a medical device.", defaultValue: "Nutrition values are estimates and can vary with preparation, ingredients, oil, dressing, sauces, and portion size. CycleBalance is not a medical device.")
         } else {
             caution = nil
         }

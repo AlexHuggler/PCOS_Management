@@ -389,8 +389,8 @@ private enum PaywallCopy {
         switch reason {
         case .mealScan:
             string(
-                "Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts.",
-                defaultValue: "Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts.",
+                "Turn meal photos into editable nutrition drafts you review before saving.",
+                defaultValue: "Turn meal photos into editable nutrition drafts you review before saving.",
                 language: language
             )
         case .general:

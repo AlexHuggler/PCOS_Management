@@ -19,6 +19,12 @@ final class MealScanViewModel {
         case saved
     }
 
+    enum ProcessingStage: Equatable {
+        case preparingPhoto
+        case checkingPreviousEstimate
+        case estimatingFoodsAndPortions
+    }
+
     private let modelContext: ModelContext
     private var pipeline: MealScanPipeline
     private let nutritionRepository: LocalFoodNutritionRepository
@@ -43,8 +49,9 @@ final class MealScanViewModel {
     private var pendingPhotoRetryAvailableAt: Date?
 
     var phase: Phase = .entry
+    private(set) var processingStage: ProcessingStage = .preparingPhoto
     var mealType: MealType
-    var mealName: String = "Photo meal estimate"
+    var mealName: String = L10n.string("Photo meal estimate", defaultValue: "Photo meal estimate")
     var draftItems: [MealFoodItemDraft] = []
     var totalNutrition = NutritionSnapshot()
     var metabolicProfile: MealMetabolicProfile?
@@ -140,6 +147,10 @@ final class MealScanViewModel {
         } else {
             self.repeatMealCache = nil
         }
+
+        #if DEBUG
+        applyUITestPhaseFixtureIfNeeded(arguments: ProcessInfo.processInfo.arguments)
+        #endif
     }
 
     func startScan() {
@@ -167,6 +178,7 @@ final class MealScanViewModel {
         errorMessage = nil
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
+        processingStage = .preparingPhoto
         phase = .processing
         let normalizedImage = try imageNormalizer.normalizeJPEGData(from: image)
         pendingNormalizedImage = normalizedImage
@@ -247,6 +259,7 @@ final class MealScanViewModel {
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
 
+        processingStage = .checkingPreviousEstimate
         if let remoteMealScanService,
            let normalizedImage = pendingNormalizedImage {
             if let cachedOutcome = try? await remoteMealScanService.cachedOutcome(
@@ -329,7 +342,7 @@ final class MealScanViewModel {
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
         errorMessage = nil
-        addManualFood(named: "Manual food")
+        addManualFood(named: L10n.string("Manual food", defaultValue: "Manual food"))
     }
 
     private func performPendingImageScan(startedFromUnknownRecheck: Bool = false) async throws {
@@ -339,6 +352,7 @@ final class MealScanViewModel {
 
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
+        processingStage = remoteMealScanService == nil ? .preparingPhoto : .estimatingFoodsAndPortions
         phase = .processing
         resetPendingPhotoRetryState()
         let result: MealScanResult
@@ -415,7 +429,23 @@ final class MealScanViewModel {
     }
 
     func useMockPhoto() async {
-        await scanWithFallback(image: UIImage())
+        #if DEBUG
+        guard let sampleImage = UIImage(named: "botanical-meal-bowl") else {
+            errorMessage = L10n.string(
+                "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
+                defaultValue: "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually."
+            )
+            phase = .manualFallback
+            return
+        }
+        await scanWithFallback(image: sampleImage)
+        #else
+        errorMessage = L10n.string(
+            "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
+            defaultValue: "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually."
+        )
+        phase = .manualFallback
+        #endif
     }
 
     func apply(result: MealScanResult) {
@@ -458,10 +488,11 @@ final class MealScanViewModel {
         recalculate()
     }
 
-    func addManualFood(named name: String = "Food", grams: Double = 0) {
+    func addManualFood(named name: String? = nil, grams: Double = 0) {
+        let resolvedName = name ?? L10n.string("Food", defaultValue: "Food")
         draftItems.append(
             MealFoodItemDraft(
-                displayName: name,
+                displayName: resolvedName,
                 canonicalFoodId: "manual-food",
                 nutritionSource: .userManual,
                 estimatedGrams: grams,
@@ -487,14 +518,14 @@ final class MealScanViewModel {
             let grams = estimate.addedOilGrams
             draftItems.append(
                 MealFoodItemDraft(
-                    displayName: "Olive oil estimate",
+                    displayName: L10n.string("Olive oil estimate", defaultValue: "Olive oil estimate"),
                     canonicalFoodId: oil.id,
                     nutritionSource: oil.source,
                     estimatedGrams: grams,
                     servingDescription: estimate.displayName,
                     nutrition: calculator.calculateItemNutrition(food: oil, grams: grams),
                     confidence: estimate == .notSure ? .low : .medium,
-                    warning: "Added from hidden oil, butter, dressing, or sauce prompt.",
+                    warning: L10n.string("Added from hidden oil, butter, dressing, or sauce prompt.", defaultValue: "Added from hidden oil, butter, dressing, or sauce prompt."),
                     detectionSource: "hidden_ingredient_prompt",
                     portionEstimationMethod: .servingSizeHeuristic,
                     wasUserEdited: true
@@ -693,6 +724,30 @@ final class MealScanViewModel {
         }
         return ISO8601DateFormatter().date(from: value)
     }
+
+    #if DEBUG
+    private func applyUITestPhaseFixtureIfNeeded(arguments: [String]) {
+        guard arguments.contains("UITestMode") else { return }
+
+        if arguments.contains("SeedMealScanProcessingPhase") {
+            processingStage = .estimatingFoodsAndPortions
+            phase = .processing
+        } else if arguments.contains("SeedMealScanManualFallbackPhase") {
+            errorMessage = L10n.string(
+                "No food was confidently detected. You can retake the photo or add the meal manually.",
+                defaultValue: "No food was confidently detected. You can retake the photo or add the meal manually."
+            )
+            phase = .manualFallback
+        } else if arguments.contains("SeedMealScanAmbiguousOutcomePhase") {
+            pendingRequestID = UUID(uuidString: "A8A72F4E-96C3-494F-B9BD-111D8D3B6AA8")
+            errorMessage = L10n.string(
+                "CycleBalance could not confirm whether the previous analysis completed.",
+                defaultValue: "CycleBalance could not confirm whether the previous analysis completed."
+            )
+            phase = .ambiguousOutcome
+        }
+    }
+    #endif
 }
 
 #if DEBUG

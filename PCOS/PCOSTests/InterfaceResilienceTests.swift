@@ -237,7 +237,9 @@ struct InterfaceResilienceTests {
 
         #expect(source.contains("suggestion.sourceMealLoggedAt"))
         #expect(source.contains("last logged %@"))
-        #expect(source.contains("ScrollView"))
+        #expect(!source.contains("ScrollView"))
+        #expect(source.contains("ViewThatFits(in: .horizontal)"))
+        #expect(flowSource.contains("MealScanPhaseShell("))
         #expect(source.contains(".fixedSize(horizontal: false, vertical: true)"))
         #expect(source.contains("meal_scan.repeat_suggestion.use_previous"))
         #expect(source.contains("meal_scan.repeat_suggestion.scan_as_new"))

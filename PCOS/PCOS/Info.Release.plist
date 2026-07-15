@@ -20,6 +20,8 @@
 	<string>CycleBalance</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>APP_STORE_PROVIDER_TOKEN</key>
+	<string>$(APP_STORE_PROVIDER_TOKEN)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>

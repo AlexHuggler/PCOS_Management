@@ -374,8 +374,20 @@ final class PCOSUITests: XCTestCase {
 
     @MainActor
     private func saveScreenshotArtifact(named filename: String) throws {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = filename
+        attachment.lifetime = .keepAlways
+        add(attachment)
+
         let directoryURL: URL
-        if let artifactDirectory = ProcessInfo.processInfo.environment["BOTANICAL_UI_ARTIFACT_DIR"] {
+        if filename.hasPrefix("task-2-") {
+            directoryURL = URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent(".superpowers/sdd/task-2-screenshots", isDirectory: true)
+        } else if let artifactDirectory = ProcessInfo.processInfo.environment["BOTANICAL_UI_ARTIFACT_DIR"] {
             directoryURL = URL(fileURLWithPath: artifactDirectory, isDirectory: true)
         } else {
             directoryURL = URL(fileURLWithPath: #filePath)
@@ -387,7 +399,7 @@ final class PCOSUITests: XCTestCase {
 
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let screenshotURL = directoryURL.appendingPathComponent(filename)
-        try XCUIScreen.main.screenshot().pngRepresentation.write(to: screenshotURL, options: .atomic)
+        try screenshot.pngRepresentation.write(to: screenshotURL, options: .atomic)
     }
 
     override func setUpWithError() throws {
@@ -1930,6 +1942,347 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.actions").waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_scan.manual_button"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testMealScanReleasePhaseMatrixAcrossAllThemes() throws {
+        let themes = [
+            (option: "lunarCalm", artifact: "lunar-calm"),
+            (option: "botanicalJournal", artifact: "botanical-journal"),
+            (option: "fruitGrove", artifact: "fruit-grove"),
+            (option: "highContrast", artifact: "high-contrast"),
+        ]
+
+        for theme in themes {
+            let app = makeApp(
+                language: "en",
+                locale: "en_US",
+                onboardingCompleted: true,
+                appLanguage: "system",
+                themeOption: theme.option,
+                demoScenario: "symptomManagement"
+            )
+            app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+            app.launch()
+
+            openMealLogFromTrackHub(in: app)
+            openMealScanFromMealLog(in: app)
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.entry").waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-entry.png")
+
+            let scanButton = app.buttons["meal_scan.scan_button"]
+            XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+            scanButton.tap()
+            let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+            XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+            sampleButton.tap()
+
+            XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+            XCTAssertTrue(app.buttons.matching(identifier: "meal_scan.edit_food_item").firstMatch.waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-review.png")
+
+            let scrollContainer = app.scrollViews.firstMatch
+            let saveButton = app.buttons["meal_scan.save_button"]
+            scrollToElement(saveButton, in: scrollContainer, maxSwipes: 16)
+            saveButton.tap()
+
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
+            XCTAssertTrue(app.buttons["meal_scan.saved.view_meal"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.buttons["meal_scan.saved.add_context"].waitForExistence(timeout: 5))
+            let shareButton = app.buttons["meal_scan.saved.share"]
+            XCTAssertTrue(shareButton.waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-saved.png")
+
+            scrollToElement(shareButton, in: scrollContainer, maxSwipes: 8)
+            shareButton.tap()
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.share.preview").waitForExistence(timeout: 8))
+            XCTAssertTrue(app.switches["Include food names"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.switches["Include meal photo"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.switches["Include nutrition macros"].waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-share.png")
+            app.terminate()
+        }
+    }
+
+    @MainActor
+    func testMealScanConsentMatrixAcrossAllThemes() throws {
+        let themes = [
+            (option: "lunarCalm", artifact: "lunar-calm"),
+            (option: "botanicalJournal", artifact: "botanical-journal"),
+            (option: "fruitGrove", artifact: "fruit-grove"),
+            (option: "highContrast", artifact: "high-contrast"),
+        ]
+
+        for theme in themes {
+            let app = makeApp(
+                language: "en",
+                locale: "en_US",
+                onboardingCompleted: true,
+                appLanguage: "system",
+                themeOption: theme.option,
+                demoScenario: "symptomManagement"
+            )
+            app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData", "-enableGeminiMealScan"]
+            app.launchEnvironment["MEAL_SCAN_PROXY_BASE_URL"] = "https://meal-scan-ui-test.invalid"
+            app.launch()
+
+            openMealLogFromTrackHub(in: app)
+            openMealScanFromMealLog(in: app)
+            app.buttons["meal_scan.scan_button"].tap()
+            let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+            XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+            sampleButton.tap()
+
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.remote_consent").waitForExistence(timeout: 8))
+            XCTAssertTrue(app.buttons["meal_scan.remote_consent.continue"].waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-consent.png")
+            app.terminate()
+        }
+    }
+
+    @MainActor
+    func testMealScanSmallestPhoneAccessibilityXXXLFlow() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "highContrast",
+            demoScenario: "symptomManagement",
+            contentSizeCategory: "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+        let entryScroll = app.scrollViews.firstMatch
+        let scanButton = app.buttons["meal_scan.scan_button"]
+        scrollToElement(scanButton, in: entryScroll, maxSwipes: 12)
+        scanButton.tap()
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        scrollToElement(sampleButton, in: app.scrollViews.firstMatch, maxSwipes: 12)
+        sampleButton.tap()
+
+        XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+        let saveButton = app.buttons["meal_scan.save_button"]
+        scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 20)
+        XCTAssertTrue(saveButton.isHittable)
+        try saveScreenshotArtifact(named: "task-2-smallest-high-contrast-axxxl-review.png")
+        saveButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
+        let shareButton = app.buttons["meal_scan.saved.share"]
+        scrollToElement(shareButton, in: app.scrollViews.firstMatch, maxSwipes: 12)
+        XCTAssertTrue(shareButton.isHittable)
+        try saveScreenshotArtifact(named: "task-2-smallest-high-contrast-axxxl-saved.png")
+    }
+
+    @MainActor
+    func testMealScanSevenLanguageSavedShareSmoke() throws {
+        let localizations = [
+            (language: "en", locale: "en_US", artifact: "en"),
+            (language: "de", locale: "de_DE", artifact: "de"),
+            (language: "fr", locale: "fr_FR", artifact: "fr"),
+            (language: "it", locale: "it_IT", artifact: "it"),
+            (language: "ja", locale: "ja_JP", artifact: "ja"),
+            (language: "ko", locale: "ko_KR", artifact: "ko"),
+            (language: "nl", locale: "nl_NL", artifact: "nl"),
+        ]
+
+        for localization in localizations {
+            let app = makeApp(
+                language: localization.language,
+                locale: localization.locale,
+                onboardingCompleted: true,
+                appLanguage: "system",
+                themeOption: "lunarCalm",
+                demoScenario: "symptomManagement"
+            )
+            app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+            app.launch()
+
+            openMealLogFromTrackHub(in: app)
+            openMealScanFromMealLog(in: app)
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.entry").waitForExistence(timeout: 5))
+            let scanButton = app.buttons["meal_scan.scan_button"]
+            XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+            scanButton.tap()
+            let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+            XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+            sampleButton.tap()
+
+            XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+            let saveButton = app.buttons["meal_scan.save_button"]
+            scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 16)
+            saveButton.tap()
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
+            let shareButton = app.buttons["meal_scan.saved.share"]
+            scrollToElement(shareButton, in: app.scrollViews.firstMatch, maxSwipes: 8)
+            shareButton.tap()
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.share.preview").waitForExistence(timeout: 8))
+            try saveScreenshotArtifact(named: "task-2-language-\(localization.artifact)-meal-scan-share.png")
+            app.terminate()
+        }
+    }
+
+    @MainActor
+    func testMealScanLightAndDarkAppearanceSmoke() throws {
+        let appearances = [
+            (theme: "fruitGrove", artifact: "light"),
+            (theme: "lunarCalm", artifact: "dark"),
+        ]
+
+        for appearance in appearances {
+            let app = makeApp(
+                language: "en",
+                locale: "en_US",
+                onboardingCompleted: true,
+                appLanguage: "system",
+                themeOption: appearance.theme,
+                demoScenario: "symptomManagement"
+            )
+            app.launchArguments += [
+                "-enableMealScanV2",
+                "-enableMockMealScanData",
+            ]
+            app.launch()
+
+            openMealLogFromTrackHub(in: app)
+            openMealScanFromMealLog(in: app)
+            XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.entry").waitForExistence(timeout: 5))
+            try saveScreenshotArtifact(named: "task-2-appearance-\(appearance.artifact)-meal-scan-entry.png")
+            app.terminate()
+        }
+    }
+
+    @MainActor
+    func testMealScanCameraProcessingAndRecoveryPhaseFixtures() throws {
+        let cameraApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        cameraApp.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        cameraApp.launch()
+        openMealLogFromTrackHub(in: cameraApp)
+        openMealScanFromMealLog(in: cameraApp)
+        cameraApp.buttons["meal_scan.scan_button"].tap()
+        XCTAssertTrue(screenElement(in: cameraApp, identifier: "meal_scan.camera.permission").waitForExistence(timeout: 5))
+        XCTAssertTrue(cameraApp.buttons["meal_scan.import_photo_button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(cameraApp.buttons["meal_scan.take_photo_button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(cameraApp.buttons["meal_scan.camera.barcode"].waitForExistence(timeout: 5))
+        XCTAssertTrue(cameraApp.buttons["meal_scan.camera.manual"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-camera.png")
+        cameraApp.terminate()
+
+        let processingApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        processingApp.launchArguments += ["-enableMealScanV2", "SeedMealScanProcessingPhase"]
+        processingApp.launch()
+        openMealLogFromTrackHub(in: processingApp)
+        openMealScanFromMealLog(in: processingApp)
+        XCTAssertTrue(screenElement(in: processingApp, identifier: "meal_scan.lunar.processing").waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-processing.png")
+        processingApp.terminate()
+
+        let fallbackApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        fallbackApp.launchArguments += ["-enableMealScanV2", "SeedMealScanManualFallbackPhase"]
+        fallbackApp.launch()
+        openMealLogFromTrackHub(in: fallbackApp)
+        openMealScanFromMealLog(in: fallbackApp)
+        XCTAssertTrue(screenElement(in: fallbackApp, identifier: "meal_scan.lunar.manual_fallback").waitForExistence(timeout: 5))
+        let fallbackTitle = fallbackApp.staticTexts["meal_scan.phase.title"]
+        let fallbackClose = fallbackApp.buttons["meal_scan.phase.close"]
+        XCTAssertEqual(fallbackTitle.label, "Photo analysis unavailable")
+        XCTAssertTrue(fallbackClose.waitForExistence(timeout: 5))
+        let fallbackManualButton = fallbackApp.buttons["Enter nutrition manually"]
+        let fallbackBarcodeButton = fallbackApp.buttons["Scan a barcode"]
+        let retakeButton = fallbackApp.buttons["Retake photo"]
+        scrollToElement(retakeButton, in: fallbackApp.scrollViews.firstMatch, maxSwipes: 8)
+        XCTAssertTrue(fallbackManualButton.exists)
+        XCTAssertTrue(fallbackBarcodeButton.exists)
+        XCTAssertTrue(retakeButton.exists)
+        XCTAssertTrue(retakeButton.isHittable)
+        XCTAssertTrue(fallbackTitle.exists)
+        XCTAssertTrue(fallbackClose.isHittable)
+        try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-fallback.png")
+        retakeButton.tap()
+        XCTAssertTrue(screenElement(in: fallbackApp, identifier: "meal_scan.camera.permission").waitForExistence(timeout: 5))
+        fallbackApp.terminate()
+
+        let ambiguousApp = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        ambiguousApp.launchArguments += ["-enableMealScanV2", "SeedMealScanAmbiguousOutcomePhase"]
+        ambiguousApp.launch()
+        openMealLogFromTrackHub(in: ambiguousApp)
+        openMealScanFromMealLog(in: ambiguousApp)
+        XCTAssertTrue(screenElement(in: ambiguousApp, identifier: "meal_scan.unknown_outcome").waitForExistence(timeout: 5))
+        let ambiguousTitle = ambiguousApp.staticTexts["meal_scan.phase.title"]
+        let ambiguousClose = ambiguousApp.buttons["meal_scan.phase.close"]
+        XCTAssertEqual(ambiguousTitle.label, "Analysis status unknown")
+        XCTAssertTrue(ambiguousClose.waitForExistence(timeout: 5))
+        let requestNewButton = ambiguousApp.buttons["Consider a new analysis"]
+        XCTAssertTrue(requestNewButton.waitForExistence(timeout: 5))
+        scrollToElement(requestNewButton, in: ambiguousApp.scrollViews.firstMatch, maxSwipes: 8)
+        XCTAssertTrue(requestNewButton.isHittable)
+        XCTAssertTrue(ambiguousTitle.exists)
+        XCTAssertTrue(ambiguousClose.isHittable)
+        try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-ambiguous.png")
+        requestNewButton.tap()
+        XCTAssertTrue(screenElement(in: ambiguousApp, identifier: "meal_scan.new_attempt_confirmation").waitForExistence(timeout: 5))
+        let confirmNewButton = ambiguousApp.buttons["Start a new billable analysis"]
+        XCTAssertTrue(confirmNewButton.waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-new-attempt.png")
+        let goBackButton = ambiguousApp.buttons["Go back"]
+        XCTAssertTrue(goBackButton.waitForExistence(timeout: 5))
+        scrollToElement(goBackButton, in: ambiguousApp.scrollViews.firstMatch, maxSwipes: 8)
+        XCTAssertTrue(goBackButton.isHittable)
+        goBackButton.tap()
+        XCTAssertTrue(screenElement(in: ambiguousApp, identifier: "meal_scan.unknown_outcome").waitForExistence(timeout: 5))
+        ambiguousApp.terminate()
+    }
+
+    @MainActor
+    func testMealScanIncreaseContrastRuntimeSmoke() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "highContrast",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.entry").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "task-2-increase-contrast-high-contrast-entry.png")
     }
 
     @MainActor
