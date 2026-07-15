@@ -2028,7 +2028,7 @@ struct MealAfterMealContextEditor: View {
                         Text("\(value)")
                             .appFont(.caption, weight: .semibold)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 38)
+                            .frame(height: 44)
                             .background(
                                 Circle()
                                     .fill(

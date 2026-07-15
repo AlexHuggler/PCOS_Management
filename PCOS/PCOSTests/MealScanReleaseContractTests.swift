@@ -470,6 +470,9 @@ struct MealScanReleaseContractTests {
         #expect(viewModelSource.contains("savedMealID = confirmedMeal.id"))
         #expect(viewModelSource.contains("func updateSavedMealContext("))
         #expect(viewModelSource.contains("func savedMealGlucosePrefillContext()"))
+        #expect(viewModelSource.contains("L10n.format("))
+        #expect(viewModelSource.contains("\"After %@\""))
+        #expect(!viewModelSource.contains("mealContext: \"After \\(meal.mealDescription)\""))
         #expect(viewModelSource.contains("entry.id == targetMealID"))
         #expect(!contentSource.contains("routeMealScanFallback(to: .afterMealContext)"))
         #expect(!mealLogSource.contains("case afterMealContext"))
@@ -477,6 +480,21 @@ struct MealScanReleaseContractTests {
         #expect(mealLogSource.contains("focusNoteRequest: focusedField == .postMealNote"))
         #expect(mealLogSource.contains(".focused($isNoteFocused)"))
         #expect(mealLogSource.contains("onNoteFocusChanged"))
+    }
+
+    @Test("After-meal context intensity controls meet the minimum touch target")
+    func afterMealContextIntensityControlsAreAtLeast44Points() throws {
+        let mealLogSource = try source(
+            at: "PCOS/PCOS/Features/Meals/Views/MealLogView.swift"
+        )
+        let editorSource = try sourceSlice(
+            mealLogSource,
+            from: "struct MealAfterMealContextEditor: View",
+            to: "private extension View"
+        )
+
+        #expect(editorSource.contains(".frame(height: 44)"))
+        #expect(!editorSource.contains(".frame(height: 38)"))
     }
 
     @Test("Release hard-locks similarity while Debug keeps the override seam")

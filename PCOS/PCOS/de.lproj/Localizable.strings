@@ -2863,6 +2863,7 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal needs review before CycleBalance can estimate glucose impact." = "Diese Mahlzeit muss geprüft werden, bevor CycleBalance den Einfluss auf den Blutzucker schätzen kann.";
 "The saved meal could not be opened. Your meal remains saved." = "Die gespeicherte Mahlzeit konnte nicht geöffnet werden. Deine Mahlzeit bleibt gespeichert.";
 "Add meal context" = "Mahlzeitenkontext hinzufügen";
+"After %@" = "Nach %@";
 "Your check-in will update this saved meal without creating another meal." = "Dein Check-in aktualisiert diese gespeicherte Mahlzeit, ohne eine weitere Mahlzeit anzulegen.";
 "Glucose context" = "Blutzuckerkontext";
 "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Ein Blutzuckerwert nach der Mahlzeit wird separat gespeichert. Beim Öffnen wird diese Mahlzeit weder geändert noch dupliziert.";

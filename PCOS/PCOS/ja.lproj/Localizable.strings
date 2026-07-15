@@ -2787,6 +2787,7 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal needs review before CycleBalance can estimate glucose impact." = "CycleBalanceが血糖への影響を推定するには、この食事を確認する必要があります。";
 "The saved meal could not be opened. Your meal remains saved." = "保存した食事を開けませんでした。食事は保存されたままです。";
 "Add meal context" = "食事のコンテキストを追加";
+"After %@" = "%@の後";
 "Your check-in will update this saved meal without creating another meal." = "このチェックインは、新しい食事を作成せずに保存済みの食事を更新します。";
 "Glucose context" = "血糖コンテキスト";
 "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "食後の血糖値は別に保存されます。開いても、この食事が変更または複製されることはありません。";

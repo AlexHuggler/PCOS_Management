@@ -2810,6 +2810,7 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal needs review before CycleBalance can estimate glucose impact." = "Ce repas doit être vérifié avant que CycleBalance puisse estimer son effet glycémique.";
 "The saved meal could not be opened. Your meal remains saved." = "Le repas enregistré n’a pas pu être ouvert. Il reste enregistré.";
 "Add meal context" = "Ajouter un contexte au repas";
+"After %@" = "Après %@";
 "Your check-in will update this saved meal without creating another meal." = "Votre bilan mettra à jour ce repas enregistré sans en créer un autre.";
 "Glucose context" = "Contexte glycémique";
 "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Une mesure de glycémie après le repas est enregistrée séparément. L’ouvrir ne modifie ni ne duplique ce repas.";

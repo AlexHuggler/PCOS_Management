@@ -80,7 +80,7 @@ struct MealScanViewModelTests {
         #expect(viewModel.draftItems.first?.wasPortionAdjusted == true)
     }
 
-    @Test("saved-meal context updates the saved scan in place without duplication")
+    @Test("saved-meal context localizes glucose prefill and updates the exact scan in place")
     func savedMealContextUpdatesExactIdentityInPlace() async throws {
         let container = try TestHelpers.makeModelContainer()
         let context = container.mainContext
@@ -100,9 +100,14 @@ struct MealScanViewModelTests {
         #expect(draft.mealID == savedID)
         #expect(draft.mealName == beforeMeals.first?.mealDescription)
 
-        let glucosePrefill = try viewModel.savedMealGlucosePrefillContext()
+        let glucosePrefill = try L10n.withOverrides(
+            appLanguage: .fr,
+            preferredLanguages: ["fr_FR"]
+        ) {
+            try viewModel.savedMealGlucosePrefillContext()
+        }
         let afterPrefillMeals = try context.fetch(FetchDescriptor<MealEntry>())
-        #expect(glucosePrefill.mealContext == "After \(draft.mealName)")
+        #expect(glucosePrefill.mealContext == "Après \(draft.mealName)")
         #expect(glucosePrefill.readingType == .afterMeal)
         #expect(afterPrefillMeals.count == 1)
         #expect(afterPrefillMeals.first?.id == savedID)

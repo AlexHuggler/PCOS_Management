@@ -630,7 +630,11 @@ final class MealScanViewModel {
     func savedMealGlucosePrefillContext() throws -> GlucosePrefillContext {
         let meal = try savedMealEntry()
         return GlucosePrefillContext(
-            mealContext: "After \(meal.mealDescription)",
+            mealContext: L10n.format(
+                "After %@",
+                defaultValue: "After %@",
+                meal.mealDescription
+            ),
             readingType: .afterMeal,
             readingDate: Date()
         )

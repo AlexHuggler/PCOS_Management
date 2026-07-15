@@ -184,6 +184,7 @@ struct LocalizationResourceTests {
         "A fresh AI photo analysis was used.",
         "Add Context",
         "Add meal context",
+        "After %@",
         "Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change.",
         "Adjusted portions",
         "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal.",
