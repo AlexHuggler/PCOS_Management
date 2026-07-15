@@ -107,6 +107,7 @@ Publication-time owner inputs: Apple provider token (`pt`) and final approved Cu
 2. At publication time, the authorized owner supplies the Apple provider token (`pt`) and approved destination ID (`ppid`). Keep both out of staging copy and source defaults.
 3. Marketing and the App Store owner approve one stable scanner-specific campaign token (`ct`) before link creation. Keep that same non-empty token across the approved placements so reporting remains attributable.
 4. Validate the final Apple-generated Campaign Link against this contract:
+   - Campaign Link pathname must target CycleBalance app ID `6760353511`.
    - `pt`: non-empty ASCII digits only (`^[0-9]+$`);
    - `ct`: stable, non-empty approved campaign token exactly equal to the owner-approved value;
    - `ppid`: non-empty and exactly equal to the approved destination ID for `symptoms-food-glucose`.

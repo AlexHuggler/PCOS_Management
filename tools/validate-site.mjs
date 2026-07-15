@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const DOCS = path.join(ROOT, 'docs');
 const MEAL_SCAN_PREVIEW = path.join(ROOT, '.superpowers/sdd/staging/meal-scan-preview.html');
 const SITE = 'https://cyclebalance.app';
+const APP_STORE_APP_ID_PATH_SEGMENT = 'id6760353511';
 const REPORT_TIME_ZONE = 'America/Chicago';
 const LOCALES = ['en', 'de', 'fr', 'it', 'ja', 'ko', 'nl'];
 const LOCALE_PREFIXES = new Set(LOCALES.filter(locale => locale !== 'en'));
@@ -101,20 +102,43 @@ function normalizeClaimText(source) {
     .replace(/\s*-\s*/g, '-');
 }
 
-function forbidClaimPatterns(source, label) {
+const FORBIDDEN_CLAIM_PATTERNS = [
+  ['diagnosis', /\bdiagnos(?:is|e[sd]?|ing|tic)\b/],
+  ['treatment', /\btreat(?:ment|s|ed|ing)?\b/],
+  ['causal insight', /\bcausal\s+(?:insight|conclusion)s?\b/],
+  ['exact nutrition', /\bexact\s+nutrition(?:al)?\b/],
+  ['Zero Data Retention', /\bzero\s+data\s+retention\b/],
+  ['guaranteed accuracy', /\bguaranteed\s+accur(?:acy|ate)\b/],
+  ['100% accurate', /\b100\s*%\s+accurate\b/],
+  ['cycle-aware nutrition', /\bcycle-aware\s+nutrition\b/],
+  ['meal-balance score', /\bmeal-?balance\s+score\b/]
+];
+
+function findForbiddenClaims(source) {
   const normalized = normalizeClaimText(source);
-  const forbidden = [
-    ['diagnosis', /\bdiagnos(?:is|e[sd]?|tic)\b/],
-    ['treatment', /\btreat(?:ment|s|ed|ing)?\b/],
-    ['causal insight', /\bcausal\s+(?:insight|conclusion)s?\b/],
-    ['exact nutrition', /\bexact\s+nutrition(?:al)?\b/],
-    ['Zero Data Retention', /\bzero\s+data\s+retention\b/],
-    ['guaranteed accuracy', /\bguaranteed\s+accuracy\b/],
-    ['cycle-aware nutrition', /\bcycle-aware\s+nutrition\b/],
-    ['meal-balance score', /\bmeal-?balance\s+score\b/]
-  ];
-  for (const [name, pattern] of forbidden) {
-    if (pattern.test(normalized)) fail(`${label}: forbidden claim pattern present: ${name}`);
+  return FORBIDDEN_CLAIM_PATTERNS
+    .filter(([, pattern]) => pattern.test(normalized))
+    .map(([name]) => name);
+}
+
+function forbidClaimPatterns(source, label) {
+  for (const name of findForbiddenClaims(source)) {
+    fail(`${label}: forbidden claim pattern present: ${name}`);
+  }
+}
+
+const FORBIDDEN_CLAIM_NEGATIVE_FIXTURES = [
+  ['diagnosing variant', 'The scanner is diagnosing a health condition.', 'diagnosis'],
+  ['diagnosed variant', 'The meal was diagnosed from a photo.', 'diagnosis'],
+  ['guaranteed accurate variant', 'Guaranteed accurate meal estimates.', 'guaranteed accuracy'],
+  ['100% accurate variant', '100% accurate meal estimates.', '100% accurate']
+];
+
+function validateForbiddenClaimFixtures() {
+  for (const [label, source, expected] of FORBIDDEN_CLAIM_NEGATIVE_FIXTURES) {
+    if (!findForbiddenClaims(source).includes(expected)) {
+      fail(`Forbidden-claim negative fixture "${label}" was not rejected as ${expected}`);
+    }
   }
 }
 
@@ -166,6 +190,9 @@ function validateCampaignLinkArgs() {
   }
   if (campaignLink.protocol !== 'https:' || campaignLink.hostname !== 'apps.apple.com') {
     fail('Campaign Link: URL must use https://apps.apple.com');
+  }
+  if (!campaignLink.pathname.split('/').includes(APP_STORE_APP_ID_PATH_SEGMENT)) {
+    fail('Campaign Link: pathname must target CycleBalance app ID 6760353511');
   }
 
   const values = Object.fromEntries(['pt', 'ct', 'ppid'].map(name => [name, campaignLink.searchParams.getAll(name)]));
@@ -362,6 +389,7 @@ async function validateMealScanLaunch() {
       '`ct`: stable, non-empty approved campaign token',
       '`ppid`: non-empty and exactly equal to the approved destination',
       '`symptoms-food-glucose` is Approved and publicly visible',
+      'Campaign Link pathname must target CycleBalance app ID `6760353511`.',
       '`--campaign-link`',
       '`--approved-ct`',
       '`--approved-ppid`',
@@ -531,6 +559,7 @@ async function writeReport() {
 }
 
 async function main() {
+  validateForbiddenClaimFixtures();
   validateCampaignLinkArgs();
   await validateMealScanLaunch();
   await validateSitemap();

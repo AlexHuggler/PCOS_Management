@@ -26,16 +26,61 @@ Nothing was pushed, published, deployed, sent, posted, or changed in App Store C
 | Critical: text, button, boundary, and focus contrast failed AA | Fixed | Deterministic validator computes contrast from CSS tokens and enforces 4.5:1 for text plus 3:1 for interface/focus indicators. |
 | Important: declining copy incorrectly grouped barcode with local alternatives | Fixed | Copy now says declining skips the photo estimate; manual/exact reuse can stay on-device; barcode lookup is a separate optional network request that does not send the meal photo. |
 | Important: Campaign Link handoff/validator was underspecified | Fixed as an executable publication gate | Validator requires numeric `pt`, stable approved `ct`, matching approved `ppid`, Approved/public visibility evidence, and signed-out storefront evidence when publication arguments are supplied. Real values/evidence remain owner inputs. |
-| Important: validation date and forbidden-claim checks were brittle | Fixed | Report date is generated dynamically in America/Chicago; claims are normalized across case, whitespace, and dash variants before pattern matching. |
+| Important: validation date and forbidden-claim checks were brittle | Fixed | Report date is generated dynamically in America/Chicago; claims are normalized across case, whitespace, and dash variants before pattern matching. Final negative fixtures explicitly cover `diagnosing`, `diagnosed`, `guaranteed accurate`, and `100% accurate`. |
+
+## Final green-review minor hardening
+
+The final re-review found no Critical or Important issues and marked non-public staging ready. Both remaining Minor findings were closed without changing the publication posture:
+
+1. `findForbiddenClaims()` now drives both the page check and four deterministic negative fixtures. The diagnosis pattern includes `diagnosing` and `diagnosed`; accuracy patterns reject both `guaranteed accuracy`/`guaranteed accurate` and `100% accurate`.
+2. A supplied Campaign Link must have an exact pathname segment `id6760353511`. Host, `pt`, approved `ct`, approved `ppid`, Approved/publicly-visible evidence, and manual signed-out target-storefront evidence requirements remain in force.
+
+RED evidence:
+
+```text
+Wrong-app fixture before the app-ID check:
+Validation PASS: 0 errors, 0 warnings
+RED: wrong App Store app ID was accepted
+
+Claim negative fixtures before the expanded patterns:
+Validation FAIL: 3 errors, 0 warnings
+- Forbidden-claim negative fixture "diagnosing variant" was not rejected as diagnosis
+- Forbidden-claim negative fixture "guaranteed accurate variant" was not rejected as guaranteed accuracy
+- Forbidden-claim negative fixture "100% accurate variant" was not rejected as 100% accurate
+
+Handoff contract before the matching documentation update:
+Validation FAIL: 1 errors, 0 warnings
+- Launch-delta handoff: missing required text: Campaign Link pathname must target CycleBalance app ID `6760353511`.
+```
+
+Focused GREEN evidence:
+
+```text
+Claim negative fixtures and base contract:
+Validation PASS: 0 errors, 0 warnings
+
+Wrong-app fixture after the app-ID check:
+Validation FAIL: 1 errors, 0 warnings
+- Campaign Link: pathname must target CycleBalance app ID 6760353511
+
+Correct app-path fixture without manual storefront evidence:
+Validation FAIL: 1 errors, 0 warnings
+- Campaign Link: --signed-out-storefront-verified evidence flag is required
+
+Correct CycleBalance app-path fixture with all manual evidence flags:
+Validation PASS: 0 errors, 0 warnings
+```
+
+All Campaign Link fixtures used synthetic local-only query values. No provider token, final CPP ID, approval state, or storefront result was invented or recorded as a real launch input.
 
 ## Corrected files
 
 - `.superpowers/sdd/staging/meal-scan-preview.html` — non-public responsive preview with corrected AA tokens, two-color focus indicator, and truthful alternative-path wording.
-- `tools/validate-site.mjs` — merge-safety, discovery, claims, contrast, current-date, page/handoff, and optional Campaign Link publication checks.
+- `tools/validate-site.mjs` — merge-safety, discovery, claims plus negative fixtures, contrast, current-date, page/handoff, and app-ID-bound Campaign Link publication checks.
 - `docs/sitemap.xml` — removed the premature `/meal-scan` URL.
 - `docs/llms.txt` — removed the premature meal-scan discovery line.
 - `docs/VALIDATION-REPORT.md` — fresh July 14 full-site/external-reference result.
-- `.superpowers/sdd/task-4-launch-delta-handoff.md` — non-public publication boundary, corrected local/network wording, and owner-supplied Apple link contract.
+- `.superpowers/sdd/task-4-launch-delta-handoff.md` — non-public publication boundary, corrected local/network wording, owner-supplied Apple link contract, and required CycleBalance app-ID pathname.
 - `.superpowers/sdd/task-4-social-demo-handoff.md` — corrected decline/manual/exact-reuse/network-barcode production note.
 - `.superpowers/sdd/task-4-plan.md` — correction-first execution plan and separate future-publication boundary.
 - `.superpowers/sdd/task-4-report.md` — this review disposition and evidence record.
@@ -173,7 +218,7 @@ xmllint --noout docs/sitemap.xml
 git diff --check
 test ! -e docs/meal-scan.html
 ! rg -n 'https://cyclebalance\.app/meal-scan' docs/sitemap.xml docs/llms.txt
-! rg -ni 'diagnos(is|e|ed|es|ing|tic)|treat(ment|s|ed|ing)?|causal[[:space:]]+(insight|conclusion)|exact[[:space:]]+nutrition(al)?|zero[[:space:]]+data[[:space:]]+retention|guaranteed[[:space:]]+accuracy|cycle-aware[[:space:]]+nutrition|meal-?balance[[:space:]]+score' .superpowers/sdd/staging/meal-scan-preview.html
+! rg -ni 'diagnos(is|e|ed|es|ing|tic)|treat(ment|s|ed|ing)?|causal[[:space:]]+(insight|conclusion)|exact[[:space:]]+nutrition(al)?|zero[[:space:]]+data[[:space:]]+retention|guaranteed[[:space:]]+accur(acy|ate)|100[[:space:]]*%[[:space:]]+accurate|cycle-aware[[:space:]]+nutrition|meal-?balance[[:space:]]+score' .superpowers/sdd/staging/meal-scan-preview.html
 curl --silent --show-error --location --output /dev/null --max-time 20 \
   --write-out 'App Store CTA: HTTP %{http_code} -> %{url_effective}\n' \
   'https://apps.apple.com/us/app/cyclebalance/id6760353511'
@@ -188,7 +233,7 @@ Results:
 - Git whitespace check: PASS.
 - Merge safety: PASS; `docs/meal-scan.html` is absent.
 - Deployed discovery safety: PASS; `/meal-scan` is absent from sitemap and `llms.txt`.
-- Normalized forbidden-claim search: PASS; no matches.
+- Normalized forbidden-claim search and four built-in negative fixtures: PASS; no page matches and all fixtures were rejected.
 - App Store CTA: HTTP `200` at `https://apps.apple.com/us/app/cyclebalance/id6760353511`.
 - Current validation-report date: `2026-07-14` in America/Chicago.
 - Site counts: 174 HTML files, 173 sitemap URLs, 5,895 internal references, 1,344 hreflang links, 486 JSON-LD blocks, 1,146 image references, and 14 external evidence references.
@@ -208,7 +253,7 @@ The preview remains intentionally non-public. A separate publication commit may 
 7. Product, Privacy/Policy, Support, App Store release, Web, and Marketing owners approve one fact block and availability posture.
 8. `symptoms-food-glucose` is confirmed Approved and publicly visible in the target storefront with dated evidence.
 9. The authorized owner supplies the real numeric Apple provider token (`pt`) and final approved destination ID (`ppid`); Marketing/App Store owners approve one stable campaign token (`ct`). No invented source defaults are allowed.
-10. The final Apple-generated link passes `--campaign-link`, `--approved-ct`, `--approved-ppid`, `--cpp-approved-visible`, and `--signed-out-storefront-verified`, and a signed-out device lands on the intended CPP in the target storefront.
+10. The final Apple-generated link pathname targets app ID `6760353511`, passes `--campaign-link`, `--approved-ct`, `--approved-ppid`, `--cpp-approved-visible`, and `--signed-out-storefront-verified`, and a signed-out device lands on the intended CPP in the target storefront.
 11. The public scanner build is reachable before website, store, Campaign Link, CPP, or social copy implies availability.
 
 ## Remaining concerns
