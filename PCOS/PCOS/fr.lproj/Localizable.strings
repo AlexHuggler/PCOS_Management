@@ -2808,3 +2808,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal." = "Ce repas peut avoir un effet glycémique modéré. Les protéines et les fibres peuvent aider à l’équilibrer.";
 "This meal may have a moderate-high glucose impact, mostly from visible carbs." = "Ce repas peut avoir un effet glycémique modéré à élevé, principalement en raison des glucides visibles.";
 "This meal needs review before CycleBalance can estimate glucose impact." = "Ce repas doit être vérifié avant que CycleBalance puisse estimer son effet glycémique.";
+"The saved meal could not be opened. Your meal remains saved." = "Le repas enregistré n’a pas pu être ouvert. Il reste enregistré.";
+"Add meal context" = "Ajouter un contexte au repas";
+"Your check-in will update this saved meal without creating another meal." = "Votre bilan mettra à jour ce repas enregistré sans en créer un autre.";
+"Glucose context" = "Contexte glycémique";
+"An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Une mesure de glycémie après le repas est enregistrée séparément. L’ouvrir ne modifie ni ne duplique ce repas.";
+"Save context" = "Enregistrer le contexte";
+"Context could not be saved. Your meal remains unchanged." = "Le contexte n’a pas pu être enregistré. Votre repas reste inchangé.";
+"Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change." = "Ajoutez un contexte sur l’énergie, la satiété ou la faim, les envies, la digestion ou les ballonnements et les symptômes. Cela peut aider à comparer les tendances au fil du temps, sans montrer qu’un repas a causé un changement.";
+"How noticeable was the context? Choose 1 for slight through 5 for strong." = "À quel point ce contexte était-il perceptible ? Choisissez 1 pour léger et 5 pour fort.";
+"Context intensity %lld of 5" = "Intensité du contexte %lld sur 5";
+"e.g., steady energy, comfortably full, hungry soon, craving later, or bloated" = "p. ex. énergie stable, rassasiée, faim rapide, envie plus tard ou ballonnement";

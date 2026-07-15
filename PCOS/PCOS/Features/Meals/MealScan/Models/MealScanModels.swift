@@ -319,7 +319,57 @@ struct MealFoodItemDraft: Identifiable, Equatable, Codable, Sendable {
     var detectionSource: String = "mock_fixture"
     var portionEstimationMethod: PortionEstimationMethod = .mockFixture
     var wasUserEdited: Bool = false
+    /// Optional backing keeps older cached/backup JSON decodable while exposing
+    /// a default-false Boolean to scanner and share-card code.
+    private var persistedWasPortionAdjusted: Bool?
     var isMixedDish: Bool = false
+
+    var wasPortionAdjusted: Bool {
+        get { persistedWasPortionAdjusted == true }
+        set { persistedWasPortionAdjusted = newValue ? true : nil }
+    }
+
+    init(
+        id: UUID = UUID(),
+        displayName: String,
+        canonicalFoodId: String,
+        nutritionSource: NutritionDataSource = .appFixture,
+        estimatedGrams: Double,
+        estimatedVolumeMl: Double? = nil,
+        servingDescription: String? = nil,
+        nutrition: NutritionSnapshot = NutritionSnapshot(),
+        confidence: NutritionConfidence = .medium,
+        warning: String? = nil,
+        detectionSource: String = "mock_fixture",
+        portionEstimationMethod: PortionEstimationMethod = .mockFixture,
+        wasUserEdited: Bool = false,
+        wasPortionAdjusted: Bool = false,
+        isMixedDish: Bool = false
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.canonicalFoodId = canonicalFoodId
+        self.nutritionSource = nutritionSource
+        self.estimatedGrams = estimatedGrams
+        self.estimatedVolumeMl = estimatedVolumeMl
+        self.servingDescription = servingDescription
+        self.nutrition = nutrition
+        self.confidence = confidence
+        self.warning = warning
+        self.detectionSource = detectionSource
+        self.portionEstimationMethod = portionEstimationMethod
+        self.wasUserEdited = wasUserEdited
+        persistedWasPortionAdjusted = wasPortionAdjusted ? true : nil
+        self.isMixedDish = isMixedDish
+    }
+
+    mutating func recordUserEdit(previousEstimatedGrams: Double) {
+        wasUserEdited = true
+        guard previousEstimatedGrams.isFinite, estimatedGrams.isFinite else { return }
+        if abs(previousEstimatedGrams - estimatedGrams) > 0.001 {
+            wasPortionAdjusted = true
+        }
+    }
 }
 
 /// Privacy-first content for the post-save scanner share card.
@@ -362,7 +412,7 @@ struct ScannerShareCard: Equatable, Sendable {
             defaultValue: "Photo estimate — reviewed by me"
         )
         reviewedFoodCount = items.count
-        adjustedPortionCount = items.filter(\.wasUserEdited).count
+        adjustedPortionCount = items.filter(\.wasPortionAdjusted).count
         brandName = "CycleBalance"
         destinationURL = Self.destinationURL(providerToken: providerToken)
         foodNames = options.includeFoodNames ? items.map(\.displayName) : nil
@@ -534,6 +584,13 @@ struct ConfirmedMealScan: Equatable, Sendable {
         self.notes = notes
         self.repeatSourceRecordID = repeatSourceRecordID
     }
+}
+
+struct SavedMealContextDraft: Equatable, Sendable {
+    let mealID: UUID
+    let mealName: String
+    var severity: Int
+    var note: String
 }
 
 struct FoodAlias: Codable, Equatable, Sendable {

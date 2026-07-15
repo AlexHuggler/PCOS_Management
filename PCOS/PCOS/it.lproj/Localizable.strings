@@ -2820,3 +2820,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal." = "Questo pasto può avere un impatto glicemico moderato. Proteine e fibre possono aiutare a bilanciarlo.";
 "This meal may have a moderate-high glucose impact, mostly from visible carbs." = "Questo pasto può avere un impatto glicemico moderato-alto, soprattutto per i carboidrati visibili.";
 "This meal needs review before CycleBalance can estimate glucose impact." = "Questo pasto deve essere controllato prima che CycleBalance possa stimarne l’impatto glicemico.";
+"The saved meal could not be opened. Your meal remains saved." = "Non è stato possibile aprire il pasto salvato. Il pasto rimane salvato.";
+"Add meal context" = "Aggiungi contesto al pasto";
+"Your check-in will update this saved meal without creating another meal." = "Il check-in aggiornerà questo pasto salvato senza crearne un altro.";
+"Glucose context" = "Contesto glicemico";
+"An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Una lettura glicemica dopo il pasto viene salvata separatamente. Aprirla non modifica né duplica questo pasto.";
+"Save context" = "Salva contesto";
+"Context could not be saved. Your meal remains unchanged." = "Non è stato possibile salvare il contesto. Il pasto rimane invariato.";
+"Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change." = "Aggiungi contesto su energia, sazietà o fame, voglie, digestione o gonfiore e sintomi. Può aiutare a confrontare gli schemi nel tempo, ma non dimostra che un pasto abbia causato un cambiamento.";
+"How noticeable was the context? Choose 1 for slight through 5 for strong." = "Quanto era evidente il contesto? Scegli 1 per lieve e 5 per forte.";
+"Context intensity %lld of 5" = "Intensità del contesto %lld su 5";
+"e.g., steady energy, comfortably full, hungry soon, craving later, or bloated" = "es. energia stabile, sazietà confortevole, fame presto, voglia più tardi o gonfiore";

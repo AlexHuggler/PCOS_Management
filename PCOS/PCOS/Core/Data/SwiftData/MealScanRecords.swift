@@ -29,6 +29,7 @@ final class MealScanFoodItem {
     var detectionSource: String?
     var portionEstimationMethod: PortionEstimationMethod = PortionEstimationMethod.mockFixture
     var wasUserEdited: Bool = false
+    var wasPortionAdjusted: Bool = false
     var warning: String?
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
@@ -47,6 +48,7 @@ final class MealScanFoodItem {
         detectionSource: String?,
         portionEstimationMethod: PortionEstimationMethod,
         wasUserEdited: Bool,
+        wasPortionAdjusted: Bool = false,
         warning: String?,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -72,6 +74,7 @@ final class MealScanFoodItem {
         self.detectionSource = detectionSource
         self.portionEstimationMethod = portionEstimationMethod
         self.wasUserEdited = wasUserEdited
+        self.wasPortionAdjusted = wasPortionAdjusted
         self.warning = warning
         self.createdAt = createdAt
         self.updatedAt = updatedAt

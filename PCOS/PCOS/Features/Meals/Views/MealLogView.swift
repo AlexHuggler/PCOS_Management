@@ -16,7 +16,6 @@ enum MealLogEntryPoint: String, Sendable {
 enum MealLogInitialDestination: Sendable {
     case form
     case barcode
-    case afterMealContext
 }
 
 private func localizedNutritionSourceLabel(_ sourceLabel: String) -> String {
@@ -183,10 +182,6 @@ struct MealLogView: View {
                         },
                         onChooseManual: {
                             showingMealScan = false
-                        },
-                        onAddContext: {
-                            showingMealScan = false
-                            focusedField = .postMealNote
                         }
                     )
                 }
@@ -795,62 +790,24 @@ struct MealLogView: View {
     }
 
     private func lunarAfterMealCard(viewModel: MealViewModel) -> some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-            Label(L10n.string("After-meal check-in", defaultValue: "After-meal check-in"), systemImage: "heart.text.square")
-                .appFont(.headline, weight: .semibold)
-                .foregroundStyle(AppTheme.primaryText)
-
-            Text(L10n.string("Use this after eating to connect meals with energy, cravings, bloating, or skin changes.", defaultValue: "Use this after eating to connect meals with energy, cravings, bloating, or skin changes."))
-                .appFont(.caption)
-                .foregroundStyle(AppTheme.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-
-            HStack(spacing: AppTheme.spacing8) {
-                ForEach(1...5, id: \.self) { severity in
-                    Button {
-                        viewModel.postMealSymptomSeverity = severity
-                    } label: {
-                        Text("\(severity)")
-                            .appFont(.caption, weight: .semibold)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 38)
-                            .background(
-                                Circle()
-                                    .fill(
-                                        viewModel.postMealSymptomSeverity == severity
-                                            ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient)
-                                            : AnyShapeStyle(AppTheme.premiumEditorSurface.opacity(0.88))
-                                    )
-                            )
-                            .foregroundStyle(viewModel.postMealSymptomSeverity == severity ? AppTheme.premiumEditorCTAForeground : AppTheme.primaryText)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("meal_log.lunar.checkin.\(severity)")
+        MealAfterMealContextEditor(
+            severity: Binding(
+                get: { viewModel.postMealSymptomSeverity },
+                set: { viewModel.postMealSymptomSeverity = $0 }
+            ),
+            note: Binding(
+                get: { viewModel.postMealSymptomNote },
+                set: { viewModel.postMealSymptomNote = $0 }
+            ),
+            focusNoteRequest: focusedField == .postMealNote,
+            onNoteFocusChanged: { isFocused in
+                if isFocused {
+                    focusedField = .postMealNote
+                } else if focusedField == .postMealNote {
+                    focusedField = nil
                 }
             }
-
-            TextField(
-                L10n.string("e.g., steady energy, hungry soon, bloated later", defaultValue: "e.g., steady energy, hungry soon, bloated later"),
-                text: Binding(
-                    get: { viewModel.postMealSymptomNote },
-                    set: { viewModel.postMealSymptomNote = $0 }
-                ),
-                axis: .vertical
-            )
-            .appFont(.body)
-            .foregroundStyle(AppTheme.primaryText)
-            .lineLimit(2...4)
-            .focused($focusedField, equals: .postMealNote)
-            .padding(AppTheme.spacing12)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(AppTheme.premiumEditorBorder.opacity(0.58), lineWidth: 0.8)
-            )
-        }
+        )
         .padding(AppTheme.spacing12)
         .lunarMealCard()
         .accessibilityElement(children: .contain)
@@ -1526,8 +1483,6 @@ struct MealLogView: View {
             break
         case .barcode:
             showingBarcodeImport = true
-        case .afterMealContext:
-            focusedField = .postMealNote
         }
     }
 
@@ -2031,6 +1986,105 @@ struct MealLogView: View {
         )
     }
 #endif
+}
+
+struct MealAfterMealContextEditor: View {
+    @Binding var severity: Int
+    @Binding var note: String
+    var accessibilityPrefix = "meal_log.lunar.checkin"
+    var focusNoteRequest = false
+    var onNoteFocusChanged: ((Bool) -> Void)?
+    @FocusState private var isNoteFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+            Label(
+                L10n.string("After-meal check-in", defaultValue: "After-meal check-in"),
+                systemImage: "heart.text.square"
+            )
+            .appHeadingFont(.headline, weight: .regular)
+            .foregroundStyle(AppTheme.primaryText)
+
+            Text(L10n.string(
+                "Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change.",
+                defaultValue: "Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change."
+            ))
+            .appFont(.caption)
+            .foregroundStyle(AppTheme.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Text(L10n.string(
+                "How noticeable was the context? Choose 1 for slight through 5 for strong.",
+                defaultValue: "How noticeable was the context? Choose 1 for slight through 5 for strong."
+            ))
+            .appFont(.caption, weight: .semibold)
+            .foregroundStyle(AppTheme.primaryText)
+
+            HStack(spacing: AppTheme.spacing8) {
+                ForEach(1...5, id: \.self) { value in
+                    Button {
+                        severity = value
+                    } label: {
+                        Text("\(value)")
+                            .appFont(.caption, weight: .semibold)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 38)
+                            .background(
+                                Circle()
+                                    .fill(
+                                        severity == value
+                                            ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient)
+                                            : AnyShapeStyle(AppTheme.premiumEditorSurface.opacity(0.88))
+                                    )
+                            )
+                            .foregroundStyle(severity == value ? AppTheme.premiumEditorCTAForeground : AppTheme.primaryText)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.format(
+                        "Context intensity %lld of 5",
+                        defaultValue: "Context intensity %lld of 5",
+                        Int64(value)
+                    ))
+                    .accessibilityAddTraits(severity == value ? .isSelected : [])
+                    .accessibilityIdentifier("\(accessibilityPrefix).severity.\(value)")
+                }
+            }
+
+            TextField(
+                L10n.string(
+                    "e.g., steady energy, comfortably full, hungry soon, craving later, or bloated",
+                    defaultValue: "e.g., steady energy, comfortably full, hungry soon, craving later, or bloated"
+                ),
+                text: $note,
+                axis: .vertical
+            )
+            .appFont(.body)
+            .foregroundStyle(AppTheme.primaryText)
+            .lineLimit(2...4)
+            .focused($isNoteFocused)
+            .padding(AppTheme.spacing12)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(AppTheme.premiumEditorBorder.opacity(0.58), lineWidth: 0.8)
+            )
+            .accessibilityIdentifier("\(accessibilityPrefix).note")
+        }
+        .onAppear {
+            isNoteFocused = focusNoteRequest
+        }
+        .onChange(of: focusNoteRequest) { _, shouldFocus in
+            if isNoteFocused != shouldFocus {
+                isNoteFocused = shouldFocus
+            }
+        }
+        .onChange(of: isNoteFocused) { _, isFocused in
+            onNoteFocusChanged?(isFocused)
+        }
+    }
 }
 
 private extension View {

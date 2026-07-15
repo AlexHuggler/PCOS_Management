@@ -113,6 +113,7 @@ struct SwiftDataMealLogRepository: MealLogRepository {
                     detectionSource: item.detectionSource,
                     portionEstimationMethod: item.portionEstimationMethod,
                     wasUserEdited: item.wasUserEdited,
+                    wasPortionAdjusted: item.wasPortionAdjusted,
                     warning: item.warning,
                     createdAt: now,
                     updatedAt: now

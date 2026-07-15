@@ -66,6 +66,7 @@ final class MealScanViewModel {
     var repeatMealSuggestion: RepeatMealSuggestion?
     private(set) var mealScanQuota: MealScanQuota?
     private(set) var mealScanCacheDisposition: MealScanCacheDisposition?
+    private(set) var savedMealID: UUID?
 
     var canAddManualFood: Bool { true }
     var canStartFreshAnalysis: Bool { mealScanQuota?.remaining != 0 }
@@ -174,6 +175,7 @@ final class MealScanViewModel {
     }
 
     func prepareSelectedImage(_ image: UIImage) async throws {
+        savedMealID = nil
         selectedImage = image
         errorMessage = nil
         repeatMealSuggestion = nil
@@ -460,8 +462,9 @@ final class MealScanViewModel {
 
     func updateItem(id: UUID, mutate: (inout MealFoodItemDraft) -> Void) {
         guard let index = draftItems.firstIndex(where: { $0.id == id }) else { return }
+        let previousEstimatedGrams = draftItems[index].estimatedGrams
         mutate(&draftItems[index])
-        draftItems[index].wasUserEdited = true
+        draftItems[index].recordUserEdit(previousEstimatedGrams: previousEstimatedGrams)
         if let food = SampleNutritionFixtures.records.first(where: { $0.id == draftItems[index].canonicalFoodId }) {
             draftItems[index].nutrition = calculator.calculateItemNutrition(
                 food: food,
@@ -580,6 +583,7 @@ final class MealScanViewModel {
     func save() async throws {
         let confirmedMeal = confirmedMeal()
         try await mealLogRepository.saveMealScan(confirmedMeal)
+        savedMealID = confirmedMeal.id
 
         if featureFlags.enableRepeatMealSuggestions,
            let repeatMealCache,
@@ -613,7 +617,56 @@ final class MealScanViewModel {
         phase = .saved
     }
 
+    func savedMealContextDraft() throws -> SavedMealContextDraft {
+        let meal = try savedMealEntry()
+        return SavedMealContextDraft(
+            mealID: meal.id,
+            mealName: meal.mealDescription,
+            severity: meal.postMealSymptomSeverity ?? 0,
+            note: meal.postMealSymptomNote ?? ""
+        )
+    }
+
+    func savedMealGlucosePrefillContext() throws -> GlucosePrefillContext {
+        let meal = try savedMealEntry()
+        return GlucosePrefillContext(
+            mealContext: "After \(meal.mealDescription)",
+            readingType: .afterMeal,
+            readingDate: Date()
+        )
+    }
+
+    func updateSavedMealContext(severity: Int, note: String) throws {
+        let meal = try savedMealEntry()
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedSeverity = (1...5).contains(severity) ? severity : nil
+        meal.postMealSymptomSeverity = normalizedSeverity
+        meal.postMealSymptomNote = trimmedNote.isEmpty ? nil : trimmedNote
+        meal.postMealFeedbackTimestamp = normalizedSeverity != nil || !trimmedNote.isEmpty
+            ? Date()
+            : nil
+        meal.updatedAt = Date()
+        try modelContext.save()
+        InsightRefreshCoordinator.invalidate()
+    }
+
+    private func savedMealEntry() throws -> MealEntry {
+        guard let targetMealID = savedMealID else {
+            throw MealScanViewModelError.missingSavedMealIdentity
+        }
+        let descriptor = FetchDescriptor<MealEntry>(
+            predicate: #Predicate<MealEntry> { entry in
+                entry.id == targetMealID
+            }
+        )
+        guard let meal = try modelContext.fetch(descriptor).first else {
+            throw MealScanViewModelError.savedMealNotFound
+        }
+        return meal
+    }
+
     func retake() {
+        savedMealID = nil
         selectedImage = nil
         selectedImageData = nil
         pendingNormalizedImage = nil
@@ -776,4 +829,6 @@ private enum MealScanViewModelError: Error {
     case ambiguousOutcomeRequired
     case retryablePhotoRequired
     case newAttemptConfirmationRequired
+    case missingSavedMealIdentity
+    case savedMealNotFound
 }

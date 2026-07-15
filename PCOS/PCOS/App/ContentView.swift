@@ -528,9 +528,6 @@ struct TrackingHubView: View {
                     },
                     onChooseManual: {
                         routeMealScanFallback(to: .form)
-                    },
-                    onAddContext: {
-                        routeMealScanFallback(to: .afterMealContext)
                     }
                 )
             }

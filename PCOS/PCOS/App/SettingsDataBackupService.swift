@@ -282,6 +282,7 @@ private extension SettingsDataBackupService {
                     detectionSource: $0.detectionSource,
                     portionEstimationMethod: $0.portionEstimationMethod,
                     wasUserEdited: $0.wasUserEdited,
+                    wasPortionAdjusted: $0.wasPortionAdjusted,
                     warning: $0.warning,
                     createdAt: $0.createdAt,
                     updatedAt: $0.updatedAt

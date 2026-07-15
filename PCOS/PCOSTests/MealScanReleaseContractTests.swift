@@ -39,7 +39,8 @@ struct MealScanReleaseContractTests {
                 estimatedGrams: 125,
                 nutrition: NutritionSnapshot(caloriesKcal: 280, proteinGrams: 32),
                 confidence: .high,
-                wasUserEdited: true
+                wasUserEdited: true,
+                wasPortionAdjusted: true
             ),
             MealFoodItemDraft(
                 displayName: "Private rice",
@@ -49,6 +50,112 @@ struct MealScanReleaseContractTests {
                 confidence: .medium
             ),
         ]
+    }
+
+    @Test("Adjusted share count ignores name-only and unchanged edits")
+    func adjustedShareCountUsesPortionSpecificTruth() {
+        let nameOnlyEdit = MealFoodItemDraft(
+            displayName: "Renamed bowl",
+            canonicalFoodId: "bowl",
+            estimatedGrams: 125,
+            nutrition: NutritionSnapshot(caloriesKcal: 280),
+            wasUserEdited: true
+        )
+        let unchangedSave = MealFoodItemDraft(
+            displayName: "Rice",
+            canonicalFoodId: "rice",
+            estimatedGrams: 140,
+            nutrition: NutritionSnapshot(caloriesKcal: 180),
+            wasUserEdited: true,
+            wasPortionAdjusted: false
+        )
+        let changedPortion = MealFoodItemDraft(
+            displayName: "Greens",
+            canonicalFoodId: "greens",
+            estimatedGrams: 90,
+            nutrition: NutritionSnapshot(caloriesKcal: 40),
+            wasUserEdited: true,
+            wasPortionAdjusted: true
+        )
+
+        let card = ScannerShareCard(
+            items: [nameOnlyEdit, unchangedSave, changedPortion],
+            nutrition: NutritionSnapshot(),
+            sourcePhoto: nil
+        )
+
+        #expect(card.reviewedFoodCount == 3)
+        #expect(card.adjustedPortionCount == 1)
+    }
+
+    @Test("Nutrition summary always announces Net carbs including zero")
+    func nutritionSummaryAlwaysIncludesNetCarbs() {
+        let label = MealNutritionSummaryView.accessibilityLabel(
+            for: NutritionSnapshot(netCarbsGrams: 0)
+        )
+
+        #expect(label.contains("Net carbs, 0 g"))
+    }
+
+    @Test("Food rows expose one contextual VoiceOver label including warnings")
+    func foodRowsUseOneContextualAccessibilityElement() throws {
+        let item = MealFoodItemDraft(
+            displayName: "Rice bowl",
+            canonicalFoodId: "rice-bowl",
+            estimatedGrams: 140,
+            nutrition: NutritionSnapshot(caloriesKcal: 220),
+            confidence: .medium,
+            warning: "Sauce amount is uncertain."
+        )
+        let label = MealScanFoodItemRow.accessibilityLabel(for: item)
+        let flowSource = try source(
+            at: "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+        )
+        let rowSource = try sourceSlice(
+            flowSource,
+            from: "struct MealScanFoodItemRow: View",
+            to: "struct MealScanManualFallbackView: View"
+        )
+        let reviewSource = try sourceSlice(
+            flowSource,
+            from: "struct MealScanReviewView: View",
+            to: "struct MealFoodItemEditView: View"
+        )
+
+        #expect(label.localizedCaseInsensitiveContains("rice bowl"))
+        #expect(label.contains("140"))
+        #expect(label.contains("220"))
+        #expect(label.localizedCaseInsensitiveContains("review suggested"))
+        #expect(label.localizedCaseInsensitiveContains("sauce amount is uncertain"))
+        #expect(rowSource.contains(".accessibilityElement(children: .ignore)"))
+        #expect(rowSource.contains(".accessibilityLabel(Self.accessibilityLabel(for: item))"))
+        #expect(!reviewSource.contains(".accessibilityLabel(MealScanFoodItemRow.accessibilityLabel(for: item))"))
+    }
+
+    @Test("Scanner semantic headings use the existing branded heading font")
+    func scannerHeadingsUseAppHeadingFont() throws {
+        let flowSource = try source(
+            at: "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+        )
+        let repeatSource = try source(
+            at: "PCOS/PCOS/Features/Meals/MealScan/RepeatMeal/RepeatMealSuggestionView.swift"
+        )
+        let shellSource = try sourceSlice(
+            flowSource,
+            from: "struct MealScanPhaseShell<Content: View>: View",
+            to: "struct MealScanRemoteConsentView: View"
+        )
+        let nutritionSource = try sourceSlice(
+            flowSource,
+            from: "struct MealNutritionSummaryView: View",
+            to: "struct MealScanFoodItemRow: View"
+        )
+
+        #expect(shellSource.contains(".appHeadingFont(.title3, weight: .regular)"))
+        #expect(flowSource.components(separatedBy: ".appHeadingFont(").count - 1 >= 16)
+        #expect(repeatSource.components(separatedBy: ".appHeadingFont(").count - 1 >= 2)
+        #expect(!nutritionSource.contains(".appHeadingFont("))
+        #expect(nutritionSource.contains(".appFont(.subheadline, weight: .semibold)"))
     }
 
     @Test("Default scanner share card contains only privacy-safe reviewed counts and branding")
@@ -341,20 +448,35 @@ struct MealScanReleaseContractTests {
         #expect(mealLogSource.contains("showingBarcodeImport = true"))
     }
 
-    @Test("Saved meal Add Context opens the existing after-meal check-in instead of nutrition entry")
-    func savedMealAddContextRoutesToAfterMealCheckIn() throws {
+    @Test("Saved meal Add Context routes by saved identity and never opens a blank meal form")
+    func savedMealAddContextRoutesBySavedMealIdentity() throws {
         let contentSource = try source(at: "PCOS/PCOS/App/ContentView.swift")
         let mealLogSource = try source(at: "PCOS/PCOS/Features/Meals/Views/MealLogView.swift")
+        let flowSource = try source(
+            at: "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+        )
+        let viewModelSource = try source(
+            at: "PCOS/PCOS/Features/Meals/MealScan/ViewModels/MealScanViewModel.swift"
+        )
 
-        #expect(mealLogSource.contains("case afterMealContext"))
-        #expect(mealLogSource.contains("onAddContext: {"))
-        #expect(mealLogSource.contains("focusedField = .postMealNote"))
-        #expect(mealLogSource.contains("case .afterMealContext:"))
-        #expect(mealLogSource.contains("After-meal check-in"))
-
-        #expect(contentSource.contains("onAddContext: {"))
-        #expect(contentSource.contains("routeMealScanFallback(to: .afterMealContext)"))
-        #expect(!contentSource.contains("onAddContext: {\n                        routeMealScanFallback(to: .form)"))
+        #expect(flowSource.contains("MealScanSavedContextView(viewModel: viewModel)"))
+        #expect(flowSource.contains("guard viewModel.savedMealID != nil"))
+        #expect(flowSource.contains("meal_scan.saved_context"))
+        #expect(flowSource.contains("meal_scan.context.meal_name"))
+        #expect(flowSource.contains("MealAfterMealContextEditor("))
+        #expect(flowSource.contains("BloodSugarLogView(prefillContext: glucosePrefillContext)"))
+        #expect(flowSource.contains("meal_scan.context.log_glucose"))
+        #expect(viewModelSource.contains("private(set) var savedMealID: UUID?"))
+        #expect(viewModelSource.contains("savedMealID = confirmedMeal.id"))
+        #expect(viewModelSource.contains("func updateSavedMealContext("))
+        #expect(viewModelSource.contains("func savedMealGlucosePrefillContext()"))
+        #expect(viewModelSource.contains("entry.id == targetMealID"))
+        #expect(!contentSource.contains("routeMealScanFallback(to: .afterMealContext)"))
+        #expect(!mealLogSource.contains("case afterMealContext"))
+        #expect(mealLogSource.contains("struct MealAfterMealContextEditor: View"))
+        #expect(mealLogSource.contains("focusNoteRequest: focusedField == .postMealNote"))
+        #expect(mealLogSource.contains(".focused($isNoteFocused)"))
+        #expect(mealLogSource.contains("onNoteFocusChanged"))
     }
 
     @Test("Release hard-locks similarity while Debug keeps the override seam")

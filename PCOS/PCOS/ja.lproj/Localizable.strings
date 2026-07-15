@@ -2785,3 +2785,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal." = "この食事は血糖への影響が中程度の可能性があります。たんぱく質と食物繊維が食事のバランスに役立つ場合があります。";
 "This meal may have a moderate-high glucose impact, mostly from visible carbs." = "この食事は、主に見えている炭水化物により、血糖への影響が中〜高の可能性があります。";
 "This meal needs review before CycleBalance can estimate glucose impact." = "CycleBalanceが血糖への影響を推定するには、この食事を確認する必要があります。";
+"The saved meal could not be opened. Your meal remains saved." = "保存した食事を開けませんでした。食事は保存されたままです。";
+"Add meal context" = "食事のコンテキストを追加";
+"Your check-in will update this saved meal without creating another meal." = "このチェックインは、新しい食事を作成せずに保存済みの食事を更新します。";
+"Glucose context" = "血糖コンテキスト";
+"An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "食後の血糖値は別に保存されます。開いても、この食事が変更または複製されることはありません。";
+"Save context" = "コンテキストを保存";
+"Context could not be saved. Your meal remains unchanged." = "コンテキストを保存できませんでした。食事は変更されていません。";
+"Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change." = "エネルギー、満腹感や空腹感、食欲、消化や膨満感、症状のコンテキストを追加します。時間の経過によるパターンの比較に役立ちますが、食事が変化を引き起こしたことを示すものではありません。";
+"How noticeable was the context? Choose 1 for slight through 5 for strong." = "そのコンテキストはどの程度でしたか？軽い場合は1、強い場合は5を選んでください。";
+"Context intensity %lld of 5" = "コンテキストの強さ 5段階中%lld";
+"e.g., steady energy, comfortably full, hungry soon, craving later, or bloated" = "例：安定したエネルギー、心地よい満腹感、すぐに空腹、後で食欲、または膨満感";

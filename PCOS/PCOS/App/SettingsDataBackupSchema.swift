@@ -332,6 +332,7 @@ struct MealScanFoodItemRecord: Codable, Sendable {
     var detectionSource: String?
     var portionEstimationMethod: PortionEstimationMethod
     var wasUserEdited: Bool
+    var wasPortionAdjusted: Bool?
     var warning: String?
     var createdAt: Date
     var updatedAt: Date

@@ -2788,3 +2788,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal." = "Deze maaltijd kan een matige invloed op de bloedsuiker hebben. Eiwitten en vezels kunnen helpen de maaltijd in balans te brengen.";
 "This meal may have a moderate-high glucose impact, mostly from visible carbs." = "Deze maaltijd kan een matig-hoge invloed op de bloedsuiker hebben, vooral door zichtbare koolhydraten.";
 "This meal needs review before CycleBalance can estimate glucose impact." = "Deze maaltijd moet worden gecontroleerd voordat CycleBalance de invloed op de bloedsuiker kan schatten.";
+"The saved meal could not be opened. Your meal remains saved." = "De opgeslagen maaltijd kon niet worden geopend. Je maaltijd blijft opgeslagen.";
+"Add meal context" = "Maaltijdcontext toevoegen";
+"Your check-in will update this saved meal without creating another meal." = "Je check-in werkt deze opgeslagen maaltijd bij zonder een extra maaltijd te maken.";
+"Glucose context" = "Glucosecontext";
+"An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Een glucosemeting na de maaltijd wordt apart opgeslagen. Het openen ervan wijzigt of dupliceert deze maaltijd niet.";
+"Save context" = "Context opslaan";
+"Context could not be saved. Your meal remains unchanged." = "De context kon niet worden opgeslagen. Je maaltijd blijft ongewijzigd.";
+"Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change." = "Voeg context toe over energie, verzadiging of honger, trek, spijsvertering of een opgeblazen gevoel en symptomen. Dit kan helpen patronen over tijd te vergelijken, maar toont niet aan dat een maaltijd een verandering veroorzaakte.";
+"How noticeable was the context? Choose 1 for slight through 5 for strong." = "Hoe merkbaar was de context? Kies 1 voor licht tot en met 5 voor sterk.";
+"Context intensity %lld of 5" = "Contextintensiteit %lld van 5";
+"e.g., steady energy, comfortably full, hungry soon, craving later, or bloated" = "bijv. stabiele energie, prettig vol, snel weer honger, later trek of een opgeblazen gevoel";

@@ -41,8 +41,87 @@ struct MealScanViewModelTests {
         }
 
         #expect(viewModel.draftItems.first?.wasUserEdited == true)
+        #expect(viewModel.draftItems.first?.wasPortionAdjusted == true)
         #expect(viewModel.totalNutrition.caloriesKcal > originalCalories)
         #expect(viewModel.hasUserEdits)
+    }
+
+    @Test("portion-adjusted truth ignores name-only and unchanged saves and survives repeat edits")
+    func portionAdjustedTruthTracksOnlyPortionChanges() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: container.mainContext,
+            pipeline: .mock()
+        )
+        try await viewModel.scan(image: UIImage())
+        let firstID = try #require(viewModel.draftItems.first?.id)
+        let originalGrams = try #require(viewModel.draftItems.first?.estimatedGrams)
+
+        viewModel.updateItem(id: firstID) { item in
+            item.displayName = "Renamed only"
+        }
+        #expect(viewModel.draftItems.first?.wasUserEdited == true)
+        #expect(viewModel.draftItems.first?.wasPortionAdjusted == false)
+
+        viewModel.updateItem(id: firstID) { item in
+            item.estimatedGrams = originalGrams
+        }
+        #expect(viewModel.draftItems.first?.wasPortionAdjusted == false)
+
+        viewModel.updateItem(id: firstID) { item in
+            item.estimatedGrams = originalGrams + 25
+        }
+        #expect(viewModel.draftItems.first?.wasPortionAdjusted == true)
+
+        viewModel.updateItem(id: firstID) { item in
+            item.displayName = "Renamed after portion edit"
+        }
+        #expect(viewModel.draftItems.first?.wasPortionAdjusted == true)
+    }
+
+    @Test("saved-meal context updates the saved scan in place without duplication")
+    func savedMealContextUpdatesExactIdentityInPlace() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let viewModel = MealScanViewModel(
+            mealType: .lunch,
+            modelContext: context,
+            pipeline: .mock()
+        )
+        try await viewModel.scan(image: UIImage())
+        try await viewModel.save()
+
+        let savedID = try #require(viewModel.savedMealID)
+        let beforeMeals = try context.fetch(FetchDescriptor<MealEntry>())
+        let beforeFoodItems = try context.fetch(FetchDescriptor<MealScanFoodItem>())
+        let draft = try viewModel.savedMealContextDraft()
+        #expect(beforeMeals.count == 1)
+        #expect(draft.mealID == savedID)
+        #expect(draft.mealName == beforeMeals.first?.mealDescription)
+
+        let glucosePrefill = try viewModel.savedMealGlucosePrefillContext()
+        let afterPrefillMeals = try context.fetch(FetchDescriptor<MealEntry>())
+        #expect(glucosePrefill.mealContext == "After \(draft.mealName)")
+        #expect(glucosePrefill.readingType == .afterMeal)
+        #expect(afterPrefillMeals.count == 1)
+        #expect(afterPrefillMeals.first?.id == savedID)
+        #expect(afterPrefillMeals.first?.postMealSymptomNote == nil)
+
+        try viewModel.updateSavedMealContext(
+            severity: 4,
+            note: "Steady energy; digestion felt comfortable."
+        )
+
+        let afterMeals = try context.fetch(FetchDescriptor<MealEntry>())
+        let afterFoodItems = try context.fetch(FetchDescriptor<MealScanFoodItem>())
+        let updatedMeal = try #require(afterMeals.first)
+        #expect(afterMeals.count == 1)
+        #expect(updatedMeal.id == savedID)
+        #expect(updatedMeal.postMealSymptomSeverity == 4)
+        #expect(updatedMeal.postMealSymptomNote == "Steady energy; digestion felt comfortable.")
+        #expect(updatedMeal.postMealFeedbackTimestamp != nil)
+        #expect(afterFoodItems.map(\.id) == beforeFoodItems.map(\.id))
     }
 
     @Test("hidden oil prompt adds oil estimate and lowers confidence")

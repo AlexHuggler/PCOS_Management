@@ -11,7 +11,8 @@ struct MealScanPersistenceTests {
     func saveConfirmedMealScan() async throws {
         let container = try TestHelpers.makeModelContainer()
         let context = container.mainContext
-        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        var result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        result.detectedItems[0].wasPortionAdjusted = true
         let confirmed = ConfirmedMealScan(
             scanResult: result,
             loggedAt: Date(timeIntervalSince1970: 1_779_331_200),
@@ -31,6 +32,7 @@ struct MealScanPersistenceTests {
         let meal = try #require(meals.first)
         #expect(meals.count == 1)
         #expect(items.count == result.detectedItems.count)
+        #expect(items.first(where: { $0.id == result.detectedItems[0].id })?.wasPortionAdjusted == true)
         #expect(summaries.count == 1)
         #expect(metadata.count == 1)
         #expect(imports.count == 1)
@@ -91,7 +93,8 @@ struct MealScanPersistenceTests {
     func backupRoundTripsMealScanFields() async throws {
         let source = try TestHelpers.makeModelContainer()
         let destination = try TestHelpers.makeModelContainer()
-        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        var result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        result.detectedItems[0].wasPortionAdjusted = true
         let confirmed = ConfirmedMealScan(scanResult: result, mealType: .lunch, userConfirmed: true)
 
         try await SwiftDataMealLogRepository(modelContext: source.mainContext).saveMealScan(confirmed)
@@ -110,5 +113,10 @@ struct MealScanPersistenceTests {
         #expect(summary.counts.meals == 1)
         #expect(summary.counts.mealScanFoodItems == result.detectedItems.count)
         #expect(try destination.mainContext.fetch(FetchDescriptor<MealScanMetadata>()).first?.userConfirmed == true)
+        #expect(
+            try destination.mainContext.fetch(FetchDescriptor<MealScanFoodItem>())
+                .first(where: { $0.id == result.detectedItems[0].id })?
+                .wasPortionAdjusted == true
+        )
     }
 }

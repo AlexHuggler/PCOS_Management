@@ -763,6 +763,7 @@ private extension SettingsDataImportService {
             detectionSource: try optionalString(field: "detectionSource", in: object, location: location),
             portionEstimationMethod: try optionalEnum(field: "portionEstimationMethod", in: object, location: location, as: PortionEstimationMethod.self) ?? .manualUserInput,
             wasUserEdited: try optionalBool(field: "wasUserEdited", in: object, location: location) ?? false,
+            wasPortionAdjusted: try optionalBool(field: "wasPortionAdjusted", in: object, location: location),
             warning: try optionalString(field: "warning", in: object, location: location),
             createdAt: createdAt,
             updatedAt: try optionalDate(field: "updatedAt", in: object, location: location) ?? createdAt
@@ -1408,6 +1409,7 @@ private extension SettingsDataImportService {
                     detectionSource: record.detectionSource,
                     portionEstimationMethod: record.portionEstimationMethod,
                     wasUserEdited: record.wasUserEdited,
+                    wasPortionAdjusted: record.wasPortionAdjusted ?? false,
                     warning: record.warning,
                     createdAt: record.createdAt,
                     updatedAt: record.updatedAt

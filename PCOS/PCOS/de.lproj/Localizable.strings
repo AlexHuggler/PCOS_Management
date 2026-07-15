@@ -2861,3 +2861,14 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal." = "Diese Mahlzeit kann den Blutzucker mäßig beeinflussen. Protein und Ballaststoffe können zur Ausgewogenheit beitragen.";
 "This meal may have a moderate-high glucose impact, mostly from visible carbs." = "Diese Mahlzeit kann vor allem wegen sichtbarer Kohlenhydrate einen mittleren bis hohen Einfluss auf den Blutzucker haben.";
 "This meal needs review before CycleBalance can estimate glucose impact." = "Diese Mahlzeit muss geprüft werden, bevor CycleBalance den Einfluss auf den Blutzucker schätzen kann.";
+"The saved meal could not be opened. Your meal remains saved." = "Die gespeicherte Mahlzeit konnte nicht geöffnet werden. Deine Mahlzeit bleibt gespeichert.";
+"Add meal context" = "Mahlzeitenkontext hinzufügen";
+"Your check-in will update this saved meal without creating another meal." = "Dein Check-in aktualisiert diese gespeicherte Mahlzeit, ohne eine weitere Mahlzeit anzulegen.";
+"Glucose context" = "Blutzuckerkontext";
+"An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal." = "Ein Blutzuckerwert nach der Mahlzeit wird separat gespeichert. Beim Öffnen wird diese Mahlzeit weder geändert noch dupliziert.";
+"Save context" = "Kontext speichern";
+"Context could not be saved. Your meal remains unchanged." = "Der Kontext konnte nicht gespeichert werden. Deine Mahlzeit bleibt unverändert.";
+"Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change." = "Füge Kontext zu Energie, Sättigung oder Hunger, Heißhunger, Verdauung oder Blähungen und Symptomen hinzu. Dies kann helfen, Muster im Laufe der Zeit zu vergleichen; es zeigt nicht, dass eine Mahlzeit eine Veränderung verursacht hat.";
+"How noticeable was the context? Choose 1 for slight through 5 for strong." = "Wie deutlich war der Kontext? Wähle 1 für leicht bis 5 für stark.";
+"Context intensity %lld of 5" = "Kontextintensität %lld von 5";
+"e.g., steady energy, comfortably full, hungry soon, craving later, or bloated" = "z. B. gleichmäßige Energie, angenehm satt, bald wieder hungrig, später Heißhunger oder aufgebläht";

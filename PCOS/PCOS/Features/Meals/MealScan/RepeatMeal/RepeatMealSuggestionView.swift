@@ -45,7 +45,7 @@ struct RepeatMealSuggestionView: View {
         HStack(alignment: .top, spacing: AppTheme.spacing12) {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                 Text(L10n.string("Looks familiar", defaultValue: "Looks familiar"))
-                    .appFont(.title2, weight: .semibold)
+                    .appHeadingFont(.title2, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -70,7 +70,7 @@ struct RepeatMealSuggestionView: View {
     private var suggestionCard: some View {
         let content = VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             Text(suggestion.snapshot.mealName)
-                .appFont(.title3, weight: .semibold)
+                .appHeadingFont(.title3, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
 

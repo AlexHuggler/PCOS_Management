@@ -2005,6 +2005,79 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testMealScanAddContextUpdatesSavedMealIdentityInPlace() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+        app.buttons["meal_scan.scan_button"].tap()
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+        sampleButton.tap()
+        XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+
+        let saveButton = app.buttons["meal_scan.save_button"]
+        scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 16)
+        saveButton.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
+
+        app.buttons["meal_scan.saved.view_meal"].tap()
+        let savedFoodRow = screenElement(in: app, identifier: "meal_scan.food_item_row")
+        XCTAssertTrue(savedFoodRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(savedFoodRow.label.localizedCaseInsensitiveContains("g"))
+        XCTAssertTrue(savedFoodRow.label.localizedCaseInsensitiveContains("kcal"))
+        XCTAssertTrue(savedFoodRow.label.localizedCaseInsensitiveContains("confidence"))
+        app.buttons["meal_scan.phase.close"].firstMatch.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 5))
+
+        let addContext = app.buttons["meal_scan.saved.add_context"]
+        XCTAssertTrue(addContext.waitForExistence(timeout: 5))
+        addContext.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.saved_context").waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["meal_scan.context.meal_name"].label, "Chicken rice bowl")
+
+        let glucoseButton = app.buttons["meal_scan.context.log_glucose"]
+        XCTAssertTrue(glucoseButton.waitForExistence(timeout: 5))
+        glucoseButton.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.blood_sugar_log").waitForExistence(timeout: 5))
+        let visibleCancel = try XCTUnwrap(
+            app.buttons
+                .matching(NSPredicate(format: "label == %@", "Cancel"))
+                .allElementsBoundByIndex
+                .first(where: { $0.isHittable })
+        )
+        visibleCancel.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.saved_context").waitForExistence(timeout: 5))
+
+        let severity = app.buttons["meal_scan.context.severity.4"]
+        XCTAssertTrue(severity.waitForExistence(timeout: 5))
+        severity.tap()
+        let note = app.textFields["meal_scan.context.note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        note.tap()
+        note.typeText("Steady energy and comfortable digestion")
+        app.buttons["meal_scan.context.save"].tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 5))
+        app.buttons["meal_scan.saved.add_context"].tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.saved_context").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["meal_scan.context.severity.4"].isSelected)
+        XCTAssertEqual(
+            app.textFields["meal_scan.context.note"].value as? String,
+            "Steady energy and comfortable digestion"
+        )
+    }
+
+    @MainActor
     func testMealScanConsentMatrixAcrossAllThemes() throws {
         let themes = [
             (option: "lunarCalm", artifact: "lunar-calm"),

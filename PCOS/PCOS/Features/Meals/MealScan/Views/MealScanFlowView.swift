@@ -10,20 +10,17 @@ struct MealScanFlowView: View {
     let mealType: MealType
     var onChooseBarcode: (() -> Void)?
     var onChooseManual: (() -> Void)?
-    var onAddContext: (() -> Void)?
 
     @State private var viewModel: MealScanViewModel?
 
     init(
         mealType: MealType,
         onChooseBarcode: (() -> Void)? = nil,
-        onChooseManual: (() -> Void)? = nil,
-        onAddContext: (() -> Void)? = nil
+        onChooseManual: (() -> Void)? = nil
     ) {
         self.mealType = mealType
         self.onChooseBarcode = onChooseBarcode
         self.onChooseManual = onChooseManual
-        self.onAddContext = onAddContext
     }
 
     var body: some View {
@@ -115,7 +112,7 @@ struct MealScanFlowView: View {
                 onChooseManual: chooseManual
             )
         case .saved:
-            MealScanSavedView(viewModel: viewModel, onAddContext: addContext)
+            MealScanSavedView(viewModel: viewModel)
         }
     }
     private func chooseBarcode() {
@@ -128,12 +125,6 @@ struct MealScanFlowView: View {
         dismiss()
     }
 
-    private func addContext() {
-        if let onAddContext {
-            onAddContext()
-            dismiss()
-        }
-    }
 }
 
 private extension MealScanViewModel.Phase {
@@ -189,7 +180,7 @@ struct MealScanPhaseShell<Content: View>: View {
             VStack(spacing: 0) {
                 HStack(spacing: AppTheme.spacing12) {
                     Text(title)
-                        .appFont(.title3, weight: .semibold)
+                        .appHeadingFont(.title3, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
@@ -303,7 +294,7 @@ struct MealScanRemoteConsentView: View {
                     L10n.string("Send this photo to Google Gemini?", defaultValue: "Send this photo to Google Gemini?"),
                     systemImage: "lock.shield"
                 )
-                .appFont(.title3, weight: .semibold)
+                .appHeadingFont(.title3, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
 
                 ForEach(Array(consentFacts.enumerated()), id: \.offset) { _, fact in
@@ -466,7 +457,7 @@ struct MealScanEntryView: View {
                 HStack(alignment: .top, spacing: AppTheme.spacing12) {
                     VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                         Text(L10n.string("Start with a photo", defaultValue: "Start with a photo"))
-                            .appFont(.largeTitle, weight: .semibold)
+                            .appHeadingFont(.largeTitle, weight: .regular)
                             .foregroundStyle(AppTheme.primaryText)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(L10n.string(
@@ -498,7 +489,7 @@ struct MealScanEntryView: View {
 
             VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(L10n.string("Choose a starting point", defaultValue: "Choose a starting point"), systemImage: "sparkles")
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                 Button {
@@ -629,7 +620,7 @@ struct MealCameraView: View {
                     L10n.string("Photo quality", defaultValue: "Photo quality"),
                     systemImage: "viewfinder"
                 )
-                .appFont(.headline, weight: .semibold)
+                .appHeadingFont(.headline, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 Text(L10n.string(
                     "Choose a clear photo with the whole plate visible and steady, even lighting.",
@@ -647,7 +638,7 @@ struct MealCameraView: View {
                     L10n.string("Camera permission", defaultValue: "Camera permission"),
                     systemImage: cameraPermissionSystemImage
                 )
-                .appFont(.headline, weight: .semibold)
+                .appHeadingFont(.headline, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 Text(cameraPermissionStatusText)
                     .appFont(.subheadline, weight: .semibold)
@@ -890,7 +881,7 @@ struct MealScanProcessingView: View {
                 .controlSize(.large)
                 .tint(AppTheme.premiumEditorAccentColor)
             Text(stageTitle)
-                .appFont(.headline, weight: .semibold)
+                .appHeadingFont(.headline, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .multilineTextAlignment(.center)
             Text(L10n.string("You'll be able to edit everything before saving.", defaultValue: "You'll be able to edit everything before saving."))
@@ -965,7 +956,7 @@ struct MealScanReviewView: View {
 
             VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(L10n.string("Foods", defaultValue: "Foods"), systemImage: "fork.knife")
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                 ForEach(viewModel.draftItems) { item in
@@ -978,7 +969,6 @@ struct MealScanReviewView: View {
                             MealScanFoodItemRow(item: item)
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(MealScanFoodItemRow.accessibilityLabel(for: item))
                         .accessibilityHint(L10n.string("Double tap to edit this food and portion.", defaultValue: "Double tap to edit this food and portion."))
                         .accessibilityIdentifier("meal_scan.edit_food_item")
 
@@ -1011,7 +1001,7 @@ struct MealScanReviewView: View {
 
             VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(L10n.string("Nutrition estimate", defaultValue: "Nutrition estimate"), systemImage: "chart.bar")
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
                 MealNutritionSummaryView(nutrition: viewModel.totalNutrition)
                     .accessibilityElement(children: .ignore)
@@ -1076,7 +1066,7 @@ struct MealScanReviewView: View {
             if !viewModel.warnings.isEmpty {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label(L10n.string("Estimate notes", defaultValue: "Estimate notes"), systemImage: "exclamationmark.triangle")
-                        .appFont(.headline, weight: .semibold)
+                        .appHeadingFont(.headline, weight: .regular)
                     ForEach(viewModel.warnings, id: \.self) { warning in
                         Text(warning)
                             .appFont(.caption)
@@ -1138,7 +1128,7 @@ struct MealScanReviewView: View {
         if let disposition = viewModel.mealScanCacheDisposition {
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                 Label(L10n.string("AI photo allowance", defaultValue: "AI photo allowance"), systemImage: "gauge.with.dots.needle.50percent")
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                 if disposition == .fresh, let quota = viewModel.mealScanQuota {
                     Text(L10n.format(
                         "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
@@ -1248,7 +1238,7 @@ struct MealFoodItemEditView: View {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                     Label(L10n.string("Portion", defaultValue: "Portion"), systemImage: "slider.horizontal.3")
-                        .appFont(.headline, weight: .semibold)
+                        .appHeadingFont(.headline, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
 
                     TextField(L10n.string("Food name", defaultValue: "Food name"), text: $query)
@@ -1271,7 +1261,7 @@ struct MealFoodItemEditView: View {
 
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label(L10n.string("Local foods", defaultValue: "Local foods"), systemImage: "magnifyingglass")
-                        .appFont(.headline, weight: .semibold)
+                        .appHeadingFont(.headline, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
 
                     ForEach(matches) { food in
@@ -1344,12 +1334,15 @@ struct MealFoodItemEditView: View {
         }
         let updatedItem: MealFoodItemDraft
         if let selectedFood {
-            updatedItem = viewModel.draftItem(for: selectedFood, grams: grams, existingID: initialItem.id)
+            var item = viewModel.draftItem(for: selectedFood, grams: grams, existingID: initialItem.id)
+            item.wasPortionAdjusted = initialItem.wasPortionAdjusted
+            item.recordUserEdit(previousEstimatedGrams: initialItem.estimatedGrams)
+            updatedItem = item
         } else {
             var item = initialItem
             item.displayName = trimmedName
             item.estimatedGrams = grams
-            item.wasUserEdited = true
+            item.recordUserEdit(previousEstimatedGrams: initialItem.estimatedGrams)
             updatedItem = item
         }
         onSave(updatedItem)
@@ -1413,14 +1406,12 @@ struct MealNutritionSummaryView: View {
                 value: "\(MealNutritionCalculator.displayMacro(nutrition.carbsGrams)) g"
             ),
         ]
-        if nutrition.netCarbsGrams > 0 {
-            metrics.append(
-                NutrientMetric(
-                    label: L10n.string("Net carbs", defaultValue: "Net carbs"),
-                    value: "\(MealNutritionCalculator.displayMacro(nutrition.netCarbsGrams)) g"
-                )
+        metrics.append(
+            NutrientMetric(
+                label: L10n.string("Net carbs", defaultValue: "Net carbs"),
+                value: "\(MealNutritionCalculator.displayMacro(nutrition.netCarbsGrams)) g"
             )
-        }
+        )
         metrics.append(contentsOf: [
             NutrientMetric(
                 label: L10n.string("Sugar", defaultValue: "Sugar"),
@@ -1466,10 +1457,13 @@ struct MealScanFoodItemRow: View {
                 .foregroundStyle(AppTheme.secondaryText)
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Self.accessibilityLabel(for: item))
+        .accessibilityIdentifier("meal_scan.food_item_row")
     }
 
     static func accessibilityLabel(for item: MealFoodItemDraft) -> String {
-        L10n.format(
+        let context = L10n.format(
             "%@: %@ g, %@ kcal, confidence %@.",
             defaultValue: "%@: %@ g, %@ kcal, confidence %@.",
             item.displayName,
@@ -1477,6 +1471,11 @@ struct MealScanFoodItemRow: View {
             MealNutritionCalculator.displayCalories(item.nutrition.caloriesKcal),
             item.confidence.displayName
         )
+        guard let warning = item.warning?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !warning.isEmpty else {
+            return context
+        }
+        return "\(context) \(warning)"
     }
 }
 
@@ -1548,7 +1547,7 @@ struct MealScanManualFallbackView: View {
                 .accessibilityHidden(true)
 
             Text(title)
-                .appFont(.title3, weight: .semibold)
+                .appHeadingFont(.title3, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
             Text(viewModel.errorMessage ?? L10n.string(
                 "You can retake the photo or add the meal manually.",
@@ -1637,7 +1636,7 @@ struct MealScanAmbiguousOutcomeView: View {
                     Text(viewModel.isRequestPending
                         ? L10n.string("Analysis still processing", defaultValue: "Analysis still processing")
                         : L10n.string("Analysis status unknown", defaultValue: "Analysis status unknown"))
-                        .appFont(.title3, weight: .semibold)
+                        .appHeadingFont(.title3, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
 
                     Text(
@@ -1764,7 +1763,7 @@ struct MealScanNewAttemptConfirmationView: View {
                     .accessibilityHidden(true)
 
                 Text(L10n.string("Start a separate analysis?", defaultValue: "Start a separate analysis?"))
-                    .appFont(.title3, weight: .semibold)
+                    .appHeadingFont(.title3, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                 Text(
@@ -1863,9 +1862,10 @@ struct MealScanPrivacyNoticeView: View {
 
 struct MealScanSavedView: View {
     let viewModel: MealScanViewModel
-    let onAddContext: () -> Void
     @State private var showingMealDetails = false
+    @State private var showingContextEditor = false
     @State private var showingShareComposer = false
+    @State private var contextError: String?
 
     var body: some View {
         VStack(spacing: AppTheme.spacing16) {
@@ -1875,7 +1875,7 @@ struct MealScanSavedView: View {
                     .foregroundStyle(AppTheme.premiumEditorAccentGradient)
                     .accessibilityHidden(true)
                 Text(L10n.string("Meal saved", defaultValue: "Meal saved"))
-                    .appFont(.title2, weight: .semibold)
+                    .appHeadingFont(.title2, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
                 Text(
                     L10n.string(
@@ -1904,9 +1904,18 @@ struct MealScanSavedView: View {
                 savedAction(
                     title: L10n.string("Add Context", defaultValue: "Add Context"),
                     systemImage: "text.badge.plus",
-                    identifier: "meal_scan.saved.add_context",
-                    action: onAddContext
-                )
+                    identifier: "meal_scan.saved.add_context"
+                ) {
+                    guard viewModel.savedMealID != nil else {
+                        contextError = L10n.string(
+                            "The saved meal could not be opened. Your meal remains saved.",
+                            defaultValue: "The saved meal could not be opened. Your meal remains saved."
+                        )
+                        return
+                    }
+                    contextError = nil
+                    showingContextEditor = true
+                }
 
                 savedAction(
                     title: L10n.string("Share", defaultValue: "Share"),
@@ -1918,11 +1927,21 @@ struct MealScanSavedView: View {
             }
             .padding(AppTheme.spacing12)
             .mealScanCard()
+
+            if let contextError {
+                Label(contextError, systemImage: "exclamationmark.triangle.fill")
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                    .accessibilityIdentifier("meal_scan.saved.context_error")
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meal_scan.lunar.saved")
         .sheet(isPresented: $showingMealDetails) {
             MealScanSavedMealDetailView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showingContextEditor) {
+            MealScanSavedContextView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingShareComposer) {
             ScannerShareComposerView(viewModel: viewModel)
@@ -1968,7 +1987,7 @@ private struct MealScanSavedMealDetailView: View {
         ) {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 Text(viewModel.mealName)
-                    .appFont(.title3, weight: .semibold)
+                    .appHeadingFont(.title3, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                 VStack(spacing: AppTheme.spacing8) {
@@ -1980,11 +1999,149 @@ private struct MealScanSavedMealDetailView: View {
                 .mealScanCard()
 
                 MealNutritionSummaryView(nutrition: viewModel.totalNutrition)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(MealNutritionSummaryView.accessibilityLabel(for: viewModel.totalNutrition))
                     .padding(AppTheme.spacing16)
                     .mealScanCard()
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+private struct MealScanSavedContextView: View {
+    @Environment(\.dismiss) private var dismiss
+    let viewModel: MealScanViewModel
+    @State private var mealName = ""
+    @State private var severity = 0
+    @State private var note = ""
+    @State private var glucosePrefillContext: GlucosePrefillContext?
+    @State private var errorMessage: String?
+    @State private var isLoaded = false
+
+    var body: some View {
+        NavigationStack {
+            MealScanPhaseShell(
+                title: L10n.string("Add meal context", defaultValue: "Add meal context"),
+                closeLabel: L10n.string("Cancel", defaultValue: "Cancel"),
+                onClose: { dismiss() }
+            ) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                    if isLoaded {
+                        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                            Text(mealName)
+                                .appHeadingFont(.title3, weight: .regular)
+                                .foregroundStyle(AppTheme.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("meal_scan.context.meal_name")
+
+                            Text(L10n.string(
+                                "Your check-in will update this saved meal without creating another meal.",
+                                defaultValue: "Your check-in will update this saved meal without creating another meal."
+                            ))
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(AppTheme.spacing16)
+                        .mealScanCard()
+
+                        MealAfterMealContextEditor(
+                            severity: $severity,
+                            note: $note,
+                            accessibilityPrefix: "meal_scan.context"
+                        )
+                        .padding(AppTheme.spacing16)
+                        .mealScanCard()
+
+                        if let glucosePrefillContext {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                                Text(L10n.string("Glucose context", defaultValue: "Glucose context"))
+                                    .appHeadingFont(.headline, weight: .regular)
+                                    .foregroundStyle(AppTheme.primaryText)
+
+                                Text(L10n.string(
+                                    "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal.",
+                                    defaultValue: "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal."
+                                ))
+                                .appFont(.caption)
+                                .foregroundStyle(AppTheme.secondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                                NavigationLink {
+                                    BloodSugarLogView(prefillContext: glucosePrefillContext)
+                                } label: {
+                                    Label(
+                                        L10n.string("Log after-meal glucose", defaultValue: "Log after-meal glucose"),
+                                        systemImage: "drop.fill"
+                                    )
+                                    .frame(maxWidth: .infinity, minHeight: 44)
+                                }
+                                .buttonStyle(.bordered)
+                                .accessibilityIdentifier("meal_scan.context.log_glucose")
+                            }
+                            .padding(AppTheme.spacing16)
+                            .mealScanCard()
+                        }
+
+                        Button(action: save) {
+                            Label(
+                                L10n.string("Save context", defaultValue: "Save context"),
+                                systemImage: "checkmark.circle.fill"
+                            )
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(AppTheme.premiumEditorAccentColor)
+                        .accessibilityIdentifier("meal_scan.context.save")
+                    } else if errorMessage == nil {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, minHeight: 120)
+                    }
+
+                    if let errorMessage {
+                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                            .padding(AppTheme.spacing16)
+                            .mealScanCard()
+                            .accessibilityIdentifier("meal_scan.context.error")
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("meal_scan.saved_context")
+        .task { load() }
+    }
+
+    private func load() {
+        do {
+            let draft = try viewModel.savedMealContextDraft()
+            mealName = draft.mealName
+            severity = draft.severity
+            note = draft.note
+            glucosePrefillContext = try viewModel.savedMealGlucosePrefillContext()
+            errorMessage = nil
+            isLoaded = true
+        } catch {
+            errorMessage = L10n.string(
+                "The saved meal could not be opened. Your meal remains saved.",
+                defaultValue: "The saved meal could not be opened. Your meal remains saved."
+            )
+            isLoaded = false
+        }
+    }
+
+    private func save() {
+        do {
+            try viewModel.updateSavedMealContext(severity: severity, note: note)
+            dismiss()
+        } catch {
+            errorMessage = L10n.string(
+                "Context could not be saved. Your meal remains unchanged.",
+                defaultValue: "Context could not be saved. Your meal remains unchanged."
+            )
+        }
     }
 }
 
@@ -2022,7 +2179,7 @@ private struct ScannerShareComposerView: View {
                         L10n.string("Private by default", defaultValue: "Private by default"),
                         systemImage: "hand.raised.fill"
                     )
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                     Text(
@@ -2038,7 +2195,7 @@ private struct ScannerShareComposerView: View {
                 .mealScanCard()
 
                 Text(L10n.string("Share preview", defaultValue: "Share preview"))
-                    .appFont(.headline, weight: .semibold)
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
 
                 ScannerShareCardArtwork(card: card)
@@ -2136,7 +2293,7 @@ private struct ScannerShareCardArtwork: View {
                 }
 
                 Text(card.headline)
-                    .appFont(.title2, weight: .bold)
+                    .appHeadingFont(.title2, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
