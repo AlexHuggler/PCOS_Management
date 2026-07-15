@@ -150,10 +150,10 @@ git add tools/validate-site.mjs docs/meal-scan.html docs/sitemap.xml docs/llms.t
 git commit -m "feat: stage meal scan launch materials"
 ```
 
-- [ ] **Step 4: Write and commit the report**
+- [x] **Step 4: Write and commit the report**
 
 Record files, exact RED/GREEN commands and outputs, final verification commands/results, implementation commit, scope self-review, and any concerns in `.superpowers/sdd/task-4-report.md`, then commit it with `docs: add meal scan marketing task report`.
 
-- [ ] **Step 5: Verify committed state**
+- [x] **Step 5: Verify committed state**
 
 Run `node tools/validate-site.mjs && git status --short --branch && git log -2 --oneline` and return only status, current commit hash, one-line validation summary, and concerns.
