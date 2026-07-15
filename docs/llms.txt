@@ -13,6 +13,7 @@
 - Home: https://cyclebalance.app/
 - Promo video with transcript: https://cyclebalance.app/promo-video
 - Social landing page: https://cyclebalance.app/social
+- Meal scan staged preview: https://cyclebalance.app/meal-scan
 
 ## Localized blog indexes
 - English: https://cyclebalance.app/blog

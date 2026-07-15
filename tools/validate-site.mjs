@@ -76,6 +76,139 @@ function extractAll(pattern, text) {
   return [...text.matchAll(pattern)].map(match => match[1]);
 }
 
+function requireText(source, label, required) {
+  for (const value of required) {
+    if (!source.includes(value)) fail(`${label}: missing required text: ${value}`);
+  }
+}
+
+function forbidText(source, label, forbidden) {
+  const normalized = source.toLowerCase();
+  for (const value of forbidden) {
+    if (normalized.includes(value.toLowerCase())) fail(`${label}: forbidden claim present: ${value}`);
+  }
+}
+
+async function readRequiredArtifact(file, label) {
+  if (!await exists(file)) {
+    fail(`${label}: missing file ${path.relative(ROOT, file)}`);
+    return null;
+  }
+  return fs.readFile(file, 'utf8');
+}
+
+async function validateMealScanLaunch() {
+  const page = await readRequiredArtifact(path.join(DOCS, 'meal-scan.html'), 'Meal scan page');
+  if (page) {
+    requireText(page, 'Meal scan page', [
+      '<title>Meal Scan Preview — CycleBalance</title>',
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      '<link rel="canonical" href="https://cyclebalance.app/meal-scan">',
+      '<meta property="og:title" content="Start with a photo. Stay in control. — CycleBalance">',
+      '<meta property="og:description" content="A staged preview of consent-first photo meal logging with an editable draft and local save.">',
+      '<meta property="og:url" content="https://cyclebalance.app/meal-scan">',
+      '<meta property="og:image" content="https://cyclebalance.app/assets/images/site/cyclebalance-og-1200x630.jpg">',
+      '<meta name="twitter:card" content="summary_large_image">',
+      '<meta name="twitter:title" content="Start with a photo. Stay in control. — CycleBalance">',
+      '<meta name="twitter:description" content="Preview a review-before-save approach to photo meal logging.">',
+      '<meta name="twitter:image" content="https://cyclebalance.app/assets/images/site/cyclebalance-og-1200x630.jpg">',
+      'Start with a photo. Stay in control.',
+      'Meal context, not meal judgment.',
+      'From plate to pattern-ready record.',
+      '<h3>Photo</h3>',
+      '<h3>Consent</h3>',
+      '<h3>Correct</h3>',
+      '<h3>Save</h3>',
+      '<h3>Context</h3>',
+      'Google Gemini',
+      'explicit consent',
+      'editable draft',
+      'up to 55 days',
+      'abuse monitoring',
+      'The CycleBalance proxy does not retain raw image bytes',
+      'Exact reviewed-meal reuse can remain on your device',
+      'Manual and barcode alternatives stay available',
+      'Coming after release verification',
+      '<a class="skip-link" href="#main-content">',
+      '<main id="main-content">',
+      '@media (prefers-reduced-motion: reduce)',
+      'href="/"',
+      'href="/support"',
+      'href="/privacy"',
+      'href="/terms"',
+      'href="https://apps.apple.com/us/app/cyclebalance/id6760353511"',
+      'src="/assets/images/site/cyclebalance-app-icon-96.png"'
+    ]);
+    forbidText(page, 'Meal scan page', [
+      'diagnosis',
+      'treatment',
+      'causal insight',
+      'exact nutrition',
+      'Zero Data Retention',
+      'guaranteed accuracy',
+      'cycle-aware nutrition',
+      'meal-balance score',
+      'meal balance score'
+    ]);
+  }
+
+  const social = await readRequiredArtifact(
+    path.join(ROOT, '.superpowers/sdd/task-4-social-demo-handoff.md'),
+    'Social/demo handoff'
+  );
+  if (social) {
+    requireText(social, 'Social/demo handoff', [
+      '15-second Photo → Consent → Correct → Save storyboard',
+      'What the AI guessed—and what I corrected',
+      'What a meal photo cannot see',
+      'Same meal again? Reuse your reviewed version',
+      'Context, not conclusions',
+      'Demonstration using synthetic meal details — not a testimonial or accuracy result.'
+    ]);
+  }
+
+  const launchDelta = await readRequiredArtifact(
+    path.join(ROOT, '.superpowers/sdd/task-4-launch-delta-handoff.md'),
+    'Launch-delta handoff'
+  );
+  if (launchDelta) {
+    requireText(launchDelta, 'Launch-delta handoff', [
+      'This is a staging document, not a live policy edit.',
+      '## Current live-state correction — verified July 14, 2026',
+      'Privacy Policy and Terms were updated July 12 with detailed Photo Estimate, Google Gemini, cache, and quota language.',
+      'The live Support FAQ currently has one privacy FAQ that names Google Gemini.',
+      '| Privacy Policy | Verify/reconcile',
+      '| Terms | Verify/reconcile',
+      '| Support FAQ | Expand',
+      '| Homepage FAQ | Confirmed contradiction',
+      '| App Store description | Confirmed contradiction',
+      'health logs stay on-device unless exported',
+      'No accounts required, no cloud uploads, no ads.',
+      'Privacy Policy',
+      'Terms',
+      'Support FAQ',
+      'App Privacy',
+      'Review notes',
+      'Live website copy',
+      'App Store copy',
+      'Paid: 10 fresh scans per rolling 24 hours (immutable max 15).',
+      'Trial/sandbox: 5 fresh scans per rolling 24 hours and 25 lifetime.',
+      'Exact cache, barcode, and manual paths are non-billable.',
+      'Apple Campaign Link',
+      'Custom Product Page',
+      '`symptoms-food-glucose`',
+      'optional scanner page',
+      'Do not invent current performance results or unverified platform algorithm claims.'
+    ]);
+  }
+
+  const sitemap = await fs.readFile(path.join(DOCS, 'sitemap.xml'), 'utf8');
+  requireText(sitemap, 'Sitemap', ['<loc>https://cyclebalance.app/meal-scan</loc>']);
+
+  const llms = await fs.readFile(path.join(DOCS, 'llms.txt'), 'utf8');
+  requireText(llms, 'llms.txt', ['- Meal scan staged preview: https://cyclebalance.app/meal-scan']);
+}
+
 async function validateSitemap() {
   const sitemapPath = path.join(DOCS, 'sitemap.xml');
   const xml = await fs.readFile(sitemapPath, 'utf8');
@@ -223,6 +356,7 @@ async function writeReport() {
 }
 
 async function main() {
+  await validateMealScanLaunch();
   await validateSitemap();
   await validateBlogManifest();
   await validateMediaManifest();
