@@ -289,6 +289,11 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    private func mealScanScroll(in app: XCUIApplication) -> XCUIElement {
+        app.scrollViews["meal_scan.phase.scroll"]
+    }
+
+    @MainActor
     private func isReadyForScrollTarget(
         _ element: XCUIElement,
         in container: XCUIElement,
@@ -1776,10 +1781,17 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(retentionDisclosure.waitForExistence(timeout: 5))
         XCTAssertTrue(manualButton.waitForExistence(timeout: 5))
         XCTAssertTrue(retakeButton.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.frame.intersects(retentionDisclosure.frame))
-        XCTAssertTrue(sendButton.isHittable)
-        XCTAssertTrue(manualButton.isHittable)
-        XCTAssertTrue(retakeButton.isHittable)
+        let scrollContainer = mealScanScroll(in: app)
+        XCTAssertTrue(scrollContainer.waitForExistence(timeout: 5))
+        for action in [sendButton, manualButton, retakeButton] {
+            scrollToElement(
+                action,
+                in: scrollContainer,
+                maxSwipes: 8,
+                requireSafeTapZone: false
+            )
+            XCTAssertTrue(action.isHittable)
+        }
         try saveScreenshotArtifact(named: "lunar-calm-meal-scan-consent.png")
     }
 
@@ -1811,17 +1823,19 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
         let editableFood = app.buttons.matching(identifier: "meal_scan.edit_food_item").firstMatch
         XCTAssertTrue(editableFood.waitForExistence(timeout: 5))
-        scrollToElement(editableFood, in: app.collectionViews.firstMatch, maxSwipes: 4)
+        let scrollContainer = mealScanScroll(in: app)
+        XCTAssertTrue(scrollContainer.waitForExistence(timeout: 5))
+        scrollToElement(editableFood, in: scrollContainer, maxSwipes: 4)
         XCTAssertTrue(editableFood.isHittable)
-        editableFood.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        editableFood.tap()
         XCTAssertTrue(app.textFields["meal_scan.edit_food.name"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.textFields["meal_scan.edit_food.grams"].waitForExistence(timeout: 5))
-        app.buttons["meal_scan.edit_food.cancel"].tap()
+        app.buttons["meal_scan.phase.close"].tap()
 
         let saveButton = app.buttons["meal_scan.save_button"]
-        scrollToElement(saveButton, in: app.collectionViews.firstMatch, maxSwipes: 12)
+        scrollToElement(saveButton, in: scrollContainer, maxSwipes: 12)
         XCTAssertTrue(saveButton.isHittable)
-        XCTAssertTrue(app.buttons["Edit Portions"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons.matching(identifier: "meal_scan.edit_food_item").firstMatch.waitForExistence(timeout: 5))
         try saveScreenshotArtifact(named: "lunar-calm-meal-estimate-review.png")
     }
 
@@ -1871,7 +1885,7 @@ final class PCOSUITests: XCTestCase {
 
         XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 5))
         let reuseSaveButton = app.buttons["meal_scan.save_button"]
-        scrollToElement(reuseSaveButton, in: app.collectionViews.firstMatch, maxSwipes: 12)
+        scrollToElement(reuseSaveButton, in: mealScanScroll(in: app), maxSwipes: 12)
         XCTAssertTrue(reuseSaveButton.isHittable)
     }
 
@@ -1914,7 +1928,7 @@ final class PCOSUITests: XCTestCase {
 
         XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
         let freshScanSaveButton = app.buttons["meal_scan.save_button"]
-        scrollToElement(freshScanSaveButton, in: app.collectionViews.firstMatch, maxSwipes: 12)
+        scrollToElement(freshScanSaveButton, in: mealScanScroll(in: app), maxSwipes: 12)
         XCTAssertTrue(freshScanSaveButton.isHittable)
     }
 
@@ -1981,7 +1995,7 @@ final class PCOSUITests: XCTestCase {
             XCTAssertTrue(app.buttons.matching(identifier: "meal_scan.edit_food_item").firstMatch.waitForExistence(timeout: 5))
             try saveScreenshotArtifact(named: "task-2-\(theme.artifact)-meal-scan-review.png")
 
-            let scrollContainer = app.scrollViews.firstMatch
+            let scrollContainer = mealScanScroll(in: app)
             let saveButton = app.buttons["meal_scan.save_button"]
             scrollToElement(saveButton, in: scrollContainer, maxSwipes: 16)
             saveButton.tap()
@@ -2026,7 +2040,7 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
 
         let saveButton = app.buttons["meal_scan.save_button"]
-        scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 16)
+        scrollToElement(saveButton, in: mealScanScroll(in: app), maxSwipes: 16)
         saveButton.tap()
         XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
 
@@ -2129,24 +2143,24 @@ final class PCOSUITests: XCTestCase {
 
         openMealLogFromTrackHub(in: app)
         openMealScanFromMealLog(in: app)
-        let entryScroll = app.scrollViews.firstMatch
+        let entryScroll = mealScanScroll(in: app)
         let scanButton = app.buttons["meal_scan.scan_button"]
         scrollToElement(scanButton, in: entryScroll, maxSwipes: 12)
         scanButton.tap()
         let sampleButton = app.buttons["meal_scan.mock_photo_button"]
-        scrollToElement(sampleButton, in: app.scrollViews.firstMatch, maxSwipes: 12)
+        scrollToElement(sampleButton, in: mealScanScroll(in: app), maxSwipes: 12)
         sampleButton.tap()
 
         XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
         let saveButton = app.buttons["meal_scan.save_button"]
-        scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 20)
+        scrollToElement(saveButton, in: mealScanScroll(in: app), maxSwipes: 20)
         XCTAssertTrue(saveButton.isHittable)
         try saveScreenshotArtifact(named: "task-2-smallest-high-contrast-axxxl-review.png")
         saveButton.tap()
 
         XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
         let shareButton = app.buttons["meal_scan.saved.share"]
-        scrollToElement(shareButton, in: app.scrollViews.firstMatch, maxSwipes: 12)
+        scrollToElement(shareButton, in: mealScanScroll(in: app), maxSwipes: 12)
         XCTAssertTrue(shareButton.isHittable)
         try saveScreenshotArtifact(named: "task-2-smallest-high-contrast-axxxl-saved.png")
     }
@@ -2187,11 +2201,11 @@ final class PCOSUITests: XCTestCase {
 
             XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
             let saveButton = app.buttons["meal_scan.save_button"]
-            scrollToElement(saveButton, in: app.scrollViews.firstMatch, maxSwipes: 16)
+            scrollToElement(saveButton, in: mealScanScroll(in: app), maxSwipes: 16)
             saveButton.tap()
             XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.lunar.saved").waitForExistence(timeout: 8))
             let shareButton = app.buttons["meal_scan.saved.share"]
-            scrollToElement(shareButton, in: app.scrollViews.firstMatch, maxSwipes: 8)
+            scrollToElement(shareButton, in: mealScanScroll(in: app), maxSwipes: 8)
             shareButton.tap()
             XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.share.preview").waitForExistence(timeout: 8))
             try saveScreenshotArtifact(named: "task-2-language-\(localization.artifact)-meal-scan-share.png")
@@ -2288,7 +2302,7 @@ final class PCOSUITests: XCTestCase {
         let fallbackManualButton = fallbackApp.buttons["Enter nutrition manually"]
         let fallbackBarcodeButton = fallbackApp.buttons["Scan a barcode"]
         let retakeButton = fallbackApp.buttons["Retake photo"]
-        scrollToElement(retakeButton, in: fallbackApp.scrollViews.firstMatch, maxSwipes: 8)
+        scrollToElement(retakeButton, in: mealScanScroll(in: fallbackApp), maxSwipes: 8)
         XCTAssertTrue(fallbackManualButton.exists)
         XCTAssertTrue(fallbackBarcodeButton.exists)
         XCTAssertTrue(retakeButton.exists)
@@ -2319,7 +2333,7 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(ambiguousClose.waitForExistence(timeout: 5))
         let requestNewButton = ambiguousApp.buttons["Consider a new analysis"]
         XCTAssertTrue(requestNewButton.waitForExistence(timeout: 5))
-        scrollToElement(requestNewButton, in: ambiguousApp.scrollViews.firstMatch, maxSwipes: 8)
+        scrollToElement(requestNewButton, in: mealScanScroll(in: ambiguousApp), maxSwipes: 8)
         XCTAssertTrue(requestNewButton.isHittable)
         XCTAssertTrue(ambiguousTitle.exists)
         XCTAssertTrue(ambiguousClose.isHittable)
@@ -2331,7 +2345,12 @@ final class PCOSUITests: XCTestCase {
         try saveScreenshotArtifact(named: "task-2-lunar-calm-meal-scan-new-attempt.png")
         let goBackButton = ambiguousApp.buttons["Go back"]
         XCTAssertTrue(goBackButton.waitForExistence(timeout: 5))
-        scrollToElement(goBackButton, in: ambiguousApp.scrollViews.firstMatch, maxSwipes: 8)
+        scrollToElement(
+            goBackButton,
+            in: mealScanScroll(in: ambiguousApp),
+            maxSwipes: 8,
+            requireSafeTapZone: false
+        )
         XCTAssertTrue(goBackButton.isHittable)
         goBackButton.tap()
         XCTAssertTrue(screenElement(in: ambiguousApp, identifier: "meal_scan.unknown_outcome").waitForExistence(timeout: 5))

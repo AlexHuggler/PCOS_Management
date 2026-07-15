@@ -391,29 +391,6 @@ export function createServer(overrides = {}) {
         return sendJSON(response, 404, { error: "not_found" });
       }
 
-      if (configuredCanaryCorrelationId) {
-        const canaryId = headerValue(request.headers["x-cyclebalance-canary-id"]);
-        const operationTag = headerValue(request.headers["x-cyclebalance-canary-operation"]);
-        const correlationId = canonicalCanaryId(canaryId)
-          ? sha256Hex(canaryId)
-          : null;
-        if (
-          correlationId !== configuredCanaryCorrelationId ||
-          !isSha256Hex(operationTag)
-        ) {
-          return sendJSON(response, 400, {
-            error: "invalid_request",
-            detail: "request correlation is invalid",
-          });
-        }
-        canaryContext = {
-          canaryId,
-          correlationId,
-          operationTag,
-          quotaTag: null,
-        };
-      }
-
       if (!scanEnabled) {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -453,6 +430,29 @@ export function createServer(overrides = {}) {
           });
         }
         appCheckAccepted = true;
+      }
+
+      if (configuredCanaryCorrelationId) {
+        const canaryId = headerValue(request.headers["x-cyclebalance-canary-id"]);
+        const operationTag = headerValue(request.headers["x-cyclebalance-canary-operation"]);
+        const correlationId = canonicalCanaryId(canaryId)
+          ? sha256Hex(canaryId)
+          : null;
+        if (
+          correlationId !== configuredCanaryCorrelationId ||
+          !isSha256Hex(operationTag)
+        ) {
+          return sendJSON(response, 400, {
+            error: "invalid_request",
+            detail: "request correlation is invalid",
+          });
+        }
+        canaryContext = {
+          canaryId,
+          correlationId,
+          operationTag,
+          quotaTag: null,
+        };
       }
 
       const payload = await readJSONBody(request, maxBodyBytes);
@@ -2253,7 +2253,7 @@ function identifierFreeMetric({ modelId, usage, quota, tier, budget, cacheHit })
   return {
     providerId: PROVIDER_ID,
     modelId,
-    promptTokens: numberOrNull(usage?.inputTokens),
+    inputTokens: numberOrNull(usage?.inputTokens),
     outputTokens: numberOrNull(usage?.outputTokens),
     estimatedCostUSD: numberOrNull(usage?.estimatedCostUSD),
     quotaUsed: numberOrNull(quota?.used),

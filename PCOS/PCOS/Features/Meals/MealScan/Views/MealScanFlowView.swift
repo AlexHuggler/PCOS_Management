@@ -217,6 +217,8 @@ struct MealScanPhaseShell<Content: View>: View {
                         .padding(.vertical, AppTheme.spacing20)
                         .frame(maxWidth: .infinity)
                 }
+                .id(title)
+                .accessibilityIdentifier("meal_scan.phase.scroll")
             }
         }
         .background(AppTheme.premiumEditorBackground)
@@ -967,6 +969,8 @@ struct MealScanReviewView: View {
                             }
                         } label: {
                             MealScanFoodItemRow(item: item)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint(L10n.string("Double tap to edit this food and portion.", defaultValue: "Double tap to edit this food and portion."))
@@ -1316,6 +1320,7 @@ struct MealFoodItemEditView: View {
                 .accessibilityIdentifier("meal_scan.edit_food.save")
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.meal_scan.edit_food")
     }
 

@@ -4,6 +4,7 @@
 set -euo pipefail
 
 readonly PINNED_PROJECT_ID="cyclebalance-prod-20260710"
+readonly PINNED_PROJECT_NUMBER="947929010052"
 readonly PINNED_REGION="us-central1"
 readonly PINNED_SERVICE_NAME="cyclebalance-meal-scan-proxy"
 readonly PINNED_SERVICE_URL="https://cyclebalance-meal-scan-proxy-mdd7lrfyqa-uc.a.run.app"
@@ -18,6 +19,9 @@ readonly PINNED_APPLE_PRODUCT_IDS="cyclebalance.premium.monthly,cyclebalance.pre
 readonly PINNED_REVENUECAT_PROJECT_ID="proj8da4e000"
 readonly PINNED_REVENUECAT_ENTITLEMENT_ID="CycleBalance Unlimited"
 readonly PINNED_REVENUECAT_OFFERING_ID="default"
+readonly PINNED_RUNTIME_SERVICE_ACCOUNT_NAME="cyclebalance-meal-scan-proxy"
+readonly PINNED_RUNTIME_SERVICE_ACCOUNT_EMAIL="cyclebalance-meal-scan-proxy@cyclebalance-prod-20260710.iam.gserviceaccount.com"
+readonly PINNED_BUILD_SERVICE_ACCOUNT_NAME="cyclebalance-cloud-build"
 readonly PINNED_GEMINI_SECRET_NAME="cyclebalance-gemini-api-key"
 readonly PINNED_PRINCIPAL_HMAC_SECRET_NAME="cyclebalance-meal-scan-principal-hmac"
 readonly PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME="cyclebalance-app-store-iap-private-key"
@@ -32,6 +36,7 @@ readonly FIRESTORE_SNAPSHOT_PAGE_SIZE=100
 readonly RESCAN_INGESTION_SKEW_BUFFER_SECONDS="600"
 readonly CANARY_RECEIPT_ROOT="$HOME/Library/Application Support/CycleBalance/PositiveCanary"
 readonly CANARY_RECEIPT_PATH="$CANARY_RECEIPT_ROOT/seed-receipt.json"
+readonly DEVICE_BACKUP_ROOT="$HOME/Library/Application Support/CycleBalance/DeviceBackups"
 
 PROJECT_ID="${PROJECT_ID:-$PINNED_PROJECT_ID}"
 REGION="${REGION:-$PINNED_REGION}"
@@ -63,6 +68,7 @@ CANARY_APP_PATH=""
 CANARY_REVISION=""
 ROLLBACK_ARMED=false
 ROLLBACK_COMPLETE=false
+ROLLBACK_IN_PROGRESS=false
 APP_WAS_INSTALLED=""
 CANARY_APP_INSTALL_STARTED=false
 CANARY_RUN_COMPLETED=false
@@ -76,6 +82,7 @@ DEVICE_CONSOLE_OFFSET=0
 INITIAL_IAM_POLICY_FILE=""
 INITIAL_IAM_POLICY_DIGEST=""
 INITIAL_DISABLED_REVISION=""
+STAGED_DISABLED_REVISION=""
 FINAL_DISABLED_REVISION=""
 ORIGINAL_APP_VERSION=""
 ORIGINAL_APP_BUILD=""
@@ -94,6 +101,8 @@ APPLE_IAP_PRIVATE_KEY_SECRET_VERSION="$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_VERSI
 REVENUECAT_SECRET_VERSION=""
 APPLE_IAP_KEY_ID_VALUE=""
 APPLE_IAP_ISSUER_ID_VALUE=""
+CANARY_SOURCE_ARCHIVE=""
+CANARY_SOURCE_ARCHIVE_SHA256=""
 
 die() {
   printf 'ERROR: %s\n' "$*" >&2
@@ -205,7 +214,7 @@ print_dry_run() {
   note "Pinned target: project $PROJECT_ID; region $REGION; service $SERVICE_NAME; endpoint $SERVICE_URL."
   note "Pinned app/device: $APP_BUNDLE_ID on $DEVICE_NAME ($DEVICE_ID)."
   note "1. Require exact live confirmation $LIVE_CONFIRMATION_VALUE before any live preflight or mutation."
-  note "2. Require a full owner-approved source commit equal to clean HEAD, including no untracked files, and canonical project.yml Release scanner flags still NO."
+  note "2. Require a full owner-approved source commit equal to clean HEAD, including no untracked files, seal its exact proxy subtree once, and keep canonical project.yml Release scanner flags NO."
   note "3. Snapshot canonical Cloud Run IAM, reject allUsers/allAuthenticatedUsers, require the invoker IAM check, MEAL_SCAN_ENABLED=false, normal budget, and pinned identifiers."
   note "4. Verify numeric secret-version metadata; then pipe only the pinned RevenueCat key memory-only into read-only default/monthly/annual/CycleBalance Unlimited configuration checks."
   print_apple_iap_provisioning_handoff
@@ -354,9 +363,18 @@ assert_canonical_release_flags() {
 
 assert_no_prohibited_content() {
   local file="$1"
-  ! LC_ALL=C grep -Eiq \
-    'Authorization:[[:space:]]*Bearer|x-firebase-appcheck|app_?check_?token|signed_?transaction_?jws|store_?kit_?jws|original_?transaction_?id|transaction_?id|meal_name|mealName|display_name|data:image|/9j/|iVBORw0KGgo|-----BEGIN|ya29\.|sk_[[:alnum:]_-]{16,}|AIza[[:alnum:]_-]+' \
-    "$file"
+  node "$EVIDENCE_HELPER" assert-safe-content <"$file" >/dev/null
+}
+
+persist_redacted_evidence_file() {
+  local source_file="$1"
+  local output_name="$2"
+  [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR" ]] || return 1
+  [[ "$output_name" =~ ^[a-z0-9][a-z0-9.-]*\.json$ ]] || return 1
+  assert_no_prohibited_content "$source_file" || return 1
+  /bin/cp "$source_file" "$EVIDENCE_DIR/$output_name" || return 1
+  chmod 0600 "$EVIDENCE_DIR/$output_name" || return 1
+  assert_no_prohibited_content "$EVIDENCE_DIR/$output_name"
 }
 
 verify_phase_evidence() {
@@ -373,6 +391,7 @@ verify_phase_evidence() {
     fresh-scan|scan-as-new)
       jq -e --arg phase "$phase" '
         .phase == $phase and
+        .eventCount == 13 and
         .requestCompleted == 1 and
         .providerStarted == 1 and
         .providerCompleted == 1 and
@@ -416,6 +435,61 @@ prepare_evidence_directory() {
   append_summary "No photo, meal, token, JWS, transaction, purchase principal, or raw log content is retained."
 }
 
+verify_receipt_backup_continuity() {
+  if [[ "$APP_WAS_INSTALLED" == "false" ]]; then
+    [[ "$ORIGINAL_APP_DATA_BACKUP_STATE" == "not_present" ]] || return 1
+    [[ -z "$ORIGINAL_APP_DATA_BACKUP_PATH" ]] || return 1
+    return 0
+  fi
+  [[ "$APP_WAS_INSTALLED" == "true" ]] || return 1
+  [[ "$ORIGINAL_APP_DATA_BACKUP_STATE" == "app_data_container_copied" ]] || return 1
+  [[ -n "$ORIGINAL_APP_DATA_BACKUP_PATH" ]] || return 1
+
+  node - "$DEVICE_BACKUP_ROOT" "$ORIGINAL_APP_DATA_BACKUP_PATH" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+
+const root = process.argv[2];
+const candidate = process.argv[3];
+const owner = process.getuid();
+const fail = () => process.exit(1);
+const exactMode = (stats, expected) => ((stats.mode & 0o777) === expected);
+const ownerOnly = (stats) => ((stats.mode & 0o077) === 0);
+
+try {
+  if (!path.isAbsolute(root) || !path.isAbsolute(candidate)) fail();
+  if (path.resolve(root) !== root || path.resolve(candidate) !== candidate) fail();
+  const rootStats = fs.lstatSync(root);
+  const candidateStats = fs.lstatSync(candidate);
+  if (!rootStats.isDirectory() || rootStats.isSymbolicLink() || rootStats.uid !== owner || !exactMode(rootStats, 0o700)) fail();
+  if (!candidateStats.isDirectory() || candidateStats.isSymbolicLink() || candidateStats.uid !== owner || !exactMode(candidateStats, 0o700)) fail();
+  const realRoot = fs.realpathSync(root);
+  const realCandidate = fs.realpathSync(candidate);
+  if (path.dirname(candidate) !== root || path.dirname(realCandidate) !== realRoot) fail();
+
+  let entryCount = 0;
+  const inspect = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      entryCount += 1;
+      const entryPath = path.join(directory, entry.name);
+      const stats = fs.lstatSync(entryPath);
+      if (stats.uid !== owner || stats.isSymbolicLink() || !ownerOnly(stats)) fail();
+      if (stats.isDirectory()) {
+        if (!exactMode(stats, 0o700)) fail();
+        inspect(entryPath);
+      } else if (!stats.isFile()) {
+        fail();
+      }
+    }
+  };
+  inspect(realCandidate);
+  if (entryCount === 0) fail();
+} catch {
+  fail();
+}
+NODE
+}
+
 load_seed_receipt() {
   [[ -f "$CANARY_RECEIPT_PATH" ]] || die "Rescan requires the owner-only seed receipt at $CANARY_RECEIPT_PATH"
   [[ "$(stat -f '%Lp' "$CANARY_RECEIPT_PATH")" == "600" ]] || die "Seed receipt permissions must be 0600"
@@ -438,7 +512,15 @@ load_seed_receipt() {
       (.rescanNotBeforeEpoch | type == "number") and
       (.appInitiallyInstalled | type == "boolean") and
       (.originalApp | type == "object") and
-      (.canaryApp | type == "object")
+      (.canaryApp | type == "object") and
+      (
+        (.appInitiallyInstalled == true and
+          .originalApp.dataBackupState == "app_data_container_copied" and
+          (.originalApp.dataBackupPath | type == "string" and length > 0)) or
+        (.appInitiallyInstalled == false and
+          .originalApp.dataBackupState == "not_present" and
+          .originalApp.dataBackupPath == "")
+      )
     ' "$CANARY_RECEIPT_PATH" >/dev/null || die "Seed receipt failed its strict content-free schema"
   receipt_rescan_is_due "$CANARY_RECEIPT_PATH" || die "Rescan is blocked until the 24-hour TTL plus ingestion/skew buffer has elapsed"
 
@@ -459,6 +541,8 @@ load_seed_receipt() {
   CANARY_APP_VERSION="$(jq -er '.canaryApp.version' "$CANARY_RECEIPT_PATH")"
   CANARY_APP_BUILD="$(jq -er '.canaryApp.build' "$CANARY_RECEIPT_PATH")"
   CANARY_SIGNING_STATE="$(jq -er '.canaryApp.signingState' "$CANARY_RECEIPT_PATH")"
+  verify_receipt_backup_continuity \
+    || die "Protected original-app backup continuity failed; no cloud or device action is permitted"
   RESCAN_RECEIPT_LOADED=true
   append_summary "Machine-read lifecycle: content-free owner receipt loaded; buffered rescan boundary satisfied."
 }
@@ -529,9 +613,21 @@ write_seed_receipt() {
           signingState: $canary_signing
         }
       }
-    ' >"$receipt_temp"
-  chmod 0600 "$receipt_temp"
-  mv "$receipt_temp" "$CANARY_RECEIPT_PATH"
+    ' >"$receipt_temp" || {
+      rm -f "$receipt_temp"
+      return 1
+    }
+  chmod 0600 "$receipt_temp" || {
+    rm -f "$receipt_temp"
+    return 1
+  }
+  # A hard-link publication is atomic and fails if another receipt appeared
+  # after the preflight check. Both paths are on the same protected volume.
+  ln "$receipt_temp" "$CANARY_RECEIPT_PATH" || {
+    rm -f "$receipt_temp"
+    return 1
+  }
+  rm -f "$receipt_temp" || return 1
   SEED_RECEIPT_PENDING=false
   append_summary "Machine-read lifecycle: owner-only content-free seed receipt persisted after verified rollback."
 }
@@ -543,6 +639,65 @@ service_json() {
     --format=json
 }
 
+verify_deployed_build_provenance() {
+  local service_file="$1"
+  local build_file="$2"
+  jq -se \
+    --arg region "$REGION" \
+    --arg service "$SERVICE_NAME" \
+    --arg build_service_account_email "${PINNED_BUILD_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" '
+      .[0] as $service_state |
+      .[1] as $build |
+      $service_state.metadata.annotations as $annotations |
+      $annotations["run.googleapis.com/build-id"] as $build_id |
+      $annotations["run.googleapis.com/build-name"] as $build_name |
+      $annotations["run.googleapis.com/build-service-account"] as $annotated_build_service_account |
+      $annotations["run.googleapis.com/build-source-location"] as $source_location |
+      $service_state.spec.template.spec.containers[0].image as $service_image |
+      ($service_image | capture("^(?<name>.+)@(?<digest>sha256:[a-f0-9]{64})$")) as $deployed_image |
+      ($build.source.storageSource.generation | tostring) as $generation |
+      ($build_id | type == "string" and test("^[A-Za-z0-9-]{8,128}$")) and
+      ($build_name | type == "string") and
+      ($build.name == $build_name) and
+      ($build_name | endswith("/locations/" + $region + "/builds/" + $build_id)) and
+      ($build.id == $build_id) and
+      ($build.serviceAccount | type == "string" and startswith("projects/") and
+        endswith("/serviceAccounts/" + $build_service_account_email)) and
+      ($annotated_build_service_account == $build_service_account_email or
+        $annotated_build_service_account == $build.serviceAccount) and
+      ($build.status == "SUCCESS") and
+      ($build.source.storageSource.bucket | type == "string" and length > 0) and
+      ($build.source.storageSource.object | type == "string" and length > 0) and
+      ($generation | test("^[1-9][0-9]*$")) and
+      ($source_location == ("gs://" + $build.source.storageSource.bucket + "/" + $build.source.storageSource.object + "#" + $generation)) and
+      ($service_state.status.latestCreatedRevisionName == $service_state.status.latestReadyRevisionName) and
+      (($service_state.spec.template.metadata.name // $service_state.status.latestReadyRevisionName) == $service_state.status.latestReadyRevisionName) and
+      ($service_state.status.latestReadyRevisionName | startswith($service + "-")) and
+      ([($build.results.images // [])[] |
+        select((.name == $deployed_image.name or (.name | startswith($deployed_image.name + ":"))) and
+          .digest == $deployed_image.digest)] | length == 1)
+    ' "$service_file" "$build_file" >/dev/null
+}
+
+capture_and_verify_build_provenance() {
+  local service_file="$1"
+  local label="$2"
+  local build_id build_file
+  [[ "$label" =~ ^[a-z0-9-]+$ ]] || return 1
+  build_id="$(jq -er '.metadata.annotations["run.googleapis.com/build-id"]' "$service_file")" || return 1
+  [[ "$build_id" =~ ^[A-Za-z0-9-]{8,128}$ ]] || return 1
+  build_file="$TEMP_ROOT/${label}-cloud-build.json"
+  gcloud builds describe "$build_id" \
+    --project "$PROJECT_ID" \
+    --region "$REGION" \
+    --format=json >"$build_file" \
+    || return 1
+  chmod 0600 "$build_file" || return 1
+  verify_deployed_build_provenance "$service_file" "$build_file" || return 1
+  rm -f "$build_file"
+  append_summary "Machine-read $label build: pinned Cloud Build service account, immutable source object generation, ready revision, and deployed image digest were tied together."
+}
+
 service_env_value() {
   local service_file="$1"
   local name="$2"
@@ -550,6 +705,176 @@ service_env_value() {
     [.spec.template.spec.containers[].env[]? | select(.name == $name) | .value] |
     if length == 1 and (.[0] | type == "string") then .[0] else empty end
   ' "$service_file"
+}
+
+verify_deployed_runtime_and_secret_refs() {
+  local service_file="$1"
+  local env_name secret_name secret_version
+  require_equal \
+    "$(jq -er '.spec.template.spec.serviceAccountName' "$service_file")" \
+    "$PINNED_RUNTIME_SERVICE_ACCOUNT_EMAIL" \
+    "Cloud Run runtime service account drifted"
+  while IFS='|' read -r env_name secret_name secret_version; do
+    jq -e \
+      --arg env_name "$env_name" \
+      --arg secret_name "$secret_name" \
+      --arg secret_version "$secret_version" '
+        [.spec.template.spec.containers[].env[]? |
+          select(.name == $env_name) |
+          .valueFrom.secretKeyRef] as $refs |
+        ($refs | length) == 1 and
+        $refs[0].name == $secret_name and
+        ($refs[0].key | tostring) == $secret_version
+      ' "$service_file" >/dev/null \
+      || die "Cloud Run secret reference drifted for $env_name"
+  done <<EOF
+GEMINI_API_KEY|$PINNED_GEMINI_SECRET_NAME|$GEMINI_SECRET_VERSION
+MEAL_SCAN_PRINCIPAL_HMAC_SECRET|$PINNED_PRINCIPAL_HMAC_SECRET_NAME|$PRINCIPAL_HMAC_SECRET_VERSION
+APPLE_IAP_PRIVATE_KEY|$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME|$APPLE_IAP_PRIVATE_KEY_SECRET_VERSION
+REVENUECAT_SECRET_API_KEY|$PINNED_REVENUECAT_SECRET_NAME|$REVENUECAT_SECRET_VERSION
+EOF
+}
+
+verify_approved_source_runtime_constants() {
+  grep -Fqx 'const DEFAULT_MODEL_ID = "gemini-3.1-flash-lite";' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const PROVIDER_ID = "google-gemini";' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const ABSOLUTE_PAID_ROLLING_LIMIT = 15;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const MAX_PUBLIC_BODY_BYTES = 2_200_000;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const MAX_DECODED_IMAGE_BYTES = 1_500_000;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const MAX_SOURCE_IMAGE_PIXELS = 12_000_000;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const MAX_CANONICAL_IMAGE_BYTES = 750_000;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_PAID_ROLLING_LIMIT = 10;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_TRIAL_ROLLING_LIMIT = 5;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_TRIAL_LIFETIME_LIMIT = 25;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_BUDGET_ALERT_USD = 15;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_BUDGET_DEGRADE_USD = 20;' "$PROXY_DIR/src/server.js" || return 1
+  grep -Fqx 'const DEFAULT_BUDGET_DISABLE_USD = 25;' "$PROXY_DIR/src/server.js" || return 1
+}
+
+verify_deployed_runtime_configuration() {
+  local service_file="$1"
+  local enabled="$2"
+  local expected_values actual_values expected_names actual_names
+  expected_values="$(mktemp "${TMPDIR:-/tmp}/cyclebalance-runtime-values.XXXXXX")" || return 1
+  actual_values="$(mktemp "${TMPDIR:-/tmp}/cyclebalance-runtime-actual.XXXXXX")" || {
+    rm -f "$expected_values"
+    return 1
+  }
+  expected_names="$(mktemp "${TMPDIR:-/tmp}/cyclebalance-runtime-names.XXXXXX")" || {
+    rm -f "$expected_values" "$actual_values"
+    return 1
+  }
+  actual_names="$(mktemp "${TMPDIR:-/tmp}/cyclebalance-runtime-actual-names.XXXXXX")" || {
+    rm -f "$expected_values" "$actual_values" "$expected_names"
+    return 1
+  }
+  chmod 0600 "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+
+  {
+    printf '%s\n' \
+      'NODE_ENV|production' \
+      "MEAL_SCAN_ENABLED|$enabled" \
+      'APP_CHECK_REQUIRED|true' \
+      "FIREBASE_APP_ID|$PINNED_FIREBASE_APP_ID" \
+      "APPLE_BUNDLE_ID|$PINNED_APP_BUNDLE_ID" \
+      "APPLE_APP_ID|$PINNED_APPLE_APP_ID" \
+      "APPLE_ALLOWED_PRODUCT_IDS|$PINNED_APPLE_PRODUCT_IDS" \
+      "APPLE_IAP_KEY_ID|$APPLE_IAP_KEY_ID_VALUE" \
+      "APPLE_IAP_ISSUER_ID|$APPLE_IAP_ISSUER_ID_VALUE" \
+      "REVENUECAT_PROJECT_ID|$PINNED_REVENUECAT_PROJECT_ID" \
+      "REVENUECAT_ENTITLEMENT_ID|$PINNED_REVENUECAT_ENTITLEMENT_ID" \
+      'REVENUECAT_TIMEOUT_MS|3000' \
+      'MEAL_SCAN_QUOTA_STORE|firestore' \
+      'MEAL_SCAN_QUOTA_COLLECTION|mealScanRollingQuota' \
+      'MEAL_SCAN_RESULT_CACHE|firestore' \
+      'MEAL_SCAN_RESULT_CACHE_COLLECTION|mealScanEstimateCache' \
+      'MEAL_SCAN_IDEMPOTENCY_STORE|firestore' \
+      'MEAL_SCAN_IDEMPOTENCY_COLLECTION|mealScanIdempotency' \
+      'MEAL_SCAN_IDEMPOTENCY_PENDING_TTL_MS|30000' \
+      'MEAL_SCAN_REQUEST_GATE|firestore' \
+      'MEAL_SCAN_REQUEST_GATE_COLLECTION|mealScanRequestGate' \
+      'MEAL_SCAN_REQUESTS_PER_MINUTE_LIMIT|30' \
+      'MEAL_SCAN_REQUESTS_PER_DAY_LIMIT|200' \
+      'MEAL_SCAN_GLOBAL_REQUESTS_PER_MINUTE_LIMIT|300' \
+      'MEAL_SCAN_GLOBAL_REQUESTS_PER_DAY_LIMIT|3000' \
+      'MEAL_SCAN_PRINCIPAL_ATTEMPT_STORE|firestore' \
+      'MEAL_SCAN_PRINCIPAL_ATTEMPT_COLLECTION|mealScanPrincipalAttempts' \
+      'MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_MINUTE_LIMIT|3' \
+      'MEAL_SCAN_PRINCIPAL_ATTEMPTS_PER_24_HOURS_LIMIT|30' \
+      'MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_MINUTE_LIMIT|60' \
+      'MEAL_SCAN_GLOBAL_PROVIDER_DISPATCHES_PER_24_HOURS_LIMIT|1000' \
+      'MEAL_SCAN_BUDGET_STORE|firestore' \
+      'MEAL_SCAN_CONTROL_COLLECTION|mealScanControls' \
+      'MEAL_SCAN_CONTROL_DOCUMENT|global' \
+      'MEAL_SCAN_BUDGET_STATE_MAX_AGE_SECONDS|86400' \
+      'MEAL_SCAN_RESULT_CACHE_TTL_SECONDS|86400' \
+      'MEAL_SCAN_RESULT_LEASE_TTL_MS|30000' \
+      'MEAL_SCAN_CONTROL_CACHE_TTL_MS|30000' \
+      'MEAL_SCAN_DAILY_LIMIT|10' \
+      'MEAL_SCAN_TRIAL_DAILY_LIMIT|5' \
+      'MEAL_SCAN_TRIAL_TOTAL_LIMIT|25' \
+      'MEAL_SCAN_MONTHLY_BUDGET_ALERT_USD|15' \
+      'MEAL_SCAN_MONTHLY_BUDGET_DEGRADE_USD|20' \
+      'MEAL_SCAN_MONTHLY_BUDGET_DISABLE_USD|25' \
+      'MAX_BODY_BYTES|2200000' \
+      'MAX_IMAGE_BYTES|1500000' \
+      'MAX_IMAGE_PIXELS|12000000' \
+      'MAX_CANONICAL_IMAGE_BYTES|750000' \
+      'APP_CHECK_TIMEOUT_MS|5000' \
+      'APPLE_STATUS_TIMEOUT_MS|5000' \
+      'GEMINI_TIMEOUT_MS|12000'
+    if [[ "$enabled" == "true" ]]; then
+      printf '%s\n' "MEAL_SCAN_CANARY_CORRELATION_SHA256|$CANARY_CORRELATION_ID"
+    fi
+  } | sort >"$expected_values"
+
+  jq -er '.spec.template.spec.containers[0].env[]? | select(has("value")) | [.name, .value] | @tsv' \
+    "$service_file" | tr '\t' '|' | sort >"$actual_values" || {
+      rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+      return 1
+    }
+  cmp -s "$expected_values" "$actual_values" || {
+    rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+    return 1
+  }
+  {
+    cut -d '|' -f 1 "$expected_values"
+    printf '%s\n' GEMINI_API_KEY MEAL_SCAN_PRINCIPAL_HMAC_SECRET APPLE_IAP_PRIVATE_KEY REVENUECAT_SECRET_API_KEY
+  } | sort >"$expected_names"
+  jq -er '.spec.template.spec.containers[0].env[]?.name' "$service_file" | sort >"$actual_names" || {
+    rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+    return 1
+  }
+  cmp -s "$expected_names" "$actual_names" || {
+    rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+    return 1
+  }
+  jq -e --arg enabled "$enabled" '
+    .spec.template as $template |
+    .metadata.annotations as $service_annotations |
+    ($template.metadata.annotations // {}) as $template_annotations |
+    .spec.template.spec as $spec |
+    $spec.containers[0].resources.limits as $limits |
+    (($limits.cpu | tostring) == "1" or ($limits.cpu | tostring) == "1000m") and
+    (($limits.memory | tostring) == "512Mi") and
+    ($spec.containerConcurrency == 20) and
+    ($spec.timeoutSeconds == 30) and
+    (($template_annotations["autoscaling.knative.dev/minScale"] // "") == "0") and
+    (($template_annotations["autoscaling.knative.dev/maxScale"] // "") == "2") and
+    (($template_annotations["run.googleapis.com/execution-environment"] // "") == "gen2") and
+    (($service_annotations["run.googleapis.com/ingress"] // "") == "all") and
+    (($service_annotations | has("run.googleapis.com/base-images")) | not) and
+    (($template_annotations | has("run.googleapis.com/base-images")) | not) and
+    (if $enabled == "true" then
+      (($service_annotations["run.googleapis.com/invoker-iam-disabled"] // "false") == "true")
+    else
+      (($service_annotations["run.googleapis.com/invoker-iam-disabled"] // "false") != "true")
+    end)
+  ' "$service_file" >/dev/null || {
+    rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
+    return 1
+  }
+  rm -f "$expected_values" "$actual_values" "$expected_names" "$actual_names"
 }
 
 single_enabled_secret_version() {
@@ -573,6 +898,52 @@ verify_secret_version_metadata() {
     "ENABLED" "Secret $secret_name version $version must exist and be ENABLED"
 }
 
+verify_apple_iap_provisioning_files() {
+  local metadata_file="$1"
+  local versions_file="$2"
+  local iam_file="$3"
+  jq -se \
+    --arg resource "projects/$PINNED_PROJECT_NUMBER/secrets/$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" \
+    --arg version_resource "projects/$PINNED_PROJECT_NUMBER/secrets/$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME/versions/1" \
+    --arg member "serviceAccount:$PINNED_RUNTIME_SERVICE_ACCOUNT_EMAIL" '
+      .[0] as $metadata |
+      .[1] as $versions |
+      .[2] as $iam |
+      ($metadata | type == "object") and
+      ($metadata.name == $resource) and
+      ($metadata.labels.cyclebalance_iap_provision_state == "complete") and
+      ($metadata.labels.cyclebalance_iap_provision_owner | type == "string" and test("^[a-f0-9]{32}$")) and
+      ($versions | type == "array" and length == 1) and
+      ($versions[0].name == $version_resource) and
+      ($versions[0].state == "ENABLED") and
+      (($iam.auditConfigs // []) | length == 0) and
+      (($iam.bindings // []) | length == 1) and
+      ($iam.bindings[0].role == "roles/secretmanager.secretAccessor") and
+      (($iam.bindings[0].condition // null) == null) and
+      (($iam.bindings[0].members // []) == [$member])
+    ' "$metadata_file" "$versions_file" "$iam_file" >/dev/null
+}
+
+verify_apple_iap_secret_handoff() {
+  local metadata_file versions_file iam_file
+  metadata_file="$TEMP_ROOT/apple-iap-secret-metadata.json"
+  versions_file="$TEMP_ROOT/apple-iap-secret-versions.json"
+  iam_file="$TEMP_ROOT/apple-iap-secret-iam.json"
+  gcloud secrets describe "$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" \
+    --project "$PROJECT_ID" --format=json >"$metadata_file" \
+    || die "Apple IAP secret resource is missing or unreadable"
+  gcloud secrets versions list "$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" \
+    --project "$PROJECT_ID" --format=json >"$versions_file" \
+    || die "Apple IAP secret version inventory is unreadable"
+  gcloud secrets get-iam-policy "$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" \
+    --project "$PROJECT_ID" --format=json >"$iam_file" \
+    || die "Apple IAP secret IAM policy is unreadable"
+  chmod 0600 "$metadata_file" "$versions_file" "$iam_file"
+  verify_apple_iap_provisioning_files "$metadata_file" "$versions_file" "$iam_file" \
+    || die "Apple IAP handoff must be complete, sole-enabled-v1, and exact proxy-only IAM"
+  rm -f "$metadata_file" "$versions_file" "$iam_file"
+}
+
 load_and_verify_secret_metadata() {
   note "Checking secret resources and numeric versions without reading any values."
   GEMINI_SECRET_VERSION="$(single_enabled_secret_version "$PINNED_GEMINI_SECRET_NAME")" \
@@ -581,9 +952,9 @@ load_and_verify_secret_metadata() {
     || die "RevenueCat must have exactly one enabled numeric secret version; do not rotate it from this harness"
   verify_secret_version_metadata "$PINNED_GEMINI_SECRET_NAME" "$GEMINI_SECRET_VERSION"
   verify_secret_version_metadata "$PINNED_PRINCIPAL_HMAC_SECRET_NAME" "$PRINCIPAL_HMAC_SECRET_VERSION"
-  verify_secret_version_metadata "$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" "$APPLE_IAP_PRIVATE_KEY_SECRET_VERSION"
+  verify_apple_iap_secret_handoff
   verify_secret_version_metadata "$PINNED_REVENUECAT_SECRET_NAME" "$REVENUECAT_SECRET_VERSION"
-  append_summary "Machine-read secret metadata: required resources and pinned numeric versions exist; values were not accessed."
+  append_summary "Machine-read secret metadata: required resources and pinned numeric versions exist; Apple IAP provisioning is complete with sole enabled v1 and exact proxy-only IAM; values were not accessed."
 }
 
 read_hidden_apple_iap_identifiers() {
@@ -614,7 +985,7 @@ firestore_document_json() {
   response_file="$(mktemp "$TEMP_ROOT/firestore-response.XXXXXX")" || return 1
   chmod 0600 "$response_file"
   status="$(printf 'header = "Authorization: Bearer %s"\n' "$access_token" | \
-    curl --silent --show-error --config - --output "$response_file" --write-out '%{http_code}' \
+    curl --disable --silent --show-error --config - --output "$response_file" --write-out '%{http_code}' \
       "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/$collection/$document_id")" || return 1
   unset access_token
   case "$status" in
@@ -661,6 +1032,22 @@ verify_source_preconditions() {
   append_summary "Machine-read source: clean pinned RC branch, approved commit matched HEAD, and canonical Release scanner flags NO."
 }
 
+prepare_approved_source_archive() {
+  local verification_sha
+  CANARY_SOURCE_ARCHIVE="$TEMP_ROOT/approved-meal-scan-source.tar"
+  git -C "$REPOSITORY_ROOT" archive --format=tar "$APPROVED_SOURCE_COMMIT" -- cloud/meal-scan-proxy \
+    >"$CANARY_SOURCE_ARCHIVE" \
+    || die "Unable to seal the approved meal-scan proxy source"
+  chmod 0400 "$CANARY_SOURCE_ARCHIVE"
+  CANARY_SOURCE_ARCHIVE_SHA256="$(shasum -a 256 "$CANARY_SOURCE_ARCHIVE" | awk '{print $1}')"
+  [[ "$CANARY_SOURCE_ARCHIVE_SHA256" =~ ^[a-f0-9]{64}$ ]] \
+    || die "Unable to hash the sealed approved proxy source"
+  verification_sha="$(git -C "$REPOSITORY_ROOT" archive --format=tar "$APPROVED_SOURCE_COMMIT" -- cloud/meal-scan-proxy | shasum -a 256 | awk '{print $1}')" \
+    || die "Unable to independently verify the sealed approved proxy source"
+  require_equal "$verification_sha" "$CANARY_SOURCE_ARCHIVE_SHA256" "Sealed approved proxy source digest was not reproducible"
+  append_summary "Machine-read source: one mode-0400 approved-commit proxy archive was sealed before cloud mutation for exact enable/rollback reuse."
+}
+
 verify_initial_cloud_state() {
   note "Checking Google Cloud service, pinned identifiers, private transport, disabled flag, and normal budget."
   local service_file service_url budget_mode unauthenticated_status response_file raw_iam_file
@@ -672,15 +1059,7 @@ verify_initial_cloud_state() {
   service_url="$(jq -er '.status.url' "$service_file")"
   require_equal "$service_url" "$PINNED_SERVICE_URL" "Cloud Run URL drifted from the pinned endpoint"
   require_equal "$(service_env_value "$service_file" MEAL_SCAN_ENABLED)" "false" "MEAL_SCAN_ENABLED must initially be false"
-  require_equal "$(service_env_value "$service_file" APP_CHECK_REQUIRED)" "true" "App Check must be required"
-  require_equal "$(service_env_value "$service_file" FIREBASE_APP_ID)" "$PINNED_FIREBASE_APP_ID" "Firebase app ID mismatch"
-  require_equal "$(service_env_value "$service_file" APPLE_BUNDLE_ID)" "$PINNED_APP_BUNDLE_ID" "Apple bundle ID mismatch"
-  require_equal "$(service_env_value "$service_file" APPLE_APP_ID)" "$PINNED_APPLE_APP_ID" "Apple app ID mismatch"
-  require_equal "$(service_env_value "$service_file" APPLE_ALLOWED_PRODUCT_IDS)" "$PINNED_APPLE_PRODUCT_IDS" "Apple product IDs mismatch"
-  require_equal "$(service_env_value "$service_file" REVENUECAT_PROJECT_ID)" "$PINNED_REVENUECAT_PROJECT_ID" "RevenueCat project mismatch"
-  require_equal "$(service_env_value "$service_file" REVENUECAT_ENTITLEMENT_ID)" "$PINNED_REVENUECAT_ENTITLEMENT_ID" "RevenueCat entitlement mismatch"
   invoker_iam_check_is_enabled "$service_file" || die "Cloud Run invoker IAM check must be enabled"
-  read_hidden_apple_iap_identifiers "$service_file"
 
   budget_mode="$(read_budget_mode)" || die "Unable to read the Firestore budget control"
   require_equal "$budget_mode" "normal" "Budget mode must be normal before the canary"
@@ -706,11 +1085,11 @@ verify_initial_cloud_state() {
   INITIAL_DISABLED_REVISION="$observed_revision"
 
   response_file="$TEMP_ROOT/initial-private-response.txt"
-  unauthenticated_status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+  unauthenticated_status="$(curl --disable --silent --show-error --output "$response_file" --write-out '%{http_code}' \
     --request POST "$SERVICE_URL/v1/meal-scans/estimate")" || die "Unable to verify private Cloud Run transport"
   private_invoker_gate_rejects_status "$unauthenticated_status" \
     || die "Private Cloud Run must reject anonymous transport with 403 or concealed 404"
-  append_summary "Machine-read initial cloud: exact IAM snapshot private, invoker check enabled, disabled, normal budget, App Check required, pinned public identifiers."
+  append_summary "Machine-read initial cloud: legacy-safe exact IAM snapshot private, invoker check enabled, disabled flag, normal budget, pinned project/URL, and anonymous transport rejection."
 }
 
 verify_dormant_window_continuity() {
@@ -774,7 +1153,7 @@ verify_device_preconditions() {
 }
 
 backup_app_data() {
-  local apps_json backup_root backup_dir app_entry
+  local apps_json backup_dir app_entry
   apps_json="$TEMP_ROOT/device-apps.json"
   xcrun devicectl device info apps --device "$DEVICE_ID" --json-output "$apps_json" >/dev/null \
     || die "CoreDevice could not read the app inventory"
@@ -801,11 +1180,10 @@ backup_app_data() {
       (if .isDeveloperApp then "developer" else "distribution_or_store" end)
     else "unknown" end
   ' <<<"$app_entry")"
-  backup_root="$HOME/Library/Application Support/CycleBalance/DeviceBackups"
-  backup_dir="$backup_root/$(date -u +%Y%m%dT%H%M%SZ)-positive-canary"
+  backup_dir="$DEVICE_BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)-positive-canary"
   umask 077
   mkdir -p "$backup_dir"
-  chmod 0700 "$backup_root" "$backup_dir"
+  chmod 0700 "$DEVICE_BACKUP_ROOT" "$backup_dir"
   xcrun devicectl device copy from \
     --device "$DEVICE_ID" \
     --domain-type appDataContainer \
@@ -974,17 +1352,22 @@ launch_canary_with_console() {
   sleep 3
   kill -0 "$DEVICE_CONSOLE_PID" 2>/dev/null \
     || die "The nondistributable canary did not remain attached to the device console"
+  assert_no_prohibited_content "$DEVICE_CONSOLE_LOG" \
+    || die "Device-console startup contained prohibited sensitive content"
   DEVICE_CONSOLE_OFFSET="$(wc -c <"$DEVICE_CONSOLE_LOG" | tr -d ' ')"
   append_summary "Machine-read launch: development-signed canary accepted the non-feature launch nonce path; only operation hashes may enter the console evidence window."
 }
 
 stop_device_console() {
-  [[ -n "$DEVICE_CONSOLE_PID" ]] || return 0
-  if kill -0 "$DEVICE_CONSOLE_PID" 2>/dev/null; then
+  if [[ -n "$DEVICE_CONSOLE_PID" ]] && kill -0 "$DEVICE_CONSOLE_PID" 2>/dev/null; then
     kill -TERM "$DEVICE_CONSOLE_PID" 2>/dev/null || true
     wait "$DEVICE_CONSOLE_PID" 2>/dev/null || true
   fi
   DEVICE_CONSOLE_PID=""
+  if [[ -n "$DEVICE_CONSOLE_LOG" && -f "$DEVICE_CONSOLE_LOG" ]]; then
+    assert_no_prohibited_content "$DEVICE_CONSOLE_LOG" \
+      || return 1
+  fi
 }
 
 device_console_operation_for_phase() {
@@ -992,6 +1375,8 @@ device_console_operation_for_phase() {
   local segment_file tags count current_size
   segment_file="$TEMP_ROOT/${phase}-device-console-segment.txt"
   tail -c "+$((DEVICE_CONSOLE_OFFSET + 1))" "$DEVICE_CONSOLE_LOG" >"$segment_file"
+  assert_no_prohibited_content "$segment_file" \
+    || die "Device-console canary segment contained prohibited sensitive content"
   tags="$(sed -nE 's/^.*CYCLEBALANCE_CANARY_OPERATION tag=([a-f0-9]{64}).*$/\1/p' "$segment_file" | sort -u)"
   rm -f "$segment_file"
   current_size="$(wc -c <"$DEVICE_CONSOLE_LOG" | tr -d ' ')"
@@ -1012,11 +1397,21 @@ device_console_operation_for_phase() {
 deploy_environment() {
   local enabled="$1"
   local allow_unauthenticated="$2"
+  local correlation_id=""
+  if [[ "$enabled" == "true" ]]; then
+    correlation_id="$CANARY_CORRELATION_ID"
+  fi
   (
     cd "$PROXY_DIR"
     PROJECT_ID="$PROJECT_ID" \
     REGION="$REGION" \
     SERVICE_NAME="$SERVICE_NAME" \
+    SERVICE_ACCOUNT_NAME="$PINNED_RUNTIME_SERVICE_ACCOUNT_NAME" \
+    BUILD_SERVICE_ACCOUNT_NAME="$PINNED_BUILD_SERVICE_ACCOUNT_NAME" \
+    GEMINI_SECRET_NAME="$PINNED_GEMINI_SECRET_NAME" \
+    PRINCIPAL_HMAC_SECRET_NAME="$PINNED_PRINCIPAL_HMAC_SECRET_NAME" \
+    APPLE_IAP_PRIVATE_KEY_SECRET_NAME="$PINNED_APPLE_IAP_PRIVATE_KEY_SECRET_NAME" \
+    REVENUECAT_SECRET_NAME="$PINNED_REVENUECAT_SECRET_NAME" \
     FIREBASE_APP_ID="$PINNED_FIREBASE_APP_ID" \
     APPLE_BUNDLE_ID="$PINNED_APP_BUNDLE_ID" \
     APPLE_APP_ID="$PINNED_APPLE_APP_ID" \
@@ -1029,12 +1424,73 @@ deploy_environment() {
     PRINCIPAL_HMAC_SECRET_VERSION="$PRINCIPAL_HMAC_SECRET_VERSION" \
     APPLE_IAP_PRIVATE_KEY_SECRET_VERSION="$APPLE_IAP_PRIVATE_KEY_SECRET_VERSION" \
     REVENUECAT_SECRET_VERSION="$REVENUECAT_SECRET_VERSION" \
+    APPROVED_SOURCE_COMMIT="$APPROVED_SOURCE_COMMIT" \
+    CANARY_SOURCE_ARCHIVE="$CANARY_SOURCE_ARCHIVE" \
+    CANARY_SOURCE_ARCHIVE_SHA256="$CANARY_SOURCE_ARCHIVE_SHA256" \
     DEPLOY_MODE=canary \
-    MEAL_SCAN_CANARY_CORRELATION_SHA256="$CANARY_CORRELATION_ID" \
+    MEAL_SCAN_CANARY_CORRELATION_SHA256="$correlation_id" \
     MEAL_SCAN_ENABLED="$enabled" \
     ALLOW_UNAUTHENTICATED="$allow_unauthenticated" \
     "$DEPLOY_SCRIPT"
   )
+}
+
+deploy_current_rc_disabled_private() {
+  note "Staging the sealed current RC disabled/private before any public canary revision."
+  deploy_environment false false
+  restore_initial_iam_policy \
+    || die "Unable to restore the exact initial IAM policy after disabled RC staging"
+
+  local service_file raw_iam_file canonical_iam_file unauthenticated_status authenticated_status
+  local response_file identity_token
+  service_file="$TEMP_ROOT/staged-disabled-service.json"
+  raw_iam_file="$TEMP_ROOT/staged-disabled-iam-raw.json"
+  canonical_iam_file="$TEMP_ROOT/staged-disabled-iam.json"
+  response_file="$TEMP_ROOT/staged-disabled-response.json"
+  service_json >"$service_file" || die "Unable to read back the staged disabled RC"
+  chmod 0600 "$service_file"
+  require_equal "$(service_env_value "$service_file" MEAL_SCAN_ENABLED)" "false" "Staged RC must remain disabled"
+  ! service_env_value "$service_file" MEAL_SCAN_CANARY_CORRELATION_SHA256 >/dev/null 2>&1 \
+    || die "Staged disabled RC must not retain a canary correlation"
+  verify_deployed_runtime_and_secret_refs "$service_file"
+  verify_deployed_runtime_configuration "$service_file" false \
+    || die "Staged disabled RC runtime contract drifted"
+  verify_approved_source_runtime_constants \
+    || die "Approved proxy source constants drifted from the pinned provider/model/quota/budget contract"
+  capture_and_verify_build_provenance "$service_file" "staged-disabled" \
+    || die "Staged disabled RC build provenance did not match its ready revision and image"
+  invoker_iam_check_is_enabled "$service_file" \
+    || die "Staged disabled RC must enforce Cloud Run invoker IAM"
+  STAGED_DISABLED_REVISION="$(jq -er '.status.latestReadyRevisionName' "$service_file")"
+  [[ -n "$STAGED_DISABLED_REVISION" && "$STAGED_DISABLED_REVISION" != "$INITIAL_DISABLED_REVISION" ]] \
+    || die "Staged disabled RC did not produce a distinct ready revision"
+
+  gcloud run services get-iam-policy "$SERVICE_NAME" \
+    --project "$PROJECT_ID" --region "$REGION" --format=json >"$raw_iam_file" \
+    || die "Unable to read staged disabled RC IAM"
+  chmod 0600 "$raw_iam_file"
+  iam_policy_is_private "$raw_iam_file" || die "Staged disabled RC IAM became public"
+  canonical_iam_policy "$raw_iam_file" >"$canonical_iam_file"
+  cmp -s "$INITIAL_IAM_POLICY_FILE" "$canonical_iam_file" \
+    || die "Staged disabled RC IAM differs from the exact initial snapshot"
+
+  unauthenticated_status="$(curl --disable --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+    --request POST "$SERVICE_URL/v1/meal-scans/estimate")" \
+    || die "Unable to probe staged disabled RC anonymous transport"
+  private_invoker_gate_rejects_status "$unauthenticated_status" \
+    || die "Staged disabled RC did not reject anonymous transport"
+  identity_token="$(gcloud auth print-identity-token)" \
+    || die "Unable to obtain the owner identity token for the disabled RC probe"
+  authenticated_status="$(printf 'header = "Authorization: Bearer %s"\n' "$identity_token" | \
+    curl --disable --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+      --request POST --config - "$SERVICE_URL/v1/meal-scans/estimate")" \
+    || die "Unable to probe the staged disabled RC feature gate"
+  unset identity_token
+  [[ "$authenticated_status" == "503" ]] \
+    || die "Staged disabled RC must return authenticated 503 while disabled"
+  jq -e '.error == "meal_scan_unavailable" and .reason == "feature_disabled"' "$response_file" >/dev/null \
+    || die "Staged disabled RC did not return the feature_disabled contract"
+  append_summary "Machine-read staged RC: sealed approved source deployed as a distinct disabled/private revision; exact IAM, runtime, secret, provenance, anonymous rejection, and authenticated feature-disabled response verified."
 }
 
 deploy_temporarily_enabled_public() {
@@ -1045,6 +1501,14 @@ deploy_temporarily_enabled_public() {
   service_json >"$service_file"
   require_equal "$(service_env_value "$service_file" MEAL_SCAN_ENABLED)" "true" "Temporary revision must be enabled"
   require_equal "$(service_env_value "$service_file" APP_CHECK_REQUIRED)" "true" "Temporary revision must require App Check"
+  require_equal "$(service_env_value "$service_file" MEAL_SCAN_CANARY_CORRELATION_SHA256)" "$CANARY_CORRELATION_ID" "Temporary revision correlation drifted"
+  verify_deployed_runtime_and_secret_refs "$service_file"
+  verify_deployed_runtime_configuration "$service_file" true \
+    || die "Temporary enabled canary runtime contract drifted"
+  verify_approved_source_runtime_constants \
+    || die "Approved proxy source constants drifted from the pinned provider/model/quota/budget contract"
+  capture_and_verify_build_provenance "$service_file" "enabled-canary" \
+    || die "Temporary canary Cloud Build provenance did not match its ready revision and image"
   CANARY_REVISION="$(jq -er '.status.latestReadyRevisionName' "$service_file")"
   append_summary "Machine-read temporary service: current RC proxy enabled/public with App Check required."
 }
@@ -1066,7 +1530,13 @@ verify_final_disabled_private() {
   local final_iam_raw final_iam_canonical
   service_file="$TEMP_ROOT/final-service.json"
   service_json >"$service_file" || return 1
-  require_equal "$(service_env_value "$service_file" MEAL_SCAN_ENABLED)" "false" "Final service must be disabled"
+  [[ "$(service_env_value "$service_file" MEAL_SCAN_ENABLED 2>/dev/null)" == "false" ]] || return 1
+  ! service_env_value "$service_file" MEAL_SCAN_CANARY_CORRELATION_SHA256 >/dev/null 2>&1 \
+    || return 1
+  verify_deployed_runtime_and_secret_refs "$service_file" || return 1
+  verify_deployed_runtime_configuration "$service_file" false || return 1
+  verify_approved_source_runtime_constants || return 1
+  capture_and_verify_build_provenance "$service_file" "disabled-rollback" || return 1
   invoker_iam_check_is_enabled "$service_file" || return 1
   FINAL_DISABLED_REVISION="$(jq -er '.status.latestReadyRevisionName' "$service_file")" || return 1
   final_iam_raw="$TEMP_ROOT/final-iam-raw.json"
@@ -1076,21 +1546,37 @@ verify_final_disabled_private() {
   iam_policy_is_private "$final_iam_raw" || return 1
   canonical_iam_policy "$final_iam_raw" >"$final_iam_canonical" || return 1
   cmp -s "$INITIAL_IAM_POLICY_FILE" "$final_iam_canonical" || return 1
-  require_equal \
-    "$(shasum -a 256 "$final_iam_canonical" | awk '{print $1}')" \
-    "$INITIAL_IAM_POLICY_DIGEST" \
-    "Final IAM policy digest differs from the exact initial snapshot" || return 1
+  [[ "$(shasum -a 256 "$final_iam_canonical" | awk '{print $1}')" == "$INITIAL_IAM_POLICY_DIGEST" ]] \
+    || return 1
   response_file="$TEMP_ROOT/final-response.json"
-  unauthenticated_status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+  unauthenticated_status="$(curl --disable --silent --show-error --output "$response_file" --write-out '%{http_code}' \
     --request POST "$SERVICE_URL/v1/meal-scans/estimate")" || return 1
   private_invoker_gate_rejects_status "$unauthenticated_status" || return 1
   identity_token="$(gcloud auth print-identity-token)" || return 1
   authenticated_status="$(printf 'header = "Authorization: Bearer %s"\n' "$identity_token" | \
-    curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+    curl --disable --silent --show-error --output "$response_file" --write-out '%{http_code}' \
       --request POST --config - "$SERVICE_URL/v1/meal-scans/estimate")" || return 1
   unset identity_token
   [[ "$authenticated_status" == "503" ]] || return 1
-  jq -e '.error == "meal_scan_unavailable" and .reason == "feature_disabled"' "$response_file" >/dev/null
+  jq -e '.error == "meal_scan_unavailable" and .reason == "feature_disabled"' "$response_file" >/dev/null \
+    || return 1
+  local final_posture_file="$TEMP_ROOT/final-disabled-posture.json"
+  jq -n \
+    --arg project "$PROJECT_ID" \
+    --arg service "$SERVICE_NAME" \
+    --arg revision "$FINAL_DISABLED_REVISION" \
+    --arg iam_digest "$INITIAL_IAM_POLICY_DIGEST" '{
+      projectId: $project,
+      serviceName: $service,
+      revision: $revision,
+      iamPolicyDigest: $iam_digest,
+      mealScanEnabled: false,
+      transport: "private",
+      authenticatedProbe: "503_feature_disabled"
+    }' >"$final_posture_file" || return 1
+  persist_redacted_evidence_file "$final_posture_file" "final-disabled-posture.json" || return 1
+  printf '%s\n' "$FINAL_DISABLED_REVISION" >"$TEMP_ROOT/final-disabled-revision.txt" || return 1
+  chmod 0600 "$TEMP_ROOT/final-disabled-revision.txt" || return 1
 }
 
 run_owner_guided_canary() {
@@ -1144,7 +1630,7 @@ capture_quota_documents() {
     fi
     response_file="$(mktemp "$TEMP_ROOT/firestore-quota-response.XXXXXX")" || return 1
     status="$(printf 'header = "Authorization: Bearer %s"\n' "$access_token" | \
-      curl --silent --show-error --config - --output "$response_file" --write-out '%{http_code}' "$query_url")" || return 1
+      curl --disable --silent --show-error --config - --output "$response_file" --write-out '%{http_code}' "$query_url")" || return 1
     [[ "$status" == "200" ]] || return 1
     jq -cS '(.documents // [])[] | {name, fields: (.fields // {}), updateTime: (.updateTime // null)}' "$response_file" >>"$documents_file"
     next_page_token="$(jq -er '.nextPageToken // ""' "$response_file")" || return 1
@@ -1176,11 +1662,14 @@ capture_phase_window() {
     "resource.type=\"cloud_run_revision\" AND resource.labels.revision_name=\"$CANARY_REVISION\" AND timestamp>=\"$start_utc\" AND timestamp<=\"$end_utc\" AND (jsonPayload.canaryCorrelationId=\"$CANARY_CORRELATION_ID\" OR textPayload:\"$CANARY_CORRELATION_ID\") AND (logName:\"run.googleapis.com%2Fstdout\" OR logName:\"run.googleapis.com%2Fstderr\")" \
     --project "$PROJECT_ID" \
     --limit=$((MAX_LOG_ENTRIES + 1)) \
+    --order=asc \
     --format=json | node "$EVIDENCE_HELPER" project-events \
       --correlation "$CANARY_CORRELATION_ID" \
       --operation "$operation_tag" >"$events_file" \
     || die "Strict canary log projection rejected the evidence window"
   chmod 0600 "$events_file"
+  assert_no_prohibited_content "$events_file" \
+    || die "Projected canary event evidence contained prohibited content"
 
   if [[ "$phase" == "exact-reuse" ]]; then
     quota_tag="$CANARY_QUOTA_TAG"
@@ -1240,6 +1729,8 @@ capture_and_verify_phase() {
     "$phase" "$start_utc" "$end_utc" "$operation_tag" \
     "$quota_before_raw" "$quota_after_raw" "$evidence_file"
   verify_phase_evidence "$phase" "$evidence_file" || die "$phase machine-read evidence arithmetic failed"
+  persist_redacted_evidence_file "$evidence_file" "${phase}-machine-evidence.json" \
+    || die "$phase redacted evidence retention failed"
   case "$phase" in
     exact-reuse)
       append_summary "Owner-observed UI evidence: exact local reuse was owner-reported; not machine proof."
@@ -1276,10 +1767,13 @@ finalize_device_lifecycle() {
   local incoming_status="$1"
   if [[ "$CANARY_PHASE" == "seed" ]]; then
     if [[ "$incoming_status" == "0" && "$CANARY_RUN_COMPLETED" == true && "$ROLLBACK_COMPLETE" == true ]]; then
-      write_seed_receipt || return 1
-      note "Seed lifecycle complete: the canary remains installed with its local repeat state for the buffered rescan window."
-      append_summary "Machine-read device lifecycle: seed canary intentionally remains installed; app data and local repeat state are preserved for rescan."
-      return 0
+      if write_seed_receipt; then
+        note "Seed lifecycle complete: the canary remains installed with its local repeat state for the buffered rescan window."
+        append_summary "Machine-read device lifecycle: seed canary intentionally remains installed; app data and local repeat state are preserved for rescan."
+        return 0
+      fi
+      note "FATAL: seed receipt publication failed; the canary may not remain installed without its owner-only lifecycle record." >&2
+      incoming_status=1
     fi
     if [[ "$CANARY_APP_INSTALL_STARTED" == true && "$APP_WAS_INSTALLED" == false ]]; then
       note "Failed seed cleanup: restoring the initially absent app state."
@@ -1288,7 +1782,7 @@ finalize_device_lifecycle() {
       note "MANUAL RESTORE REQUIRED: the original binary could not be exported. Reinstall CycleBalance $ORIGINAL_APP_VERSION ($ORIGINAL_APP_BUILD), verify signing state $ORIGINAL_APP_SIGNING_STATE, then restore the protected app-data backup at $ORIGINAL_APP_DATA_BACKUP_PATH." >&2
       return 1
     fi
-    return 0
+    return "$incoming_status"
   fi
 
   if [[ "$incoming_status" != "0" || "$CANARY_RUN_COMPLETED" != true || "$ROLLBACK_COMPLETE" != true ]]; then
@@ -1310,20 +1804,47 @@ finalize_device_lifecycle() {
 }
 
 rollback() {
-  local status=$?
+  local incoming_status=$?
+  local status="${1:-$incoming_status}"
+  local first_iam_failed=0
+  local disabled_deploy_failed=0
+  local second_iam_failed=0
+  local final_verify_failed=0
+  trap - EXIT
+  trap '' INT TERM
+  if [[ "$ROLLBACK_IN_PROGRESS" == true ]]; then
+    exit "$status"
+  fi
+  ROLLBACK_IN_PROGRESS=true
+  if [[ "$status" == "0" && "$CANARY_RUN_COMPLETED" != true ]]; then
+    status=1
+  fi
   set +e
-  stop_device_console
   if [[ "$ROLLBACK_ARMED" == true && "$ROLLBACK_COMPLETE" == false ]]; then
-    note "Rollback: redeploying disabled/private, restoring the exact IAM snapshot, and verifying transport plus feature kill switch."
-    if deploy_disabled_private && restore_initial_iam_policy && verify_final_disabled_private; then
+    note "Rollback: closing IAM immediately, redeploying disabled/private, restoring exact IAM again, and independently verifying containment."
+    restore_initial_iam_policy || first_iam_failed=1
+    deploy_disabled_private || disabled_deploy_failed=1
+    restore_initial_iam_policy || second_iam_failed=1
+    rm -f "$TEMP_ROOT/final-disabled-revision.txt"
+    ( verify_final_disabled_private ) || final_verify_failed=1
+    if [[ "$final_verify_failed" == "0" ]]; then
+      FINAL_DISABLED_REVISION="$(<"$TEMP_ROOT/final-disabled-revision.txt")" || final_verify_failed=1
+      [[ "$FINAL_DISABLED_REVISION" =~ ^meal-scan-proxy-[a-z0-9-]+$ ]] || final_verify_failed=1
+    fi
+    if [[ "$first_iam_failed" == "0" && "$disabled_deploy_failed" == "0" && "$second_iam_failed" == "0" && "$final_verify_failed" == "0" ]]; then
       ROLLBACK_COMPLETE=true
-      append_summary "Machine-read rollback: exact initial IAM restored; invoker check enabled; final service private; anonymous 403/404; authenticated 503 feature_disabled."
+      append_summary "Machine-read rollback: immediate IAM closure, disabled deploy, second exact IAM restore, invoker check, private anonymous rejection, and authenticated 503 feature_disabled all passed."
       note "Rollback verification passed."
     else
-      note "FATAL: rollback deploy or disabled/private verification failed; investigate Cloud Run immediately." >&2
+      note "FATAL: one or more independent rollback containment steps failed; investigate Cloud Run immediately." >&2
       append_summary "Machine-read rollback: FAILED; immediate owner investigation required."
       status=1
     fi
+  fi
+  if ! stop_device_console; then
+    note "FATAL: complete device-console lifetime contained prohibited sensitive content." >&2
+    append_summary "Machine-read device console: FAILED whole-lifetime prohibited-content scan."
+    status=1
   fi
   if ! finalize_device_lifecycle "$status"; then
     note "FATAL: device lifecycle restoration or handoff is incomplete." >&2
@@ -1338,10 +1859,27 @@ rollback() {
   exit "$status"
 }
 
+handle_canary_exit() {
+  local status=$?
+  rollback "$status"
+}
+
+handle_canary_signal() {
+  local signal_name="$1"
+  local status
+  case "$signal_name" in
+    INT) status=130 ;;
+    TERM) status=143 ;;
+    *) status=1 ;;
+  esac
+  CANARY_RUN_COMPLETED=false
+  rollback "$status"
+}
+
 main() {
   validate_pinned_identity
   case "$DRY_RUN" in
-    true) print_dry_run; return ;;
+    true) print_dry_run; CANARY_RUN_COMPLETED=true; return ;;
     false) ;;
     *) die "DRY_RUN must be true or false" ;;
   esac
@@ -1349,7 +1887,7 @@ main() {
   [[ "$CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY" == "$LIVE_CONFIRMATION_VALUE" ]] \
     || die "Live execution requires CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY=$LIVE_CONFIRMATION_VALUE"
 
-  for command in gcloud jq curl node npm xcodebuild xcrun codesign security plutil shasum git awk sed grep find uuidgen stat cmp sort tail; do
+  for command in gcloud jq curl node npm xcodebuild xcrun codesign security plutil shasum git awk sed grep find uuidgen stat cmp sort tail cut tr ln; do
     require_command "$command"
   done
   [[ -x "$DEPLOY_SCRIPT" ]] || die "Missing executable deploy script: $DEPLOY_SCRIPT"
@@ -1372,10 +1910,20 @@ main() {
       ;;
   esac
   verify_source_preconditions
+  prepare_approved_source_archive
   load_and_verify_secret_metadata
   verify_live_revenuecat_configuration
   verify_initial_cloud_state
+  read_hidden_apple_iap_identifiers "$TEMP_ROOT/initial-service.json"
   verify_dormant_window_continuity
+  verify_approved_source_runtime_constants \
+    || die "Approved proxy source constants drifted from the pinned provider/model/quota/budget contract"
+  require_unchanged "$(shasum -a 256 "$PROJECT_YML" | awk '{print $1}')" "$PROJECT_YML_SHA_BEFORE" "project.yml changed before disabled RC staging"
+
+  # The trap is already installed; arm before the first cloud mutation, which
+  # stages and qualifies the sealed RC while it is still disabled/private.
+  ROLLBACK_ARMED=true
+  deploy_current_rc_disabled_private
   verify_device_preconditions
   case "$CANARY_PHASE" in
     seed)
@@ -1392,8 +1940,6 @@ main() {
   assert_canonical_release_flags
   require_unchanged "$(shasum -a 256 "$PROJECT_YML" | awk '{print $1}')" "$PROJECT_YML_SHA_BEFORE" "project.yml changed before cloud mutation"
 
-  # The trap is already installed; this arm switch is set before the first cloud mutation.
-  ROLLBACK_ARMED=true
   deploy_temporarily_enabled_public
   run_owner_guided_canary
   CANARY_RUN_COMPLETED=true
@@ -1404,6 +1950,8 @@ main() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  trap rollback EXIT INT TERM
+  trap handle_canary_exit EXIT
+  trap 'handle_canary_signal INT' INT
+  trap 'handle_canary_signal TERM' TERM
   main "$@"
 fi

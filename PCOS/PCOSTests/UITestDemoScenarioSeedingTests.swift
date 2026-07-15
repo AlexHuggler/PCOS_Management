@@ -102,7 +102,8 @@ struct UITestDemoScenarioSeedingTests {
 
         let record = try #require(context.fetch(FetchDescriptor<MealScanRepeatCacheRecord>()).first)
         let sourceMeal = try #require(context.fetch(FetchDescriptor<MealEntry>()).first)
-        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: UIImage())
+        let sampleImage = try #require(UIImage(named: "botanical-meal-bowl"))
+        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: sampleImage)
         #expect(record.sourceMealID == sourceMeal.id)
         #expect(record.sourceImageHash == normalizedImage.sourceImageHash)
         #expect(record.mealName == "Reviewed lentil bowl")

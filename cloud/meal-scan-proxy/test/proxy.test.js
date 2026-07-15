@@ -383,6 +383,9 @@ test("does not log pseudonymous app user identifiers or meal content", async () 
   assert.equal(Object.hasOwn(estimateEvent.metadata, "imageHash"), false);
   assert.equal(Object.hasOwn(estimateEvent.metadata, "requestId"), false);
   assert.equal(Object.hasOwn(estimateEvent.metadata, "principal"), false);
+  assert.equal(Object.hasOwn(estimateEvent.metadata, "promptTokens"), false);
+  assert.equal(estimateEvent.metadata.inputTokens, 2448);
+  assert.equal(estimateEvent.metadata.outputTokens, 750);
   assert.equal(JSON.stringify(estimateEvent).includes("1000000123456789"), false);
   assert.equal(JSON.stringify(estimateEvent).includes("Rice bowl"), false);
 });
@@ -638,6 +641,54 @@ test("canary mode fails closed when the operation tag is not bound to requestId"
   );
   assert.equal(correlatedResults.length, 1);
   assert.equal(correlatedResults[0].metadata.outcome, "rejected");
+});
+
+test("disabled rollback returns feature_disabled before canary correlation validation", async () => {
+  const canaryId = "90b2ac63-e61f-49e1-a8b0-a5e85f154d4c";
+  const canaryCorrelationId = crypto.createHash("sha256").update(canaryId).digest("hex");
+  const server = createHardenedServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "false",
+      MEAL_SCAN_CANARY_CORRELATION_SHA256: canaryCorrelationId,
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 503);
+  assert.deepEqual(response.body, {
+    error: "meal_scan_unavailable",
+    reason: "feature_disabled",
+    retryable: false,
+  });
+});
+
+test("enabled public canary readiness returns the App Check 401 before correlation validation", async () => {
+  const canaryId = "90b2ac63-e61f-49e1-a8b0-a5e85f154d4c";
+  const canaryCorrelationId = crypto.createHash("sha256").update(canaryId).digest("hex");
+  let verifierCalls = 0;
+  const server = createHardenedServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "true",
+      MEAL_SCAN_CANARY_CORRELATION_SHA256: canaryCorrelationId,
+    },
+    requireAppCheck: true,
+    verifyAppIntegrity: async () => {
+      verifierCalls += 1;
+      return { allowed: true };
+    },
+  });
+
+  const response = await request(server, hardenedPayload);
+
+  assert.equal(response.status, 401);
+  assert.deepEqual(response.body, {
+    error: "app_integrity_required",
+    reason: "app_check_required",
+  });
+  assert.equal(verifierCalls, 0, "missing-token readiness must not reach the verifier");
 });
 
 test("ordinary scanner requests never emit canary correlation or affirmative authorization events", async () => {

@@ -4,6 +4,12 @@ import FirebaseCore
 import SwiftUI
 import SwiftData
 import UIKit
+
+#if DEBUG
+private enum UITestDemoSeedError: Error {
+    case missingSampleMealImage
+}
+#endif
 @preconcurrency import UserNotifications
 import os
 #if canImport(AdServices)
@@ -569,7 +575,10 @@ extension CycleBalanceApp {
             return
         }
 
-        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: UIImage())
+        guard let sampleImage = UIImage(named: "botanical-meal-bowl") else {
+            throw UITestDemoSeedError.missingSampleMealImage
+        }
+        let normalizedImage = try MealScanImageNormalizer().normalizeJPEGData(from: sampleImage)
         let loggedAt = Date().addingTimeInterval(-3_600)
         let sourceMealID = UUID(uuidString: "6D9979A0-0FC4-4AA2-AB8C-2D5DA356A1D4") ?? UUID()
         let sourceMeal = MealEntry(

@@ -38,6 +38,7 @@ struct RepeatMealSuggestionView: View {
             }
             .controlSize(.large)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meal_scan.repeat_suggestion")
     }
 

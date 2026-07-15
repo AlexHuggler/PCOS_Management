@@ -2,6 +2,7 @@
 set -euo pipefail
 
 readonly PINNED_PROJECT_ID="cyclebalance-prod-20260710"
+readonly PINNED_PROJECT_NUMBER="947929010052"
 readonly PINNED_SECRET_NAME="cyclebalance-app-store-iap-private-key"
 readonly PINNED_PROXY_SERVICE_ACCOUNT="cyclebalance-meal-scan-proxy@cyclebalance-prod-20260710.iam.gserviceaccount.com"
 
@@ -12,6 +13,12 @@ DRY_RUN="${DRY_RUN:-true}"
 readonly REQUIRED_APPROVAL="I_APPROVE_CREATE_APPLE_IAP_P8_SECRET_VERSION_1"
 P8_FILE="${APPLE_IAP_P8_FILE:-}"
 TEMP_ROOT=""
+SEALED_P8_FILE=""
+PROVISION_OWNER=""
+INSPECTED_RESOURCE_STATE=""
+INSPECTED_VERSION_COUNT=""
+INSPECTED_PROVISION_STATE="unclaimed"
+INSPECTED_PROVISION_OWNER=""
 
 umask 077
 
@@ -30,23 +37,31 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"
 }
 
+prepare_temp_root() {
+  [[ -z "$TEMP_ROOT" ]] || return 0
+  TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/cyclebalance-p8-v1.XXXXXX")"
+  chmod 0700 "$TEMP_ROOT"
+}
+
 cleanup() {
   P8_FILE=""
-  unset P8_FILE APPLE_IAP_P8_FILE
+  SEALED_P8_FILE=""
+  PROVISION_OWNER=""
+  unset P8_FILE SEALED_P8_FILE PROVISION_OWNER APPLE_IAP_P8_FILE
   if [[ -n "$TEMP_ROOT" && -d "$TEMP_ROOT" ]]; then
     rm -rf "$TEMP_ROOT"
   fi
 }
 
 secret_resource_name() {
-  printf 'projects/%s/secrets/%s' "$PROJECT_ID" "$SECRET_NAME"
+  printf 'projects/%s/secrets/%s' "$PINNED_PROJECT_NUMBER" "$SECRET_NAME"
 }
 
 read_secret_inventory() {
   local output_file="$1"
   gcloud secrets list \
     --project "$PROJECT_ID" \
-    --filter="name=$SECRET_NAME" \
+    --filter="name:$SECRET_NAME" \
     --format=json >"$output_file" \
     || die "could not read Apple IAP secret inventory"
   jq -e --arg expected "$(secret_resource_name)" '
@@ -64,9 +79,42 @@ verify_secret_metadata() {
     --format=json >"$output_file" \
     || die "could not read Apple IAP secret metadata"
   jq -e --arg expected "$(secret_resource_name)" '
-    (.name? | type == "string") and .name == $expected
+    (.name? | type == "string") and .name == $expected and
+    (.etag? | type == "string") and (.etag | length > 0) and
+    (((.labels // {}) | type) == "object")
   ' "$output_file" >/dev/null 2>&1 \
     || die "Apple IAP secret metadata did not match the pinned resource"
+}
+
+metadata_etag() {
+  jq -er '.etag | strings | select(length > 0)' "$1" \
+    || die "Apple IAP secret metadata did not contain an ETag"
+}
+
+require_unclaimed_provision_metadata() {
+  jq -e '
+    ((.labels // {}) | type == "object") and
+    ((.labels // {}).cyclebalance_iap_provision_state // "" | length == 0) and
+    ((.labels // {}).cyclebalance_iap_provision_owner // "" | length == 0)
+  ' "$1" >/dev/null 2>&1 \
+    || die "Apple IAP secret is already locked or claimed; manual review is required"
+}
+
+require_owned_provision_state() {
+  local metadata_file="$1"
+  local expected_state="$2"
+  jq -e --arg state "$expected_state" --arg owner "$PROVISION_OWNER" '
+    ((.labels // {}) | type == "object") and
+    (.labels.cyclebalance_iap_provision_state == $state) and
+    (.labels.cyclebalance_iap_provision_owner == $owner)
+  ' "$metadata_file" >/dev/null 2>&1 \
+    || die "Apple IAP secret provisioning ownership readback did not match"
+}
+
+provision_labels() {
+  local state="$1"
+  printf 'cyclebalance_iap_provision_state=%s,cyclebalance_iap_provision_owner=%s' \
+    "$state" "$PROVISION_OWNER"
 }
 
 read_versions() {
@@ -98,6 +146,42 @@ read_iam_policy() {
     || die "Apple IAP secret IAM metadata is malformed or contains a public principal"
 }
 
+inspect_metadata_read_only() {
+  local inventory_file secret_file versions_file iam_file resource_count
+  inventory_file="$TEMP_ROOT/inspection-secret-inventory.json"
+  secret_file="$TEMP_ROOT/inspection-secret.json"
+  versions_file="$TEMP_ROOT/inspection-versions.json"
+  iam_file="$TEMP_ROOT/inspection-iam.json"
+  read_secret_inventory "$inventory_file"
+  resource_count="$(jq -r 'length' "$inventory_file")"
+  if [[ "$resource_count" == "0" ]]; then
+    INSPECTED_RESOURCE_STATE="absent"
+    INSPECTED_VERSION_COUNT="0"
+  else
+    INSPECTED_RESOURCE_STATE="present"
+    verify_secret_metadata "$secret_file"
+    INSPECTED_PROVISION_STATE="$(jq -r '(.labels // {}).cyclebalance_iap_provision_state // "unclaimed"' "$secret_file")"
+    INSPECTED_PROVISION_OWNER="$(jq -r '(.labels // {}).cyclebalance_iap_provision_owner // ""' "$secret_file")"
+    read_versions "$versions_file"
+    INSPECTED_VERSION_COUNT="$(jq -r 'length' "$versions_file")"
+    require_zero_versions "$versions_file"
+    read_iam_policy "$iam_file"
+  fi
+  printf '%s\n' \
+    "Read-only metadata inspection complete." \
+    "Observed resource: $INSPECTED_RESOURCE_STATE" \
+    "Observed versions: $INSPECTED_VERSION_COUNT" \
+    "Observed provisioning state: $INSPECTED_PROVISION_STATE" \
+    "Observed public IAM principals: none."
+}
+
+require_live_claimable_inspection() {
+  if [[ "$INSPECTED_RESOURCE_STATE" == "present" ]]; then
+    [[ "$INSPECTED_PROVISION_STATE" == "unclaimed" && -z "$INSPECTED_PROVISION_OWNER" ]] \
+      || die "Apple IAP secret is already locked or claimed; manual review is required"
+  fi
+}
+
 require_exact_proxy_iam() {
   local policy_file="$1"
   local expected_member="serviceAccount:$PROXY_SERVICE_ACCOUNT"
@@ -114,32 +198,98 @@ require_exact_proxy_iam() {
 }
 
 load_and_validate_p8_file() {
-  local file_mode file_size first_line last_line
+  local sealed_path
   if [[ -z "$P8_FILE" ]]; then
     [[ -t 0 ]] || die "APPLE_IAP_P8_FILE must name the owner-only .p8 file for live provisioning"
     read -rsp "Path to the owner-only App Store Connect IAP .p8 file: " P8_FILE
     printf '\n' >/dev/tty
   fi
-  [[ -f "$P8_FILE" && -r "$P8_FILE" && ! -L "$P8_FILE" ]] \
-    || die "APPLE_IAP_P8_FILE must be a readable regular file, not a symlink"
   [[ "$P8_FILE" == *.p8 ]] || die "APPLE_IAP_P8_FILE must use the .p8 extension"
+  sealed_path="$TEMP_ROOT/sealed-app-store-iap-key.p8"
+  node - "$P8_FILE" "$sealed_path" <<'NODE' >/dev/null 2>&1 \
+    || die ".p8 file must contain one valid PKCS8 P-256 EC private key"
+const {
+  closeSync,
+  constants,
+  fchmodSync,
+  fstatSync,
+  fsyncSync,
+  openSync,
+  readSync,
+  writeSync,
+} = require("node:fs");
+const { createPrivateKey } = require("node:crypto");
 
-  file_mode="$(stat -f '%Lp' "$P8_FILE" 2>/dev/null || stat -c '%a' "$P8_FILE" 2>/dev/null)" \
-    || die "could not inspect .p8 file permissions"
-  [[ "$file_mode" =~ ^[0-7]{3,4}$ ]] || die "could not validate .p8 file permissions"
-  (( (8#$file_mode & 077) == 0 )) || die ".p8 file must not be accessible by group or other users"
+let sourceFd;
+let sealedFd;
+let material;
+let der;
+try {
+  const source = process.argv[2];
+  const sealed = process.argv[3];
+  sourceFd = openSync(source, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  const metadata = fstatSync(sourceFd);
+  if (!metadata.isFile()) throw new Error("not a regular file");
+  if ((metadata.mode & 0o077) !== 0) throw new Error("source permissions are not owner-only");
+  if (metadata.size < 100 || metadata.size > 10_000) throw new Error("unexpected source size");
 
-  file_size="$(wc -c <"$P8_FILE" | tr -d ' ')"
-  [[ "$file_size" =~ ^[0-9]+$ ]] || die "could not validate .p8 file size"
-  (( file_size >= 100 && file_size <= 10000 )) || die ".p8 file size is outside the expected private-key range"
-  first_line="$(head -n 1 "$P8_FILE")"
-  last_line="$(tail -n 1 "$P8_FILE")"
-  [[ "$first_line" == "-----BEGIN PRIVATE KEY-----" && "$last_line" == "-----END PRIVATE KEY-----" ]] \
-    || die ".p8 file did not have the expected private-key envelope"
-  [[ "$(grep -c '^-----BEGIN PRIVATE KEY-----$' "$P8_FILE")" == "1" ]] \
-    || die ".p8 file must contain exactly one private-key envelope"
-  [[ "$(grep -c '^-----END PRIVATE KEY-----$' "$P8_FILE")" == "1" ]] \
-    || die ".p8 file must contain exactly one private-key envelope"
+  material = Buffer.alloc(metadata.size);
+  let readOffset = 0;
+  while (readOffset < material.length) {
+    const count = readSync(sourceFd, material, readOffset, material.length - readOffset, readOffset);
+    if (count === 0) throw new Error("short source read");
+    readOffset += count;
+  }
+  const afterRead = fstatSync(sourceFd);
+  if (
+    afterRead.dev !== metadata.dev ||
+    afterRead.ino !== metadata.ino ||
+    afterRead.size !== metadata.size
+  ) {
+    throw new Error("source changed while held open");
+  }
+
+  const pem = material.toString("utf8");
+  const match = pem.match(/^-----BEGIN PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END PRIVATE KEY-----\r?\n?$/);
+  if (!match) throw new Error("invalid envelope");
+  der = Buffer.from(match[1].replace(/\s/g, ""), "base64");
+  if (der.length === 0) throw new Error("invalid DER");
+  const key = createPrivateKey({ key: der, format: "der", type: "pkcs8" });
+  const curve = key.asymmetricKeyDetails?.namedCurve;
+  if (key.asymmetricKeyType !== "ec" || !["prime256v1", "secp256r1", "P-256"].includes(curve)) {
+    throw new Error("invalid key type");
+  }
+  sealedFd = openSync(
+    sealed,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0),
+    0o400
+  );
+  let writeOffset = 0;
+  while (writeOffset < material.length) {
+    writeOffset += writeSync(
+      sealedFd,
+      material,
+      writeOffset,
+      material.length - writeOffset,
+      writeOffset
+    );
+  }
+  fchmodSync(sealedFd, 0o400);
+  fsyncSync(sealedFd);
+} catch {
+  process.exitCode = 1;
+} finally {
+  der?.fill(0);
+  material?.fill(0);
+  if (sealedFd !== undefined) closeSync(sealedFd);
+  if (sourceFd !== undefined) closeSync(sourceFd);
+}
+NODE
+  SEALED_P8_FILE="$sealed_path"
+  P8_FILE=""
+  unset P8_FILE APPLE_IAP_P8_FILE
+  [[ -f "$SEALED_P8_FILE" && ! -L "$SEALED_P8_FILE" ]] \
+    || die "sealed .p8 snapshot was not created safely"
 }
 
 verify_exact_enabled_v1() {
@@ -155,17 +305,12 @@ verify_exact_enabled_v1() {
 
 provision_live() {
   local inventory_file secret_file versions_file iam_file iam_policy_file version_file
-  local resource_count secret_existed="false"
+  local resource_count secret_existed="false" etag
 
-  require_command gcloud
-  require_command jq
-  require_command stat
-  TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/cyclebalance-p8-v1.XXXXXX")"
-  chmod 0700 "$TEMP_ROOT"
-  inventory_file="$TEMP_ROOT/secret-inventory.json"
-  secret_file="$TEMP_ROOT/secret.json"
-  versions_file="$TEMP_ROOT/versions.json"
-  iam_file="$TEMP_ROOT/iam.json"
+  inventory_file="$TEMP_ROOT/live-secret-inventory.json"
+  secret_file="$TEMP_ROOT/live-secret.json"
+  versions_file="$TEMP_ROOT/live-versions.json"
+  iam_file="$TEMP_ROOT/live-iam.json"
   iam_policy_file="$TEMP_ROOT/iam-policy.json"
   version_file="$TEMP_ROOT/version-1.json"
 
@@ -174,26 +319,33 @@ provision_live() {
   if [[ "$resource_count" == "1" ]]; then
     secret_existed="true"
     verify_secret_metadata "$secret_file"
+    require_unclaimed_provision_metadata "$secret_file"
     read_versions "$versions_file"
     require_zero_versions "$versions_file"
     read_iam_policy "$iam_file"
-  fi
-
-  load_and_validate_p8_file
-
-  if [[ "$secret_existed" == "false" ]]; then
+    etag="$(metadata_etag "$secret_file")"
+    gcloud secrets update "$SECRET_NAME" \
+      --project "$PROJECT_ID" \
+      --etag="$etag" \
+      --update-labels="$(provision_labels locked)" >/dev/null \
+      || die "could not acquire the Apple IAP provisioning lock; no IAM or version mutation was attempted"
+    verify_secret_metadata "$secret_file"
+    require_owned_provision_state "$secret_file" "locked"
+    read_versions "$versions_file"
+    require_zero_versions "$versions_file"
+    read_iam_policy "$iam_file"
+  else
     gcloud secrets create "$SECRET_NAME" \
       --project "$PROJECT_ID" \
-      --replication-policy=automatic >/dev/null \
-      || die "could not create the pinned Apple IAP secret resource"
+      --replication-policy=automatic \
+      --data-file="$SEALED_P8_FILE" \
+      --labels="$(provision_labels locked)" >/dev/null \
+      || die "atomic Apple IAP secret creation did not succeed; do not retry without manual inventory review"
+    verify_secret_metadata "$secret_file"
+    require_owned_provision_state "$secret_file" "locked"
+    read_versions "$versions_file"
+    verify_exact_enabled_v1 "$versions_file"
   fi
-
-  # Re-read immediately before the one permitted write so an observed nonzero
-  # state always aborts instead of creating another version.
-  verify_secret_metadata "$secret_file"
-  read_versions "$versions_file"
-  require_zero_versions "$versions_file"
-  read_iam_policy "$iam_file"
 
   jq -n --arg member "serviceAccount:$PROXY_SERVICE_ACCOUNT" '{
     version: 1,
@@ -205,13 +357,18 @@ provision_live() {
     || die "could not set exact proxy-only IAM on the Apple IAP secret"
   read_iam_policy "$iam_file"
   require_exact_proxy_iam "$iam_file"
-  read_versions "$versions_file"
-  require_zero_versions "$versions_file"
-
-  gcloud secrets versions add "$SECRET_NAME" \
-    --project "$PROJECT_ID" \
-    --data-file="$P8_FILE" >/dev/null \
-    || die "could not create Apple IAP secret version 1"
+  if [[ "$secret_existed" == "true" ]]; then
+    read_versions "$versions_file"
+    require_zero_versions "$versions_file"
+    if ! gcloud secrets versions add "$SECRET_NAME" \
+      --project "$PROJECT_ID" \
+      --data-file="$SEALED_P8_FILE" >/dev/null; then
+      gcloud secrets versions list "$SECRET_NAME" \
+        --project "$PROJECT_ID" \
+        --format=json >"$TEMP_ROOT/ambiguous-version-readback.json" 2>/dev/null || true
+      die "Apple IAP version creation result was ambiguous; the provisioning lock remains for manual review"
+    fi
+  fi
 
   read_versions "$versions_file"
   verify_exact_enabled_v1 "$versions_file"
@@ -229,17 +386,35 @@ provision_live() {
   read_iam_policy "$iam_file"
   require_exact_proxy_iam "$iam_file"
 
+  verify_secret_metadata "$secret_file"
+  require_owned_provision_state "$secret_file" "locked"
+  etag="$(metadata_etag "$secret_file")"
+  gcloud secrets update "$SECRET_NAME" \
+    --project "$PROJECT_ID" \
+    --etag="$etag" \
+    --update-labels="$(provision_labels complete)" >/dev/null \
+    || die "could not finalize Apple IAP provisioning ownership; the lock remains for manual review"
+  verify_secret_metadata "$secret_file"
+  require_owned_provision_state "$secret_file" "complete"
+  read_versions "$versions_file"
+  verify_exact_enabled_v1 "$versions_file"
+  read_iam_policy "$iam_file"
+  require_exact_proxy_iam "$iam_file"
+
   printf '%s\n' \
     "Provisioning verified: the pinned Apple IAP secret has exactly enabled version 1." \
-    "IAM verified: secretAccessor is granted to the pinned proxy service account only."
+    "IAM verified: secretAccessor is granted to the pinned proxy service account only." \
+    "Provisioning state verified: complete under the retained immutable owner label."
 }
 
 print_dry_run() {
   printf '%s\n' \
-    "DRY RUN ONLY - no Google Cloud or key-file command was executed." \
+    "DRY RUN ONLY - authenticated read-only metadata inspection completed; no Cloud write or key-file access occurred." \
     "Pinned project: $PROJECT_ID" \
     "Pinned secret: $SECRET_NAME" \
-    "Planned invariant: start with zero versions and create exactly enabled version 1." \
+    "Observed resource: $INSPECTED_RESOURCE_STATE" \
+    "Observed versions: $INSPECTED_VERSION_COUNT" \
+    "Eligible invariant: start with zero versions and create exactly enabled version 1." \
     "Planned IAM invariant: service-account-only secretAccessor for the pinned proxy identity." \
     "Set DRY_RUN=false and provide the exact owner approval to perform the one-time handoff."
 }
@@ -248,13 +423,27 @@ main() {
   trap cleanup EXIT
   require_pinned_identity
   case "$DRY_RUN" in
+    true|false) ;;
+    *) die "DRY_RUN must be true or false" ;;
+  esac
+  require_command gcloud
+  require_command jq
+  prepare_temp_root
+  inspect_metadata_read_only
+  case "$DRY_RUN" in
     true) print_dry_run ;;
     false)
       [[ "${CONFIRM_APPLE_IAP_P8_V1:-}" == "$REQUIRED_APPROVAL" ]] \
         || die "live provisioning requires CONFIRM_APPLE_IAP_P8_V1=$REQUIRED_APPROVAL"
+      require_command node
+      require_live_claimable_inspection
+      PROVISION_OWNER="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(16).toString("hex"))')" \
+        || die "could not create a local provisioning owner token"
+      [[ "$PROVISION_OWNER" =~ ^[a-f0-9]{32}$ ]] \
+        || die "local provisioning owner token was invalid"
+      load_and_validate_p8_file
       provision_live
       ;;
-    *) die "DRY_RUN must be true or false" ;;
   esac
 }
 
