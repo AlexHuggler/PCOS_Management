@@ -381,6 +381,32 @@ struct GeminiMealScanTests {
         #expect(first.count == 64)
     }
 
+    @Test("cache access proactively removes every expired structured result")
+    func cacheAccessPurgesExpiredRecords() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let now = Date(timeIntervalSince1970: 2_000_000)
+        context.insert(MealScanResultCacheRecord(
+            cacheKey: "expired-unrelated-key",
+            modelID: "gemini-3.1-flash-lite",
+            schemaVersion: "meal-scan-gemini-v1",
+            promptVersion: "meal-scan-prompt-v1",
+            responseJSON: "{}",
+            confidenceScore: 0.5,
+            sourceImageHash: "hash",
+            createdAt: now.addingTimeInterval(-100),
+            lastAccessedAt: now.addingTimeInterval(-100),
+            expiresAt: now.addingTimeInterval(-1)
+        ))
+        try context.save()
+
+        let cache = MealScanResultCache(modelContext: context)
+        _ = try cache.cachedResponseJSON(for: "missing-key", now: now)
+
+        let remaining = try context.fetch(FetchDescriptor<MealScanResultCacheRecord>())
+        #expect(remaining.isEmpty)
+    }
+
     @Test("cached remote estimator avoids repeat proxy calls")
     func cachedRemoteEstimatorAvoidsRepeatProxyCalls() async throws {
         let container = try TestHelpers.makeModelContainer()

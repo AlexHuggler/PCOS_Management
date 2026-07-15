@@ -18,6 +18,10 @@ enum MealLogInitialDestination: Sendable {
     case barcode
 }
 
+private func localizedNutritionSourceLabel(_ sourceLabel: String) -> String {
+    L10n.string(sourceLabel, defaultValue: sourceLabel)
+}
+
 struct MealLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -237,7 +241,6 @@ struct MealLogView: View {
     private func standardMealLogForm(viewModel: MealViewModel) -> some View {
         Form {
             mealTypeSection(viewModel: viewModel)
-            aiMealScanSection
             descriptionSection(viewModel: viewModel)
             barcodeImportSection(viewModel: viewModel)
             recentMealReuseSection(viewModel: viewModel)
@@ -372,7 +375,6 @@ struct MealLogView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 lunarMealHeader
-                lunarPrimaryMealScanCard
                 lunarMealTypeCard(viewModel: viewModel)
                 lunarDescriptionCard(viewModel: viewModel)
                 lunarImportActionsCard
@@ -432,77 +434,6 @@ struct MealLogView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meal_log.lunar.header")
-    }
-
-    @ViewBuilder
-    private var lunarPrimaryMealScanCard: some View {
-        if MealScanFeatureFlags.current.enableMealScanV2 {
-            Button {
-                openMealScanIfAvailable()
-            } label: {
-                HStack(alignment: .center, spacing: AppTheme.spacing12) {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
-                        .frame(width: 54, height: 54)
-                        .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
-                        .shadow(color: AppTheme.premiumEditorSecondaryAccentColor.opacity(0.22), radius: 16, y: 8)
-
-                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                        Text(L10n.string("Scan Meal with AI", defaultValue: "Scan Meal with AI"))
-                            .appFont(.headline, weight: .semibold)
-                            .foregroundStyle(AppTheme.primaryText)
-                        Text(L10n.string("Start from a sample or unlock real photo estimates, then review everything before saving.", defaultValue: "Start from a sample or unlock real photo estimates, then review everything before saving."))
-                            .appFont(.caption)
-                            .foregroundStyle(AppTheme.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: AppTheme.spacing8)
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.secondaryText)
-                }
-                .padding(AppTheme.spacing16)
-                .lunarMealCard()
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("meal_log.lunar.ai_meal_scan_primary")
-        } else {
-            Button {
-                showingBarcodeImport = true
-            } label: {
-                HStack(alignment: .center, spacing: AppTheme.spacing12) {
-                    Image(systemName: "barcode.viewfinder")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
-                        .frame(width: 54, height: 54)
-                        .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
-                        .shadow(color: AppTheme.premiumEditorSecondaryAccentColor.opacity(0.22), radius: 16, y: 8)
-
-                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                        Text(L10n.string("Scan barcode now", defaultValue: "Scan barcode now"))
-                            .appFont(.headline, weight: .semibold)
-                            .foregroundStyle(AppTheme.primaryText)
-                        Text(L10n.string("AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving.", defaultValue: "AI meal scanning is coming soon. Barcode lookup is available now, and you review every result before saving."))
-                            .appFont(.caption)
-                            .foregroundStyle(AppTheme.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: AppTheme.spacing8)
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.secondaryText)
-                }
-                .padding(AppTheme.spacing16)
-                .lunarMealCard()
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("meal_log.lunar.barcode_primary")
-        }
     }
 
     private func lunarMealTypeCard(viewModel: MealViewModel) -> some View {
@@ -583,19 +514,34 @@ struct MealLogView: View {
 
     private var lunarImportActionsCard: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-            Label(L10n.string("Add nutrition details", defaultValue: "Add nutrition details"), systemImage: "barcode.viewfinder")
+            Label(L10n.string("Add nutrition", defaultValue: "Add nutrition"), systemImage: "plus.circle")
                 .appFont(.headline, weight: .semibold)
                 .foregroundStyle(AppTheme.primaryText)
 
-            LazyVGrid(columns: lunarTwoColumnGrid, spacing: AppTheme.spacing8) {
+            VStack(spacing: AppTheme.spacing8) {
+                if MealScanFeatureFlags.current.enableMealScanV2 {
+                    Button {
+                        openMealScanIfAvailable()
+                    } label: {
+                        lunarNutritionActionRow(
+                            title: L10n.string("Photo estimate", defaultValue: "Photo estimate"),
+                            subtitle: L10n.string("Estimate foods and portions", defaultValue: "Estimate foods and portions"),
+                            icon: "camera.viewfinder",
+                            accent: AppTheme.premiumEditorAccentColor
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("meal_log.photo_estimate_button")
+                }
+
                 Button {
                     showingBarcodeImport = true
                 } label: {
-                    lunarActionTile(
+                    lunarNutritionActionRow(
                         title: L10n.string("Scan barcode", defaultValue: "Scan barcode"),
-                        subtitle: L10n.string("Review source first", defaultValue: "Review source first"),
+                        subtitle: L10n.string("Look up packaged food", defaultValue: "Look up packaged food"),
                         icon: "barcode.viewfinder",
-                        accent: AppTheme.premiumEditorAccentColor
+                        accent: AppTheme.premiumEditorSecondaryAccentColor
                     )
                 }
                 .buttonStyle(.plain)
@@ -604,22 +550,70 @@ struct MealLogView: View {
                 Button {
                     focusManualNutritionEntry()
                 } label: {
-                    lunarActionTile(
+                    lunarNutritionActionRow(
                         title: L10n.string("Enter manually", defaultValue: "Enter manually"),
-                        subtitle: L10n.string("Use meal fields", defaultValue: "Use meal fields"),
+                        subtitle: L10n.string("Type nutrition details", defaultValue: "Type nutrition details"),
                         icon: "square.and.pencil",
                         accent: AppTheme.premiumEditorWarningAccentColor
                     )
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("meal_log.manual_nutrition_button")
-
             }
         }
         .padding(AppTheme.spacing12)
         .lunarMealCard()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meal_log.lunar.quick_actions")
+    }
+
+    private func lunarNutritionActionRow(
+        title: String,
+        subtitle: String,
+        icon: String,
+        accent: Color
+    ) -> some View {
+        HStack(spacing: AppTheme.spacing12) {
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(accent)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(accent.opacity(0.14)))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                Text(title)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(subtitle)
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: AppTheme.spacing8)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppTheme.secondaryText)
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+        .padding(.horizontal, AppTheme.spacing12)
+        .padding(.vertical, AppTheme.spacing8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(AppTheme.premiumEditorRaisedSurface.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppTheme.premiumEditorBorder.opacity(0.56), lineWidth: 0.8)
+        )
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(title))
+        .accessibilityHint(Text(subtitle))
     }
 
     private func lunarGlycemicImpactCard(viewModel: MealViewModel) -> some View {
@@ -1392,66 +1386,6 @@ struct MealLogView: View {
         }
     }
 
-    @ViewBuilder
-    private var aiMealScanSection: some View {
-        if MealScanFeatureFlags.current.enableMealScanV2 {
-            Section {
-                Button {
-                    openMealScanIfAvailable()
-                } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label(
-                            L10n.string("Scan Meal with AI", defaultValue: "Scan Meal with AI"),
-                            systemImage: "camera.viewfinder"
-                        )
-                        .appFont(.headline)
-
-                        Text(L10n.string(
-                            "Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not.",
-                            defaultValue: "Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not."
-                        ))
-                        .appFont(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .accessibilityIdentifier("meal_log.ai_meal_estimate_button")
-            } header: {
-                Text(L10n.string("AI estimate", defaultValue: "AI estimate"))
-            }
-        } else {
-            Section {
-                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label(
-                        L10n.string("AI meal scanning is coming soon", defaultValue: "AI meal scanning is coming soon"),
-                        systemImage: "camera.viewfinder"
-                    )
-                    .appFont(.headline)
-
-                    Text(L10n.string(
-                        "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release.",
-                        defaultValue: "Photo-based meal estimates are still being prepared. Scan a barcode or enter nutrition manually for this release."
-                    ))
-                    .appFont(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                    Button {
-                        showingBarcodeImport = true
-                    } label: {
-                        Label(
-                            L10n.string("Scan barcode now", defaultValue: "Scan barcode now"),
-                            systemImage: "barcode.viewfinder"
-                        )
-                    }
-                    .accessibilityIdentifier("meal_log.ai_scan_barcode_now_button")
-                }
-            } header: {
-                Text(L10n.string("AI estimate", defaultValue: "AI estimate"))
-            }
-        }
-    }
-
     private func openMealScanIfAvailable() {
         guard MealScanFeatureFlags.current.enableMealScanV2 else {
             Logger.meals.info("AI meal scan is disabled for this release.")
@@ -1464,6 +1398,18 @@ struct MealLogView: View {
     @ViewBuilder
     private func barcodeImportSection(viewModel: MealViewModel) -> some View {
         Section {
+            if MealScanFeatureFlags.current.enableMealScanV2 {
+                Button {
+                    openMealScanIfAvailable()
+                } label: {
+                    Label(
+                        L10n.string("Photo estimate", defaultValue: "Photo estimate"),
+                        systemImage: "camera.viewfinder"
+                    )
+                }
+                .accessibilityIdentifier("meal_log.photo_estimate_button")
+            }
+
             Button {
                 showingBarcodeImport = true
             } label: {
@@ -1486,7 +1432,7 @@ struct MealLogView: View {
 
             if let summary = viewModel.pendingNutritionImportSummary {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label(summary.sourceLabel, systemImage: "checkmark.seal.fill")
+                    Label(localizedNutritionSourceLabel(summary.sourceLabel), systemImage: "checkmark.seal.fill")
                         .appFont(.caption, weight: .semibold)
                         .foregroundStyle(AppTheme.sage)
 
@@ -1514,8 +1460,8 @@ struct MealLogView: View {
             Text(L10n.string("Add nutrition", defaultValue: "Add nutrition"))
         } footer: {
             Text(L10n.string(
-                "Barcode results fill this meal draft only after you review the source.",
-                defaultValue: "Barcode results fill this meal draft only after you review the source."
+                "Every option stays editable until you save the meal.",
+                defaultValue: "Every option stays editable until you save the meal."
             ))
         }
     }
@@ -2264,7 +2210,7 @@ private struct BarcodeMealImportSheet: View {
         if let candidate {
             Section {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label(candidate.sourceLabel, systemImage: "checkmark.seal")
+                    Label(localizedNutritionSourceLabel(candidate.sourceLabel), systemImage: "checkmark.seal")
                         .appFont(.caption, weight: .semibold)
                         .foregroundStyle(AppTheme.sage)
 
@@ -2408,5 +2354,6 @@ private struct BarcodeDataScannerView: UIViewControllerRepresentable {
             MealScanNutritionSummary.self,
             MealScanMetadata.self,
             NutritionImportRecord.self,
+            MealScanRepeatCacheRecord.self,
         ], inMemory: true)
 }

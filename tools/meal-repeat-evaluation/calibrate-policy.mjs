@@ -1,4 +1,18 @@
-import { lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import {
+  chmodSync,
+  closeSync,
+  constants,
+  fsyncSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -127,6 +141,7 @@ function resolveOutputDestination(destinationPath, kind) {
   if (resolvedOutputDirectory !== outputDirectory) {
     fail(`${kind} output directory must not be a symbolic link`);
   }
+  chmodSync(outputDirectory, 0o700);
 
   const destination = resolve(destinationPath);
   if (dirname(destination) !== outputDirectory) {
@@ -206,7 +221,9 @@ function selectPolicy(scoredImages) {
   const labelCounts = new Map();
   for (const image of scoredImages) labelCounts.set(image.label, (labelCounts.get(image.label) ?? 0) + 1);
   const repeatableCount = scoredImages.filter(({ label }) => labelCounts.get(label) > 1).length;
-  const distances = [...new Set(scoredImages.map(({ nearest }) => round(nearest.distance)))].sort((a, b) => a - b);
+  const distances = [...new Set(scoredImages.map(({ nearest }) => round(nearest.distance)))]
+    .filter((distance) => distance > EPSILON)
+    .sort((a, b) => a - b);
   const margins = [...new Set(scoredImages.map(({ neighborMargin }) => neighborMargin))].sort((a, b) => b - a);
   let best = null;
 
@@ -222,9 +239,26 @@ function selectPolicy(scoredImages) {
 }
 
 function writePolicyAtomically(policyPath, policy) {
-  const temporaryPath = join(dirname(policyPath), `.${process.pid}-${Date.now()}-policy.tmp`);
-  writeFileSync(temporaryPath, `${JSON.stringify(policy, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
-  renameSync(temporaryPath, policyPath);
+  const temporaryPath = join(
+    dirname(policyPath),
+    `.${process.pid}-${randomBytes(16).toString("hex")}-policy.tmp`,
+  );
+  let descriptor;
+  try {
+    descriptor = openSync(
+      temporaryPath,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+      0o600,
+    );
+    writeFileSync(descriptor, `${JSON.stringify(policy, null, 2)}\n`, { encoding: "utf8" });
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = undefined;
+    renameSync(temporaryPath, policyPath);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    rmSync(temporaryPath, { force: true });
+  }
 }
 
 function main() {

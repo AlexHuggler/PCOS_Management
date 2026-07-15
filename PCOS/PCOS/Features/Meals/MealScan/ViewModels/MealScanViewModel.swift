@@ -44,7 +44,7 @@ final class MealScanViewModel {
 
     var phase: Phase = .entry
     var mealType: MealType
-    var mealName: String = "AI meal estimate"
+    var mealName: String = "Photo meal estimate"
     var draftItems: [MealFoodItemDraft] = []
     var totalNutrition = NutritionSnapshot()
     var metabolicProfile: MealMetabolicProfile?

@@ -54,7 +54,7 @@ struct OnboardingMealScanDemoView: View {
                 .foregroundStyle(AppTheme.accentColor)
                 .accessibilityHidden(true)
 
-            Text(L10n.string("Photo meal estimates", defaultValue: "Photo meal estimates"))
+            Text(L10n.string("Photo estimates, with you in control", defaultValue: "Photo estimates, with you in control"))
                 .appHeadingFont(.title2, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .multilineTextAlignment(.center)
@@ -83,7 +83,7 @@ struct OnboardingMealScanDemoView: View {
                 Text(L10n.string("Chicken rice bowl", defaultValue: "Chicken rice bowl"))
                     .appFont(.headline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
-                Text(L10n.string("Estimated from a sample preview. You would review and edit before saving.", defaultValue: "Estimated from a sample preview. You would review and edit before saving."))
+                Text(L10n.string("Estimated from a sample preview. You review and edit before saving.", defaultValue: "Estimated from a sample preview. You review and edit before saving."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -133,11 +133,11 @@ struct OnboardingMealScanDemoView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Text(L10n.string("Approximate, not automatic", defaultValue: "Approximate, not automatic"))
+                Text(L10n.string("You choose before upload", defaultValue: "You choose before upload"))
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
 
-                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Review and edit every estimate before saving. Barcode scanning and manual entry remain available if photo analysis is unavailable or your fresh-analysis allowance is used.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Review and edit every estimate before saving. Barcode scanning and manual entry remain available if photo analysis is unavailable or your fresh-analysis allowance is used."))
+                Text(L10n.string("Exact previous meals can be reused on this device. For a new photo estimate, CycleBalance asks before sending a compressed copy to Google Gemini. Barcode and manual entry stay available without a photo upload.", defaultValue: "Exact previous meals can be reused on this device. For a new photo estimate, CycleBalance asks before sending a compressed copy to Google Gemini. Barcode and manual entry stay available without a photo upload."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

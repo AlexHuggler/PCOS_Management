@@ -581,7 +581,7 @@ extension CycleBalanceApp {
             carbsGrams: 52,
             proteinGrams: 27,
             fatGrams: 14,
-            sourceLabel: "AI meal estimate",
+            sourceLabel: "Photo meal estimate",
             calories: 430,
             fiberGrams: 9,
             mealSource: NutritionImportSourceKind.aiMealScan.rawValue,

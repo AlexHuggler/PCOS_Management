@@ -72,7 +72,7 @@ struct OnboardingHealthContextRevealView: View {
 
     private var continueButtonTitle: String {
         if MealScanFeatureFlags.current.enableMealScanV2 {
-            return L10n.string("Try an AI meal estimate", defaultValue: "Try an AI meal estimate")
+            return L10n.string("See how photo estimates work", defaultValue: "See how photo estimates work")
         }
 
         return L10n.string("Review your plan", defaultValue: "Review your plan")

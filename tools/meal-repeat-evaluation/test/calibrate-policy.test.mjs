@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 
 const toolkitDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const calibratorPath = join(toolkitDirectory, "calibrate-policy.mjs");
+const extractorPath = join(toolkitDirectory, "extract-feature-distances.swift");
+const gitignorePath = join(toolkitDirectory, ".gitignore");
 const outputDirectory = join(toolkitDirectory, "output");
 let policySequence = 0;
 
@@ -59,6 +61,18 @@ function makeMalformedHundredImageEvaluation() {
   return evaluation;
 }
 
+function makeZeroDistanceEvaluation() {
+  const evaluation = makeSyntheticEvaluation();
+  for (const pair of evaluation.report.pairs) {
+    const firstIndex = Number(pair.firstID.slice(-3)) - 1;
+    const secondIndex = Number(pair.secondID.slice(-3)) - 1;
+    if (firstIndex < 80 && secondIndex < 80 && Math.floor(firstIndex / 4) === Math.floor(secondIndex / 4)) {
+      pair.distance = 0;
+    }
+  }
+  return evaluation;
+}
+
 function writeEvaluationFixture(evaluation) {
   const directory = mkdtempSync(join(tmpdir(), "cyclebalance-repeat-evaluation-"));
   const manifestPath = join(directory, "manifest.json");
@@ -98,12 +112,14 @@ test("selects the highest-recall policy that meets every release gate", (t) => {
     precision: 1,
     highRiskFalseMatches: 0,
   });
+  assert.equal(statSync(outputDirectory).mode & 0o777, 0o700);
 });
 
 test("refuses unsafe, incomplete, or malformed evaluations without writing a policy", (t) => {
   const cases = [
     ["sub-95-percent precision", makeSyntheticEvaluation({ unsafeCrossMatches: 3 })],
     ["high-risk cross-meal match", makeSyntheticEvaluation({ unsafeCrossMatches: 1, highRisk: true })],
+    ["zero-distance similarity threshold", makeZeroDistanceEvaluation()],
     ["incomplete dataset", makeSyntheticEvaluation({ imageCount: 99 })],
     ["malformed 100-image composition", makeMalformedHundredImageEvaluation()],
   ];
@@ -119,6 +135,22 @@ test("refuses unsafe, incomplete, or malformed evaluations without writing a pol
     assert.notEqual(result.status, 0, name);
     assert.match(result.stderr, /release gate|exactly 100|20 labels|four images|negative labels/i, name);
     assert.throws(() => readFileSync(fixture.policyPath), name);
+  }
+});
+
+test("private artifact protections cover writers and common image formats", () => {
+  const calibratorSource = readFileSync(calibratorPath, "utf8");
+  const extractorSource = readFileSync(extractorPath, "utf8");
+  const gitignoreSource = readFileSync(gitignorePath, "utf8");
+
+  assert.match(calibratorSource, /chmodSync\(outputDirectory, 0o700\)/);
+  assert.match(calibratorSource, /O_EXCL/);
+  assert.match(calibratorSource, /O_NOFOLLOW/);
+  assert.doesNotMatch(calibratorSource, /Date\.now\(\).*policy\.tmp/);
+  assert.match(extractorSource, /\.posixPermissions:\s*0o700/);
+
+  for (const extension of ["webp", "WEBP", "tif", "TIF", "tiff", "TIFF", "avif", "AVIF"]) {
+    assert.match(gitignoreSource, new RegExp(`\\*\\.${extension}(?:\\n|$)`));
   }
 });
 

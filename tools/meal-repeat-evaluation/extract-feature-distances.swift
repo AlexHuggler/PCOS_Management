@@ -138,6 +138,10 @@ private func resolveReportDestination(_ requestedURL: URL) throws -> URL {
     guard outputDirectoryURL.resolvingSymlinksInPath() == outputDirectoryURL else {
         throw ExtractorError.unsafeReportDestination
     }
+    try fileManager.setAttributes(
+        [.posixPermissions: 0o700],
+        ofItemAtPath: outputDirectoryURL.path
+    )
 
     let destinationURL = requestedURL.standardizedFileURL
     guard destinationURL.deletingLastPathComponent() == outputDirectoryURL else {

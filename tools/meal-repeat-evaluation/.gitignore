@@ -8,5 +8,13 @@ output/
 *.JPEG
 *.png
 *.PNG
+*.webp
+*.WEBP
+*.tif
+*.TIF
+*.tiff
+*.TIFF
+*.avif
+*.AVIF
 manifest.private.json
 policy.json

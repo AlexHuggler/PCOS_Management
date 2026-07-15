@@ -473,9 +473,11 @@ struct LocalizationResourceTests {
         "You're part of a growing community of women taking control of their PCOS. We're glad you're here.",
         "Help CycleBalance work better",
         "These permissions are optional. You can change them anytime in Settings.",
-        "Your data stays on your device. No accounts, no servers, no exceptions.",
+        "Your health logs stay on this device by default.",
+        "Your health logs stay on this device by default. Optional photo estimates are sent only after you confirm each upload.",
         "Camera",
-        "Take photos for your hair & skin journal to track changes over time.",
+        "Take photos for your hair & skin journal.",
+        "Take photos for your hair & skin journal and meal estimates.",
         "See skin and hair changes side by side over months.",
         "Apple Health",
         "Read nutrition, glucose, weight, sleep, steps, activity, and heart rate for richer insights.",
@@ -525,6 +527,48 @@ struct LocalizationResourceTests {
         "You can try the same photo again at %@.",
         "Try the same photo again",
         "Get an editable Google Gemini nutrition estimate after consent. Fresh analyses use your rolling allowance; cached repeats do not.",
+        "Photo estimates, with you in control",
+        "Unlock photo meal estimates",
+        "See how photo estimates work",
+        "Take or choose a meal photo, review an editable nutrition draft, then save only what looks right.",
+        "Estimated from a sample preview. You review and edit before saving.",
+        "You choose before upload",
+        "Exact previous meals can be reused on this device. For a new photo estimate, CycleBalance asks before sending a compressed copy to Google Gemini. Barcode and manual entry stay available without a photo upload.",
+        "Photo estimate",
+        "Photo meal estimate",
+        "Start with a photo",
+        "Choose meal photo",
+        "Estimate foods and portions",
+        "Look up packaged food",
+        "Type nutrition details",
+        "Every option stays editable until you save the meal.",
+        "Send this photo to Google Gemini?",
+        "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
+        "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
+        "You will review and edit the estimate before anything is added to your meal log.",
+        "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
+        "Send to Google Gemini",
+        "Enter Manually",
+        "Choose Another Photo",
+        "The photo estimate could not start. You can try another photo or enter the meal manually.",
+        "No food was confidently detected. You can retake the photo or add the meal manually.",
+        "Could not import photo. %@",
+        "Subscribe to unlock photo estimates.",
+        "Camera is unavailable on this device. You can import a meal photo instead.",
+        "Camera access is needed to take a meal photo. You can import a photo instead.",
+        "You've reached the 14-day trial photo estimate limit. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "You've reached today's photo estimate limit. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "Photo meal estimates require an active trial or subscription.",
+        "CycleBalance could not verify this app install. Update the app and try again.",
+        "Photo estimates are temporarily unavailable. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "The photo estimate timed out. Try again, close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "That photo is too large to estimate. Try another photo or enter the meal manually.",
+        "Photo estimates are unavailable right now. Close Photo Estimate to scan a barcode, or enter the meal manually.",
+        "No food confidently detected",
+        "You can retake the photo or add the meal manually.",
+        "Add manually",
+        "Retake photo",
+        "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
         "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in.",
         "Choose one quick log, scan a barcode, or enter your next meal manually.",
     ]
@@ -967,6 +1011,32 @@ struct LocalizationResourceTests {
             "NSHealthShareUsageDescription",
             "NSHealthUpdateUsageDescription",
         ]
+        let expectedPhotoUsageDescriptions = [
+            "de": [
+                "NSCameraUsageDescription": "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen, Mahlzeiten für Nährwertschätzungen zu fotografieren und Fotos zu deinem Haar- oder Hauttagebuch hinzuzufügen.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance verwendet deine Fotomediathek, wenn du Mahlzeitenfotos für Nährwertschätzungen auswählst oder Fotos zu deinem Haar- und Hauttagebuch hinzufügst.",
+            ],
+            "fr": [
+                "NSCameraUsageDescription": "CycleBalance utilise votre appareil photo pour scanner des codes-barres alimentaires, photographier des repas afin d'en estimer les valeurs nutritionnelles et ajouter des photos à votre journal des cheveux ou de la peau.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance utilise votre photothèque lorsque vous choisissez des photos de repas pour estimer leurs valeurs nutritionnelles ou ajoutez des photos à votre journal des cheveux et de la peau.",
+            ],
+            "it": [
+                "NSCameraUsageDescription": "CycleBalance usa la fotocamera per scansionare codici a barre alimentari, fotografare i pasti per stimarne i valori nutrizionali e aggiungere foto al diario di capelli o pelle.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance usa la libreria foto quando scegli foto dei pasti per stimarne i valori nutrizionali o aggiungi foto al diario di capelli e pelle.",
+            ],
+            "ja": [
+                "NSCameraUsageDescription": "CycleBalance は、食品バーコードのスキャン、栄養推定用の食事撮影、髪や肌の日記への写真追加にカメラを使用します。",
+                "NSPhotoLibraryUsageDescription": "CycleBalance は、栄養推定用の食事写真を選ぶときや、髪・肌の日記に写真を追加するときに写真ライブラリを使用します。",
+            ],
+            "ko": [
+                "NSCameraUsageDescription": "CycleBalance는 식품 바코드를 스캔하고, 영양 추정을 위한 식사 사진을 촬영하고, 모발 또는 피부 일지에 사진을 추가하는 데 카메라를 사용합니다.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance는 영양 추정을 위한 식사 사진을 선택하거나 모발 및 피부 일지에 사진을 추가할 때 사진 보관함을 사용합니다.",
+            ],
+            "nl": [
+                "NSCameraUsageDescription": "CycleBalance gebruikt je camera om voedselbarcodes te scannen, maaltijden te fotograferen voor voedingsschattingen en foto's toe te voegen aan je haar- of huiddagboek.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance gebruikt je fotobibliotheek wanneer je maaltijdfoto's kiest voor voedingsschattingen of foto's toevoegt aan je haar- en huiddagboek.",
+            ],
+        ]
 
         for languageIdentifier in L10n.supportedLanguageIdentifiers {
             guard let table = loadStringsTable(named: "InfoPlist", languageIdentifier: languageIdentifier, appDirectory: appDirectory) else {
@@ -977,6 +1047,26 @@ struct LocalizationResourceTests {
             for key in usageDescriptionKeys {
                 let value = table[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 #expect(!value.isEmpty, "Missing localized Info.plist value for '\(key)' in \(languageIdentifier).")
+            }
+
+            let photoDescriptions = [
+                table["NSPhotoLibraryUsageDescription"] ?? "",
+                table["NSCameraUsageDescription"] ?? "",
+            ]
+            let forbiddenAIMarker: String = switch languageIdentifier {
+            case "de": "KI-"
+            case "fr", "it": "IA"
+            default: "AI"
+            }
+            for description in photoDescriptions {
+                #expect(!description.contains(forbiddenAIMarker))
+                #expect(!description.localizedCaseInsensitiveContains("Gemini"))
+            }
+            for (key, expectedValue) in expectedPhotoUsageDescriptions[languageIdentifier] ?? [:] {
+                #expect(
+                    table[key] == expectedValue,
+                    "Expected '\(key)' in \(languageIdentifier) to describe meal estimates and journal photos."
+                )
             }
         }
     }

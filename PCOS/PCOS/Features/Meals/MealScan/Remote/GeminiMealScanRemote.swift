@@ -463,10 +463,24 @@ struct GeminiRemoteMealScanConfiguration: Equatable, Sendable {
         self.proxyEndpointURL = proxyEndpointURL
     }
 
-    static func from(bundle: Bundle = .main) -> GeminiRemoteMealScanConfiguration? {
-        guard let rawURL = BillingConfiguration.sanitized(
+    static func from(
+        bundle: Bundle = .main,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        arguments: [String] = ProcessInfo.processInfo.arguments
+    ) -> GeminiRemoteMealScanConfiguration? {
+        let bundledRawURL = BillingConfiguration.sanitized(
             bundle.object(forInfoDictionaryKey: proxyBaseURLKey) as? String
-        ),
+        )
+
+#if DEBUG
+        let rawURL = arguments.contains("UITestMode")
+            ? BillingConfiguration.sanitized(environment[proxyBaseURLKey]) ?? bundledRawURL
+            : bundledRawURL
+#else
+        let rawURL = bundledRawURL
+#endif
+
+        guard let rawURL,
               let baseURL = URL(string: rawURL)
         else {
             return nil

@@ -650,19 +650,6 @@ struct TrackingHubView: View {
                 open(shortcut: .meal)
             }
 
-            if MealScanFeatureFlags.current.enableMealScanV2 {
-                TrackingCard(
-                    title: L10n.string("AI Meal Scan", defaultValue: "AI Meal Scan"),
-                    subtitle: L10n.string("Estimate foods, portions, and nutrients from a photo", defaultValue: "Estimate foods, portions, and nutrients from a photo"),
-                    systemImage: "camera.viewfinder",
-                    botanicalAssetName: "botanical-meal-bowl",
-                    color: AppTheme.lavenderAccent,
-                    accessibilityIdentifier: "tracking.card.meal_scan"
-                ) {
-                    openMealScan()
-                }
-            }
-
             TrackingCard(
                 title: L10n.string("Photo Journal", defaultValue: "Photo Journal"),
                 subtitle: L10n.string("Track hair and skin changes", defaultValue: "Track hair and skin changes"),
@@ -871,18 +858,6 @@ struct TrackingHubView: View {
                 accessibilityIdentifier: "tracking.card.meal"
             ) {
                 open(shortcut: .meal)
-            }
-
-            if MealScanFeatureFlags.current.enableMealScanV2 {
-                LunarTrackingCard(
-                    title: L10n.string("AI Meal Scan", defaultValue: "AI Meal Scan"),
-                    subtitle: L10n.string("Photo estimate for foods and portions", defaultValue: "Photo estimate for foods and portions"),
-                    systemImage: "camera.viewfinder",
-                    tint: AppTheme.softGoldAccent,
-                    accessibilityIdentifier: "tracking.card.meal_scan"
-                ) {
-                    openMealScan()
-                }
             }
 
             LunarTrackingCard(

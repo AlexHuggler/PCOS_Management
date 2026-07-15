@@ -38,7 +38,7 @@ struct SwiftDataMealLogRepository: MealLogRepository {
         let now = Date()
         let mealID = confirmedMeal.id
         let isRepeated = confirmedMeal.repeatSourceRecordID != nil
-        let sourceName = isRepeated ? "Repeated reviewed meal" : "AI meal estimate"
+        let sourceName = isRepeated ? "Repeated reviewed meal" : "Photo meal estimate"
         let mealSource = isRepeated ? "reusedMeal" : NutritionImportSourceKind.aiMealScan.rawValue
         let photoPath: String?
         if featureFlags.enableMealPhotoRetention, let photoData = confirmedMeal.photoData {

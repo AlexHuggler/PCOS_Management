@@ -18,6 +18,9 @@ private let onboardingContainerSourceRelativePath = "../PCOS/Features/Onboarding
 private let onboardingHowAppHelpsSourceRelativePath = "../PCOS/Features/Onboarding/Views/HowAppHelpsView.swift"
 private let onboardingQuestionnaireSourceRelativePath = "../PCOS/Features/Onboarding/Views/QuestionnaireView.swift"
 private let onboardingMealScanDemoSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingMealScanDemoView.swift"
+private let onboardingHealthContextSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingHealthContextRevealView.swift"
+private let onboardingPermissionsSourceRelativePath = "../PCOS/Features/Onboarding/Views/PermissionsStepView.swift"
+private let onboardingResultsSourceRelativePath = "../PCOS/Features/Onboarding/Views/ResultsView.swift"
 private let symptomGridItemSourceRelativePath = "../PCOS/Features/Symptoms/Views/SymptomGridItem.swift"
 private let settingsSourceRelativePath = "../PCOS/App/SettingsView.swift"
 private let settingsDebugToolsSourceRelativePath = "../PCOS/App/SettingsDebugToolsState.swift"
@@ -136,14 +139,24 @@ struct InterfaceResilienceTests {
         #expect(source.contains("BarcodeMealImportSheet"))
         #expect(source.contains("meal_log.manual_barcode_field"))
         #expect(source.contains("meal_log.lookup_barcode_button"))
-        #expect(source.contains("AI meal scanning is coming soon"))
-        #expect(source.contains("Scan barcode now"))
+        #expect(source.contains("Photo estimate"))
+        #expect(source.contains("Scan barcode"))
+        #expect(source.contains("Enter manually"))
+        #expect(!source.contains("AI meal scanning is coming soon"))
+        #expect(!source.contains("Photo-based meal estimates are still being prepared"))
+        #expect(!source.contains("Scan Meal with AI"))
+        #expect(!source.contains("private var aiMealScanSection"))
+        #expect(!source.contains("lunarPrimaryMealScanCard"))
         #expect(source.contains("private func openMealScanIfAvailable()"))
         #expect(source.contains("guard MealScanFeatureFlags.current.enableMealScanV2 else {"))
         #expect(source.contains("showingMealScan = true"))
-        #expect(source.contains("lunarPrimaryMealScanCard"))
         #expect(source.contains("focusManualNutritionEntry()"))
         #expect(source.contains("meal_log.manual_nutrition_button"))
+        #expect(source.contains(".accessibilityElement(children: .ignore)"))
+        #expect(source.contains(".accessibilityLabel(Text(title))"))
+        #expect(source.contains(".accessibilityHint(Text(subtitle))"))
+        #expect(source.contains("localizedNutritionSourceLabel"))
+        #expect(!source.contains("L10n.string(\"Photo Estimate\""))
     }
 
     @Test("Meal scan preview opens without root premium gate while real photos present contextual paywall")
@@ -158,7 +171,21 @@ struct InterfaceResilienceTests {
         #expect(flowSource.contains("presentPremiumPaywall(reason: .mealScan)"))
         #expect(flowSource.contains("Use sample meal"))
         #expect(flowSource.contains("if MealScanFeatureFlags.current.enableMockMealScanData {"))
-        #expect(flowSource.contains("a compressed copy is sent securely to our AI service for analysis"))
+        #expect(flowSource.contains("case .remoteConsent:"))
+        #expect(flowSource.contains("Send this photo to Google Gemini?"))
+        #expect(flowSource.contains("Send to Google Gemini"))
+        #expect(!flowSource.contains("Continue with Photo Estimate"))
+        #expect(flowSource.contains("Enter Manually"))
+        #expect(flowSource.contains("meal_scan.remote_consent"))
+        #expect(flowSource.contains("meal_scan.remote_consent.continue"))
+        #expect(flowSource.contains("meal_scan.remote_consent.manual"))
+        #expect(flowSource.contains(".frame(height: 168)"))
+        #expect(flowSource.contains("Google does not use paid API photos or responses to improve its products"))
+        #expect(flowSource.contains("retain the photo and response for up to 55 days"))
+        #expect(flowSource.contains("abuse monitoring and legal or regulatory requirements"))
+        #expect(flowSource.contains("before anything is added to your meal log"))
+        #expect(flowSource.contains("structured estimate may be cached for up to 24 hours"))
+        #expect(!flowSource.contains("our AI service"))
         #expect(flowSource.contains("CycleBalance does not retain the uploaded photo on its server"))
         #expect(flowSource.contains("By default, only nutrition you review and save is kept"))
         #expect(flowSource.contains("Keep Saved Meal Photos in Settings"))
@@ -168,7 +195,29 @@ struct InterfaceResilienceTests {
         #expect(!flowSource.contains("Meal estimates and nutrition logs stay on your device unless you choose to sync through iCloud."))
         #expect(!onboardingSource.contains("MealScanFlowView("))
         #expect(onboardingSource.contains("Sample meal estimate"))
+        #expect(!contentSource.contains("tracking.card.meal_scan"))
+        #expect(!contentSource.contains("AI Meal Scan"))
         #expect(!contentSource.contains("guard appState.allowsPremiumAccess else {\n            appState.presentPremiumPaywall()\n            return\n        }\n        showingMealScan = true"))
+    }
+
+    @Test("Onboarding scanner copy follows availability and describes its preview honestly")
+    func onboardingScannerCopyMatchesAvailability() throws {
+        let permissionsSource = try loadSource(relativePath: onboardingPermissionsSourceRelativePath)
+        let resultsSource = try loadSource(relativePath: onboardingResultsSourceRelativePath)
+        let healthContextSource = try loadSource(relativePath: onboardingHealthContextSourceRelativePath)
+        let demoSource = try loadSource(relativePath: onboardingMealScanDemoSourceRelativePath)
+
+        #expect(permissionsSource.contains("MealScanFeatureFlags.current.enableMealScanV2"))
+        #expect(permissionsSource.contains("private var privacySummary"))
+        #expect(permissionsSource.contains("private var cameraPermissionDescription"))
+        #expect(resultsSource.contains("MealScanFeatureFlags.current.enableMealScanV2"))
+        #expect(resultsSource.contains("private var privacySummary"))
+        #expect(resultsSource.contains("ScrollView"))
+        #expect(resultsSource.contains(".safeAreaInset(edge: .bottom"))
+        #expect(healthContextSource.contains("See how photo estimates work"))
+        #expect(!healthContextSource.contains("Try a photo estimate"))
+        #expect(demoSource.contains("Barcode and manual entry stay available without a photo upload."))
+        #expect(!demoSource.contains("Barcode and manual entry are always available."))
     }
 
     @Test("Repeat meal suggestion stays quiet adaptive and user controlled")
@@ -201,6 +250,16 @@ struct InterfaceResilienceTests {
         #expect(flowSource.contains("viewModel.scanPendingImageAsNew()"))
         #expect(appSource.contains("arguments.contains(\"SeedRepeatMealSuggestion\")"))
         #expect(appSource.contains("MealScanRepeatCacheRecord("))
+    }
+
+    @Test("Meal scan previews include the isolated repeat cache model")
+    func mealScanPreviewsIncludeRepeatCacheModel() throws {
+        for relativePath in [mealScanFlowSourceRelativePath, mealLogSourceRelativePath] {
+            let source = try loadSource(relativePath: relativePath)
+            let preview = try #require(source.components(separatedBy: "#Preview").last)
+
+            #expect(preview.contains("MealScanRepeatCacheRecord.self"))
+        }
     }
 
     @Test("FSA letter preview uses readable selectable text instead of a disabled fixed editor")

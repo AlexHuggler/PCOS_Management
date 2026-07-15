@@ -143,9 +143,12 @@ final class PCOSUITests: XCTestCase {
 
     @MainActor
     private func openMealScanFromMealLog(in app: XCUIApplication) {
-        let premiumButton = app.buttons["meal_log.lunar.ai_meal_scan_primary"]
-        let standardButton = app.buttons["meal_log.ai_meal_estimate_button"]
-        let mealEstimateButton = premiumButton.waitForExistence(timeout: 2) ? premiumButton : standardButton
+        let currentButton = app.buttons["meal_log.photo_estimate_button"]
+        let legacyPremiumButton = app.buttons["meal_log.lunar.ai_meal_scan_primary"]
+        let legacyStandardButton = app.buttons["meal_log.ai_meal_estimate_button"]
+        let mealEstimateButton = currentButton.waitForExistence(timeout: 2)
+            ? currentButton
+            : (legacyPremiumButton.waitForExistence(timeout: 1) ? legacyPremiumButton : legacyStandardButton)
 
         scrollToElement(mealEstimateButton, in: app)
         mealEstimateButton.tap()
@@ -1032,6 +1035,28 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testOnboardingResultsAccessibilityTextSizeKeepsActionsReachable() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: false,
+            appLanguage: "system",
+            themeOption: "botanicalJournal",
+            onboardingStartPhase: "results",
+            contentSizeCategory: "UICTContentSizeCategoryAccessibilityXXXL"
+        )
+        app.launch()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "screen.onboarding.results").waitForExistence(timeout: 10))
+        let continueButton = app.buttons["onboarding.results.continue"]
+        let skipButton = app.buttons["onboarding.results.skip"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 10))
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 10))
+        XCTAssertTrue(continueButton.isHittable)
+        XCTAssertTrue(skipButton.isHittable)
+    }
+
+    @MainActor
     func testLunarCalmThemeLaunchesCustomTabsAndPilotSurfaces() throws {
         let app = makeApp(
             language: "en",
@@ -1585,6 +1610,37 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testLunarCalmAddNutritionShowsEveryEntryPath() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let addNutritionCard = screenElement(in: app, identifier: "meal_log.lunar.quick_actions")
+        scrollToElement(addNutritionCard, in: app, maxSwipes: 10)
+
+        let photoButton = app.buttons["meal_log.photo_estimate_button"]
+        let barcodeButton = app.buttons["meal_log.scan_barcode_button"]
+        let manualButton = app.buttons["meal_log.manual_nutrition_button"]
+        XCTAssertTrue(photoButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(barcodeButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(manualButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(photoButton.isHittable)
+        XCTAssertTrue(barcodeButton.isHittable)
+        XCTAssertTrue(manualButton.isHittable)
+        try saveScreenshotArtifact(named: "lunar-calm-add-nutrition.png")
+    }
+
+    @MainActor
     func testLunarCalmMealHistoryOpensFromLog() throws {
         let app = makeApp(
             language: "en",
@@ -1668,6 +1724,93 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_scan.manual_button"].waitForExistence(timeout: 5))
         try saveScreenshotArtifact(named: "lunar-calm-meal-scan-entry.png")
+    }
+
+    @MainActor
+    func testMealScanRemoteConsentNamesGoogleAndKeepsFallbacksVisible() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData", "-enableGeminiMealScan"]
+        app.launchEnvironment["MEAL_SCAN_PROXY_BASE_URL"] = "https://meal-scan-ui-test.invalid"
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+
+        let scanButton = app.buttons["meal_scan.scan_button"]
+        XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+        scanButton.tap()
+
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+        sampleButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.remote_consent").waitForExistence(timeout: 8))
+        let sendButton = app.buttons["meal_scan.remote_consent.continue"]
+        let manualButton = app.buttons["meal_scan.remote_consent.manual"]
+        let retakeButton = app.buttons["meal_scan.remote_consent.retake"]
+        let retentionDisclosure = app.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS[c] %@", "up to 55 days"))
+            .firstMatch
+        XCTAssertTrue(sendButton.waitForExistence(timeout: 5))
+        XCTAssertEqual(sendButton.label, "Send to Google Gemini")
+        XCTAssertTrue(retentionDisclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(manualButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(retakeButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.frame.intersects(retentionDisclosure.frame))
+        XCTAssertTrue(sendButton.isHittable)
+        XCTAssertTrue(manualButton.isHittable)
+        XCTAssertTrue(retakeButton.isHittable)
+        try saveScreenshotArtifact(named: "lunar-calm-meal-scan-consent.png")
+    }
+
+    @MainActor
+    func testMealScanReviewKeepsFoodEditsAndSaveVisible() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+
+        let scanButton = app.buttons["meal_scan.scan_button"]
+        XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+        scanButton.tap()
+
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+        sampleButton.tap()
+
+        XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+        let editableFood = app.buttons.matching(identifier: "meal_scan.edit_food_item").firstMatch
+        XCTAssertTrue(editableFood.waitForExistence(timeout: 5))
+        scrollToElement(editableFood, in: app.collectionViews.firstMatch, maxSwipes: 4)
+        XCTAssertTrue(editableFood.isHittable)
+        editableFood.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.textFields["meal_scan.edit_food.name"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["meal_scan.edit_food.grams"].waitForExistence(timeout: 5))
+        app.buttons["meal_scan.edit_food.cancel"].tap()
+
+        let saveButton = app.buttons["meal_scan.save_button"]
+        scrollToElement(saveButton, in: app.collectionViews.firstMatch, maxSwipes: 12)
+        XCTAssertTrue(saveButton.isHittable)
+        XCTAssertTrue(app.buttons["Edit Portions"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-meal-estimate-review.png")
     }
 
     @MainActor
