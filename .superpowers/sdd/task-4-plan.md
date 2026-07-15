@@ -91,9 +91,9 @@
 - [x] Re-run rendered browser QA at desktop and mobile widths, including page identity, DOM, console, focus/navigation interaction, overflow, and screenshots.
 - [x] Run `node --check tools/validate-site.mjs`, base validation, external-reference validation, XML parsing, forbidden-claim search, `git diff --check`, and App Store CTA check.
 - [x] Confirm `docs/meal-scan.html` is absent and `/meal-scan` is absent from deployed discovery.
-- [ ] Record reviewer disposition, exact RED/GREEN evidence, contrast ratios, current counts/date, rendered QA, publication inputs, blockers, and concerns in `.superpowers/sdd/task-4-report.md`.
-- [ ] Commit the isolated corrections locally. Do not push, publish, or deploy.
-- [ ] Re-run validation on committed HEAD and report the new hash.
+- [x] Record reviewer disposition, exact RED/GREEN evidence, contrast ratios, current counts/date, rendered QA, publication inputs, blockers, and concerns in `.superpowers/sdd/task-4-report.md`.
+- [x] Commit the isolated corrections locally. Do not push, publish, or deploy.
+- [x] Re-run validation on committed HEAD and report the new hash.
 
 ---
 

@@ -1,4 +1,4 @@
-# Task 4 — Staged Meal-Scan Website and Marketing Report
+# Task 4 — Non-Public Meal-Scan Marketing Correction Report
 
 Date: 2026-07-14
 
@@ -6,172 +6,214 @@ Branch: `codex/cyclebalance-meal-scan-marketing`
 
 Worktree: `/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-meal-scan-marketing`
 
-Implementation commit: `d39a8b467fa7d70ebacc5f20106062fae4783ce6`
+Original feature commit: `d39a8b467fa7d70ebacc5f20106062fae4783ce6`
 
-## Status
+Original report commit: `e1ab9242e1c2bd9150bcbbc198748a5a699bc5ed`
 
-Implemented and committed locally. Nothing was pushed, published, deployed, sent, or changed in App Store Connect. The scanner and all launch materials remain staged behind release verification and synchronized-copy approval.
+Non-public move commit: `191a36ee8dc2e4abd73d689f5d0a3a4d4691885e`
 
-## Files
+Review-fix implementation commit: `cbc1feeec33b7ccddbf0a4a05da37ec99012a8c3`
 
-- `docs/meal-scan.html` — English responsive landing page with canonical/Open Graph/Twitter metadata, App Store CTA, semantic navigation/footer, consent-first five-step loop, provider/retention/proxy disclosure, local exact reuse, manual/barcode alternatives, staged availability language, synthetic-demo label, and accessible/reduced-motion behavior.
-- `tools/validate-site.mjs` — executable Task 4 contract for page metadata/copy/disclosures/links/assets, forbidden claims, both staging handoffs, corrected live-state statuses, sitemap, and `llms.txt`.
-- `docs/sitemap.xml` — staged `/meal-scan` route entry.
-- `docs/llms.txt` — staged meal-scan preview discovery entry.
-- `docs/VALIDATION-REPORT.md` — latest full site/external-reference validation counts and warnings.
-- `.superpowers/sdd/task-4-social-demo-handoff.md` — privacy-safe 15-second storyboard, four organic concepts, fixture labeling, and preflight gate.
-- `.superpowers/sdd/task-4-launch-delta-handoff.md` — single synchronized policy/support/store/campaign handoff with corrected July 14 live-state status.
-- `.superpowers/sdd/task-4-plan.md` — test-first implementation plan and execution checklist.
-- `.superpowers/sdd/task-4-report.md` — this evidence report; committed separately after the implementation commit so the report can record that immutable hash.
+## Status and reviewer disposition
+
+All Critical and Important independent-review findings are fixed in the isolated worktree. The corrected materials are ready for local staging/merge review. They are **not ready for publication** because the scanner release, synchronized owner approvals, real Apple Campaign Link inputs, Approved/publicly-visible destination evidence, and signed-out target-storefront verification remain publication-time gates.
+
+Nothing was pushed, published, deployed, sent, posted, or changed in App Store Connect.
+
+| Review finding | Disposition | Evidence |
+|---|---|---|
+| Critical: preview was inside deployed GitHub Pages `docs` | Fixed | Preview moved to `.superpowers/sdd/staging/meal-scan-preview.html`; `docs/meal-scan.html` is absent; sitemap and `llms.txt` do not advertise `/meal-scan`. |
+| Critical: text, button, boundary, and focus contrast failed AA | Fixed | Deterministic validator computes contrast from CSS tokens and enforces 4.5:1 for text plus 3:1 for interface/focus indicators. |
+| Important: declining copy incorrectly grouped barcode with local alternatives | Fixed | Copy now says declining skips the photo estimate; manual/exact reuse can stay on-device; barcode lookup is a separate optional network request that does not send the meal photo. |
+| Important: Campaign Link handoff/validator was underspecified | Fixed as an executable publication gate | Validator requires numeric `pt`, stable approved `ct`, matching approved `ppid`, Approved/public visibility evidence, and signed-out storefront evidence when publication arguments are supplied. Real values/evidence remain owner inputs. |
+| Important: validation date and forbidden-claim checks were brittle | Fixed | Report date is generated dynamically in America/Chicago; claims are normalized across case, whitespace, and dash variants before pattern matching. |
+
+## Corrected files
+
+- `.superpowers/sdd/staging/meal-scan-preview.html` — non-public responsive preview with corrected AA tokens, two-color focus indicator, and truthful alternative-path wording.
+- `tools/validate-site.mjs` — merge-safety, discovery, claims, contrast, current-date, page/handoff, and optional Campaign Link publication checks.
+- `docs/sitemap.xml` — removed the premature `/meal-scan` URL.
+- `docs/llms.txt` — removed the premature meal-scan discovery line.
+- `docs/VALIDATION-REPORT.md` — fresh July 14 full-site/external-reference result.
+- `.superpowers/sdd/task-4-launch-delta-handoff.md` — non-public publication boundary, corrected local/network wording, and owner-supplied Apple link contract.
+- `.superpowers/sdd/task-4-social-demo-handoff.md` — corrected decline/manual/exact-reuse/network-barcode production note.
+- `.superpowers/sdd/task-4-plan.md` — correction-first execution plan and separate future-publication boundary.
+- `.superpowers/sdd/task-4-report.md` — this review disposition and evidence record.
 
 ## RED/GREEN evidence
 
-### Baseline
+### Independent-review RED
 
-Command:
+After encoding all review findings before correcting the artifacts:
 
-```bash
-node tools/validate-site.mjs
+```text
+Validation FAIL: 34 errors, 0 warnings
 ```
 
-Result before Task 4 changes: exit `0`, `Validation PASS: 0 errors, 0 warnings`.
+The failures covered the deployed page/discovery, absent non-public preview, old decline wording, low-contrast tokens and focus styles, stale date evidence, and missing Campaign Link contract.
 
-### Original RED — missing staged deliverables
+### Merge-safety intermediate RED
 
-The validator assertions were added before the page or handoffs.
+After moving the file outside `docs`, removing deployed discovery, and making the report date dynamic:
 
-Command:
-
-```bash
-node tools/validate-site.mjs
+```text
+Validation FAIL: 29 errors, 0 warnings
 ```
 
-Result: exit `1`, `Validation FAIL: 5 errors, 0 warnings`.
+The merge-safety/discovery/date failures were gone; accessibility, wording, and handoff contract failures remained.
 
-Expected failures:
+### Accessibility and wording intermediate RED
 
-1. `Meal scan page: missing file docs/meal-scan.html`
-2. `Social/demo handoff: missing file .superpowers/sdd/task-4-social-demo-handoff.md`
-3. `Launch-delta handoff: missing file .superpowers/sdd/task-4-launch-delta-handoff.md`
-4. sitemap missing `https://cyclebalance.app/meal-scan`
-5. `llms.txt` missing the staged meal-scan preview line
+After correcting the AA tokens, two-color focus indicator, and local-versus-network wording:
 
-### Original GREEN — page and handoffs implemented
-
-Command:
-
-```bash
-node tools/validate-site.mjs
+```text
+Validation FAIL: 10 errors, 0 warnings
 ```
 
-Result: exit `0`, `Validation PASS: 0 errors, 0 warnings`.
+Only the Campaign Link handoff contract assertions remained.
 
-### Correction RED — current live-source status
+### Campaign Link negative fixture
 
-After receiving the verified July 14 source correction, assertions were added before changing the launch handoff.
+The optional publication validator was exercised with a synthetic malformed link, mismatched approved values, and no evidence flags. The synthetic values were used only in the shell test and are not stored as launch defaults or owner inputs.
 
-Command:
-
-```bash
-node tools/validate-site.mjs
+```text
+Validation FAIL: 6 errors, 0 warnings
+- Campaign Link: --cpp-approved-visible evidence flag is required
+- Campaign Link: --signed-out-storefront-verified evidence flag is required
+- Campaign Link: URL must contain exactly one non-empty ct parameter
+- Campaign Link: pt must contain ASCII digits only
+- Campaign Link: ct does not match --approved-ct
+- Campaign Link: ppid does not match --approved-ppid
 ```
 
-Result: exit `1`, `Validation FAIL: 10 errors, 0 warnings`.
+### Campaign Link positive fixture
 
-Expected missing assertions covered:
+The same validator passed with a synthetic HTTPS Apple URL containing one numeric `pt`, one stable `ct` matching `--approved-ct`, one `ppid` matching `--approved-ppid`, and both evidence flags:
 
-- July 12 Privacy Policy/Terms update status;
-- existing Support FAQ Gemini answer and required expansion;
-- `Verify/reconcile`, `Expand`, and `Confirmed contradiction` matrix states;
-- the homepage claim that health logs stay on-device unless exported; and
-- the App Store description line `No accounts required, no cloud uploads, no ads.`
-
-### Correction GREEN
-
-The handoff was updated without editing any live page or App Store surface.
-
-Command:
-
-```bash
-node tools/validate-site.mjs
+```text
+Validation PASS: 0 errors, 0 warnings
 ```
 
-Result: exit `0`, `Validation PASS: 0 errors, 0 warnings`.
+This proves the deterministic contract only. It does **not** claim that a real Campaign Link, provider token, final CPP ID, approval state, or storefront route has been verified.
 
-## Final validation
+### Repository GREEN
 
-Fresh pre-commit gate:
+```text
+node tools/validate-site.mjs
+Validation PASS: 0 errors, 0 warnings
 
-```bash
-node --check tools/validate-site.mjs && \
-node tools/validate-site.mjs --external && \
-xmllint --noout docs/sitemap.xml && \
-git diff --check && \
+node tools/validate-site.mjs --external
+Validation PASS: 0 errors, 5 warnings
+```
+
+## WCAG contrast evidence
+
+The validator calculates these ratios from the staged page's required six-digit CSS tokens. Text thresholds are 4.5:1; essential boundary/focus thresholds are 3:1.
+
+| Pair | Ratio | Threshold | Result |
+|---|---:|---:|---|
+| White primary-button text / coral | 6.41:1 | 4.5:1 | PASS |
+| Coral-dark accent text / cream | 7.73:1 | 4.5:1 | PASS |
+| Muted text / paper | 6.24:1 | 4.5:1 | PASS |
+| Small muted text / paper | 5.49:1 | 4.5:1 | PASS |
+| Edit-chip text / coral-pale | 4.97:1 | 4.5:1 | PASS |
+| Interface line / paper | 3.55:1 | 3:1 | PASS |
+| Outer focus indicator / cream | 8.69:1 | 3:1 | PASS |
+| Inner focus indicator / dark surface | 11.69:1 | 3:1 | PASS |
+| Dark-surface boundary / dark surface | 3.17:1 | 3:1 | PASS |
+
+The executable contract also covers the token pairs used on cream, paper, white, sage-pale, and dark footer/principle surfaces, rather than relying only on this representative table.
+
+## Rendered browser QA
+
+The flow under test was: non-public preview loads → meaningful responsive page renders → scoped Primary-navigation `Privacy` link is selected → the intended privacy section becomes the current anchor and visible target.
+
+Environment:
+
+- Local route: `http://127.0.0.1:4173/meal-scan-preview.html`, served from the staging file with assets mapped read-only from `docs`.
+- Browser path: Browser plugin available; selected Chrome through the supported browser runtime; no fallback used.
+- Desktop viewport override: 1440×900.
+- Mobile viewport override: 390×844.
+
+Checks:
+
+| Check | Desktop | Mobile |
+|---|---|---|
+| URL/title identity | PASS | PASS |
+| Meaningful DOM / not blank | PASS | PASS |
+| Framework/error overlay | None | None |
+| Console warnings/errors | None | None |
+| Failed rendered images | 0 | 0 |
+| Horizontal overflow | None | None |
+| Responsive layout | Full navigation and multi-column composition | Inline nav hidden; hero and process grids collapse to one column; CTAs remain untangled |
+| Screenshot evidence | Hero and privacy-anchor states visually inspected | Hero/mobile-first viewport visually inspected |
+
+Interaction result:
+
+- The Primary-navigation `Privacy` locator resolved to exactly one link before the click.
+- After selection, the URL hash was `#privacy`.
+- `Privacy, in plain language.` was the target heading and rendered 147 px from the viewport top.
+
+Semantic/accessibility audit:
+
+- one `h1`, one `main`, one labeled Primary navigation, and one labeled Footer navigation;
+- zero images missing `alt`, zero failed images, zero unnamed links, zero duplicate IDs, and zero broken hash targets;
+- canonical observed as `https://cyclebalance.app/meal-scan` for the future publication route;
+- desktop/mobile screenshots showed readable corrected color usage, unclipped content, and no visible overlap.
+
+## Full validation
+
+Fresh correction gate:
+
+```sh
+node --check tools/validate-site.mjs
+node tools/validate-site.mjs
+node tools/validate-site.mjs --external
+xmllint --noout docs/sitemap.xml
+git diff --check
+test ! -e docs/meal-scan.html
+! rg -n 'https://cyclebalance\.app/meal-scan' docs/sitemap.xml docs/llms.txt
+! rg -ni 'diagnos(is|e|ed|es|ing|tic)|treat(ment|s|ed|ing)?|causal[[:space:]]+(insight|conclusion)|exact[[:space:]]+nutrition(al)?|zero[[:space:]]+data[[:space:]]+retention|guaranteed[[:space:]]+accuracy|cycle-aware[[:space:]]+nutrition|meal-?balance[[:space:]]+score' .superpowers/sdd/staging/meal-scan-preview.html
 curl --silent --show-error --location --output /dev/null --max-time 20 \
   --write-out 'App Store CTA: HTTP %{http_code} -> %{url_effective}\n' \
   'https://apps.apple.com/us/app/cyclebalance/id6760353511'
 ```
 
-Result: exit `0`.
+Results:
 
 - JavaScript syntax: PASS.
-- Site validation/build/link contract: PASS, `0 errors`, `5 warnings`.
+- Base site/content contract: PASS, `0 errors`, `0 warnings`.
+- External-reference validation: PASS, `0 errors`, `5 warnings`.
 - Sitemap XML: PASS.
 - Git whitespace check: PASS.
+- Merge safety: PASS; `docs/meal-scan.html` is absent.
+- Deployed discovery safety: PASS; `/meal-scan` is absent from sitemap and `llms.txt`.
+- Normalized forbidden-claim search: PASS; no matches.
 - App Store CTA: HTTP `200` at `https://apps.apple.com/us/app/cyclebalance/id6760353511`.
-- Site counts: 175 HTML files, 174 sitemap URLs, 5,913 internal references, 1,344 hreflang links, 487 JSON-LD blocks, 1,152 image references, and 14 external evidence references.
+- Current validation-report date: `2026-07-14` in America/Chicago.
+- Site counts: 174 HTML files, 173 sitemap URLs, 5,895 internal references, 1,344 hreflang links, 486 JSON-LD blocks, 1,146 image references, and 14 external evidence references.
 
-The five warnings are automated-access responses from pre-existing evidence references, not the meal-scan page: four HTTP `403` responses and one HTTP `412` response. They are preserved in `docs/VALIDATION-REPORT.md` for manual verification; there were no broken-link errors.
+The five warnings are pre-existing automated-access responses from evidence sources: four HTTP 403 responses and one HTTP 412 response. They are preserved in `docs/VALIDATION-REPORT.md`; no reference returned 404/410 and no Task 4 link failed.
 
-## Rendered and accessibility QA
+## Publication contract and blockers
 
-Local browser route: `http://127.0.0.1:4173/meal-scan.html`. The local Python static server does not rewrite extensionless routes, so `/meal-scan` returned the server's expected 404; the repository validator separately proved that the public canonical and sitemap route resolve to `docs/meal-scan.html` under the site's extensionless mapping.
+The preview remains intentionally non-public. A separate publication commit may move it to `docs/meal-scan.html` and add sitemap/LLM discovery only after all of the following are true:
 
-Browser checks:
+1. Scanner release verification passes against the production provider path and matching signed distribution build.
+2. Final consent, Google retention, proxy handling, local cache/reuse, quotas, billing/access, error states, and fallback behavior match the synchronized copy.
+3. RevenueCat/App Store paid, trial, restore, expiry, and offline/error states are verified.
+4. Final screenshots/demo captures come from the approved archived build and pass privacy/synthetic-fixture preflight.
+5. Privacy Policy and Terms are reconciled, Support FAQ is expanded, and App Privacy/review notes match the same release.
+6. The homepage FAQ and App Store description contradictions are removed or correctly qualified.
+7. Product, Privacy/Policy, Support, App Store release, Web, and Marketing owners approve one fact block and availability posture.
+8. `symptoms-food-glucose` is confirmed Approved and publicly visible in the target storefront with dated evidence.
+9. The authorized owner supplies the real numeric Apple provider token (`pt`) and final approved destination ID (`ppid`); Marketing/App Store owners approve one stable campaign token (`ct`). No invented source defaults are allowed.
+10. The final Apple-generated link passes `--campaign-link`, `--approved-ct`, `--approved-ppid`, `--cpp-approved-visible`, and `--signed-out-storefront-verified`, and a signed-out device lands on the intended CPP in the target storefront.
+11. The public scanner build is reachable before website, store, Campaign Link, CPP, or social copy implies availability.
 
-- Desktop override: 1440×900; rendered client viewport 1425×900.
-- Mobile override: 390×844; rendered client viewport 375×844.
-- Page title: `Meal Scan Preview — CycleBalance`.
-- Meaningful DOM present; no framework/error overlay.
-- Console warnings/errors: none.
-- Horizontal overflow: none at either viewport.
-- Mobile layout: primary inline links hidden, hero and step grids collapsed to one column, CTA controls remained readable and untangled.
-- Interaction: the unique Primary navigation `Privacy` link moved to `#privacy`; `Privacy, in plain language.` rendered at the top of the viewport.
-- Semantic audit: one `h1`, one `main`, labeled Primary and Footer navigation, zero images missing `alt`, zero unnamed links, zero duplicate IDs, and zero broken hash targets.
-- Canonical observed in the DOM: `https://cyclebalance.app/meal-scan`.
+## Remaining concerns
 
-## Source and claims self-review
-
-- All three approved positioning lines are present verbatim.
-- The page shows Photo → explicit Google Gemini Consent → editable draft/Correct → local Save → optional Context.
-- Google retention up to 55 days for abuse monitoring, proxy raw-byte non-retention, on-device exact reviewed-meal reuse, and manual/barcode alternatives are stated plainly.
-- App Store CTAs are explicitly for the current app; scanner availability is repeatedly marked staged/coming after release verification.
-- A page-only forbidden-claim search returned no matches for diagnosis, treatment, causal insight, exact nutrition, Zero Data Retention, guaranteed accuracy, `cycle-aware nutrition`, or either meal-balance-score spelling.
-- Synthetic UI/meal details are labeled `Demonstration using synthetic meal details — not a testimonial or accuracy result.`
-- The social handoff includes the exact 15-second Photo → Consent → Correct → Save sequence and all four approved organic concepts.
-- The launch handoff keeps the exact paid/trial quotas and marks exact cache, barcode, and manual paths non-billable.
-- Privacy Policy and Terms are correctly `Verify/reconcile`, not treated as missing; Support FAQ is `Expand`; homepage FAQ and App Store description are `Confirmed contradiction`.
-- Campaign Link/Custom Product Page instructions route to `symptoms-food-glucose` first and keep the optional scanner page gated; no results or platform-algorithm claims were invented.
-- Staged implementation changed only the eight implementation files listed above. It did not edit `docs/index.html`, `docs/privacy.html`, `docs/terms.html`, `docs/support.html`, the user-owned hero-video worktree, or any live external surface.
-
-## Exact publication blockers
-
-Do not publish, deploy, update App Store metadata, or distribute campaign assets until all of the following are true:
-
-1. Scanner release verification is complete against the production provider path and matching signed distribution build.
-2. Final consent, provider retention, proxy handling, local cache/reuse, quota, billing/access, error, and fallback behavior match the approved copy.
-3. RevenueCat/App Store paid, trial, restore, expiry, and offline/error states are verified for the release.
-4. Final screenshots and demo captures come from the approved archived build and pass the synthetic-fixture/privacy preflight.
-5. Privacy Policy and Terms are reconciled against final behavior; Support FAQ is expanded; App Privacy and review notes are synchronized.
-6. The homepage FAQ no longer makes an unqualified on-device-only claim that hides the opt-in fresh-photo provider path.
-7. The App Store description no longer says `No accounts required, no cloud uploads, no ads.` without qualifying the fresh-photo provider path.
-8. Product, Privacy/Policy, Support, App Store release, Web, and Marketing owners approve the same fact block and availability language.
-9. The public scanner build is reachable before `/meal-scan`, App Store copy, Campaign Links, Custom Product Pages, or social assets imply availability.
-10. The Apple Campaign Link is created and verified against `symptoms-food-glucose`; any optional scanner page has approved archived-build assets and metadata.
-
-## Concerns
-
-- Five pre-existing external evidence references block automated verification with HTTP 403/412 and remain manual-review items; no Task 4 link failed.
-- Extensionless routing depends on the production static-host convention; Python's basic local server was therefore used only at `/meal-scan.html`, while the repository link mapper validated `/meal-scan`.
-- Independent subagent review was attempted but unavailable because all agent slots were occupied by higher-priority release tasks. Fresh source, claims, rendered-browser, accessibility, link, XML, syntax, and diff self-review were completed instead.
-- Publication remains intentionally blocked by the ten gates above. No live action was taken.
+- Real App Store Connect CPP approval/visibility, real owner-supplied link values, and signed-out target-storefront routing were not verified in this local correction. They remain explicit publication blockers, not implied passes.
+- The five pre-existing external evidence URLs that returned 403/412 still require manual review.
+- The staged file preserves future canonical/social metadata, but it is outside the deployed tree and undiscoverable. Publication must happen as a separate reviewed commit that adds the deployed file and discovery together.
+- No live action was taken.
