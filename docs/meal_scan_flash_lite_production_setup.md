@@ -91,9 +91,11 @@ Gemini's exposed service quotas are tier- and model-specific request/token throu
 Only these server secrets belong in Secret Manager:
 
 - `cyclebalance-gemini-api-key`
+- `cyclebalance-meal-scan-principal-hmac`
+- `cyclebalance-app-store-iap-private-key`
 - `cyclebalance-revenuecat-secret-api-key`
 
-The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The RevenueCat API v2 key must have only `customer_information:subscriptions:read`; the production secret version has not yet been created or reviewed. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
+The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The principal-HMAC secret was created safely as version `1` without exposing its value. The remaining provisioning handoff is the App Store IAP `.p8` resource `cyclebalance-app-store-iap-private-key`; the positive canary below verifies its metadata but never reads its value. Do not rerun bootstrap or re-prompt, rotate, or replace the existing Gemini and RevenueCat secrets as part of that handoff. The RevenueCat API v2 key must have only `customer_information:subscriptions:read`. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
 
 The app never sends a cloneable RevenueCat app-user ID to the proxy. The server verifies Apple's signed transaction and current status first, then passes only the Apple-verified transaction ID and environment to RevenueCat as secondary corroboration. The quota principal is an HMAC of the Apple original transaction ID; raw JWS values are never stored or logged.
 
@@ -167,6 +169,72 @@ This is a negative invalid-JWS probe only. It proves that production App Check r
 
 The rollback trap is armed immediately before the first cloud mutation and runs on success, failure, interrupt, or termination. It redeploys `MEAL_SCAN_ENABLED=false` with private IAM, then requires an unauthenticated `403` and an authenticated `503` body with `error=meal_scan_unavailable` and `reason=feature_disabled`. Any rollback deploy or verification failure is fatal and requires immediate owner investigation of the Cloud Run service.
 
+## Approval-Gated Positive General Kenobi Canary
+
+The positive harness is separate from the completed negative invalid-JWS probe. Its normal/default path is a protocol-only dry run. It pins the production project, service, endpoint, `alex.PCOS`, and General Kenobi identity; verifies canonical Release flags remain `NO`; and describes every later owner-observed and machine-read gate without querying or changing cloud, device, build, or secret state.
+
+Run the non-mutating preview from the clean RC worktree:
+
+```sh
+cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-1.0.5-rc"
+DRY_RUN=true cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
+```
+
+### Owner-only Apple IAP provisioning handoff
+
+Do not run this handoff without separate owner approval. It provisions only the missing App Store IAP private-key resource. It must not access, re-prompt, rotate, or replace the existing Gemini, RevenueCat, or principal-HMAC secrets. The principal-HMAC version remains pinned at `1`.
+
+Use a hidden local path prompt so the `.p8` value never appears in chat, command arguments, environment variables, shell history, or terminal output:
+
+```sh
+(
+  set -euo pipefail
+  umask 077
+  read -rsp "Absolute path to the owner-controlled App Store IAP .p8 file: " APPLE_IAP_P8_PATH
+  printf '\n'
+  test -f "$APPLE_IAP_P8_PATH"
+  gcloud secrets describe cyclebalance-app-store-iap-private-key \
+    --project cyclebalance-prod-20260710 >/dev/null 2>&1 || \
+    gcloud secrets create cyclebalance-app-store-iap-private-key \
+      --project cyclebalance-prod-20260710 \
+      --replication-policy automatic
+  gcloud secrets versions add cyclebalance-app-store-iap-private-key \
+    --project cyclebalance-prod-20260710 \
+    --data-file "$APPLE_IAP_P8_PATH"
+  unset APPLE_IAP_P8_PATH
+)
+```
+
+Before the owner-approved live canary, independently verify the newly created version is numeric and `ENABLED`. The harness expects version `1`; it uses metadata-only `describe` calls and never `versions access`. The matching App Store IAP key ID and issuer ID are entered only through hidden interactive prompts during the live preflight and are never written to the evidence summary.
+
+Only after the owner approves the temporary public App Check-protected endpoint, physically controls the unlocked phone, and confirms the provisioning handoff is complete may they run the seed window:
+
+```sh
+cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-1.0.5-rc"
+DRY_RUN=false \
+CANARY_PHASE=seed \
+CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY=I_APPROVE_GENERAL_KENOBI_POSITIVE_CANARY_WITH_TEMPORARY_PUBLIC_CLOUD_RUN \
+cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
+```
+
+The seed window verifies one fresh scan plus exact local reuse, then rolls back. Do not leave the endpoint public while waiting for the 24-hour structured-result cache to expire. After more than 24 hours, obtain fresh owner approval and run the rescan window, which uses the locally saved repeat photo and requires `Scan as New` to add exactly one quota/provider operation:
+
+```sh
+cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-1.0.5-rc"
+DRY_RUN=false \
+CANARY_PHASE=rescan \
+CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY=I_APPROVE_GENERAL_KENOBI_POSITIVE_CANARY_WITH_TEMPORARY_PUBLIC_CLOUD_RUN \
+cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
+```
+
+The live path builds—not archives or exports—a development-signed Release canary while overriding only `MEAL_SCAN_RELEASE_UI_ENABLED=YES` and `MEAL_SCAN_RELEASE_GEMINI_ENABLED=YES`. Mock data, debug-direct transport, fallback-model routing, and visual similarity remain `NO`. The product must read back the pinned bundle/endpoint, both signed gates enabled, production App Attest, `get-task-allow=true`, `ProvisionedDevices`, and an Apple Development signer; App Store/TestFlight distribution provisioning fails this canary build gate.
+
+Across the rollback-bounded seed and rescan windows, the owner performs the real sandbox purchase/entitlement, photo, per-upload Gemini consent, edit, save, exact reuse, Scan as New, relaunch, camera denial/recovery, offline/timeout/retry, entitlement loss, quota, kill-switch, barcode, and manual-fallback checks. Owner keystrokes are recorded only as unverified observations. Separately, bounded machine-read evidence must show the successful path reached App Check, Apple JWS/current status, RevenueCat corroboration, quota, cache, and one provider dispatch. Exact local reuse must add zero server/quota/provider activity. The later uncached Scan as New must add exactly one completed request, one quota decision, and one provider dispatch.
+
+On every exit path the rollback trap redeploys disabled/private, then requires anonymous `403`/concealed `404` and authenticated `503 feature_disabled`. The permission-restricted evidence summary contains only bounded counts and explicitly separates machine-read results from owner-observed UI notes. It never retains raw logs, photos, meal names, tokens, JWS values, transaction identifiers, bearer headers, or API keys.
+
+Preparing or even passing this development-signed canary does not close the positive sandbox-JWS real-device TestFlight gate. The exact 80-image/120-call benchmark, regenerated App Store distribution profile with production App Attest and HealthKit, signed archive/export, RevenueCat offering verification, App Privacy/policy, localization, screenshots, and explicit TestFlight/distribution approval all remain open.
+
 ## Release Gates
 
 Complete in source and local verification:
@@ -190,7 +258,8 @@ Required before enabling users:
 - [ ] Freeze the exact 40 Nutrition5k, 30 SNAPMe, and 10 MFDS candidate before inference, then run exactly 120 calls: 80 primary plus two repeats for each of 20 locked holdouts.
 - [ ] Pass every automatic quality gate: structured success at least 98%; calorie WAPE at most 25%; calorie median APE at most 20%; calorie bias from -10% through +10%; each macro WAPE at most 30%; calorie pass rate at least 70%; each macro pass rate at least 65%; source calorie WAPE at most 35%; and median holdout spread at most 10% calories and 5 g per macro.
 - [ ] Complete qualitative review with at least 72 of 80 acceptable dominant-food interpretations and zero severe or uneditable failures. Any failed gate requires a newly frozen candidate and a complete 120-call rerun.
-- [ ] Create and review the least-privilege RevenueCat API v2 secret, verify the live default offering/entitlement/product mappings, and validate sandbox purchase, cancellation/pending, and restore behavior without a reviewer bypass.
+- [ ] Provision and metadata-verify `cyclebalance-app-store-iap-private-key` through the owner-only hidden `.p8` handoff; keep the principal-HMAC secret pinned at version `1` and do not re-prompt or rotate existing Gemini or RevenueCat secrets.
+- [ ] Verify the existing least-privilege RevenueCat API v2 secret, live default offering/entitlement/product mappings, and sandbox purchase, cancellation/pending, and restore behavior without a reviewer bypass.
 - [ ] Enable App Attest on the Apple App ID and regenerate the App Store distribution profile. The current profile has HealthKit and `get-task-allow=false` but lacks the production App Attest entitlement.
 - [ ] Archive/export the exact candidate, confirm both required architectures, dSYM, privacy manifest, codesign/profile, production entitlements, and an exported-IPA credential scan.
 - [ ] Capture six clean `1290 x 2796` screenshots per store localization from the exact submitted archive and finish the localized App Store metadata review.
