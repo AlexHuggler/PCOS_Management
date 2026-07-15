@@ -1,0 +1,15 @@
+{
+  "object": "list",
+  "items": [
+    {
+      "state": "active",
+      "object": "entitlement",
+      "project_id": "proj8da4e000",
+      "id": "entl_cyclebalance_unlimited",
+      "lookup_key": "CycleBalance Unlimited",
+      "display_name": "CycleBalance Unlimited"
+    }
+  ],
+  "next_page": null,
+  "url": "/v2/projects/proj8da4e000/entitlements"
+}

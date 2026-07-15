@@ -1,0 +1,19 @@
+{
+  "object": "list",
+  "items": [
+    {
+      "product": {
+        "state": "active",
+        "object": "product",
+        "id": "prod_cyclebalance_monthly",
+        "store_identifier": "cyclebalance.premium.monthly",
+        "type": "subscription",
+        "subscription": { "duration": "P1M" },
+        "app_id": "app_cyclebalance_ios"
+      },
+      "eligibility_criteria": "all"
+    }
+  ],
+  "next_page": null,
+  "url": "/v2/projects/proj8da4e000/packages/pkge_cyclebalance_monthly/products"
+}

@@ -254,6 +254,9 @@ export function createServer(overrides = {}) {
     overrides.principalSecret ??
     environment.MEAL_SCAN_PRINCIPAL_HMAC_SECRET ??
     (environment.NODE_ENV === "production" ? null : "cyclebalance-development-principal-secret");
+  const configuredCanaryCorrelationId = normalizedCanaryDigest(
+    environment.MEAL_SCAN_CANARY_CORRELATION_SHA256
+  );
 
   validateProductionMealScanConfiguration({
     environment,
@@ -339,7 +342,17 @@ export function createServer(overrides = {}) {
     let lease = null;
     let cacheInput = null;
     let cacheDisposition = null;
-    const scannerEvent = (fields) => emitIdentifierFreeScannerEvent(dependencies.logger, fields);
+    let canaryContext = null;
+    const scannerEvent = (fields) => emitIdentifierFreeScannerEvent(dependencies.logger, {
+      ...fields,
+      ...(canaryContext
+        ? {
+            canaryCorrelationId: canaryContext.correlationId,
+            canaryOperationTag: canaryContext.operationTag,
+            canaryQuotaTag: canaryContext.quotaTag,
+          }
+        : {}),
+    });
     const recordCacheDisposition = (disposition, outcome = "observed") => {
       cacheDisposition = disposition;
       scannerEvent({
@@ -378,6 +391,29 @@ export function createServer(overrides = {}) {
         return sendJSON(response, 404, { error: "not_found" });
       }
 
+      if (configuredCanaryCorrelationId) {
+        const canaryId = headerValue(request.headers["x-cyclebalance-canary-id"]);
+        const operationTag = headerValue(request.headers["x-cyclebalance-canary-operation"]);
+        const correlationId = canonicalCanaryId(canaryId)
+          ? sha256Hex(canaryId)
+          : null;
+        if (
+          correlationId !== configuredCanaryCorrelationId ||
+          !isSha256Hex(operationTag)
+        ) {
+          return sendJSON(response, 400, {
+            error: "invalid_request",
+            detail: "request correlation is invalid",
+          });
+        }
+        canaryContext = {
+          canaryId,
+          correlationId,
+          operationTag,
+          quotaTag: null,
+        };
+      }
+
       if (!scanEnabled) {
         return sendJSON(response, 503, {
           error: "meal_scan_unavailable",
@@ -387,6 +423,7 @@ export function createServer(overrides = {}) {
       }
 
       const integrityToken = headerValue(request.headers["x-firebase-appcheck"]);
+      let appCheckAccepted = false;
       if (requireAppCheck && !integrityToken) {
         scannerEvent({
           eventType: "authorization_rejection",
@@ -415,6 +452,7 @@ export function createServer(overrides = {}) {
             reason: integrityResult.reason ?? "integrity_failed",
           });
         }
+        appCheckAccepted = true;
       }
 
       const payload = await readJSONBody(request, maxBodyBytes);
@@ -429,6 +467,22 @@ export function createServer(overrides = {}) {
           });
         }
         return sendJSON(response, 400, { error: "invalid_request", detail: validation.detail });
+      }
+      if (
+        canaryContext &&
+        canaryContext.operationTag !== sha256Hex(payload.requestId.toLowerCase())
+      ) {
+        return sendJSON(response, 400, {
+          error: "invalid_request",
+          detail: "request correlation is invalid",
+        });
+      }
+      if (appCheckAccepted && canaryContext) {
+        scannerEvent({
+          eventType: "authorization_acceptance",
+          outcome: "accepted",
+          control: "app_check",
+        });
       }
 
       if (!requireAppCheck) {
@@ -445,6 +499,13 @@ export function createServer(overrides = {}) {
           return sendJSON(response, 401, {
             error: "app_integrity_required",
             reason: integrityResult.reason ?? "integrity_failed",
+          });
+        }
+        if (canaryContext) {
+          scannerEvent({
+            eventType: "authorization_acceptance",
+            outcome: "accepted",
+            control: "app_check",
           });
         }
       }
@@ -586,12 +647,22 @@ export function createServer(overrides = {}) {
           reason: transactionAccess.reason,
         });
       }
+      if (canaryContext) {
+        scannerEvent({
+          eventType: "authorization_acceptance",
+          outcome: "accepted",
+          control: "storekit_jws",
+        });
+      }
 
       const principal = derivePurchasePrincipal({
         originalTransactionId: transaction.originalTransactionId,
         environment: transaction.environment,
         secret: principalSecret,
       });
+      if (canaryContext) {
+        canaryContext.quotaTag = sha256Hex(`${canaryContext.canaryId}|${principal}`);
+      }
 
       let principalAttempt;
       try {
@@ -693,6 +764,13 @@ export function createServer(overrides = {}) {
         }
         authoritativeTier = currentAccess.tier;
         currentVerifiedTransaction = currentAccess.transaction;
+        if (canaryContext) {
+          scannerEvent({
+            eventType: "authorization_acceptance",
+            outcome: "accepted",
+            control: "apple_current_status",
+          });
+        }
       } else if (
         environment.NODE_ENV === "production" ||
         dependencies.revenueCatSubscriptionVerifier
@@ -774,6 +852,13 @@ export function createServer(overrides = {}) {
           return sendJSON(response, retryable ? 503 : 403, retryable
             ? { error: "meal_scan_unavailable", reason, retryable: true }
             : { error: "premium_entitlement_required", reason });
+        }
+        if (canaryContext) {
+          scannerEvent({
+            eventType: "authorization_acceptance",
+            outcome: "accepted",
+            control: "revenuecat_subscription",
+          });
         }
       } else if (environment.NODE_ENV === "production") {
         scannerEvent({
@@ -1036,6 +1121,7 @@ export function createServer(overrides = {}) {
       }
 
       let quota;
+      let freshQuotaConsumed = false;
       try {
         if (usesAtomicQuotaReservation) {
           const reservation = await dependencies.idempotencyStore.claimAndConsumeQuota({
@@ -1098,6 +1184,7 @@ export function createServer(overrides = {}) {
           } else {
             idempotencyContext = reservation;
             quota = reservation.quota;
+            freshQuotaConsumed = reservation.acquired === true;
             scannerEvent({
               eventType: "global_dispatch_decision",
               outcome: "allowed",
@@ -1105,6 +1192,7 @@ export function createServer(overrides = {}) {
           }
         } else {
           quota = await dependencies.quotaStore.checkAndConsume(quotaInput);
+          freshQuotaConsumed = quota?.allowed === true;
         }
       } catch (error) {
         scannerEvent({
@@ -1146,6 +1234,7 @@ export function createServer(overrides = {}) {
         quotaUsed: quota.used,
         quotaLimit: quota.limit,
         quotaRemaining: quota.remaining ?? quota.remainingToday,
+        quotaDelta: canaryContext && freshQuotaConsumed ? 1 : null,
       });
       if (cacheDisposition === null) recordCacheDisposition("fresh_dispatch");
 
@@ -2209,6 +2298,13 @@ function identifierFreeScannerEvent(fields = {}) {
   ]) {
     if (fields[field] != null) event[field] = safeScannerDimension(fields[field], "other");
   }
+  for (const field of [
+    "canaryCorrelationId",
+    "canaryOperationTag",
+    "canaryQuotaTag",
+  ]) {
+    if (isSha256Hex(fields[field])) event[field] = fields[field];
+  }
   if (fields.reason != null) event.reason = safeScannerReason(fields.reason);
   for (const field of [
     "statusCode",
@@ -2225,6 +2321,7 @@ function identifierFreeScannerEvent(fields = {}) {
     const value = numberOrNull(fields[field]);
     if (value !== null && value >= 0) event[field] = value;
   }
+  if (fields.quotaDelta === 1) event.quotaDelta = 1;
   return event;
 }
 
@@ -3509,6 +3606,27 @@ function roundCurrency(value) {
 
 function headerValue(value) {
   return Array.isArray(value) ? value[0] : typeof value === "string" ? value : undefined;
+}
+
+function normalizedCanaryDigest(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (!isSha256Hex(value)) {
+    throw new Error("MEAL_SCAN_CANARY_CORRELATION_SHA256 must be a SHA-256 hex digest");
+  }
+  return value.toLowerCase();
+}
+
+function canonicalCanaryId(value) {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
+}
+
+function isSha256Hex(value) {
+  return typeof value === "string" && /^[a-f0-9]{64}$/i.test(value);
+}
+
+function sha256Hex(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
 }
 
 function validatePayload(payload, { maxImageBytes = MAX_DECODED_IMAGE_BYTES } = {}) {

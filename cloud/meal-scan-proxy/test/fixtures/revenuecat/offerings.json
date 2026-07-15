@@ -1,0 +1,25 @@
+{
+  "object": "list",
+  "items": [
+    {
+      "state": "active",
+      "object": "offering",
+      "id": "ofrng_cyclebalance_default",
+      "lookup_key": "default",
+      "display_name": "CycleBalance subscriptions",
+      "is_current": true,
+      "project_id": "proj8da4e000"
+    },
+    {
+      "state": "archived",
+      "object": "offering",
+      "id": "ofrng_archived",
+      "lookup_key": "legacy",
+      "display_name": "Legacy",
+      "is_current": false,
+      "project_id": "proj8da4e000"
+    }
+  ],
+  "next_page": null,
+  "url": "/v2/projects/proj8da4e000/offerings"
+}

@@ -56,24 +56,6 @@ function withJsonFixture(value, callback) {
   }
 }
 
-function safeEvidence(overrides = {}) {
-  return {
-    requestCompleted: 0,
-    providerStarted: 0,
-    providerCompleted: 0,
-    quotaAllowed: 0,
-    cacheFreshDispatch: 0,
-    cacheServerHit: 0,
-    appCheckRejections: 0,
-    storeKitRejections: 0,
-    revenueCatRejections: 0,
-    prohibitedContentDetected: false,
-    rollingQuotaDigestBefore: "before-digest",
-    rollingQuotaDigestAfter: "before-digest",
-    ...overrides,
-  };
-}
-
 test("positive canary defaults to a complete non-mutating dry run", () => {
   assert.equal(scriptExists, true, `missing ${scriptPath}`);
   assert.notEqual(statSync(scriptPath).mode & 0o111, 0, "positive canary script must be executable");
@@ -265,7 +247,9 @@ test("rollback is armed before public enablement and verifies the final private 
       : scriptSource.length
   );
   assert.match(finalVerification, /MEAL_SCAN_ENABLED/);
-  assert.match(finalVerification, /allUsers/);
+  assert.match(finalVerification, /iam_policy_is_private/);
+  assert.match(scriptSource, /allUsers/);
+  assert.match(scriptSource, /allAuthenticatedUsers/);
   assert.match(finalVerification, /private_invoker_gate_rejects_status/);
   assert.match(finalVerification, /503/);
   assert.match(finalVerification, /feature_disabled/);
@@ -296,7 +280,9 @@ test("prohibited log content is rejected and retained evidence is redacted and r
   }
 
   assert.doesNotMatch(scriptSource, /set -x/);
-  assert.doesNotMatch(scriptSource, /secrets versions access|secrets.*access.*--secret/i);
+  assert.match(scriptSource, /secrets versions access "\$REVENUECAT_SECRET_VERSION"/);
+  assert.match(scriptSource, /verify-revenuecat-offering-v2\.sh/);
+  assert.doesNotMatch(scriptSource, /secrets versions access[^\n]*(gemini|principal|apple)/i);
   assert.doesNotMatch(scriptSource, /auth_config/);
   assert.match(scriptSource, /--config -/);
   assert.match(scriptSource, /chmod 0700/);
@@ -318,20 +304,27 @@ test("prohibited log content is rejected and retained evidence is redacted and r
 });
 
 test("machine evidence arithmetic distinguishes exact local reuse from Scan as New", () => {
-  withJsonFixture(safeEvidence(), (fixturePath) => {
+  withJsonFixture({ phase: "exact-reuse", eventCount: 0, quotaUnchanged: true }, (fixturePath) => {
     const result = callSourcedFunction(`verify_phase_evidence exact-reuse "${fixturePath}"`);
     assert.equal(result.status, 0, result.stderr);
   });
 
   withJsonFixture(
-    safeEvidence({
+    {
+      phase: "scan-as-new",
       requestCompleted: 1,
       providerStarted: 1,
       providerCompleted: 1,
-      quotaAllowed: 1,
+      quotaDelta: 1,
       cacheFreshDispatch: 1,
-      rollingQuotaDigestAfter: "after-digest",
-    }),
+      authorizationControls: [
+        "app_check",
+        "storekit_jws",
+        "apple_current_status",
+        "revenuecat_subscription",
+      ],
+      canaryQuotaTag: "a".repeat(64),
+    },
     (fixturePath) => {
       const result = callSourcedFunction(`verify_phase_evidence scan-as-new "${fixturePath}"`);
       assert.equal(result.status, 0, result.stderr);
@@ -339,18 +332,18 @@ test("machine evidence arithmetic distinguishes exact local reuse from Scan as N
   );
 
   const unsafeFixtures = [
-    ["exact-reuse", safeEvidence({ providerStarted: 1 })],
-    ["exact-reuse", safeEvidence({ rollingQuotaDigestAfter: "changed" })],
-    ["scan-as-new", safeEvidence({ requestCompleted: 1, providerStarted: 0 })],
-    ["scan-as-new", safeEvidence({
+    ["exact-reuse", { phase: "exact-reuse", eventCount: 1, quotaUnchanged: true }],
+    ["exact-reuse", { phase: "exact-reuse", eventCount: 0, quotaUnchanged: false }],
+    ["scan-as-new", {
+      phase: "scan-as-new",
       requestCompleted: 1,
-      providerStarted: 1,
+      providerStarted: 0,
       providerCompleted: 1,
-      quotaAllowed: 1,
+      quotaDelta: 1,
       cacheFreshDispatch: 1,
-      appCheckRejections: 1,
-      rollingQuotaDigestAfter: "after-digest",
-    })],
+      authorizationControls: ["app_check"],
+      canaryQuotaTag: "a".repeat(64),
+    }],
   ];
   for (const [phase, fixture] of unsafeFixtures) {
     withJsonFixture(fixture, (fixturePath) => {
@@ -414,5 +407,180 @@ test("setup and readiness docs stage dry-run and approval-gated live commands wi
     assert.match(source, /80-image\/120-call/i);
     assert.match(source, /distribution profile/i);
     assert.match(source, /remains open|still open|does not close/i);
+  }
+});
+
+test("seed receipt enforces the buffered 24-hour rescan boundary", () => {
+  withJsonFixture(
+    { schemaVersion: 1, lifecycle: "seed_rolled_back", rescanNotBeforeEpoch: 1_000 },
+    (fixturePath) => {
+      const early = callSourcedFunction(`receipt_rescan_is_due "${fixturePath}" 999`);
+      assert.notEqual(early.status, 0);
+      const due = callSourcedFunction(`receipt_rescan_is_due "${fixturePath}" 1000`);
+      assert.equal(due.status, 0, due.stderr);
+    }
+  );
+  assert.match(scriptSource, /CANARY_RECEIPT_PATH/);
+  assert.match(scriptSource, /RESCAN_INGESTION_SKEW_BUFFER_SECONDS="600"/);
+  assert.match(scriptSource, /chmod 0700/);
+  assert.match(scriptSource, /chmod 0600/);
+});
+
+test("Cloud Run policy checks reject both public principals and a disabled invoker IAM check", () => {
+  for (const member of ["allUsers", "allAuthenticatedUsers"]) {
+    withJsonFixture(
+      { bindings: [{ role: "roles/run.invoker", members: [member] }] },
+      (fixturePath) => {
+        const result = callSourcedFunction(`iam_policy_is_private "${fixturePath}"`);
+        assert.notEqual(result.status, 0, `${member} was accepted`);
+      }
+    );
+  }
+  withJsonFixture(
+    { bindings: [{ role: "roles/run.invoker", members: ["serviceAccount:proxy@example.test"] }] },
+    (fixturePath) => {
+      const result = callSourcedFunction(`iam_policy_is_private "${fixturePath}"`);
+      assert.equal(result.status, 0, result.stderr);
+    }
+  );
+
+  for (const [annotation, accepted] of [["true", false], ["false", true], [undefined, true]]) {
+    withJsonFixture(
+      annotation === undefined ? { metadata: { annotations: {} } } : {
+        metadata: { annotations: { "run.googleapis.com/invoker-iam-disabled": annotation } },
+      },
+      (fixturePath) => {
+        const result = callSourcedFunction(`invoker_iam_check_is_enabled "${fixturePath}"`);
+        assert.equal(result.status === 0, accepted, `${annotation}: ${result.stderr}`);
+      }
+    );
+  }
+});
+
+test("live source, signing, device, deploy, and evidence gates are pinned and fail closed", () => {
+  assert.match(scriptSource, /APPROVED_SOURCE_COMMIT/);
+  assert.match(scriptSource, /git status --porcelain --untracked-files=all/);
+  assert.match(scriptSource, /codesign --verify --deep --strict --verbose=4/);
+  assert.match(scriptSource, /ProvisionedDevices/);
+  assert.match(scriptSource, /TeamIdentifier/);
+  assert.match(scriptSource, /application-identifier/);
+  assert.match(scriptSource, /XCODE_DEVICE_UDID/);
+  assert.match(scriptSource, /CoreDevice.*Xcode|Xcode.*CoreDevice/i);
+  assert.match(scriptSource, /DEPLOY_MODE=canary/);
+  assert.match(scriptSource, /MEAL_SCAN_CANARY_CORRELATION_SHA256/);
+  assert.match(scriptSource, /positive-canary-evidence\.mjs/);
+  assert.doesNotMatch(scriptSource, /rolling_quota_digest\(\)/);
+});
+
+test("two-window lifecycle keeps the canary installed after seed and restores only after rescan", () => {
+  const mainFunction = scriptSource.slice(scriptSource.indexOf("main() {"));
+  assert.match(mainFunction, /case "\$CANARY_PHASE"/);
+  assert.match(mainFunction, /load_seed_receipt/);
+  assert.match(scriptSource, /verify_dormant_window_continuity/);
+  assert.match(scriptSource, /manual restore required/i);
+  assert.match(scriptSource, /initially absent/i);
+
+  const rollbackFunction = scriptSource.slice(
+    scriptSource.indexOf("rollback() {"),
+    scriptSource.indexOf("\nmain() {", scriptSource.indexOf("rollback() {"))
+  );
+  assert.match(rollbackFunction, /finalize_device_lifecycle/);
+  assert.doesNotMatch(rollbackFunction, /restore_original_app_absence/);
+});
+
+test("command-shim state machine restores cloud and IAM on failures, signals, and rollback errors", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "cyclebalance-rollback-state-machine-"));
+  const commandLog = path.join(directory, "commands.log");
+  const harness = `
+source "$1"
+TEMP_ROOT="$2/temp"
+mkdir -p "$TEMP_ROOT"
+COMMAND_LOG="$3"
+EVIDENCE_DIR=""
+EVIDENCE_SUMMARY=""
+ROLLBACK_ARMED=true
+ROLLBACK_COMPLETE=false
+CANARY_PHASE=seed
+CANARY_APP_INSTALL_STARTED=false
+RESTORE_RESULT=0
+deploy_disabled_private() { printf 'deploy-disabled\n' >> "$COMMAND_LOG"; return 0; }
+restore_initial_iam_policy() { printf 'restore-iam\n' >> "$COMMAND_LOG"; return "$RESTORE_RESULT"; }
+verify_final_disabled_private() { printf 'verify-final\n' >> "$COMMAND_LOG"; return 0; }
+finalize_device_lifecycle() { printf 'finalize-device:%s\n' "$1" >> "$COMMAND_LOG"; return 0; }
+cleanup_temp() { :; }
+set +e
+case "$4" in
+  failure) false; rollback ;;
+  signal) trap rollback TERM; kill -TERM $$ ;;
+  restore-error) RESTORE_RESULT=1; rollback ;;
+esac
+`;
+  try {
+    for (const [scenario, expectedStatus] of [["failure", 1], ["signal", 0], ["restore-error", 1]]) {
+      writeFileSync(commandLog, "");
+      const result = spawnSync(
+        "bash",
+        ["-c", harness, "rollback-test", scriptPath, directory, commandLog, scenario],
+        { cwd: repositoryRoot, encoding: "utf8" }
+      );
+      assert.equal(result.status, expectedStatus, `${scenario}: ${result.stderr}`);
+      const calls = readFileSync(commandLog, "utf8");
+      assert.match(calls, /deploy-disabled/);
+      assert.match(calls, /restore-iam/);
+      if (scenario === "restore-error") assert.doesNotMatch(calls, /verify-final/);
+      else assert.match(calls, /verify-final/);
+      assert.match(calls, /finalize-device/);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("final rescan lifecycle covers both initially absent and initially present app states", () => {
+  for (const [initialState, expectedStatus, expectedLifecycle] of [
+    ["absent", 0, "removed"],
+    ["present", 1, "manual_restore_required"],
+  ]) {
+    const directory = mkdtempSync(path.join(tmpdir(), `cyclebalance-final-${initialState}-`));
+    const home = path.join(directory, "home");
+    mkdirSync(home);
+    const harness = `
+source "$1"
+mkdir -p "$CANARY_RECEIPT_ROOT"
+chmod 0700 "$CANARY_RECEIPT_ROOT"
+printf '{"lifecycle":"seed_rolled_back"}\n' > "$CANARY_RECEIPT_PATH"
+chmod 0600 "$CANARY_RECEIPT_PATH"
+CANARY_PHASE=rescan
+CANARY_RUN_COMPLETED=true
+ROLLBACK_COMPLETE=true
+ORIGINAL_APP_VERSION=1.0.4
+ORIGINAL_APP_BUILD=17
+ORIGINAL_APP_SIGNING_STATE=distribution_or_store
+ORIGINAL_APP_DATA_BACKUP_PATH="$HOME/backup"
+EVIDENCE_SUMMARY=""
+if [[ "$2" == "absent" ]]; then APP_WAS_INSTALLED=false; else APP_WAS_INSTALLED=true; fi
+uninstall_and_verify_initial_absence() { printf 'uninstalled-and-verified\n'; return 0; }
+set +e
+finalize_device_lifecycle 0
+exit $?
+`;
+    try {
+      const result = spawnSync(
+        "bash",
+        ["-c", harness, "lifecycle-test", scriptPath, initialState],
+        { cwd: repositoryRoot, encoding: "utf8", env: { ...process.env, HOME: home } }
+      );
+      assert.equal(result.status, expectedStatus, `${initialState}: ${result.stderr}`);
+      const receiptPath = path.join(home, "Library/Application Support/CycleBalance/PositiveCanary/seed-receipt.json");
+      if (expectedLifecycle === "removed") {
+        assert.match(result.stdout, /uninstalled-and-verified/);
+        assert.equal(existsSync(receiptPath), false);
+      } else {
+        assert.equal(JSON.parse(readFileSync(receiptPath, "utf8")).lifecycle, expectedLifecycle);
+        assert.match(result.stderr, /MANUAL RESTORE REQUIRED/);
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   }
 });

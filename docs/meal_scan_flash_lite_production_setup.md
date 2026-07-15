@@ -95,7 +95,7 @@ Only these server secrets belong in Secret Manager:
 - `cyclebalance-app-store-iap-private-key`
 - `cyclebalance-revenuecat-secret-api-key`
 
-The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The principal-HMAC secret was created safely as version `1` without exposing its value. The remaining provisioning handoff is the App Store IAP `.p8` resource `cyclebalance-app-store-iap-private-key`; the positive canary below verifies its metadata but never reads its value. Do not rerun bootstrap or re-prompt, rotate, or replace the existing Gemini and RevenueCat secrets as part of that handoff. The RevenueCat API v2 key must have only `customer_information:subscriptions:read`. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
+The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The principal-HMAC secret was created safely as version `1` without exposing its value. The remaining provisioning handoff is the App Store IAP `.p8` resource `cyclebalance-app-store-iap-private-key`; the dedicated provisioner below inspects metadata before any key-file access, permits only a zero-version to enabled-version-`1` transition, refuses `v2`, and reads back exact proxy-service-account-only `secretAccessor` IAM. Do not rerun bootstrap or re-prompt, rotate, or replace the existing Gemini and RevenueCat secrets as part of that handoff. The least-privilege RevenueCat API v2 key needs read access for the server subscription corroboration and the offering, package, product, and entitlement configuration endpoints verified below. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
 
 The app never sends a cloneable RevenueCat app-user ID to the proxy. The server verifies Apple's signed transaction and current status first, then passes only the Apple-verified transaction ID and environment to RevenueCat as secondary corroboration. The quota principal is an HMAC of the Apple original transaction ID; raw JWS values are never stored or logged.
 
@@ -184,28 +184,23 @@ DRY_RUN=true cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
 
 Do not run this handoff without separate owner approval. It provisions only the missing App Store IAP private-key resource. It must not access, re-prompt, rotate, or replace the existing Gemini, RevenueCat, or principal-HMAC secrets. The principal-HMAC version remains pinned at `1`.
 
-Use a hidden local path prompt so the `.p8` value never appears in chat, command arguments, environment variables, shell history, or terminal output:
+First inspect the dedicated non-mutating plan:
 
 ```sh
-(
-  set -euo pipefail
-  umask 077
-  read -rsp "Absolute path to the owner-controlled App Store IAP .p8 file: " APPLE_IAP_P8_PATH
-  printf '\n'
-  test -f "$APPLE_IAP_P8_PATH"
-  gcloud secrets describe cyclebalance-app-store-iap-private-key \
-    --project cyclebalance-prod-20260710 >/dev/null 2>&1 || \
-    gcloud secrets create cyclebalance-app-store-iap-private-key \
-      --project cyclebalance-prod-20260710 \
-      --replication-policy automatic
-  gcloud secrets versions add cyclebalance-app-store-iap-private-key \
-    --project cyclebalance-prod-20260710 \
-    --data-file "$APPLE_IAP_P8_PATH"
-  unset APPLE_IAP_P8_PATH
-)
+DRY_RUN=true cloud/meal-scan-proxy/scripts/provision-apple-iap-key-v1.sh
 ```
 
-Before the owner-approved live canary, independently verify the newly created version is numeric and `ENABLED`. The harness expects version `1`; it uses metadata-only `describe` calls and never `versions access`. The matching App Store IAP key ID and issuer ID are entered only through hidden interactive prompts during the live preflight and are never written to the evidence summary.
+Only when the metadata review shows zero existing versions, use the exact approval and hidden `.p8` path prompt printed by that script:
+
+```sh
+DRY_RUN=false \
+CONFIRM_APPLE_IAP_P8_V1=I_APPROVE_CREATE_APPLE_IAP_P8_SECRET_VERSION_1 \
+cloud/meal-scan-proxy/scripts/provision-apple-iap-key-v1.sh
+```
+
+Any enabled, disabled, or destroyed existing version aborts before key-file access or mutation. The matching App Store IAP key ID and issuer ID are entered only through hidden interactive prompts during live canary preflight and are never written to the evidence summary.
+
+The live canary also pipes the pinned RevenueCat secret version directly from Secret Manager into `verify-revenuecat-offering-v2.sh`; the key is memory-only and is not placed in arguments, environment variables, files, or output. That read-only verifier fails closed unless the active current offering is `default`, its exact packages/products are monthly `P1M` and annual `P1Y`, and the active `CycleBalance Unlimited` entitlement has both exact products attached.
 
 Only after the owner approves the temporary public App Check-protected endpoint, physically controls the unlocked phone, and confirms the provisioning handoff is complete may they run the seed window:
 
@@ -213,11 +208,12 @@ Only after the owner approves the temporary public App Check-protected endpoint,
 cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-1.0.5-rc"
 DRY_RUN=false \
 CANARY_PHASE=seed \
+APPROVED_SOURCE_COMMIT="PASTE_REVIEWED_FULL_40_CHARACTER_COMMIT_HERE" \
 CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY=I_APPROVE_GENERAL_KENOBI_POSITIVE_CANARY_WITH_TEMPORARY_PUBLIC_CLOUD_RUN \
 cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
 ```
 
-The seed window verifies one fresh scan plus exact local reuse, then rolls back. Do not leave the endpoint public while waiting for the 24-hour structured-result cache to expire. After more than 24 hours, obtain fresh owner approval and run the rescan window, which uses the locally saved repeat photo and requires `Scan as New` to add exactly one quota/provider operation:
+The seed window verifies one fresh scan plus exact local reuse, restores the exact pre-mutation Cloud Run IAM policy, rolls back disabled/private, and writes a mode-`0600` content-free receipt only after rollback succeeds. The development-signed canary remains installed so its local repeat state survives. The receipt blocks rescan until the 24-hour cache TTL plus a 10-minute ingestion/skew buffer has elapsed. Do not uninstall the canary or leave the endpoint public while waiting. After the receipt becomes eligible, obtain fresh owner approval and run the rescan window, which verifies the same installed version/build/signing state and requires `Scan as New` to add exactly one correlated quota/provider operation:
 
 ```sh
 cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebalance-1.0.5-rc"
@@ -227,13 +223,29 @@ CONFIRM_GENERAL_KENOBI_POSITIVE_CANARY=I_APPROVE_GENERAL_KENOBI_POSITIVE_CANARY_
 cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
 ```
 
-The live path builds—not archives or exports—a development-signed Release canary while overriding only `MEAL_SCAN_RELEASE_UI_ENABLED=YES` and `MEAL_SCAN_RELEASE_GEMINI_ENABLED=YES`. Mock data, debug-direct transport, fallback-model routing, and visual similarity remain `NO`. The product must read back the pinned bundle/endpoint, both signed gates enabled, production App Attest, `get-task-allow=true`, `ProvisionedDevices`, and an Apple Development signer; App Store/TestFlight distribution provisioning fails this canary build gate.
+The live seed path builds—not archives or exports—a development-signed Release canary while overriding only `MEAL_SCAN_RELEASE_UI_ENABLED=YES` and `MEAL_SCAN_RELEASE_GEMINI_ENABLED=YES`. Mock data, debug-direct transport, fallback-model routing, and visual similarity remain `NO`. The product must pass strict code-signature verification and read back the pinned bundle/endpoint, both signed gates enabled, production App Attest, `get-task-allow=true`, exact team/application identifiers, General Kenobi in `ProvisionedDevices`, and an Apple Development signer; App Store/TestFlight distribution provisioning fails this canary build gate. The rescan path does not rebuild or reinstall.
 
-Across the rollback-bounded seed and rescan windows, the owner performs the real sandbox purchase/entitlement, photo, per-upload Gemini consent, edit, save, exact reuse, Scan as New, relaunch, camera denial/recovery, offline/timeout/retry, entitlement loss, quota, kill-switch, barcode, and manual-fallback checks. Owner keystrokes are recorded only as unverified observations. Separately, bounded machine-read evidence must show the successful path reached App Check, Apple JWS/current status, RevenueCat corroboration, quota, cache, and one provider dispatch. Exact local reuse must add zero server/quota/provider activity. The later uncached Scan as New must add exactly one completed request, one quota decision, and one provider dispatch.
+Across the rollback-bounded seed and rescan windows, the owner performs the real sandbox purchase/entitlement, photo, per-upload Gemini consent, edit, save, exact reuse, Scan as New, relaunch, camera denial/recovery, offline/timeout/retry, entitlement loss, quota, kill-switch, barcode, and manual-fallback checks. Owner keystrokes are recorded only as unverified observations. Separately, a random development-only canary ID and SHA-256 operation tag correlate a strict field-allowlisted evidence stream. A successful fresh request must contain affirmative App Check, StoreKit JWS, current Apple status, and RevenueCat controls, one exact correlated quota delta, one fresh cache dispatch, and one provider start/completion. Exact local reuse must emit zero correlated events of every outcome and leave the exact correlated quota snapshot unchanged.
 
-On every exit path the rollback trap redeploys disabled/private, then requires anonymous `403`/concealed `404` and authenticated `503 feature_disabled`. The permission-restricted evidence summary contains only bounded counts and explicitly separates machine-read results from owner-observed UI notes. It never retains raw logs, photos, meal names, tokens, JWS values, transaction identifiers, bearer headers, or API keys.
+On every exit path the rollback trap uses the canary-specific deploy mode (no global gcloud configuration mutation and no Firestore Rules deployment), redeploys disabled/private, restores and compares the canonical pre-mutation IAM policy, rejects both public principal classes, verifies the invoker IAM check, then requires anonymous `403`/concealed `404` and authenticated `503 feature_disabled`. Before rescan it also requires the same disabled revision/IAM digest and no matching Cloud Run service/IAM mutations in the bounded audit interval after the seed rollback; that is continuity evidence, not an absolute audit proof. The permission-restricted evidence summary contains only allowlisted content-free fields and explicitly separates machine-read results from owner-observed UI notes.
+
+After the final rescan, a device that was initially app-absent is uninstalled and verified absent. If CycleBalance was initially present, CoreDevice cannot export the original app binary; the harness therefore stops with an explicit manual-restore handoff, retaining the mode-`0600` receipt and protected app-data backup until the recorded original version/build/signing state is restored and verified.
 
 Preparing or even passing this development-signed canary does not close the positive sandbox-JWS real-device TestFlight gate. The exact 80-image/120-call benchmark, regenerated App Store distribution profile with production App Attest and HealthKit, signed archive/export, RevenueCat offering verification, App Privacy/policy, localization, screenshots, and explicit TestFlight/distribution approval all remain open.
+
+### Share campaign publication gate
+
+`APP_STORE_PROVIDER_TOKEN` is an optional, public numeric Apple provider token supplied through the target build configuration and expanded into the app `Info.plist`. It is attribution metadata, not a secret; do not reuse an API credential, team secret, or signing identifier. When this setting is absent, unresolved, nonnumeric, or otherwise invalid, the saved-meal share flow fails closed to the canonical `https://cyclebalance.app/meal-scan` link and does not emit a malformed App Store campaign URL.
+
+Before publishing or claiming attribution for the `meal_scan_share` campaign:
+
+- [ ] Obtain and independently verify the official numeric provider token for the CycleBalance App Store account.
+- [ ] Set `APP_STORE_PROVIDER_TOKEN` only in the approved build configuration, archive again, and read back the resolved numeric value from the archived app's signed `Info.plist`.
+- [ ] Confirm the shared URL contains the expected `pt`, `ct=meal_scan_share`, and `mt=8` values and resolves to the CycleBalance listing from a clean device.
+- [ ] Complete a real share from the post-save screen, cancel one share with no meal or navigation mutation, and verify an opted-in share contains only the fields shown in its preview.
+- [ ] Confirm the campaign is visible in the appropriate Apple attribution reporting before describing it as live or measured.
+
+Until every checkbox above is closed, the canonical web link is the publication-safe behavior and campaign attribution remains an open release concern.
 
 ## Release Gates
 

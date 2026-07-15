@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import SwiftData
 import StoreKit
@@ -492,6 +493,68 @@ struct GeminiRemoteMealScanConfiguration: Equatable, Sendable {
     }
 }
 
+struct MealScanCanaryCorrelation: Equatable, Sendable {
+    static let launchArgument = "--cyclebalance-meal-scan-canary-id"
+
+    let canaryID: UUID
+
+    var headerValue: String {
+        canaryID.uuidString.lowercased()
+    }
+
+    static func from(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        isDevelopmentSigned: Bool = Self.isDevelopmentSignedRuntime()
+    ) -> MealScanCanaryCorrelation? {
+        guard isDevelopmentSigned else { return nil }
+
+        let matchingIndexes = arguments.indices.filter { arguments[$0] == launchArgument }
+        guard matchingIndexes.count == 1,
+              let valueIndex = matchingIndexes.first.map({ arguments.index(after: $0) }),
+              arguments.indices.contains(valueIndex),
+              let canaryID = UUID(uuidString: arguments[valueIndex])
+        else {
+            return nil
+        }
+
+        return MealScanCanaryCorrelation(canaryID: canaryID)
+    }
+
+    func operationTag(for requestID: UUID) -> String {
+        Self.sha256Hex(requestID.uuidString.lowercased())
+    }
+
+    private static func isDevelopmentSignedRuntime() -> Bool {
+        guard let profileURL = Bundle.main.url(
+            forResource: "embedded",
+            withExtension: "mobileprovision"
+        ),
+              let profileData = try? Data(contentsOf: profileURL),
+              let plistStart = profileData.range(of: Data("<?xml".utf8)),
+              let plistEnd = profileData.range(
+                  of: Data("</plist>".utf8),
+                  options: .backwards
+              ),
+              plistStart.lowerBound < plistEnd.upperBound,
+              let profile = try? PropertyListSerialization.propertyList(
+                  from: profileData[plistStart.lowerBound..<plistEnd.upperBound],
+                  options: [],
+                  format: nil
+              ) as? [String: Any],
+              let entitlements = profile["Entitlements"] as? [String: Any]
+        else {
+            return false
+        }
+        return (entitlements["get-task-allow"] as? Bool) == true
+    }
+
+    private static func sha256Hex(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+    }
+}
+
 @MainActor
 final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
     static let maximumImageBytes = 1_500_000
@@ -499,10 +562,16 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
 
     private let endpointURL: URL
     private let urlSession: URLSession
+    private let canaryCorrelation: MealScanCanaryCorrelation?
 
-    init(endpointURL: URL, urlSession: URLSession = .shared) {
+    init(
+        endpointURL: URL,
+        urlSession: URLSession = .shared,
+        canaryCorrelation: MealScanCanaryCorrelation? = MealScanCanaryCorrelation.from()
+    ) {
         self.endpointURL = endpointURL
         self.urlSession = urlSession
+        self.canaryCorrelation = canaryCorrelation
     }
 
     func estimateMeal(request: RemoteMealScanRequest) async throws -> RemoteMealScanEstimate {
@@ -518,6 +587,20 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let firebaseAppCheckToken = request.firebaseAppCheckToken {
             urlRequest.setValue(firebaseAppCheckToken, forHTTPHeaderField: "X-Firebase-AppCheck")
+        }
+        let canaryOperationTag: String?
+        if let canaryCorrelation {
+            canaryOperationTag = canaryCorrelation.operationTag(for: request.requestID)
+            urlRequest.setValue(
+                canaryCorrelation.headerValue,
+                forHTTPHeaderField: "X-CycleBalance-Canary-ID"
+            )
+            urlRequest.setValue(
+                canaryOperationTag,
+                forHTTPHeaderField: "X-CycleBalance-Canary-Operation"
+            )
+        } else {
+            canaryOperationTag = nil
         }
 
         let payload = ProxyRequestPayload(
@@ -545,6 +628,9 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
         let data: Data
         let response: URLResponse
         do {
+            if let canaryOperationTag {
+                print("CYCLEBALANCE_CANARY_OPERATION tag=\(canaryOperationTag)")
+            }
             (data, response) = try await urlSession.data(for: urlRequest)
         } catch is CancellationError {
             throw CancellationError()

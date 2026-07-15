@@ -523,6 +523,139 @@ test("structured scanner events cover fresh dispatch without logging identifiers
   assert.deepEqual(findForbiddenKeys(scannerEvents, forbiddenKeys), []);
 });
 
+test("canary mode emits affirmative correlated authorization and operation evidence", async () => {
+  const events = [];
+  const canaryId = "90b2ac63-e61f-49e1-a8b0-a5e85f154d4c";
+  const canaryCorrelationId = crypto.createHash("sha256").update(canaryId).digest("hex");
+  const canaryOperationTag = crypto
+    .createHash("sha256")
+    .update(hardenedPayload.requestId.toLowerCase())
+    .digest("hex");
+  const currentTransaction = activeStoreKitTransaction({
+    transactionId: "1000000999999999",
+  });
+  const server = createHardenedServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "true",
+      APPLE_BUNDLE_ID: "alex.PCOS",
+      APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+      MEAL_SCAN_CANARY_CORRELATION_SHA256: canaryCorrelationId,
+    },
+    requireAppCheck: true,
+    verifyAppIntegrity: async () => ({ allowed: true }),
+    currentSubscriptionChecker: {
+      check: async () => ({ allowed: true, tier: "paid", transaction: currentTransaction }),
+    },
+    revenueCatSubscriptionVerifier: { check: async () => ({ allowed: true }) },
+    idempotencyStore: {
+      inspect: async () => ({ state: "missing", acquired: false }),
+      claimAndConsumeQuota: async ({ requestId, requestHash, quota }) => ({
+        requestId,
+        requestHash,
+        documentId: "idempotency-document",
+        claimId: "claim-id",
+        principal: quota.principal,
+        state: "pending",
+        acquired: true,
+        quota: rollingQuota(),
+      }),
+      complete: async () => {},
+      markUnknown: async () => {},
+      abandon: async () => {},
+    },
+    resultCache: { get: async () => null, set: async () => true },
+    logger: collectingLogger(events),
+  });
+
+  const response = await request(server, hardenedPayload, {
+    "x-firebase-appcheck": "limited-use-token",
+    "x-cyclebalance-canary-id": canaryId,
+    "x-cyclebalance-canary-operation": canaryOperationTag,
+  });
+  const scannerEvents = events
+    .filter((event) => event.name === "meal_scan_scanner_event")
+    .map((event) => event.metadata);
+
+  assert.equal(response.status, 200);
+  assert.ok(scannerEvents.length > 0);
+  assert.ok(scannerEvents.every((event) => event.canaryCorrelationId === canaryCorrelationId));
+  assert.ok(scannerEvents.every((event) => event.canaryOperationTag === canaryOperationTag));
+  assert.deepEqual(
+    scannerEvents
+      .filter((event) => event.eventType === "authorization_acceptance")
+      .map((event) => event.control),
+    ["app_check", "storekit_jws", "apple_current_status", "revenuecat_subscription"]
+  );
+  const quotaEvent = scannerEvents.find((event) => event.eventType === "quota_decision");
+  assert.equal(quotaEvent.quotaDelta, 1);
+  assert.match(quotaEvent.canaryQuotaTag, /^[a-f0-9]{64}$/);
+
+  const serialized = JSON.stringify(scannerEvents);
+  assert.equal(serialized.includes(canaryId), false, "raw canary nonce must not be logged");
+  assert.equal(serialized.includes(currentTransaction.transactionId), false);
+  assert.equal(serialized.includes(currentTransaction.originalTransactionId), false);
+});
+
+test("canary mode fails closed when the operation tag is not bound to requestId", async () => {
+  let providerCalls = 0;
+  const events = [];
+  const canaryId = "90b2ac63-e61f-49e1-a8b0-a5e85f154d4c";
+  const canaryCorrelationId = crypto.createHash("sha256").update(canaryId).digest("hex");
+  const server = createHardenedServer({
+    environment: {
+      NODE_ENV: "test",
+      MEAL_SCAN_ENABLED: "true",
+      APPLE_BUNDLE_ID: "alex.PCOS",
+      APPLE_ALLOWED_PRODUCT_IDS: "cyclebalance.premium.monthly,cyclebalance.premium.annual",
+      MEAL_SCAN_PRINCIPAL_HMAC_SECRET: "test-principal-secret-with-adequate-entropy",
+      MEAL_SCAN_CANARY_CORRELATION_SHA256: canaryCorrelationId,
+    },
+    requireAppCheck: true,
+    verifyAppIntegrity: async () => ({ allowed: true }),
+    callGemini: async () => {
+      providerCalls += 1;
+      return successGeminiResponse();
+    },
+    logger: collectingLogger(events),
+  });
+
+  const response = await request(server, hardenedPayload, {
+    "x-firebase-appcheck": "limited-use-token",
+    "x-cyclebalance-canary-id": canaryId,
+    "x-cyclebalance-canary-operation": "a".repeat(64),
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error, "invalid_request");
+  assert.equal(providerCalls, 0);
+  const correlatedResults = events.filter(
+    (event) =>
+      event.name === "meal_scan_scanner_event" &&
+      event.metadata.canaryCorrelationId === canaryCorrelationId &&
+      event.metadata.eventType === "request_result"
+  );
+  assert.equal(correlatedResults.length, 1);
+  assert.equal(correlatedResults[0].metadata.outcome, "rejected");
+});
+
+test("ordinary scanner requests never emit canary correlation or affirmative authorization events", async () => {
+  const events = [];
+  const server = createHardenedServer({ logger: collectingLogger(events) });
+  const response = await request(server, hardenedPayload);
+  const scannerEvents = events
+    .filter((event) => event.name === "meal_scan_scanner_event")
+    .map((event) => event.metadata);
+
+  assert.equal(response.status, 200);
+  assert.equal(scannerEvents.some((event) => event.eventType === "authorization_acceptance"), false);
+  assert.ok(scannerEvents.every((event) => !Object.hasOwn(event, "canaryCorrelationId")));
+  assert.ok(scannerEvents.every((event) => !Object.hasOwn(event, "canaryOperationTag")));
+  assert.ok(scannerEvents.every((event) => !Object.hasOwn(event, "canaryQuotaTag")));
+  assert.ok(scannerEvents.every((event) => !Object.hasOwn(event, "quotaDelta")));
+});
+
 test("structured scanner events sanitize App Check and StoreKit JWS rejection reasons", async (t) => {
   await t.test("App Check", async () => {
     const events = [];

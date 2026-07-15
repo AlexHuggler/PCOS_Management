@@ -743,6 +743,8 @@ struct GeminiMealScanTests {
         MockMealScanURLProtocol.handler = { request in
             #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-integrity") == nil)
             #expect(request.value(forHTTPHeaderField: "X-Firebase-AppCheck") == "limited-use-token")
+            #expect(request.value(forHTTPHeaderField: "X-CycleBalance-Canary-ID") == nil)
+            #expect(request.value(forHTTPHeaderField: "X-CycleBalance-Canary-Operation") == nil)
             #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-key-id") == nil)
             #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-attestation") == nil)
             #expect(request.value(forHTTPHeaderField: "x-cyclebalance-app-attest-assertion") == nil)
@@ -781,6 +783,76 @@ struct GeminiMealScanTests {
                 firebaseAppCheckToken: "limited-use-token"
             )
         )
+    }
+
+    @Test("canary launch nonce is accepted only for a development-signed runtime")
+    func canaryLaunchNonceRequiresDevelopmentSigning() throws {
+        let canaryID = UUID(uuidString: "90B2AC63-E61F-49E1-A8B0-A5E85F154D4C")!
+        let arguments = ["CycleBalance", MealScanCanaryCorrelation.launchArgument, canaryID.uuidString]
+
+        let accepted = MealScanCanaryCorrelation.from(
+            arguments: arguments,
+            isDevelopmentSigned: true
+        )
+        #expect(accepted?.canaryID == canaryID)
+        #expect(accepted?.headerValue == canaryID.uuidString.lowercased())
+
+        #expect(MealScanCanaryCorrelation.from(
+            arguments: arguments,
+            isDevelopmentSigned: false
+        ) == nil)
+        #expect(MealScanCanaryCorrelation.from(
+            arguments: ["CycleBalance", MealScanCanaryCorrelation.launchArgument, "not-a-uuid"],
+            isDevelopmentSigned: true
+        ) == nil)
+        #expect(MealScanCanaryCorrelation.from(
+            arguments: arguments + [MealScanCanaryCorrelation.launchArgument, canaryID.uuidString],
+            isDevelopmentSigned: true
+        ) == nil)
+    }
+
+    @Test("development canary sends content-free correlation and request operation headers")
+    func developmentCanarySendsCorrelationHeaders() async throws {
+        let canaryID = UUID(uuidString: "90B2AC63-E61F-49E1-A8B0-A5E85F154D4C")!
+        let requestID = UUID(uuidString: "4D99A795-D22C-4F50-BBBA-461DA7A4D94C")!
+        let correlation = MealScanCanaryCorrelation(canaryID: canaryID)
+        MockMealScanURLProtocol.handler = { request in
+            #expect(request.value(forHTTPHeaderField: "X-CycleBalance-Canary-ID") == canaryID.uuidString.lowercased())
+            #expect(
+                request.value(forHTTPHeaderField: "X-CycleBalance-Canary-Operation") ==
+                correlation.operationTag(for: requestID)
+            )
+            return (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data("""
+                {
+                  "modelId": "gemini-3.1-flash-lite",
+                  "quota": {
+                    "tier": "paid",
+                    "used": 1,
+                    "limit": 10,
+                    "remaining": 9,
+                    "windowSeconds": 86400,
+                    "resetAt": null,
+                    "retryAfterSeconds": null
+                  },
+                  "estimate": \(Self.simpleResponseJSON)
+                }
+                """.utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        _ = try await GeminiMealScanProxyClient(
+            endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+            urlSession: .mealScanTestSession(),
+            canaryCorrelation: correlation
+        ).estimateMeal(request: .testDefault(requestID: requestID))
     }
 
     @Test("proxy client throws user safe quota errors")

@@ -1,0 +1,25 @@
+{
+  "object": "list",
+  "items": [
+    {
+      "state": "active",
+      "object": "product",
+      "id": "prod_cyclebalance_monthly",
+      "store_identifier": "cyclebalance.premium.monthly",
+      "type": "subscription",
+      "subscription": { "duration": "P1M" },
+      "app_id": "app_cyclebalance_ios"
+    },
+    {
+      "state": "active",
+      "object": "product",
+      "id": "prod_cyclebalance_annual",
+      "store_identifier": "cyclebalance.premium.annual",
+      "type": "subscription",
+      "subscription": { "duration": "P1Y" },
+      "app_id": "app_cyclebalance_ios"
+    }
+  ],
+  "next_page": null,
+  "url": "/v2/projects/proj8da4e000/entitlements/entl_cyclebalance_unlimited/products"
+}

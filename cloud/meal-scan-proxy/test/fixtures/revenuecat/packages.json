@@ -1,0 +1,21 @@
+{
+  "object": "list",
+  "items": [
+    {
+      "object": "package",
+      "id": "pkge_cyclebalance_monthly",
+      "lookup_key": "monthly",
+      "display_name": "Monthly",
+      "position": 1
+    },
+    {
+      "object": "package",
+      "id": "pkge_cyclebalance_annual",
+      "lookup_key": "annual",
+      "display_name": "Annual",
+      "position": 2
+    }
+  ],
+  "next_page": null,
+  "url": "/v2/projects/proj8da4e000/offerings/ofrng_cyclebalance_default/packages"
+}
