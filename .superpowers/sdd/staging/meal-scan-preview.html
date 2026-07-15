@@ -64,13 +64,21 @@
       --sage: #627F7A;
       --sage-dark: #405C57;
       --sage-pale: #E8F0EC;
-      --coral: #E77C6A;
-      --coral-dark: #C55E4F;
+      --coral: #A13F35;
+      --coral-dark: #85352D;
       --coral-pale: #FBE8E2;
       --ink: #2D3B39;
-      --muted: #5A6B68;
-      --soft-muted: #778681;
-      --line: #D8D5CD;
+      --muted: #50635F;
+      --soft-muted: #5A6B68;
+      --line: #7D8985;
+      --dark-line: #778985;
+      --focus-inner: #FFFFFF;
+      --focus-outer: #7B2E28;
+      --chip-text: #9D4D41;
+      --text-on-dark: #E8EFED;
+      --muted-on-dark: #CBD5D2;
+      --accent-on-dark: #F4B8A9;
+      --footer-muted: #9FAEAA;
       --shadow: 0 26px 70px -48px rgba(45, 59, 57, 0.72);
       --radius-lg: 28px;
       --radius-md: 18px;
@@ -110,8 +118,9 @@
 
     a:focus-visible,
     summary:focus-visible {
-      outline: 3px solid var(--coral);
-      outline-offset: 4px;
+      outline: 3px solid var(--focus-inner);
+      outline-offset: 0;
+      box-shadow: 0 0 0 6px var(--focus-outer);
       border-radius: 6px;
     }
 
@@ -239,7 +248,7 @@
       gap: 8px;
       margin: 0 0 18px;
       padding: 8px 12px;
-      border: 1px solid rgba(98, 127, 122, 0.28);
+      border: 1px solid var(--line);
       border-radius: 999px;
       background: rgba(232, 240, 236, 0.8);
       color: var(--sage-dark);
@@ -296,7 +305,7 @@
     .demo-shell {
       position: relative;
       padding: 18px;
-      border: 1px solid rgba(98, 127, 122, 0.2);
+      border: 1px solid var(--line);
       border-radius: 40px;
       background: linear-gradient(145deg, rgba(255, 252, 248, 0.94), rgba(232, 240, 236, 0.88));
       box-shadow: var(--shadow);
@@ -315,7 +324,7 @@
 
     .demo-card {
       padding: 22px;
-      border: 1px solid rgba(98, 127, 122, 0.16);
+      border: 1px solid var(--line);
       border-radius: 28px;
       background: var(--paper-strong);
     }
@@ -396,7 +405,7 @@
       padding: 5px 8px;
       border-radius: 999px;
       background: var(--coral-pale);
-      color: #9D4D41;
+      color: var(--chip-text);
       font-size: 11px;
       font-weight: 800;
     }
@@ -410,7 +419,7 @@
 
     .message-band {
       padding: 26px 0;
-      border-block: 1px solid rgba(98, 127, 122, 0.2);
+      border-block: 1px solid var(--line);
       background: rgba(232, 240, 236, 0.64);
     }
 
@@ -531,7 +540,7 @@
 
     .disclosure {
       padding: 22px;
-      border: 1px solid rgba(98, 127, 122, 0.22);
+      border: 1px solid var(--line);
       border-radius: var(--radius-md);
       background: var(--paper);
     }
@@ -612,7 +621,7 @@
     .principle p {
       max-width: 760px;
       margin: 0;
-      color: #CBD5D2;
+      color: var(--muted-on-dark);
     }
 
     .principle-mark {
@@ -620,10 +629,10 @@
       width: 72px;
       height: 72px;
       place-items: center;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid var(--dark-line);
       border-radius: 22px;
       background: rgba(255, 255, 255, 0.07);
-      color: #F4B8A9;
+      color: var(--accent-on-dark);
       font-size: 32px;
       font-weight: 900;
     }
@@ -681,7 +690,7 @@
       gap: 32px;
       align-items: center;
       padding: clamp(34px, 6vw, 62px);
-      border: 1px solid rgba(98, 127, 122, 0.22);
+      border: 1px solid var(--line);
       border-radius: 34px;
       background: linear-gradient(135deg, var(--paper), var(--sage-pale));
       box-shadow: var(--shadow);
@@ -716,7 +725,7 @@
 
     .footer-tagline {
       margin: 14px 0 0;
-      color: #CBD5D2;
+      color: var(--muted-on-dark);
       font-size: 14px;
     }
 
@@ -731,21 +740,21 @@
     }
 
     .footer-links a {
-      color: #E8EFED;
+      color: var(--text-on-dark);
       font-size: 14px;
       font-weight: 700;
       text-decoration: none;
     }
 
     .footer-links a:hover {
-      color: #F4B8A9;
+      color: var(--accent-on-dark);
     }
 
     .footer-copy {
       margin-top: 38px;
       padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      color: #9FAEAA;
+      border-top: 1px solid var(--dark-line);
+      color: var(--footer-muted);
       font-size: 12px;
     }
 
@@ -972,7 +981,7 @@
         <div class="disclosure-list">
           <article class="disclosure">
             <strong>You choose before any fresh upload</strong>
-            <p>A fresh photo goes to Google Gemini only after explicit consent. Declining keeps you on local alternatives.</p>
+            <p>A fresh photo goes to Google Gemini only after explicit consent. Declining skips the photo estimate.</p>
           </article>
           <article class="disclosure">
             <strong>Provider retention has a clear limit</strong>
@@ -988,7 +997,7 @@
           </article>
           <article class="disclosure">
             <strong>You can skip the photo path</strong>
-            <p>Manual and barcode alternatives stay available, so a provider upload is never the only way to log a meal.</p>
+            <p>Manual entry and exact reviewed-meal reuse can stay on your device. Barcode lookup is a separate optional network request.</p>
           </article>
         </div>
       </div>
@@ -1011,7 +1020,7 @@
           <article class="alternative-card">
             <span class="alternative-icon" aria-hidden="true">▥</span>
             <h3>Scan a barcode</h3>
-            <p>Start from packaged-food information when a barcode is the more direct input.</p>
+            <p>Start from packaged-food information when a barcode is the more direct input. Barcode lookup can make its own network request; it does not send a meal photo.</p>
           </article>
           <article class="alternative-card">
             <span class="alternative-icon" aria-hidden="true">＋</span>
@@ -1052,7 +1061,7 @@
           </details>
           <details>
             <summary>Can I log without sending a photo?</summary>
-            <p>Yes. Exact local reuse, barcode input, and manual entry remain available.</p>
+            <p>Yes. Manual entry and exact reviewed-meal reuse can stay on your device. Barcode lookup is a separate optional network request and does not send a meal photo.</p>
           </details>
           <details>
             <summary>Where can I read the current policies?</summary>

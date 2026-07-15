@@ -4,7 +4,9 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 const DOCS = path.join(ROOT, 'docs');
+const MEAL_SCAN_PREVIEW = path.join(ROOT, '.superpowers/sdd/staging/meal-scan-preview.html');
 const SITE = 'https://cyclebalance.app';
+const REPORT_TIME_ZONE = 'America/Chicago';
 const LOCALES = ['en', 'de', 'fr', 'it', 'ja', 'ko', 'nl'];
 const LOCALE_PREFIXES = new Set(LOCALES.filter(locale => locale !== 'en'));
 
@@ -85,8 +87,159 @@ function requireText(source, label, required) {
 function forbidText(source, label, forbidden) {
   const normalized = source.toLowerCase();
   for (const value of forbidden) {
-    if (normalized.includes(value.toLowerCase())) fail(`${label}: forbidden claim present: ${value}`);
+    if (normalized.includes(value.toLowerCase())) fail(`${label}: forbidden text present: ${value}`);
   }
+}
+
+function normalizeClaimText(source) {
+  return source
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[‐‑‒–—]/g, '-')
+    .replace(/&nbsp;|&#160;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*-\s*/g, '-');
+}
+
+function forbidClaimPatterns(source, label) {
+  const normalized = normalizeClaimText(source);
+  const forbidden = [
+    ['diagnosis', /\bdiagnos(?:is|e[sd]?|tic)\b/],
+    ['treatment', /\btreat(?:ment|s|ed|ing)?\b/],
+    ['causal insight', /\bcausal\s+(?:insight|conclusion)s?\b/],
+    ['exact nutrition', /\bexact\s+nutrition(?:al)?\b/],
+    ['Zero Data Retention', /\bzero\s+data\s+retention\b/],
+    ['guaranteed accuracy', /\bguaranteed\s+accuracy\b/],
+    ['cycle-aware nutrition', /\bcycle-aware\s+nutrition\b/],
+    ['meal-balance score', /\bmeal-?balance\s+score\b/]
+  ];
+  for (const [name, pattern] of forbidden) {
+    if (pattern.test(normalized)) fail(`${label}: forbidden claim pattern present: ${name}`);
+  }
+}
+
+function reportDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: REPORT_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function argumentValue(name) {
+  const inline = process.argv.find(argument => argument.startsWith(`${name}=`));
+  if (inline) return inline.slice(name.length + 1);
+  const index = process.argv.indexOf(name);
+  if (index === -1) return null;
+  const value = process.argv[index + 1];
+  return value && !value.startsWith('--') ? value : '';
+}
+
+function validateCampaignLinkArgs() {
+  const optionNames = ['--campaign-link', '--approved-ct', '--approved-ppid'];
+  const evidenceFlags = ['--cpp-approved-visible', '--signed-out-storefront-verified'];
+  const requested = [...optionNames, ...evidenceFlags].some(name => (
+    process.argv.includes(name) || process.argv.some(argument => argument.startsWith(`${name}=`))
+  ));
+  if (!requested) return;
+
+  const rawLink = argumentValue('--campaign-link');
+  const approvedCt = argumentValue('--approved-ct');
+  const approvedPpid = argumentValue('--approved-ppid');
+  if (!rawLink) fail('Campaign Link: --campaign-link must contain the final Apple-generated CPP URL');
+  if (!approvedCt) fail('Campaign Link: --approved-ct must contain the stable owner-approved campaign token');
+  if (!approvedPpid) fail('Campaign Link: --approved-ppid must contain the final approved CPP destination ID');
+  for (const flag of evidenceFlags) {
+    if (!process.argv.includes(flag)) fail(`Campaign Link: ${flag} evidence flag is required`);
+  }
+  if (!rawLink) return;
+
+  let campaignLink;
+  try {
+    campaignLink = new URL(rawLink);
+  } catch {
+    fail('Campaign Link: --campaign-link is not a valid absolute URL');
+    return;
+  }
+  if (campaignLink.protocol !== 'https:' || campaignLink.hostname !== 'apps.apple.com') {
+    fail('Campaign Link: URL must use https://apps.apple.com');
+  }
+
+  const values = Object.fromEntries(['pt', 'ct', 'ppid'].map(name => [name, campaignLink.searchParams.getAll(name)]));
+  for (const [name, entries] of Object.entries(values)) {
+    if (entries.length !== 1 || !entries[0]) fail(`Campaign Link: URL must contain exactly one non-empty ${name} parameter`);
+  }
+  const [pt] = values.pt;
+  const [ct] = values.ct;
+  const [ppid] = values.ppid;
+  if (pt && !/^[0-9]+$/.test(pt)) fail('Campaign Link: pt must contain ASCII digits only');
+  if (ct && !/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(ct)) {
+    fail('Campaign Link: ct must be a stable non-empty token using letters, digits, period, underscore, or hyphen');
+  }
+  if (approvedCt && ct !== approvedCt) fail('Campaign Link: ct does not match --approved-ct');
+  if (approvedPpid && ppid !== approvedPpid) fail('Campaign Link: ppid does not match --approved-ppid');
+}
+
+function cssHexToken(source, token) {
+  const match = source.match(new RegExp(`--${token}:\\s*(#[0-9A-Fa-f]{6});`));
+  if (!match) {
+    fail(`Meal scan preview: missing CSS token --${token}`);
+    return null;
+  }
+  return match[1].toUpperCase();
+}
+
+function relativeLuminance(hex) {
+  const channels = hex.slice(1).match(/../g).map(value => parseInt(value, 16) / 255);
+  const linear = channels.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return (0.2126 * linear[0]) + (0.7152 * linear[1]) + (0.0722 * linear[2]);
+}
+
+function contrastRatio(foreground, background) {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+}
+
+function requireContrast(label, foreground, background, minimum) {
+  if (!foreground || !background) return;
+  const ratio = contrastRatio(foreground, background);
+  if (ratio < minimum) fail(`${label}: contrast ${ratio.toFixed(2)}:1 is below ${minimum}:1 (${foreground} on ${background})`);
+}
+
+function validateMealScanContrast(page) {
+  const tokens = Object.fromEntries([
+    'cream', 'paper', 'paper-strong', 'sage-dark', 'sage-pale', 'coral', 'coral-dark',
+    'coral-pale', 'ink', 'muted', 'soft-muted', 'line', 'dark-line', 'focus-inner',
+    'focus-outer', 'chip-text', 'text-on-dark', 'muted-on-dark', 'accent-on-dark',
+    'footer-muted'
+  ].map(token => [token, cssHexToken(page, token)]));
+
+  requireText(page, 'Meal scan preview focus styles', [
+    'outline: 3px solid var(--focus-inner);',
+    'box-shadow: 0 0 0 6px var(--focus-outer);'
+  ]);
+  requireContrast('Primary button text', '#FFFFFF', tokens.coral, 4.5);
+  requireContrast('Accent text on cream', tokens['coral-dark'], tokens.cream, 4.5);
+  requireContrast('Accent text on paper', tokens['coral-dark'], tokens.paper, 4.5);
+  for (const background of [tokens.cream, tokens.paper, tokens['paper-strong']]) {
+    requireContrast('Muted text', tokens.muted, background, 4.5);
+    requireContrast('Small muted text', tokens['soft-muted'], background, 4.5);
+    requireContrast('Interface border', tokens.line, background, 3);
+    requireContrast('Outer focus indicator', tokens['focus-outer'], background, 3);
+  }
+  requireContrast('Sage text on sage surface', tokens['sage-dark'], tokens['sage-pale'], 4.5);
+  requireContrast('Edit chip text', tokens['chip-text'], tokens['coral-pale'], 4.5);
+  requireContrast('Dark-surface interface border', tokens['dark-line'], tokens.ink, 3);
+  requireContrast('Text on dark surface', tokens['text-on-dark'], tokens.ink, 4.5);
+  requireContrast('Muted text on dark surface', tokens['muted-on-dark'], tokens.ink, 4.5);
+  requireContrast('Accent text on dark surface', tokens['accent-on-dark'], tokens.ink, 4.5);
+  requireContrast('Footer muted text', tokens['footer-muted'], tokens.ink, 4.5);
+  requireContrast('White text on dark surface', '#FFFFFF', tokens.ink, 4.5);
+  requireContrast('Inner focus indicator on dark surface', tokens['focus-inner'], tokens.ink, 3);
 }
 
 async function readRequiredArtifact(file, label) {
@@ -98,9 +251,13 @@ async function readRequiredArtifact(file, label) {
 }
 
 async function validateMealScanLaunch() {
-  const page = await readRequiredArtifact(path.join(DOCS, 'meal-scan.html'), 'Meal scan page');
+  const deployedPage = path.join(DOCS, 'meal-scan.html');
+  if (await exists(deployedPage)) fail('Merge safety: staged meal scan preview must not exist under deployed docs/meal-scan.html');
+
+  let page = await readRequiredArtifact(MEAL_SCAN_PREVIEW, 'Non-public meal scan preview');
+  if (!page && await exists(deployedPage)) page = await fs.readFile(deployedPage, 'utf8');
   if (page) {
-    requireText(page, 'Meal scan page', [
+    requireText(page, 'Meal scan preview', [
       '<title>Meal Scan Preview — CycleBalance</title>',
       '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
       '<link rel="canonical" href="https://cyclebalance.app/meal-scan">',
@@ -127,7 +284,9 @@ async function validateMealScanLaunch() {
       'abuse monitoring',
       'The CycleBalance proxy does not retain raw image bytes',
       'Exact reviewed-meal reuse can remain on your device',
-      'Manual and barcode alternatives stay available',
+      'Declining skips the photo estimate.',
+      'Manual entry and exact reviewed-meal reuse can stay on your device.',
+      'Barcode lookup is a separate optional network request.',
       'Coming after release verification',
       '<a class="skip-link" href="#main-content">',
       '<main id="main-content">',
@@ -139,17 +298,16 @@ async function validateMealScanLaunch() {
       'href="https://apps.apple.com/us/app/cyclebalance/id6760353511"',
       'src="/assets/images/site/cyclebalance-app-icon-96.png"'
     ]);
-    forbidText(page, 'Meal scan page', [
-      'diagnosis',
-      'treatment',
-      'causal insight',
-      'exact nutrition',
-      'Zero Data Retention',
-      'guaranteed accuracy',
-      'cycle-aware nutrition',
-      'meal-balance score',
-      'meal balance score'
-    ]);
+    forbidText(page, 'Meal scan preview', ['Declining keeps you on local alternatives']);
+    forbidClaimPatterns(page, 'Meal scan preview');
+    validateMealScanContrast(page);
+
+    const internalAttrs = [...page.matchAll(/\s(?:href|src)="([^"]+)"/g)];
+    for (const [, raw] of internalAttrs) {
+      const internal = normalizeInternal(raw);
+      if (!internal || internal === '/meal-scan') continue;
+      if (!await exists(sitePathToFile(internal))) fail(`Meal scan preview: internal reference missing ${internal}`);
+    }
   }
 
   const social = await readRequiredArtifact(
@@ -174,6 +332,8 @@ async function validateMealScanLaunch() {
   if (launchDelta) {
     requireText(launchDelta, 'Launch-delta handoff', [
       'This is a staging document, not a live policy edit.',
+      'The preview remains outside the deployed `docs` tree at `.superpowers/sdd/staging/meal-scan-preview.html`.',
+      'A separate publication commit may move it to `docs/meal-scan.html` and add `/meal-scan` discovery only after every release gate is approved.',
       '## Current live-state correction — verified July 14, 2026',
       'Privacy Policy and Terms were updated July 12 with detailed Photo Estimate, Google Gemini, cache, and quota language.',
       'The live Support FAQ currently has one privacy FAQ that names Google Gemini.',
@@ -197,16 +357,31 @@ async function validateMealScanLaunch() {
       'Apple Campaign Link',
       'Custom Product Page',
       '`symptoms-food-glucose`',
+      'Publication-time owner inputs: Apple provider token (`pt`) and final approved Custom Product Page ID (`ppid`); do not hardcode or invent either value.',
+      '`pt`: non-empty ASCII digits only',
+      '`ct`: stable, non-empty approved campaign token',
+      '`ppid`: non-empty and exactly equal to the approved destination',
+      '`symptoms-food-glucose` is Approved and publicly visible',
+      '`--campaign-link`',
+      '`--approved-ct`',
+      '`--approved-ppid`',
+      '`--cpp-approved-visible`',
+      '`--signed-out-storefront-verified`',
+      'signed-out device',
+      'target storefront',
       'optional scanner page',
       'Do not invent current performance results or unverified platform algorithm claims.'
     ]);
+    if (/https:\/\/apps\.apple\.com\/[^\s`]+[?&](?:pt|ppid)=/i.test(launchDelta)) {
+      fail('Launch-delta handoff: publication-time pt/ppid values must not be hardcoded in staging');
+    }
   }
 
   const sitemap = await fs.readFile(path.join(DOCS, 'sitemap.xml'), 'utf8');
-  requireText(sitemap, 'Sitemap', ['<loc>https://cyclebalance.app/meal-scan</loc>']);
+  forbidText(sitemap, 'Deployed sitemap', ['<loc>https://cyclebalance.app/meal-scan</loc>']);
 
   const llms = await fs.readFile(path.join(DOCS, 'llms.txt'), 'utf8');
-  requireText(llms, 'llms.txt', ['- Meal scan staged preview: https://cyclebalance.app/meal-scan']);
+  forbidText(llms, 'Deployed llms.txt', ['https://cyclebalance.app/meal-scan']);
 }
 
 async function validateSitemap() {
@@ -334,7 +509,7 @@ async function writeReport() {
     '# CycleBalance Validation Report',
     '',
     `Status: ${status}`,
-    `Generated: 2026-05-07`,
+    `Generated: ${reportDate()}`,
     '',
     '## Counts',
     `- HTML files checked: ${stats.htmlFiles}`,
@@ -356,6 +531,7 @@ async function writeReport() {
 }
 
 async function main() {
+  validateCampaignLinkArgs();
   await validateMealScanLaunch();
   await validateSitemap();
   await validateBlogManifest();

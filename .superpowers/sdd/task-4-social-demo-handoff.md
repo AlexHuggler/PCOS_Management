@@ -19,7 +19,7 @@ Format: 9:16 master, center-safe for 1:1 and 4:5 crops, captions burned in, soun
 | Time | Beat | Picture | On-screen copy | Production note |
 |---|---|---|---|---|
 | 0:00–0:03 | Photo | A synthetic plate fixture beside the CycleBalance photo chooser. No personal gallery thumbnails or metadata. | `Start with a photo.` | Do not show the camera roll, a person's face, a date, a location, or a real health record. |
-| 0:03–0:06 | Consent | The full Google Gemini consent disclosure before any upload action. The tap lands on the affirmative action only after the disclosure is readable. | `You choose before anything is sent.` | Do not accelerate or crop away provider/retention language. Keep the decline/manual route visible. |
+| 0:03–0:06 | Consent | The full Google Gemini consent disclosure before any upload action. The tap lands on the affirmative action only after the disclosure is readable. | `You choose before anything is sent.` | Do not accelerate or crop away provider/retention language. Keep decline, on-device manual/exact reuse, and the separate optional network-barcode route visible. |
 | 0:06–0:11 | Correct | The editable draft changes: one food name is corrected, a portion is adjusted, and an unseen dressing is added. | `Review it. Correct it. Make it yours.` | Corrections are normal product behavior, not a failure montage or an accuracy comparison. |
 | 0:11–0:15 | Save | The reviewed draft is saved locally; an optional context/check-in affordance appears. | `Save only what you reviewed.` | End card: `Meal context, not meal judgment.` plus `Staged preview · coming after release verification`. |
 

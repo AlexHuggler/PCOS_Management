@@ -1,159 +1,107 @@
 # CycleBalance Meal-Scan Marketing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** implement test-first and keep the preview non-public until every release and publication gate is approved.
 
-**Goal:** Stage an honest, accessible `/meal-scan` landing page and synchronized launch materials without publishing or implying that photo meal scanning is currently live.
+**Goal:** Stage an honest, WCAG AA meal-scan preview and synchronized launch materials without publishing, deploying, or implying that photo meal scanning is live.
 
-**Architecture:** Extend the existing dependency-free Node site validator so the launch contract is executable, then add one static English HTML page and two non-public Markdown handoffs under `.superpowers/sdd`. Reuse existing CycleBalance colors, typography, app icon, navigation, footer links, and App Store URL; add the page to sitemap and `llms.txt` discovery only as staged source content.
+**Architecture:** Keep the preview at `.superpowers/sdd/staging/meal-scan-preview.html`, outside the GitHub Pages `docs` tree. Extend the dependency-free Node validator so it proves merge safety, page content, color contrast, claims, consent/alternative wording, handoff completeness, and an owner-supplied Apple Campaign Link contract. A later, separate publication commit may move the page to `docs/meal-scan.html` and add `/meal-scan` discovery only after all gates pass.
 
 **Tech Stack:** Static HTML/CSS, Node.js built-ins, Markdown, existing `tools/validate-site.mjs` checks.
 
-## Global Constraints
+## Global constraints
 
 - Work only on `codex/cyclebalance-meal-scan-marketing` in the designated worktree.
-- Do not publish, push, deploy, alter App Store Connect, or send outreach.
-- Preserve the user-owned dirty `PCOS_Management_website_hero_video` worktree.
+- Do not publish, push, deploy, edit App Store Connect, or send outreach.
+- Preserve unrelated worktrees and user changes.
+- Keep `docs/meal-scan.html` absent and keep `/meal-scan` out of `docs/sitemap.xml` and `docs/llms.txt` until a separate approved publication commit.
 - Approved lines are exactly `Start with a photo. Stay in control.`, `Meal context, not meal judgment.`, and `From plate to pattern-ready record.`
 - Scanner posture is staged/coming after release verification, never publicly live.
-- Do not claim diagnosis, treatment, causal insight, exact nutrition, Zero Data Retention, guaranteed accuracy, `cycle-aware nutrition`, or a meal-balance score.
-- Paid quota is 10 fresh scans per rolling 24 hours with immutable max 15; trial/sandbox quota is 5 per rolling 24 hours and 25 lifetime.
-- Exact cache, barcode, and manual paths are non-billable.
+- Do not claim diagnosis, treatment, causal insight/conclusion, exact nutrition, Zero Data Retention, guaranteed accuracy, `cycle-aware nutrition`, or a meal-balance score, including punctuation/case variants.
+- All text contrast is at least 4.5:1; focus indicators and essential interface boundaries are at least 3:1.
+- Declining skips the photo estimate. Manual entry and exact reviewed-meal reuse can remain on-device; barcode lookup is a separate optional network request and does not send the meal photo.
+- Paid quota is 10 fresh scans per rolling 24 hours with immutable max 15; trial/sandbox quota is 5 per rolling 24 hours and 25 lifetime. Exact cache, barcode, and manual paths are non-billable.
+- Apple provider token (`pt`) and final Custom Product Page ID (`ppid`) are publication-time owner inputs. Never invent or hardcode them.
 
 ---
 
-### Task 1: Executable launch contract
+### Task 1: Encode the review requirements and prove RED
 
 **Files:**
 - Modify: `tools/validate-site.mjs`
 - Test: `node tools/validate-site.mjs`
 
 **Interfaces:**
-- Consumes: repository root, `docs/meal-scan.html`, `.superpowers/sdd/task-4-social-demo-handoff.md`, `.superpowers/sdd/task-4-launch-delta-handoff.md`, `docs/sitemap.xml`, and `docs/llms.txt`.
-- Produces: `validateMealScanLaunch()` failures through the validator's existing `fail(message)` accumulator.
+- Consumes the non-public preview, both Task 4 handoffs, deployed discovery files, current date, and optional publication-time Campaign Link arguments.
+- Produces deterministic failures through the existing validator accumulator and refreshes `docs/VALIDATION-REPORT.md`.
 
-- [x] **Step 1: Add deterministic content assertions before production files exist**
-
-Add helpers with these signatures and behavior:
-
-```js
-function requireText(source, label, required) {
-  for (const value of required) {
-    if (!source.includes(value)) fail(`${label}: missing required text: ${value}`);
-  }
-}
-
-function forbidText(source, label, forbidden) {
-  const normalized = source.toLowerCase();
-  for (const value of forbidden) {
-    if (normalized.includes(value.toLowerCase())) fail(`${label}: forbidden claim present: ${value}`);
-  }
-}
-```
-
-Implement `validateMealScanLaunch()` so missing artifacts fail independently, the HTML contract checks title/canonical/social URL, approved messages, Photo → Google Gemini consent → editable draft → correction → local save → context, 55-day provider retention, proxy raw-byte non-retention, on-device exact reuse, manual/barcode alternatives, release-verification posture, App Store/support/privacy/terms links and the existing app-icon asset. Reject the exact prohibited marketing phrases. Validate all four organic concepts, the synthetic-fixture label rule, the seven synchronized policy/store surfaces, both quota tiers, non-billable paths, Campaign Link, Custom Product Page, `symptoms-food-glucose`, and optional scanner page instructions in the handoffs. Require `/meal-scan` in sitemap and `llms.txt`.
-
-- [x] **Step 2: Run RED and confirm the contract fails for missing deliverables**
-
-Run: `node tools/validate-site.mjs`
-
-Expected: exit 1 with missing `docs/meal-scan.html`, social/demo handoff, and launch-delta handoff failures.
+- [x] Require the preview under `.superpowers/sdd/staging` and fail if `docs/meal-scan.html` or deployed `/meal-scan` discovery exists.
+- [x] Normalize forbidden-claim matching across case, whitespace, and dash variants.
+- [x] Compute WCAG contrast from required CSS hex tokens and assert 4.5:1 text plus 3:1 interface/focus minimums.
+- [x] Require truthful local/manual/reuse versus optional network-barcode wording and reject the old decline statement.
+- [x] Require a current America/Chicago report date rather than a fixed date.
+- [x] Require the publication contract: numeric non-empty `pt`; stable non-empty owner-approved `ct`; non-empty `ppid` equal to the approved destination; Approved/publicly-visible `symptoms-food-glucose`; and signed-out target-storefront verification.
+- [x] Run RED before production corrections. Observed: `Validation FAIL: 34 errors, 0 warnings`.
 
 ---
 
-### Task 2: Staged page and handoffs
+### Task 2: Correct merge safety, accessibility, consent copy, and handoffs
 
 **Files:**
-- Create: `docs/meal-scan.html`
-- Create: `.superpowers/sdd/task-4-social-demo-handoff.md`
-- Create: `.superpowers/sdd/task-4-launch-delta-handoff.md`
+- Move: `docs/meal-scan.html` → `.superpowers/sdd/staging/meal-scan-preview.html`
+- Modify: `.superpowers/sdd/staging/meal-scan-preview.html`
 - Modify: `docs/sitemap.xml`
 - Modify: `docs/llms.txt`
-- Test: `node tools/validate-site.mjs`
+- Modify: `.superpowers/sdd/task-4-social-demo-handoff.md`
+- Modify: `.superpowers/sdd/task-4-launch-delta-handoff.md`
 
 **Interfaces:**
-- Consumes: the Task 1 content contract and existing `/assets/images/site/cyclebalance-app-icon-96.png`, root-page navigation/footer conventions, and App Store URL.
-- Produces: canonical English page `https://cyclebalance.app/meal-scan` and review-only launch artifacts.
+- Produces a reviewable non-public preview and synchronized owner handoffs, not a deployed route.
+- Preserves future canonical/social metadata for publication review without making the route discoverable now.
 
-- [x] **Step 1: Build the accessible static page**
-
-Use semantic `header`, `nav`, `main`, ordered process content, disclosure section, alternatives section, FAQ, and `footer`; include a skip link, visible focus styles, reduced-motion behavior, responsive grid breakpoints, and the existing app icon. The hero copy is:
-
-```html
-<p class="eyebrow">Staged preview · Coming after release verification</p>
-<h1>Start with a photo. <span>Stay in control.</span></h1>
-<p class="hero-copy">Turn a meal photo into an editable starting draft, review every detail, and decide what belongs in your local record.</p>
-```
-
-The flow must visibly enumerate Photo, Consent, Correct, Save, and Context. The trust disclosure must say that consent is explicit before sending a fresh upload to Google Gemini; Google may retain fresh uploads for up to 55 days for abuse monitoring; the CycleBalance proxy does not retain raw image bytes; exact reviewed-meal reuse can remain on device; and barcode/manual logging remain available.
-
-- [x] **Step 2: Write the privacy-safe 15-second social/demo handoff**
-
-Use four timed beats—Photo, Consent, Correct, Save—and all four approved organic concept titles. Require the exact on-frame label `Demonstration using synthetic meal details — not a testimonial or accuracy result.` and prohibit raw personal health data, usernames, dates, symptoms, glucose, cycle phase, metadata-bearing photos, testimonials, and accuracy evidence.
-
-- [x] **Step 3: Write one synchronized launch-delta handoff**
-
-Use one release gate and one owner/status table covering Privacy Policy, Terms, Support FAQ, App Privacy, review notes, live website copy, and App Store copy. Include the exact quota values and non-billable paths. Stage Campaign Link routing to the existing `symptoms-food-glucose` Custom Product Page, with a scanner-specific page only after approved assets/copy and release verification; make clear that no performance or platform-algorithm claims are available.
-
-Current-state correction: Privacy Policy and Terms already received detailed Photo Estimate/Gemini/cache/quota language on July 12, so mark them verify/reconcile; expand the single Gemini privacy answer currently in Support FAQ; and treat the homepage FAQ's unqualified on-device-only statement plus the App Store description's `No accounts required, no cloud uploads, no ads.` line as confirmed contradictions to resolve in the synchronized launch set.
-
-- [x] **Step 4: Add page discovery records**
-
-Add this sitemap entry before the blog index and a matching key-page line in `llms.txt`:
-
-```xml
-<url>
-  <loc>https://cyclebalance.app/meal-scan</loc>
-  <lastmod>2026-07-14</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.7</priority>
-</url>
-```
-
-- [x] **Step 5: Run GREEN**
-
-Run: `node tools/validate-site.mjs`
-
-Expected: `Validation PASS: 0 errors, 0 warnings` and updated report counts that include the new HTML page and URL.
+- [x] Move the preview out of `docs` and remove `/meal-scan` from sitemap and LLM discovery.
+- [x] Replace low-contrast coral, muted, boundary, and focus colors with deterministic AA tokens.
+- [x] Distinguish on-device manual/exact reuse from separate optional network barcode lookup everywhere the alternatives are explained.
+- [x] Keep the consent-first Photo → Consent → Correct → Save → Context flow, explicit provider/retention/proxy disclosures, approved messages, synthetic-demo label, semantic structure, and reduced-motion behavior.
+- [x] Update the launch handoff with the non-public publication boundary and final Campaign Link contract. Keep `pt` and `ppid` owner-supplied at publication time.
+- [x] Update the social/demo handoff so the decline and fallback route is described accurately.
+- [x] Run intermediate GREEN. Observed: `Validation PASS: 0 errors, 0 warnings`.
 
 ---
 
-### Task 3: Verification, review, report, and commits
+### Task 3: Exercise the Campaign Link validator
 
 **Files:**
-- Create: `.superpowers/sdd/task-4-report.md`
-- Review: all Task 1 and Task 2 files
+- Modify: `tools/validate-site.mjs`
+- Modify: `.superpowers/sdd/task-4-launch-delta-handoff.md`
 
-**Interfaces:**
-- Consumes: complete staged artifacts and fresh command output.
-- Produces: implementation commit, evidence report, report commit, and compact status contract.
+- [x] Add optional CLI inputs `--campaign-link`, `--approved-ct`, and `--approved-ppid`, plus evidence flags `--cpp-approved-visible` and `--signed-out-storefront-verified`.
+- [x] Reject non-HTTPS/non-Apple URLs, missing or duplicate required query values, nonnumeric `pt`, unstable/empty `ct`, mismatched approved `ct`, mismatched `ppid`, and missing evidence flags.
+- [x] Run a synthetic invalid fixture. Observed: `Validation FAIL: 6 errors, 0 warnings`.
+- [x] Run a synthetic valid fixture with all evidence flags. Observed: `Validation PASS: 0 errors, 0 warnings`.
+- [x] Keep synthetic fixtures out of source defaults and treat the real URL, provider token, and final destination ID as owner-supplied publication inputs.
 
-- [x] **Step 1: Run full local checks**
+---
 
-Run:
+### Task 4: Full verification, report, and correction commit
 
-```bash
-node --check tools/validate-site.mjs
-node tools/validate-site.mjs
-git diff --check
-```
+**Files:**
+- Modify: `.superpowers/sdd/task-4-report.md`
+- Review: all corrected Task 4 files
 
-Expected: all exit 0; validator reports zero errors and warnings.
+- [x] Re-run rendered browser QA at desktop and mobile widths, including page identity, DOM, console, focus/navigation interaction, overflow, and screenshots.
+- [x] Run `node --check tools/validate-site.mjs`, base validation, external-reference validation, XML parsing, forbidden-claim search, `git diff --check`, and App Store CTA check.
+- [x] Confirm `docs/meal-scan.html` is absent and `/meal-scan` is absent from deployed discovery.
+- [ ] Record reviewer disposition, exact RED/GREEN evidence, contrast ratios, current counts/date, rendered QA, publication inputs, blockers, and concerns in `.superpowers/sdd/task-4-report.md`.
+- [ ] Commit the isolated corrections locally. Do not push, publish, or deploy.
+- [ ] Re-run validation on committed HEAD and report the new hash.
 
-- [x] **Step 2: Self-review exact requirements and scope**
+---
 
-Inspect `git diff --stat`, `git diff`, `git status --short`, and verify that no file outside the designated worktree changed. Search the page for prohibited phrases and confirm the feature is consistently described as staged.
+### Separate future publication commit — not authorized here
 
-- [x] **Step 3: Commit implementation**
+Only after release verification, synchronized owner approvals, an Approved/publicly-visible destination CPP, owner-supplied final Apple values, and signed-out target-storefront verification may a separate commit:
 
-```bash
-git add tools/validate-site.mjs docs/meal-scan.html docs/sitemap.xml docs/llms.txt docs/VALIDATION-REPORT.md .superpowers/sdd/task-4-plan.md .superpowers/sdd/task-4-social-demo-handoff.md .superpowers/sdd/task-4-launch-delta-handoff.md
-git commit -m "feat: stage meal scan launch materials"
-```
-
-- [x] **Step 4: Write and commit the report**
-
-Record files, exact RED/GREEN commands and outputs, final verification commands/results, implementation commit, scope self-review, and any concerns in `.superpowers/sdd/task-4-report.md`, then commit it with `docs: add meal scan marketing task report`.
-
-- [x] **Step 5: Verify committed state**
-
-Run `node tools/validate-site.mjs && git status --short --branch && git log -2 --oneline` and return only status, current commit hash, one-line validation summary, and concerns.
+1. move `.superpowers/sdd/staging/meal-scan-preview.html` to `docs/meal-scan.html`;
+2. add `https://cyclebalance.app/meal-scan` to `docs/sitemap.xml` and `docs/llms.txt`;
+3. update staged availability language to the approved live wording; and
+4. rerun the full validator with the actual Campaign Link inputs and evidence flags.
