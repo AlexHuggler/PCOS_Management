@@ -140,10 +140,18 @@ test("RevenueCat configuration verification defaults to a non-networking dry run
     assert.match(result.stdout, /default/);
     assert.match(result.stdout, /monthly.*annual/i);
     assert.match(result.stdout, /CycleBalance Unlimited/);
+    const scopeGuidance = result.stdout
+      .split("\n")
+      .find((line) => line.startsWith("Required shared-key read-only scopes:"));
     assert.match(
-      result.stdout,
-      /Subscriptions.*Offerings.*Packages.*Products.*Entitlements/i,
+      scopeGuidance ?? "",
+      /Subscriptions.*Offerings.*Packages.*Entitlements/i,
       "dry-run scope guidance must list the complete shared-key read-only contract"
+    );
+    assert.doesNotMatch(
+      scopeGuidance ?? "",
+      /Products/i,
+      "the verifier does not use a direct product endpoint or product expansion"
     );
     assert.equal(existsSync(commandLog) ? readFileSync(commandLog, "utf8") : "", "");
   } finally {

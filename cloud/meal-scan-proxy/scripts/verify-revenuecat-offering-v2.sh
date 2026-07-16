@@ -310,7 +310,7 @@ print_dry_run() {
     "- the active current offering has lookup_key default" \
     "- the offering contains exact $EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY and $EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY packages" \
     "- those packages and the active CycleBalance Unlimited entitlement contain both exact CycleBalance iOS products" \
-    "Required shared-key read-only scopes: Subscriptions, Offerings, Packages, Products, Entitlements; no write access."
+    "Required shared-key read-only scopes: Subscriptions, Offerings, Packages, Entitlements; no write access."
 }
 
 main() {

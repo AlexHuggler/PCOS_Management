@@ -16,6 +16,7 @@ Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unuse
 - [ ] Regenerate or verify the App Store distribution profile against the frozen archive. The embedded profile must include production App Attest and HealthKit entitlements with `get-task-allow=false`; the current profile evidence is not sufficient to clear this gate.
 - [ ] Freeze and pass the exact 80-image/120-call paid benchmark. Visual similarity remains out of scope and disabled for this release; it must not block exact local cache reuse or weaken the scanner benchmark.
 - [x] Verify RevenueCat Secret Manager version/IAM, read-only API v2 scopes, current `default`, `$rc_monthly` / `$rc_annual`, exact CycleBalance iOS products, and active `CycleBalance Unlimited` attachments through memory-only readback.
+- [ ] Remove the redundant RevenueCat `Products: Read only` permission after explicit owner approval; retain read-only `Subscriptions`, `Offerings`, `Packages`, and `Entitlements`, then rerun the live verifier.
 - [ ] Validate localized pricing, sandbox purchase, cancellation/pending, restore, and receipt synchronization on the exact candidate build.
 
 ## App Review Notes
@@ -95,6 +96,7 @@ The live privacy policy and terms must state all of the following before submiss
 - [x] Preserve the 24-hour result cache and durable HMAC-keyed trial/sandbox lifetime ledger required to enforce the 25-lifetime maximum.
 - [ ] Enter the approved App Privacy answers and updated reviewer notes in App Store Connect.
 - [x] Verify RevenueCat API v2 project `proj8da4e000`, current `default`, `$rc_monthly` / `$rc_annual`, CycleBalance iOS app `appca3539a96a`, exact monthly/annual product mappings, active `CycleBalance Unlimited`, protected Secret Manager version/IAM, and read-only `Subscriptions` / `Offerings` / `Packages` / `Products` / `Entitlements` scopes. RevenueCat remains secondary; it is not the quota principal or tier authority.
+- [ ] Remove redundant read-only `Products` permission after owner approval and reconfirm the configuration with only `Subscriptions` / `Offerings` / `Packages` / `Entitlements` read access.
 - [ ] Validate localized products/pricing, sandbox purchase, cancellation/pending, restore, and receipt synchronization against the exact candidate archive.
 - [ ] Publish and verify the live privacy-policy and terms changes.
 - [ ] Upload the approved screenshot set and submit only after the physical-device and quality gates pass.
