@@ -579,7 +579,11 @@ test("canonical Release flags remain NO and are hashed before and after the cana
     "MEAL_SCAN_RELEASE_FALLBACK_MODEL_ENABLED",
     "MEAL_SCAN_RELEASE_SIMILARITY_ENABLED",
   ]) {
-    assert.match(projectSource, new RegExp(`${key}: ["']?NO["']?`));
+    const declarations = [
+      ...projectSource.matchAll(new RegExp(`^[ \\t]+${key}:[ \\t]*(.*)[ \\t]*$`, "gm")),
+    ];
+    assert.equal(declarations.length, 1, `${key} must have exactly one canonical declaration`);
+    assert.match(declarations[0][1].trim(), /^["']?NO["']?$/, `${key} canonical declaration must remain NO`);
   }
   assert.match(scriptSource, /assert_canonical_release_flags/);
   assert.match(scriptSource, /PROJECT_YML_SHA_BEFORE/);
@@ -1839,8 +1843,20 @@ test("scanner canary Xcode configuration is isolated from canonical Release", ()
     ["MEAL_SCAN_RELEASE_SIMILARITY_ENABLED", "NO"],
   ]);
   for (const [key, expected] of expectedCanaryFlags) {
-    assert.match(scannerCanaryConfigSource, new RegExp(`^${key} = ${expected}$`, "m"));
-    const declarations = projectSource.match(new RegExp(`^\\s+${key}: ["']?NO["']?$`, "gm")) ?? [];
-    assert.equal(declarations.length, 1, `${key} must remain one canonical NO declaration`);
+    const canaryAssignments = [
+      ...scannerCanaryConfigSource.matchAll(new RegExp(`^[ \\t]*${key}[ \\t]*=[ \\t]*(.*)[ \\t]*$`, "gm")),
+    ];
+    assert.equal(canaryAssignments.length, 1, `${key} must have exactly one canary assignment`);
+    assert.equal(canaryAssignments[0][1].trim(), expected, `${key} canary assignment is unsafe`);
+
+    const canonicalDeclarations = [
+      ...projectSource.matchAll(new RegExp(`^[ \\t]+${key}:[ \\t]*(.*)[ \\t]*$`, "gm")),
+    ];
+    assert.equal(canonicalDeclarations.length, 1, `${key} must have exactly one canonical declaration`);
+    assert.match(
+      canonicalDeclarations[0][1].trim(),
+      /^["']?NO["']?$/,
+      `${key} canonical declaration must remain NO`,
+    );
   }
 });

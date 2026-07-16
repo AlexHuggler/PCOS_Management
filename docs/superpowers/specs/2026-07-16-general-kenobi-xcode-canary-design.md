@@ -51,16 +51,16 @@ The scheme is a signing and manual-run convenience. A physical run must still pr
 
 ## Companion Handoff
 
-Add `Scripts/open_general_kenobi_scanner_canary_xcode.sh`. It performs only local, non-mutating-to-cloud preparation:
+Add `scripts/open_general_kenobi_scanner_canary_xcode.sh`. It performs only local, non-mutating-to-cloud preparation:
 
 1. Resolve and pin the clean RC repository root.
 2. Require XcodeGen and the canonical root project.
 3. Refuse a dirty worktree so the future approved source commit remains unambiguous.
 4. Verify the ignored local configuration contains a non-empty RevenueCat public SDK key and the exact pinned proxy URL without printing either value.
 5. Run the existing positive-canary dry run, which performs no cloud, device, build, installation, or provider action.
-6. Regenerate `PCOS.xcodeproj` from `project.yml`.
+6. Regenerate `PCOS.xcodeproj` from `project.yml`, then refuse to continue if generation changed tracked or untracked files.
 7. Read Xcode build settings for both `Release` and `ScannerCanary` and fail unless Release has six `NO` gates while ScannerCanary has only UI and Gemini `YES`.
-8. Verify the shared scheme exists and its Archive action uses `Release`.
+8. Verify the generated shared scheme has `ScannerCanary` Launch/Profile/Analyze actions, exactly the enabled `-billing.backendMode` and `revenuecat` Launch arguments, no StoreKit configuration, and a `Release` Archive action.
 9. Open the canonical root project unless `--no-open` is supplied.
 
 The script prints no credential values and never calls the live canary path. Its final instructions tell the owner to select General Kenobi and the dedicated scheme, allow Xcode to resolve an Apple Development certificate/profile if needed, and use the audited terminal harness for the actual live AI window.

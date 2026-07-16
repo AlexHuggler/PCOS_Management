@@ -188,7 +188,7 @@ git commit -m "feat: add General Kenobi Xcode canary scheme"
 ### Task 2: Add the safe Xcode staging handoff and owner runbook
 
 **Files:**
-- Create: `Scripts/open_general_kenobi_scanner_canary_xcode.sh`
+- Create: `scripts/open_general_kenobi_scanner_canary_xcode.sh`
 - Create: `cloud/meal-scan-proxy/test/xcode-canary-staging.test.js`
 - Modify: `README.md`
 - Modify: `docs/meal_scan_flash_lite_production_setup.md`
@@ -196,11 +196,11 @@ git commit -m "feat: add General Kenobi Xcode canary scheme"
 
 **Interfaces:**
 - Consumes: `ScannerCanary`, `PCOS General Kenobi Scanner Canary`, ignored `Config/LocalSecrets.xcconfig`, and `run-positive-general-kenobi-canary.sh` dry-run mode.
-- Produces: `Scripts/open_general_kenobi_scanner_canary_xcode.sh [--no-open]` and an exact owner handoff that never mutates cloud/device state.
+- Produces: `scripts/open_general_kenobi_scanner_canary_xcode.sh [--no-open]` and an exact owner handoff that never mutates cloud/device state.
 
 - [ ] **Step 1: Write failing script-contract tests**
 
-Create `cloud/meal-scan-proxy/test/xcode-canary-staging.test.js` with `node:test`. The tests must require an executable script, verify `--help`, statically require clean-worktree checking, ignored-config validation, the exact pinned URL, positive-canary `DRY_RUN=true`, XcodeGen generation, Release/ScannerCanary setting comparisons, shared-scheme Archive verification, and an optional `--no-open` path. They must reject any live confirmation string, `DRY_RUN=false`, `gcloud`, `devicectl`, device installation, archive/export, or StoreKit credential handling.
+Create `cloud/meal-scan-proxy/test/xcode-canary-staging.test.js` with `node:test`. The tests must require an executable script, verify `--help`, and exercise shimmed clean-worktree, ignored-config, exact pinned URL, positive-canary `DRY_RUN=true`, XcodeGen generation, Release/ScannerCanary setting, full generated-scheme action/argument/StoreKit, and optional `--no-open` behavior. They must reject any live confirmation string, `DRY_RUN=false`, `gcloud`, `devicectl`, device installation, archive/export, or StoreKit credential handling.
 
 Use the exact prohibited list:
 
@@ -250,7 +250,7 @@ build_setting() {
 require_setting() {
   local file="$1" key="$2" expected="$3" actual
   actual="$(build_setting "$file" "$key")"
-  [[ "$actual" == "$expected" ]] || die "$key expected $expected, found ${actual:-missing}"
+  [[ "$actual" == "$expected" ]] || die "$key does not match required staging policy"
 }
 ```
 
@@ -263,9 +263,10 @@ The main path must:
 - require a non-empty `REVENUECAT_PUBLIC_SDK_KEY` and exact pinned `MEAL_SCAN_PROXY_BASE_URL` without printing values;
 - run `DRY_RUN=true cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh >/dev/null`;
 - run `xcodegen generate`;
+- fail if XcodeGen changes tracked or untracked files;
 - collect `xcodebuild -showBuildSettings` for `Release` and `ScannerCanary` with `CODE_SIGNING_ALLOWED=NO` into `mktemp` files cleaned by a trap;
 - require six `NO` Release values and only UI/Gemini `YES` for ScannerCanary;
-- inspect `PCOS.xcodeproj/xcshareddata/xcschemes/PCOS General Kenobi Scanner Canary.xcscheme` and require Archive `buildConfiguration = "Release"`;
+- inspect `PCOS.xcodeproj/xcshareddata/xcschemes/PCOS General Kenobi Scanner Canary.xcscheme`, require Launch/Profile/Analyze `ScannerCanary`, exact enabled `-billing.backendMode` and `revenuecat` Launch arguments, no StoreKit configuration, and Archive `Release`;
 - print the exact scheme/device/run instructions;
 - invoke `open "$ROOT/PCOS.xcodeproj"` only when `--no-open` is absent.
 
@@ -274,7 +275,7 @@ The main path must:
 Add a `General Kenobi Scanner Canary` section to `README.md` with:
 
 ```bash
-./Scripts/open_general_kenobi_scanner_canary_xcode.sh
+./scripts/open_general_kenobi_scanner_canary_xcode.sh
 ```
 
 State that Xcode Run is a local signing/launch rehearsal while Cloud Run remains disabled/private, and the real AI scan still requires the audited terminal harness.
@@ -284,7 +285,7 @@ Update `docs/meal_scan_flash_lite_production_setup.md` and `AppStoreReadinessChe
 - [ ] **Step 5: Make the script executable and run focused tests**
 
 ```bash
-chmod 0755 Scripts/open_general_kenobi_scanner_canary_xcode.sh
+chmod 0755 scripts/open_general_kenobi_scanner_canary_xcode.sh
 cd cloud/meal-scan-proxy
 node --test test/xcode-canary-staging.test.js test/positive-canary-script.test.js test/readme-contract.test.js
 ```
@@ -294,7 +295,7 @@ Expected: all tests pass.
 - [ ] **Step 6: Commit Task 2**
 
 ```bash
-git add Scripts/open_general_kenobi_scanner_canary_xcode.sh cloud/meal-scan-proxy/test/xcode-canary-staging.test.js README.md docs/meal_scan_flash_lite_production_setup.md AppStoreReadinessChecklist.md
+git add scripts/open_general_kenobi_scanner_canary_xcode.sh cloud/meal-scan-proxy/test/xcode-canary-staging.test.js README.md docs/meal_scan_flash_lite_production_setup.md AppStoreReadinessChecklist.md
 git commit -m "feat: stage General Kenobi Xcode canary handoff"
 ```
 
@@ -312,10 +313,10 @@ git commit -m "feat: stage General Kenobi Xcode canary handoff"
 - [ ] **Step 1: Run the non-opening preflight**
 
 ```bash
-./Scripts/open_general_kenobi_scanner_canary_xcode.sh --no-open
+./scripts/open_general_kenobi_scanner_canary_xcode.sh --no-open
 ```
 
-Expected: successful validation of clean state, ignored local public configuration, dry-run boundary, generated scheme, Release six-`NO` contract, canary two-`YES` contract, and Release-only Archive action.
+Expected: successful validation of clean state before and after generation, ignored local public configuration, dry-run boundary, generated Launch/Profile/Analyze/argument/StoreKit contract, Release six-`NO` contract, canary two-`YES` contract, and Release-only Archive action.
 
 - [ ] **Step 2: Build the canary for simulator without signing**
 
@@ -341,7 +342,7 @@ Read back the six flags from `xcodebuild -showBuildSettings` for Release and Sca
 ```bash
 cd cloud/meal-scan-proxy
 node --test test/xcode-canary-staging.test.js test/positive-canary-script.test.js test/readme-contract.test.js test/revenuecat-offering-verifier.test.js
-bash -n scripts/run-positive-general-kenobi-canary.sh ../../Scripts/open_general_kenobi_scanner_canary_xcode.sh
+bash -n scripts/run-positive-general-kenobi-canary.sh ../../scripts/open_general_kenobi_scanner_canary_xcode.sh
 ```
 
 Expected: all tests and syntax checks pass.
@@ -349,7 +350,7 @@ Expected: all tests and syntax checks pass.
 - [ ] **Step 5: Open Xcode**
 
 ```bash
-./Scripts/open_general_kenobi_scanner_canary_xcode.sh
+./scripts/open_general_kenobi_scanner_canary_xcode.sh
 ```
 
 Expected: the canonical root `PCOS.xcodeproj` opens. Tell the owner only now to unlock General Kenobi, select `PCOS General Kenobi Scanner Canary`, choose the device, and resolve Apple Development signing. If the phone is not paired wirelessly, stop at this handoff without enabling Cloud Run.
