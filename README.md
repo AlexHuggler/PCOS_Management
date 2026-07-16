@@ -43,6 +43,16 @@ xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simul
 
 Run those commands sequentially if you are scripting them; `xcodebuild` will lock the build database if two jobs share the same DerivedData directory.
 
+## General Kenobi Scanner Canary
+
+From a clean RC worktree with the ignored local Xcode configuration present, stage the shared canary scheme and open the generated project:
+
+```bash
+./scripts/open_general_kenobi_scanner_canary_xcode.sh
+```
+
+Xcode Run is only a local signing/launch rehearsal while Cloud Run remains disabled/private. It does not perform the live canary. The real AI scan still requires the separately approval-gated, audited terminal harness documented in `docs/meal_scan_flash_lite_production_setup.md`.
+
 ## Premium QA Runbook
 
 - RevenueCat paywall and demo import QA steps are documented in `RevenueCat_QA_Runbook.md`.

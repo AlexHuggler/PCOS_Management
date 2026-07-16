@@ -184,6 +184,18 @@ cd "/Users/alexhuggler/Desktop/AI Work/PCOS/PCOS_Management/.worktrees/cyclebala
 DRY_RUN=true cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
 ```
 
+### Local Xcode staging handoff
+
+The shared `PCOS General Kenobi Scanner Canary` scheme and `scripts/open_general_kenobi_scanner_canary_xcode.sh` are staged for a local signing/launch rehearsal. From a clean RC worktree, run:
+
+```sh
+./scripts/open_general_kenobi_scanner_canary_xcode.sh
+```
+
+The helper validates the ignored local Xcode configuration without printing its values, runs the positive harness only with `DRY_RUN=true`, regenerates the project, confirms canonical Release keeps all six scanner settings `NO`, confirms `ScannerCanary` changes only UI and Gemini to `YES`, and confirms the shared scheme still archives with Release. Use `--no-open` to perform the same staging checks without opening Xcode. The helper has no live cloud, device, installation, archive/export, or StoreKit-credential path.
+
+As of July 16, 2026, this Mac has no current Apple Development signing identity available for the rehearsal, and General Kenobi has no physical connection to it. Xcode Run has not occurred. The live seed, sandbox purchase, cancellation/pending, restore, receipt synchronization, and positive real-device TestFlight gates remain open; staging this scheme or later completing a local Xcode Run does not close any of them. The real AI scan still requires the separately approval-gated audited terminal harness.
+
 ### Owner-only Apple IAP provisioning handoff
 
 Do not run this handoff without separate owner approval. It provisions only the missing App Store IAP private-key resource. It must not access, re-prompt, rotate, or replace the existing Gemini, RevenueCat, or principal-HMAC secrets. The principal-HMAC version remains pinned at `1`.
