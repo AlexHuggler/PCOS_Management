@@ -30,6 +30,13 @@ require_setting() {
   actual="$(build_setting "$file" "$key")"
   [[ "$actual" == "$expected" ]] || die "$key expected $expected, found ${actual:-missing}"
 }
+require_effective_configuration() {
+  local file="$1" configuration="$2" proxy_url revenuecat_key
+  proxy_url="$(build_setting "$file" MEAL_SCAN_PROXY_BASE_URL)"
+  [[ "$proxy_url" == "$PINNED_PROXY_URL" ]] || die "$configuration effective MEAL_SCAN_PROXY_BASE_URL is not pinned"
+  revenuecat_key="$(build_setting "$file" REVENUECAT_PUBLIC_SDK_KEY)"
+  [[ -n "$revenuecat_key" ]] || die "$configuration effective REVENUECAT_PUBLIC_SDK_KEY is missing"
+}
 
 usage() {
   note "Usage: ./scripts/open_general_kenobi_scanner_canary_xcode.sh [--no-open]"
@@ -105,6 +112,9 @@ fi
 if ! xcodebuild -project "$PROJECT_PATH" -scheme "$SCHEME_NAME" -configuration ScannerCanary -showBuildSettings CODE_SIGNING_ALLOWED=NO >"$SCANNER_CANARY_SETTINGS_FILE" 2>&1; then
   die "Unable to inspect ScannerCanary build settings"
 fi
+
+require_effective_configuration "$RELEASE_SETTINGS_FILE" Release
+require_effective_configuration "$SCANNER_CANARY_SETTINGS_FILE" ScannerCanary
 
 require_setting "$RELEASE_SETTINGS_FILE" MEAL_SCAN_RELEASE_UI_ENABLED NO
 require_setting "$RELEASE_SETTINGS_FILE" MEAL_SCAN_RELEASE_GEMINI_ENABLED NO
