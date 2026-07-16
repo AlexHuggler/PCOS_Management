@@ -27,7 +27,7 @@ CycleBalance uses the standard paid-API disclosure: request content may be retai
 
 ## Live Production Posture
 
-As of the read-only verification on July 15, 2026:
+As of the Cloud Run read-only verification on July 15 and the Apple IAP secret provisioning readback on July 16, 2026:
 
 - Google Cloud project: `cyclebalance-prod-20260710` (`CycleBalance Production`), project number `947929010052`.
 - Region: `us-central1`.
@@ -37,7 +37,7 @@ As of the read-only verification on July 15, 2026:
 - Firebase iOS app: bundle ID `alex.PCOS`, app ID `1:947929010052:ios:6e68c8645a6a6b5e3057d1`.
 - App Check: App Attest provider, 3,600-second token TTL, and limited-use token replay protection.
 - RevenueCat candidate contract: API v2 project `proj8da4e000`, entitlement lookup key `CycleBalance Unlimited`, and Apple product mappings `cyclebalance.premium.monthly` / `cyclebalance.premium.annual`. Secret version `v1` is mounted with proxy-service-account-only accessor IAM, but its exact least-privilege API scopes and live offering/product/entitlement contract remain pending verification.
-- Apple IAP canary blocker: `cyclebalance-app-store-iap-private-key` does not exist, Apple key ID and issuer configuration are empty, and no Apple IAP secret is mounted. Provisioning remains an owner-only hidden-prompt gate.
+- Apple IAP handoff: `cyclebalance-app-store-iap-private-key` now has exactly enabled version `1`, automatic replication, and `roles/secretmanager.secretAccessor` granted only to `cyclebalance-meal-scan-proxy@cyclebalance-prod-20260710.iam.gserviceaccount.com`; no public principal is present. The current disabled/private Cloud Run revision has not been redeployed and does not mount the new secret. The matching Apple key ID and issuer ID remain hidden live-canary inputs rather than retained configuration or evidence.
 - Runtime controls: Firestore budget mode is `normal`; `$15` alert, `$20` degraded, `$25` disabled, the 2.2 MB body cap, canonical quota/cache/idempotency/request-gate/budget stores, and `gemini-3.1-flash-lite` are present. Four newer explicit environment bindings are absent from the deployed revision but currently resolve to canonical runtime defaults.
 - Firestore: Native mode in `nam5`; quota and result-cache TTL policies are active.
 - Cloud Run limits: two instances, 20 concurrent requests per instance, 30-second request timeout.
@@ -99,7 +99,7 @@ Only these server secrets belong in Secret Manager:
 - `cyclebalance-app-store-iap-private-key`
 - `cyclebalance-revenuecat-secret-api-key`
 
-The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The principal-HMAC secret was created safely as version `1` without exposing its value. The remaining provisioning handoff is the App Store IAP `.p8` resource `cyclebalance-app-store-iap-private-key`; the dedicated provisioner below performs authenticated read-only resource/version/IAM inspection before any approval or key-file access, cryptographically requires one PKCS#8 P-256 EC private key before any mutation, permits only a zero-version to enabled-version-`1` transition, refuses `v2`, and reads back exact proxy-service-account-only `secretAccessor` IAM. Fake PEM, RSA, and wrong-curve keys fail before Secret Manager is changed. Do not rerun bootstrap or re-prompt, rotate, or replace the existing Gemini and RevenueCat secrets as part of that handoff. The least-privilege RevenueCat API v2 key needs read access for the server subscription corroboration and the offering, package, product, and entitlement configuration endpoints verified below. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
+The proxy service account receives per-secret accessor grants, not project-wide Secret Manager access. The principal-HMAC secret was created safely as version `1` without exposing its value. On July 16, 2026, the App Store IAP `.p8` resource `cyclebalance-app-store-iap-private-key` was provisioned through the dedicated owner-approved handoff as exactly enabled version `1`; independent metadata readback confirmed automatic replication, exact proxy-service-account-only `secretAccessor` IAM, and no public principal without accessing the payload. The provisioner performed authenticated resource/version/IAM inspection before key-file access, cryptographically required one PKCS#8 P-256 EC private key before mutation, permitted only the zero-version to enabled-version-`1` transition, and would have refused `v2`, fake PEM, RSA, or another curve. Do not rerun the live provisioner or bootstrap, and do not re-prompt, rotate, or replace the Apple IAP, Gemini, RevenueCat, or principal-HMAC secrets without a separate rotation plan. The least-privilege RevenueCat API v2 key needs read access for the server subscription corroboration and the offering, package, product, and entitlement configuration endpoints verified below. The Gemini key is restricted to `generativelanguage.googleapis.com` and is sent only in the `x-goog-api-key` request header, never in a URL or log. Deployments pin numeric Secret Manager versions. Proxy, budget-controller, and build service accounts have no user-managed keys.
 
 The app never sends a cloneable RevenueCat app-user ID to the proxy. The server verifies Apple's signed transaction and current status first, then passes only the Apple-verified transaction ID and environment to RevenueCat as secondary corroboration. The quota principal is an HMAC of the Apple original transaction ID; raw JWS values are never stored or logged.
 
@@ -188,6 +188,8 @@ DRY_RUN=true cloud/meal-scan-proxy/scripts/run-positive-general-kenobi-canary.sh
 
 Do not run this handoff without separate owner approval. It provisions only the missing App Store IAP private-key resource. It must not access, re-prompt, rotate, or replace the existing Gemini, RevenueCat, or principal-HMAC secrets. The principal-HMAC version remains pinned at `1`.
 
+Completed July 16, 2026. The commands below are retained as the audited procedure, not as instructions to rerun it. Live reruns now fail closed because enabled version `1` exists.
+
 First run the dedicated authenticated, read-only metadata inspection. It queries only the pinned secret inventory by short-name match, then accepts only the exact numeric-project resource `projects/947929010052/secrets/cyclebalance-app-store-iap-private-key`; when present it reads metadata, versions, and IAM. It performs no Cloud write and never opens the `.p8` file:
 
 ```sh
@@ -274,7 +276,7 @@ Required before enabling users:
 - [ ] Freeze the exact 40 Nutrition5k, 30 SNAPMe, and 10 MFDS candidate before inference, then run exactly 120 calls: 80 primary plus two repeats for each of 20 locked holdouts.
 - [ ] Pass every automatic quality gate: structured success at least 98%; calorie WAPE at most 25%; calorie median APE at most 20%; calorie bias from -10% through +10%; each macro WAPE at most 30%; calorie pass rate at least 70%; each macro pass rate at least 65%; source calorie WAPE at most 35%; and median holdout spread at most 10% calories and 5 g per macro.
 - [ ] Complete qualitative review with at least 72 of 80 acceptable dominant-food interpretations and zero severe or uneditable failures. Any failed gate requires a newly frozen candidate and a complete 120-call rerun.
-- [ ] Provision and metadata-verify `cyclebalance-app-store-iap-private-key` through the owner-only hidden `.p8` handoff; keep the principal-HMAC secret pinned at version `1` and do not re-prompt or rotate existing Gemini or RevenueCat secrets.
+- [x] Provision and metadata-verify `cyclebalance-app-store-iap-private-key` through the owner-only hidden `.p8` handoff; July 16 readback confirmed exactly enabled version `1`, automatic replication, proxy-service-account-only accessor IAM, and no public principal. Keep the principal-HMAC secret pinned at version `1` and do not re-prompt or rotate existing Apple IAP, Gemini, or RevenueCat secrets.
 - [ ] Verify the existing least-privilege RevenueCat API v2 secret, live default offering/entitlement/product mappings, and sandbox purchase, cancellation/pending, and restore behavior without a reviewer bypass.
 - [ ] Enable App Attest on the Apple App ID and regenerate the App Store distribution profile. The current profile has HealthKit and `get-task-allow=false` but lacks the production App Attest entitlement.
 - [x] Build the final local Release candidate for both simulator architectures and create an unsigned generic-device archive; confirm `1.0.5 (18)`, bundle `alex.PCOS`, arm64 archive executable, both scanner plist gates false, dSYM, privacy manifest, production App Attest/HealthKit source entitlements, and no private-key/server-secret material in the bundle.
