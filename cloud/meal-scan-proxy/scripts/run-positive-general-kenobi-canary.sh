@@ -205,8 +205,8 @@ verify_live_revenuecat_configuration() {
     --project "$PROJECT_ID" | \
     DRY_RUN=false REVENUECAT_PROJECT_ID="$PINNED_REVENUECAT_PROJECT_ID" \
       "$REVENUECAT_OFFERING_VERIFIER" \
-    || die "Live RevenueCat default/monthly/annual/entitlement verification failed closed"
-  append_summary "Machine-read RevenueCat configuration: read-only API v2 verified current default, exact monthly/annual packages and products, and CycleBalance Unlimited attachments; API key was memory-only and not retained."
+    || die "Live RevenueCat default/package/CycleBalance-iOS-product/entitlement verification failed closed"
+  append_summary 'Machine-read RevenueCat configuration: read-only API v2 verified current default, exact $rc_monthly/$rc_annual packages, exact CycleBalance iOS products, and CycleBalance Unlimited attachments; API key was memory-only and not retained.'
 }
 
 print_dry_run() {
@@ -216,7 +216,7 @@ print_dry_run() {
   note "1. Require exact live confirmation $LIVE_CONFIRMATION_VALUE before any live preflight or mutation."
   note "2. Require a full owner-approved source commit equal to clean HEAD, including no untracked files, seal its exact proxy subtree once, and keep canonical project.yml Release scanner flags NO."
   note "3. Snapshot canonical Cloud Run IAM, reject allUsers/allAuthenticatedUsers, require the invoker IAM check, MEAL_SCAN_ENABLED=false, normal budget, and pinned identifiers."
-  note "4. Verify numeric secret-version metadata; then pipe only the pinned RevenueCat key memory-only into read-only default/monthly/annual/CycleBalance Unlimited configuration checks."
+  note '4. Verify numeric secret-version metadata; then pipe only the pinned RevenueCat key memory-only into read-only default/$rc_monthly/$rc_annual/CycleBalance-iOS/CycleBalance Unlimited configuration checks.'
   print_apple_iap_provisioning_handoff
   note "5. Verify $DEVICE_NAME is uniquely resolved, paired, in Developer Mode, DDI-ready, and explicitly unlocked."
   note "6. On seed, record whether the app was initially present, its version/build/signing state, and a protected data backup; preserve the installed canary and local state through rescan."

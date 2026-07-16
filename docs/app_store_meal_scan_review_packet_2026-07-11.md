@@ -2,7 +2,7 @@
 
 Date: 2026-07-13
 
-Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump. Current-RC focused tests, a dual-architecture Release simulator build, and an unsigned generic-device archive pass, but no signed distribution archive/export has been created and nothing has been uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, standard 55-day disclosure, durable lifetime quota, model selection, and limited Gemini funding. The negative invalid-JWS physical production App Attest probe is complete, but it does not satisfy the positive sandbox-JWS real-device TestFlight gate, which remains open. The App Store distribution profile, benchmark, App Privacy, RevenueCat, localized-policy correction, and final screenshot gates below also remain incomplete. The production service is private and disabled; Release keeps Photo Estimate hidden until every gate passes.
+Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unused before this local version bump. Current-RC focused tests, a dual-architecture Release simulator build, and an unsigned generic-device archive pass, but no signed distribution archive/export has been created and nothing has been uploaded, distributed through TestFlight, or submitted. The owner approved the feature direction, per-upload Google Gemini confirmation, standard 55-day disclosure, durable lifetime quota, model selection, and limited Gemini funding. The negative invalid-JWS physical production App Attest probe is complete, but it does not satisfy the positive sandbox-JWS real-device TestFlight gate, which remains open. RevenueCat secret IAM, read-only scopes, and live offering/package/CycleBalance-iOS-product/entitlement configuration verification completed July 16, 2026; exact candidate-build pricing, purchase, cancellation/pending, restore, and receipt synchronization remain open. The App Store distribution profile, benchmark, App Privacy, localized-policy correction, and final screenshot gates below also remain incomplete. The production service is private and disabled; Release keeps Photo Estimate hidden until every gate passes.
 
 ## Submission Gates
 
@@ -15,6 +15,8 @@ Status: staged local preparation for `1.0.5 (18)`. Build `18` was verified unuse
 - Confirm App Review can exercise the intended photo-estimate path without an owner credential, private device access, or unshared test account. Otherwise do not submit an archive that exposes the feature.
 - [ ] Regenerate or verify the App Store distribution profile against the frozen archive. The embedded profile must include production App Attest and HealthKit entitlements with `get-task-allow=false`; the current profile evidence is not sufficient to clear this gate.
 - [ ] Freeze and pass the exact 80-image/120-call paid benchmark. Visual similarity remains out of scope and disabled for this release; it must not block exact local cache reuse or weaken the scanner benchmark.
+- [x] Verify RevenueCat Secret Manager version/IAM, read-only API v2 scopes, current `default`, `$rc_monthly` / `$rc_annual`, exact CycleBalance iOS products, and active `CycleBalance Unlimited` attachments through memory-only readback.
+- [ ] Validate localized pricing, sandbox purchase, cancellation/pending, restore, and receipt synchronization on the exact candidate build.
 
 ## App Review Notes
 
@@ -92,6 +94,7 @@ The live privacy policy and terms must state all of the following before submiss
 - [x] Use Google's standard 55-day abuse-monitoring disclosure; do not claim unverified ZDR.
 - [x] Preserve the 24-hour result cache and durable HMAC-keyed trial/sandbox lifetime ledger required to enforce the 25-lifetime maximum.
 - [ ] Enter the approved App Privacy answers and updated reviewer notes in App Store Connect.
-- [ ] Verify the production RevenueCat offering, monthly/annual packages, localized products, pricing, purchase, restore, receipt synchronization, API v2 project/entitlement/product mappings, and the least-privilege `customer_information:subscriptions:read` secret against the exact candidate archive. RevenueCat remains secondary; it is not the quota principal or tier authority.
+- [x] Verify RevenueCat API v2 project `proj8da4e000`, current `default`, `$rc_monthly` / `$rc_annual`, CycleBalance iOS app `appca3539a96a`, exact monthly/annual product mappings, active `CycleBalance Unlimited`, protected Secret Manager version/IAM, and read-only `Subscriptions` / `Offerings` / `Packages` / `Products` / `Entitlements` scopes. RevenueCat remains secondary; it is not the quota principal or tier authority.
+- [ ] Validate localized products/pricing, sandbox purchase, cancellation/pending, restore, and receipt synchronization against the exact candidate archive.
 - [ ] Publish and verify the live privacy-policy and terms changes.
 - [ ] Upload the approved screenshot set and submit only after the physical-device and quality gates pass.

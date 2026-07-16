@@ -9,7 +9,21 @@
         "store_identifier": "cyclebalance.premium.monthly",
         "type": "subscription",
         "subscription": { "duration": "P1M" },
-        "app_id": "app_cyclebalance_ios"
+        "app_id": "appca3539a96a"
+      },
+      "eligibility_criteria": "all"
+    },
+    {
+      "product": {
+        "state": "active",
+        "object": "product",
+        "id": "prod_test_store_monthly",
+        "store_identifier": "monthly",
+        "type": "subscription",
+        "subscription": {
+          "duration": "P1M"
+        },
+        "app_id": "appecf8459b39"
       },
       "eligibility_criteria": "all"
     }

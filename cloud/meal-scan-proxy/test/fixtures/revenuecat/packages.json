@@ -4,14 +4,14 @@
     {
       "object": "package",
       "id": "pkge_cyclebalance_monthly",
-      "lookup_key": "monthly",
+      "lookup_key": "$rc_monthly",
       "display_name": "Monthly",
       "position": 1
     },
     {
       "object": "package",
       "id": "pkge_cyclebalance_annual",
-      "lookup_key": "annual",
+      "lookup_key": "$rc_annual",
       "display_name": "Annual",
       "position": 2
     }

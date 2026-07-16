@@ -95,7 +95,7 @@ Required production values include:
 - `APPLE_IAP_PRIVATE_KEY` from a numerically pinned Secret Manager version.
 - `APPLE_IAP_KEY_ID` and `APPLE_IAP_ISSUER_ID` for the App Store Server API.
 - `APPLE_BUNDLE_ID=alex.PCOS`, `APPLE_APP_ID=6760353511`, and exactly `cyclebalance.premium.monthly,cyclebalance.premium.annual`; enabled production startup rejects any other Apple identity.
-- `REVENUECAT_SECRET_API_KEY` from the numerically pinned `REVENUECAT_SECRET_VERSION`. Create this as a secret RevenueCat API v2 key with only `customer_information:subscriptions:read`; never use a public SDK key.
+- `REVENUECAT_SECRET_API_KEY` from the numerically pinned `REVENUECAT_SECRET_VERSION`. Create this as a secret RevenueCat API v2 key with exactly `customer_information:subscriptions:read` for runtime corroboration plus read-only `project_configuration:offerings:read`, `project_configuration:packages:read`, `project_configuration:products:read`, and `project_configuration:entitlements:read` for preflight. Keep every other scope at no access; never grant write access or use a public SDK key.
 - `REVENUECAT_PROJECT_ID=proj8da4e000` and `REVENUECAT_ENTITLEMENT_ID=CycleBalance Unlimited`. Enabled production startup rejects any other project or entitlement lookup key, and the RevenueCat product mappings must use the same monthly and annual App Store identifiers as the Apple allowlist.
 - `FIREBASE_APP_ID`, `APP_CHECK_REQUIRED=true`, and Firestore backends for quota, idempotency, the coarse abuse shield, verified-principal attempts, cache, and budget control.
 

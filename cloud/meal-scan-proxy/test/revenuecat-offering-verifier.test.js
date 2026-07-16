@@ -140,6 +140,11 @@ test("RevenueCat configuration verification defaults to a non-networking dry run
     assert.match(result.stdout, /default/);
     assert.match(result.stdout, /monthly.*annual/i);
     assert.match(result.stdout, /CycleBalance Unlimited/);
+    assert.match(
+      result.stdout,
+      /Subscriptions.*Offerings.*Packages.*Products.*Entitlements/i,
+      "dry-run scope guidance must list the complete shared-key read-only contract"
+    );
     assert.equal(existsSync(commandLog) ? readFileSync(commandLog, "utf8") : "", "");
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -152,7 +157,7 @@ test("RevenueCat project identity is pinned before any key read or network reque
   assert.match(result.stderr, /pinned/i);
 });
 
-test("valid fixtures prove the exact current offering, package products, and entitlement attachments", () => {
+test("valid multi-app fixtures prove the exact CycleBalance iOS offering products and entitlement attachments", () => {
   const harness = createFixtureHarness();
   try {
     const result = runVerifier(harness.environment, { input: `${sensitiveKey}\n` });
@@ -214,6 +219,15 @@ test("offering verification fails closed on non-current default or pagination", 
         });
       },
     },
+    {
+      name: "missing-page-marker",
+      mutate(directory) {
+        rewriteJson(path.join(directory, "offerings.json"), (value) => {
+          delete value.next_page;
+          return value;
+        });
+      },
+    },
   ]) {
     const harness = createFixtureHarness({ mutate: scenario.mutate });
     try {
@@ -226,7 +240,7 @@ test("offering verification fails closed on non-current default or pagination", 
   }
 });
 
-test("package verification rejects extras and any wrong product identity or duration", () => {
+test("package verification rejects extras and any wrong CycleBalance iOS product identity or duration", () => {
   const scenarios = [
     {
       name: "extra-package",
@@ -255,6 +269,35 @@ test("package verification rejects extras and any wrong product identity or dura
         });
       },
     },
+    {
+      name: "extra-cyclebalance-ios-product",
+      mutate(directory) {
+        rewriteJson(path.join(directory, "monthly-products.json"), (value) => {
+          value.items.push({
+            product: {
+              state: "active",
+              object: "product",
+              id: "prod_unexpected_cyclebalance_monthly",
+              store_identifier: "unexpected.product",
+              type: "subscription",
+              subscription: { duration: "P1M" },
+              app_id: "appca3539a96a",
+            },
+            eligibility_criteria: "all",
+          });
+          return value;
+        });
+      },
+    },
+    {
+      name: "missing-other-app-id",
+      mutate(directory) {
+        rewriteJson(path.join(directory, "monthly-products.json"), (value) => {
+          delete value.items[1].product.app_id;
+          return value;
+        });
+      },
+    },
   ];
 
   for (const scenario of scenarios) {
@@ -269,8 +312,14 @@ test("package verification rejects extras and any wrong product identity or dura
   }
 });
 
-test("entitlement verification requires both exact package products to be attached", () => {
-  for (const scenario of ["wrong-lookup", "missing-product", "mismatched-product-id"]) {
+test("entitlement verification requires exactly both CycleBalance iOS package products to be attached", () => {
+  for (const scenario of [
+    "wrong-lookup",
+    "missing-product",
+    "mismatched-product-id",
+    "extra-cyclebalance-ios-product",
+    "missing-other-app-id",
+  ]) {
     const harness = createFixtureHarness({
       mutate(directory) {
         if (scenario === "wrong-lookup") {
@@ -280,8 +329,22 @@ test("entitlement verification requires both exact package products to be attach
           });
         } else {
           rewriteJson(path.join(directory, "entitlement-products.json"), (value) => {
-            if (scenario === "missing-product") value.items.pop();
+            if (scenario === "missing-product") {
+              value.items = value.items.filter((item) => item.id !== "prod_cyclebalance_annual");
+            }
             if (scenario === "mismatched-product-id") value.items[0].id = "prod_other_monthly";
+            if (scenario === "extra-cyclebalance-ios-product") {
+              value.items.push({
+                state: "active",
+                object: "product",
+                id: "prod_unexpected_cyclebalance_product",
+                store_identifier: "unexpected.product",
+                type: "subscription",
+                subscription: { duration: "P1M" },
+                app_id: "appca3539a96a",
+              });
+            }
+            if (scenario === "missing-other-app-id") delete value.items[2].app_id;
             return value;
           });
         }

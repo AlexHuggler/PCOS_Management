@@ -3,8 +3,11 @@ set -euo pipefail
 
 readonly PINNED_PROJECT_ID="proj8da4e000"
 readonly PINNED_API_ROOT="https://api.revenuecat.com/v2"
+readonly PINNED_APP_ID="appca3539a96a"
 readonly EXPECTED_OFFERING_LOOKUP_KEY="default"
 readonly EXPECTED_ENTITLEMENT_LOOKUP_KEY="CycleBalance Unlimited"
+readonly EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY='$rc_monthly'
+readonly EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY='$rc_annual'
 readonly EXPECTED_MONTHLY_PRODUCT="cyclebalance.premium.monthly"
 readonly EXPECTED_ANNUAL_PRODUCT="cyclebalance.premium.annual"
 
@@ -95,6 +98,7 @@ verify_offering_list() {
     --arg lookup "$EXPECTED_OFFERING_LOOKUP_KEY" '
       .object == "list" and
       (.items | type == "array") and
+      has("next_page") and
       .next_page == null and
       ([.items[] | select(.is_current == true)] | length == 1) and
       ([.items[] | select(
@@ -111,17 +115,20 @@ verify_offering_list() {
 
 verify_package_list() {
   local file="$1"
-  jq -e '
+  jq -e \
+    --arg monthly "$EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY" \
+    --arg annual "$EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY" '
     .object == "list" and
     (.items | type == "array") and
+    has("next_page") and
     .next_page == null and
     (.items | length == 2) and
     (all(.items[];
       .object == "package" and
       (.id | type == "string") and
-      (.lookup_key == "monthly" or .lookup_key == "annual")
+      (.lookup_key == $monthly or .lookup_key == $annual)
     )) and
-    ([.items[].lookup_key] | sort == ["annual", "monthly"]) and
+    ([.items[].lookup_key] | sort == ([$monthly, $annual] | sort)) and
     ([.items[].id] | unique | length == 2)
   ' "$file" >/dev/null 2>&1 \
     || die "exact monthly and annual package configuration was not verified"
@@ -132,20 +139,31 @@ verify_package_product() {
   local expected_store_id="$2"
   local expected_duration="$3"
   jq -e \
+    --arg app_id "$PINNED_APP_ID" \
     --arg store_id "$expected_store_id" \
     --arg duration "$expected_duration" '
+      def safe_resource_id:
+        if type == "string" then test("^[A-Za-z0-9_-]{4,255}$") else false end;
       .object == "list" and
       (.items | type == "array") and
+      has("next_page") and
       .next_page == null and
-      (.items | length == 1) and
-      (.items[0].product |
+      (all(.items[];
+        (.product | type == "object") and
+        .product.object == "product" and
+        (.product.id | safe_resource_id) and
+        (.product.app_id | safe_resource_id)
+      )) and
+      ([.items[].product | select(.app_id == $app_id)] | length == 1) and
+      ([.items[].product | select(
+        .app_id == $app_id and
         .state == "active" and
         .object == "product" and
         (.id | type == "string") and
         .store_identifier == $store_id and
         .type == "subscription" and
         .subscription.duration == $duration
-      )
+      )] | length == 1)
     ' "$file" >/dev/null 2>&1 \
     || die "exact monthly and annual package configuration was not verified"
 }
@@ -157,6 +175,7 @@ verify_entitlement_list() {
     --arg lookup "$EXPECTED_ENTITLEMENT_LOOKUP_KEY" '
       .object == "list" and
       (.items | type == "array") and
+      has("next_page") and
       .next_page == null and
       ([.items[] | select(
         .state == "active" and
@@ -176,14 +195,24 @@ verify_entitlement_products() {
   jq -e \
     --arg monthly_id "$monthly_product_id" \
     --arg annual_id "$annual_product_id" \
+    --arg app_id "$PINNED_APP_ID" \
     --arg monthly_store "$EXPECTED_MONTHLY_PRODUCT" \
     --arg annual_store "$EXPECTED_ANNUAL_PRODUCT" '
+      def safe_resource_id:
+        if type == "string" then test("^[A-Za-z0-9_-]{4,255}$") else false end;
       .object == "list" and
       (.items | type == "array") and
+      has("next_page") and
       .next_page == null and
-      (.items | length == 2) and
-      ([.items[].id] | sort == ([$monthly_id, $annual_id] | sort)) and
+      (all(.items[];
+        .object == "product" and
+        (.id | safe_resource_id) and
+        (.app_id | safe_resource_id)
+      )) and
+      ([.items[] | select(.app_id == $app_id)] | length == 2) and
+      ([.items[] | select(.app_id == $app_id) | .id] | sort == ([$monthly_id, $annual_id] | sort)) and
       ([.items[] | select(
+        .app_id == $app_id and
         .state == "active" and
         .object == "product" and
         .id == $monthly_id and
@@ -192,6 +221,7 @@ verify_entitlement_products() {
         .subscription.duration == "P1M"
       )] | length == 1) and
       ([.items[] | select(
+        .app_id == $app_id and
         .state == "active" and
         .object == "product" and
         .id == $annual_id and
@@ -228,19 +258,29 @@ verify_live() {
 
   api_get "/offerings/$offering_id/packages?limit=100" "$packages_file"
   verify_package_list "$packages_file"
-  monthly_package_id="$(jq -er '.items[] | select(.lookup_key == "monthly") | .id' "$packages_file")"
-  annual_package_id="$(jq -er '.items[] | select(.lookup_key == "annual") | .id' "$packages_file")"
+  monthly_package_id="$(jq -er --arg lookup "$EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY" \
+    '.items[] | select(.lookup_key == $lookup) | .id' "$packages_file")"
+  annual_package_id="$(jq -er --arg lookup "$EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY" \
+    '.items[] | select(.lookup_key == $lookup) | .id' "$packages_file")"
   require_safe_resource_id "$monthly_package_id" "monthly package"
   require_safe_resource_id "$annual_package_id" "annual package"
 
   api_get "/packages/$monthly_package_id/products?limit=100" "$monthly_file"
   verify_package_product "$monthly_file" "$EXPECTED_MONTHLY_PRODUCT" "P1M"
-  monthly_product_id="$(jq -er '.items[0].product.id' "$monthly_file")"
+  monthly_product_id="$(jq -er \
+    --arg app_id "$PINNED_APP_ID" \
+    --arg store_id "$EXPECTED_MONTHLY_PRODUCT" \
+    '.items[].product | select(.app_id == $app_id and .store_identifier == $store_id) | .id' \
+    "$monthly_file")"
   require_safe_resource_id "$monthly_product_id" "monthly product"
 
   api_get "/packages/$annual_package_id/products?limit=100" "$annual_file"
   verify_package_product "$annual_file" "$EXPECTED_ANNUAL_PRODUCT" "P1Y"
-  annual_product_id="$(jq -er '.items[0].product.id' "$annual_file")"
+  annual_product_id="$(jq -er \
+    --arg app_id "$PINNED_APP_ID" \
+    --arg store_id "$EXPECTED_ANNUAL_PRODUCT" \
+    '.items[].product | select(.app_id == $app_id and .store_identifier == $store_id) | .id' \
+    "$annual_file")"
   require_safe_resource_id "$annual_product_id" "annual product"
   [[ "$monthly_product_id" != "$annual_product_id" ]] \
     || die "exact monthly and annual package configuration was not verified"
@@ -259,8 +299,8 @@ verify_live() {
 
   printf '%s\n' \
     "RevenueCat configuration verified through read-only API v2 endpoints." \
-    "Current offering: default; exact packages: monthly and annual." \
-    "Entitlement: CycleBalance Unlimited; both exact products are attached and active."
+    "Current offering: default; exact packages: $EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY and $EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY." \
+    "Entitlement: CycleBalance Unlimited; both exact CycleBalance iOS products are attached and active."
 }
 
 print_dry_run() {
@@ -268,9 +308,9 @@ print_dry_run() {
     "DRY RUN ONLY - no RevenueCat request or API-key read was performed." \
     "Planned read-only API v2 checks for project $PROJECT_ID:" \
     "- the active current offering has lookup_key default" \
-    "- the offering contains exact monthly and annual packages/products" \
-    "- the active CycleBalance Unlimited entitlement has both products attached" \
-    "Live verification requires read permissions for offerings, packages, and entitlements."
+    "- the offering contains exact $EXPECTED_MONTHLY_PACKAGE_LOOKUP_KEY and $EXPECTED_ANNUAL_PACKAGE_LOOKUP_KEY packages" \
+    "- those packages and the active CycleBalance Unlimited entitlement contain both exact CycleBalance iOS products" \
+    "Required shared-key read-only scopes: Subscriptions, Offerings, Packages, Products, Entitlements; no write access."
 }
 
 main() {
