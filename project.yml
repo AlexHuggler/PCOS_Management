@@ -7,6 +7,11 @@ options:
   generateEmptyDirectories: true
   groupSortPosition: top
 
+configs:
+  Debug: debug
+  Release: release
+  ScannerCanary: release
+
 packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios-spm.git
@@ -33,6 +38,7 @@ targets:
     configFiles:
       Debug: Config/Debug.xcconfig
       Release: Config/Release.xcconfig
+      ScannerCanary: Config/ScannerCanary.xcconfig
     sources:
       - path: PCOS/PCOS
         excludes:
@@ -76,6 +82,14 @@ targets:
           MEAL_SCAN_RELEASE_DEBUG_DIRECT_ENABLED: "NO"
           MEAL_SCAN_RELEASE_FALLBACK_MODEL_ENABLED: "NO"
           MEAL_SCAN_RELEASE_SIMILARITY_ENABLED: "NO"
+          USDA_FDC_API_KEY: ""
+        ScannerCanary:
+          SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
+          SWIFT_COMPILATION_MODE: wholemodule
+          CODE_SIGN_ENTITLEMENTS: PCOS/PCOS.entitlements
+          INFOPLIST_FILE: PCOS/PCOS/Info.Release.plist
+          INFOPLIST_PREPROCESS: "YES"
+          INFOPLIST_PREPROCESSOR_DEFINITIONS: "$(inherited) MEAL_SCAN_RELEASE_UI_ENABLED_$(MEAL_SCAN_RELEASE_UI_ENABLED)=1 MEAL_SCAN_RELEASE_GEMINI_ENABLED_$(MEAL_SCAN_RELEASE_GEMINI_ENABLED)=1"
           USDA_FDC_API_KEY: ""
     dependencies:
       - package: RevenueCat
@@ -184,6 +198,22 @@ schemes:
       targets:
         - name: PCOSTests
         - name: PCOSUITests
+    archive:
+      config: Release
+
+  PCOS General Kenobi Scanner Canary:
+    build:
+      targets:
+        PCOS: all
+    run:
+      config: ScannerCanary
+      commandLineArguments:
+        "-billing.backendMode": true
+        "revenuecat": true
+    profile:
+      config: ScannerCanary
+    analyze:
+      config: ScannerCanary
     archive:
       config: Release
 

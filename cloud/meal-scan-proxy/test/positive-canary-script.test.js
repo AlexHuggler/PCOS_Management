@@ -21,6 +21,10 @@ const proxyDirectory = path.resolve(testDirectory, "..");
 const repositoryRoot = path.resolve(proxyDirectory, "../..");
 const scriptPath = path.join(proxyDirectory, "scripts/run-positive-general-kenobi-canary.sh");
 const projectPath = path.join(repositoryRoot, "project.yml");
+const scannerCanaryConfigPath = path.join(repositoryRoot, "Config/ScannerCanary.xcconfig");
+const scannerCanaryConfigSource = existsSync(scannerCanaryConfigPath)
+  ? readFileSync(scannerCanaryConfigPath, "utf8")
+  : "";
 const productionSetupPath = path.join(repositoryRoot, "docs/meal_scan_flash_lite_production_setup.md");
 const appStoreReadinessPath = path.join(repositoryRoot, "AppStoreReadinessChecklist.md");
 const scriptExists = existsSync(scriptPath);
@@ -1807,5 +1811,36 @@ test("failed seed receipt persistence never leaves an untracked installed canary
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
+  }
+});
+
+test("scanner canary Xcode configuration is isolated from canonical Release", () => {
+  assert.equal(existsSync(scannerCanaryConfigPath), true);
+  assert.match(projectSource, /configs:\n  Debug: debug\n  Release: release\n  ScannerCanary: release/);
+  assert.match(projectSource, /ScannerCanary: Config\/ScannerCanary\.xcconfig/);
+
+  const schemeStart = projectSource.indexOf("  PCOS General Kenobi Scanner Canary:");
+  assert.notEqual(schemeStart, -1);
+  const schemeSource = projectSource.slice(schemeStart);
+  assert.match(schemeSource, /run:\n      config: ScannerCanary/);
+  assert.match(schemeSource, /profile:\n      config: ScannerCanary/);
+  assert.match(schemeSource, /analyze:\n      config: ScannerCanary/);
+  assert.match(schemeSource, /archive:\n      config: Release/);
+  assert.doesNotMatch(schemeSource, /storeKitConfiguration:/);
+  assert.match(schemeSource, /"-billing\.backendMode": true/);
+  assert.match(schemeSource, /"revenuecat": true/);
+
+  const expectedCanaryFlags = new Map([
+    ["MEAL_SCAN_RELEASE_UI_ENABLED", "YES"],
+    ["MEAL_SCAN_RELEASE_GEMINI_ENABLED", "YES"],
+    ["MEAL_SCAN_RELEASE_MOCK_DATA_ENABLED", "NO"],
+    ["MEAL_SCAN_RELEASE_DEBUG_DIRECT_ENABLED", "NO"],
+    ["MEAL_SCAN_RELEASE_FALLBACK_MODEL_ENABLED", "NO"],
+    ["MEAL_SCAN_RELEASE_SIMILARITY_ENABLED", "NO"],
+  ]);
+  for (const [key, expected] of expectedCanaryFlags) {
+    assert.match(scannerCanaryConfigSource, new RegExp(`^${key} = ${expected}$`, "m"));
+    const declarations = projectSource.match(new RegExp(`^\\s+${key}: ["']?NO["']?$`, "gm")) ?? [];
+    assert.equal(declarations.length, 1, `${key} must remain one canonical NO declaration`);
   }
 });
