@@ -97,7 +97,7 @@ struct MealScanReleaseContractTests {
         #expect(label.contains("Net carbs, 0 g"))
     }
 
-    @Test("Food rows expose one contextual VoiceOver label including warnings")
+    @Test("Food rows expose one contextual VoiceOver label while warnings stay collapsed")
     func foodRowsUseOneContextualAccessibilityElement() throws {
         let item = MealFoodItemDraft(
             displayName: "Rice bowl",
@@ -114,7 +114,7 @@ struct MealScanReleaseContractTests {
         let rowSource = try sourceSlice(
             flowSource,
             from: "struct MealScanFoodItemRow: View",
-            to: "struct MealScanManualFallbackView: View"
+            to: "struct MealScanFailureView: View"
         )
         let reviewSource = try sourceSlice(
             flowSource,
@@ -126,10 +126,12 @@ struct MealScanReleaseContractTests {
         #expect(label.contains("140"))
         #expect(label.contains("220"))
         #expect(label.localizedCaseInsensitiveContains("review suggested"))
-        #expect(label.localizedCaseInsensitiveContains("sauce amount is uncertain"))
+        #expect(!label.localizedCaseInsensitiveContains("sauce amount is uncertain"))
         #expect(rowSource.contains(".accessibilityElement(children: .ignore)"))
         #expect(rowSource.contains(".accessibilityLabel(Self.accessibilityLabel(for: item))"))
         #expect(!reviewSource.contains(".accessibilityLabel(MealScanFoodItemRow.accessibilityLabel(for: item))"))
+        #expect(reviewSource.contains("private var reviewWarnings: [String]"))
+        #expect(reviewSource.contains("DisclosureGroup"))
     }
 
     @Test("Scanner semantic headings use the existing branded heading font")
@@ -151,7 +153,7 @@ struct MealScanReleaseContractTests {
             to: "struct MealScanFoodItemRow: View"
         )
 
-        #expect(shellSource.contains(".appHeadingFont(.title3, weight: .regular)"))
+        #expect(shellSource.contains("dynamicTypeSize.isAccessibilitySize ? .caption2 : .title3"))
         #expect(flowSource.components(separatedBy: ".appHeadingFont(").count - 1 >= 16)
         #expect(repeatSource.components(separatedBy: ".appHeadingFont(").count - 1 >= 2)
         #expect(!nutritionSource.contains(".appHeadingFont("))
@@ -343,22 +345,46 @@ struct MealScanReleaseContractTests {
         #expect(flowSource.contains(".task(id: title)"))
         #expect(flowSource.contains("MealScanPhaseShell(\n            title: L10n.string(\"Edit food\""))
 
+        let phaseRouter = try sourceSlice(
+            flowSource,
+            from: "private func phaseContent(for viewModel: MealScanViewModel)",
+            to: "private func chooseBarcode()"
+        )
         for phase in [
-            ".entry", ".camera", ".processing", ".repeatSuggestion", ".remoteConsent",
-            ".ambiguousOutcome", ".newAttemptConfirmation", ".review", ".manualFallback", ".saved",
+            ".photoChoice", ".processing", ".repeatSuggestion", ".remoteConsent",
+            ".failure", ".review", ".saved",
         ] {
-            #expect(flowSource.contains("case \(phase):"), "Shared scanner routing must cover \(phase).")
+            #expect(phaseRouter.contains("case \(phase):"), "Shared scanner routing must cover \(phase).")
+        }
+        for obsoletePhase in [
+            ".entry", ".camera", ".ambiguousOutcome", ".newAttemptConfirmation", ".manualFallback",
+        ] {
+            #expect(!phaseRouter.contains("case \(obsoletePhase):"), "Scanner routing must not retain \(obsoletePhase).")
         }
 
-        let camera = try sourceSlice(flowSource, from: "struct MealCameraView", to: "struct MealScanProcessingView")
-        let review = try sourceSlice(flowSource, from: "struct MealScanReviewView", to: "struct MealFoodItemEditView")
+        let photoChoice = try sourceSlice(flowSource, from: "struct MealPhotoChoiceView", to: "struct MealScanProcessingView")
+        let review = try sourceSlice(flowSource, from: "struct MealScanReviewView", to: "struct MealScanReviewActionPanel")
         let editor = try sourceSlice(flowSource, from: "struct MealFoodItemEditView", to: "struct MealNutritionSummaryView")
-        #expect(!camera.contains("Form {"))
+        #expect(!photoChoice.contains("Form {"))
         #expect(!review.contains("Form {"))
         #expect(!editor.contains("Form {"))
-        #expect(review.contains("GridItem(.adaptive("))
+        #expect(review.contains("adjustPortion(id: item.id, byGrams: -25)"))
+        #expect(review.contains("MealNutritionSummaryView(nutrition: viewModel.totalNutrition, mode: .core)"))
+        #expect(review.contains("DisclosureGroup(isExpanded: $isShowingMoreDetails)"))
+        #expect(review.contains("viewModel.newManualFoodDraft()"))
         #expect(!review.contains("mealBalanceScore"))
         #expect(!repeatSource.contains("BotanicalScreenBackground"), "Repeat content should inherit the shared shell.")
+
+        for legacyView in [
+            "struct MealScanEntryView: View",
+            "private struct LegacyMealScanReviewView: View",
+            "struct MealScanAmbiguousOutcomeView: View",
+            "struct MealScanNewAttemptConfirmationView: View",
+            "struct MealCameraView: View",
+            "struct MealScanManualFallbackView: View",
+        ] {
+            #expect(!flowSource.contains(legacyView), "Dead legacy scanner view must be removed: \(legacyView).")
+        }
     }
 
     @Test("Debug sample scan uses bundled meal artwork instead of an empty image")
@@ -395,17 +421,17 @@ struct MealScanReleaseContractTests {
     @Test("Scanner status and actions remain understandable without color")
     func scannerStatusAndActionsUseTextAndSymbolCues() throws {
         let flowSource = try source(at: "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift")
-        let camera = try sourceSlice(flowSource, from: "struct MealCameraView", to: "struct MealScanProcessingView")
-        let review = try sourceSlice(flowSource, from: "struct MealScanReviewView", to: "struct MealFoodItemEditView")
+        let photoChoice = try sourceSlice(flowSource, from: "struct MealPhotoChoiceView", to: "struct MealScanProcessingView")
+        let review = try sourceSlice(flowSource, from: "struct MealScanReviewView", to: "struct MealScanReviewActionPanel")
         let saved = try sourceSlice(flowSource, from: "struct MealScanSavedView", to: "private struct MealScanSavedMealDetailView")
 
-        #expect(camera.contains("cameraPermissionStatusText"))
-        #expect(camera.contains("cameraPermissionSystemImage"))
-        for status in ["Allowed", "Denied", "Restricted", "Not requested"] {
-            #expect(camera.contains("L10n.string(\"\(status)\""))
+        #expect(photoChoice.contains("cameraPermissionSystemImage"))
+        #expect(photoChoice.contains("shouldShowCameraPermissionHelp"))
+        for status in ["Camera needs attention", "The camera permission was denied.", "The camera is restricted on this device."] {
+            #expect(photoChoice.contains(status))
         }
         #expect(review.contains("viewModel.confidence.displayName"))
-        #expect(review.contains("Estimate, not diagnosis"))
+        #expect(review.contains("Nutrition and glycemic context are estimates, not a diagnosis or medical advice."))
         for action in ["View Meal", "Add Context", "Share"] {
             #expect(saved.contains("L10n.string(\"\(action)\""))
         }

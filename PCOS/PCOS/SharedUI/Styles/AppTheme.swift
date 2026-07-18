@@ -293,6 +293,28 @@ enum AppTheme {
         isLunarCalm ? lunarCalmBackgroundRGB.color : .white
     }
 
+    /// Scanner-specific semantic colors. The matching RGB tokens are exposed
+    /// on `ThemeOption` so their WCAG contrast can be tested deterministically.
+    static var mealScannerSurface: Color {
+        appearance.themeOption.mealScannerSurfaceRGB.color
+    }
+
+    static var mealScannerBodyText: Color {
+        appearance.themeOption.mealScannerBodyTextRGB.color
+    }
+
+    static var mealScannerErrorText: Color {
+        appearance.themeOption.mealScannerErrorTextRGB.color
+    }
+
+    static var mealScannerActionBackground: Color {
+        appearance.themeOption.mealScannerActionBackgroundRGB.color
+    }
+
+    static var mealScannerActionForeground: Color {
+        appearance.themeOption.mealScannerActionForegroundRGB.color
+    }
+
     // MARK: - Primary Colors
 
     /// User-selected accent color

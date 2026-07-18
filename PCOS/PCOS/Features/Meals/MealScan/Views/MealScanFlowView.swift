@@ -35,6 +35,32 @@ struct MealScanFlowView: View {
                 ) {
                     phaseContent(for: viewModel)
                 }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if viewModel.phase == .review {
+                        MealScanReviewActionPanel(viewModel: viewModel)
+                    }
+                }
+                .alert(
+                    L10n.string("Start another scan?", defaultValue: "Start another scan?"),
+                    isPresented: Binding(
+                        get: { viewModel.isShowingNewAnalysisConfirmation },
+                        set: { isPresented in
+                            if !isPresented { viewModel.cancelNewAnalysisConfirmation() }
+                        }
+                    )
+                ) {
+                    Button(L10n.string("Start another scan", defaultValue: "Start another scan")) {
+                        Task { try? await viewModel.confirmNewAnalysisAfterAmbiguousOutcome() }
+                    }
+                    Button(L10n.string("Cancel", defaultValue: "Cancel"), role: .cancel) {
+                        viewModel.cancelNewAnalysisConfirmation()
+                    }
+                } message: {
+                    Text(L10n.string(
+                        "CycleBalance still cannot confirm the earlier scan. Starting another one may use an additional scan.",
+                        defaultValue: "CycleBalance still cannot confirm the earlier scan. Starting another one may use an additional scan."
+                    ))
+                }
             } else {
                 MealScanPhaseShell(
                     title: L10n.string("Photo estimate", defaultValue: "Photo estimate"),
@@ -46,6 +72,7 @@ struct MealScanFlowView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .tint(AppTheme.mealScannerActionBackground)
         .onAppear {
             if viewModel == nil {
                 viewModel = MealScanViewModel(mealType: mealType, modelContext: modelContext)
@@ -57,10 +84,8 @@ struct MealScanFlowView: View {
     @ViewBuilder
     private func phaseContent(for viewModel: MealScanViewModel) -> some View {
         switch viewModel.phase {
-        case .entry:
-            MealScanEntryView(viewModel: viewModel, onChooseManual: chooseManual)
-        case .camera:
-            MealCameraView(
+        case .photoChoice:
+            MealPhotoChoiceView(
                 viewModel: viewModel,
                 onChooseBarcode: chooseBarcode,
                 onChooseManual: chooseManual
@@ -74,15 +99,7 @@ struct MealScanFlowView: View {
                     onUsePrevious: { viewModel.usePreviousMeal() },
                     onScanAsNew: {
                         Task {
-                            do {
-                                try await viewModel.scanPendingImageAsNew()
-                            } catch {
-                                viewModel.errorMessage = L10n.string(
-                                    "No food was confidently detected. You can retake the photo or add the meal manually.",
-                                    defaultValue: "No food was confidently detected. You can retake the photo or add the meal manually."
-                                )
-                                viewModel.phase = .manualFallback
-                            }
+                            try? await viewModel.scanPendingImageAsNew()
                         }
                     }
                 )
@@ -91,26 +108,14 @@ struct MealScanFlowView: View {
             }
         case .remoteConsent:
             MealScanRemoteConsentView(viewModel: viewModel, onChooseManual: chooseManual)
-        case .ambiguousOutcome:
-            MealScanAmbiguousOutcomeView(
-                viewModel: viewModel,
-                onChooseBarcode: chooseBarcode,
-                onChooseManual: chooseManual
-            )
-        case .newAttemptConfirmation:
-            MealScanNewAttemptConfirmationView(
+        case .failure:
+            MealScanFailureView(
                 viewModel: viewModel,
                 onChooseBarcode: chooseBarcode,
                 onChooseManual: chooseManual
             )
         case .review:
             MealScanReviewView(viewModel: viewModel)
-        case .manualFallback:
-            MealScanManualFallbackView(
-                viewModel: viewModel,
-                onChooseBarcode: chooseBarcode,
-                onChooseManual: chooseManual
-            )
         case .saved:
             MealScanSavedView(viewModel: viewModel)
         }
@@ -130,24 +135,18 @@ struct MealScanFlowView: View {
 private extension MealScanViewModel.Phase {
     var localizedTitle: String {
         switch self {
-        case .entry:
-            L10n.string("Photo estimate", defaultValue: "Photo estimate")
-        case .camera:
+        case .photoChoice:
             L10n.string("Meal photo", defaultValue: "Meal photo")
         case .processing:
             L10n.string("Preparing photo", defaultValue: "Preparing photo")
         case .repeatSuggestion:
             L10n.string("Looks familiar", defaultValue: "Looks familiar")
         case .remoteConsent:
-            L10n.string("Review photo privacy", defaultValue: "Review photo privacy")
-        case .ambiguousOutcome:
-            L10n.string("Analysis status unknown", defaultValue: "Analysis status unknown")
-        case .newAttemptConfirmation:
-            L10n.string("Start a separate analysis?", defaultValue: "Start a separate analysis?")
+            L10n.string("Confirm analysis", defaultValue: "Confirm analysis")
+        case .failure:
+            L10n.string("CycleBalance AI scanner", defaultValue: "CycleBalance AI scanner")
         case .review:
             L10n.string("Review your estimate", defaultValue: "Review your estimate")
-        case .manualFallback:
-            L10n.string("Photo analysis unavailable", defaultValue: "Photo analysis unavailable")
         case .saved:
             L10n.string("Meal saved", defaultValue: "Meal saved")
         }
@@ -160,6 +159,7 @@ struct MealScanPhaseShell<Content: View>: View {
     let onClose: (() -> Void)?
     @ViewBuilder let content: Content
     @AccessibilityFocusState private var isHeadingFocused: Bool
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(
         title: String,
@@ -178,31 +178,32 @@ struct MealScanPhaseShell<Content: View>: View {
             BotanicalScreenBackground(style: AppTheme.usesPremiumEditorStyling ? .quiet : .dashboard)
 
             VStack(spacing: 0) {
-                HStack(spacing: AppTheme.spacing12) {
+                HStack(alignment: .firstTextBaseline, spacing: AppTheme.spacing8) {
                     Text(title)
-                        .appHeadingFont(.title3, weight: .regular)
+                        .appHeadingFont(dynamicTypeSize.isAccessibilitySize ? .caption2 : .title3, weight: .regular)
                         .foregroundStyle(AppTheme.primaryText)
                         .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(1)
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityHeading(.h1)
                         .accessibilityFocused($isHeadingFocused)
                         .accessibilityIdentifier("meal_scan.phase.title")
 
-                    Spacer(minLength: AppTheme.spacing8)
-
                     if let closeLabel, let onClose {
                         Button(action: onClose) {
                             Text(closeLabel)
-                                .appFont(.subheadline, weight: .semibold)
+                                .appFont(dynamicTypeSize.isAccessibilitySize ? .caption2 : .subheadline, weight: .semibold)
                                 .frame(minWidth: 44, minHeight: 44)
                         }
-                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                        .foregroundStyle(AppTheme.mealScannerActionBackground)
+                        .fixedSize()
                         .accessibilityLabel(closeLabel)
                         .accessibilityIdentifier("meal_scan.phase.close")
                     }
                 }
-                .padding(.horizontal, AppTheme.spacing20)
-                .padding(.vertical, AppTheme.spacing8)
+                .padding(.horizontal, dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing12 : AppTheme.spacing20)
+                .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 0 : AppTheme.spacing8)
                 .background(AppTheme.premiumEditorBackground.opacity(0.96))
                 .overlay(alignment: .bottom) {
                     Rectangle()
@@ -214,9 +215,10 @@ struct MealScanPhaseShell<Content: View>: View {
                     content
                         .frame(maxWidth: 620, alignment: .leading)
                         .padding(.horizontal, AppTheme.spacing16)
-                        .padding(.vertical, AppTheme.spacing20)
+                        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing4 : AppTheme.spacing20)
                         .frame(maxWidth: .infinity)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .id(title)
                 .accessibilityIdentifier("meal_scan.phase.scroll")
             }
@@ -236,87 +238,62 @@ struct MealScanRemoteConsentView: View {
     @State private var isSubmitting = false
     @State private var isShowingTechnicalDetails = false
 
-    private struct ConsentFact {
-        let title: String
-        let detail: String
-        let systemImage: String
-    }
-
-    private var consentFacts: [ConsentFact] {
-        [
-            ConsentFact(
-                title: L10n.string("What is sent", defaultValue: "What is sent"),
-                detail: L10n.string(
-                    "One compressed copy of this meal photo, only after you confirm.",
-                    defaultValue: "One compressed copy of this meal photo, only after you confirm."
-                ),
-                systemImage: "photo"
-            ),
-            ConsentFact(
-                title: L10n.string("Who processes it", defaultValue: "Who processes it"),
-                detail: L10n.string(
-                    "Google Gemini estimates foods, portions, and nutrition.",
-                    defaultValue: "Google Gemini estimates foods, portions, and nutrition."
-                ),
-                systemImage: "sparkles"
-            ),
-            ConsentFact(
-                title: L10n.string("Google retention", defaultValue: "Google retention"),
-                detail: L10n.string(
-                    "Google may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements.",
-                    defaultValue: "Google may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements."
-                ),
-                systemImage: "clock"
-            ),
-            ConsentFact(
-                title: L10n.string("What CycleBalance saves", defaultValue: "What CycleBalance saves"),
-                detail: L10n.string(
-                    "Only nutrition you review and save is added to your meal log. CycleBalance does not retain the uploaded photo on its server.",
-                    defaultValue: "Only nutrition you review and save is added to your meal log. CycleBalance does not retain the uploaded photo on its server."
-                ),
-                systemImage: "checkmark.shield"
-            ),
-        ]
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing20) {
+        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             if let image = viewModel.selectedImage {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 168)
+                    .frame(height: 176)
                     .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
                     .accessibilityLabel(L10n.string("Selected meal photo", defaultValue: "Selected meal photo"))
             }
 
-            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(
-                    L10n.string("Send this photo to Google Gemini?", defaultValue: "Send this photo to Google Gemini?"),
-                    systemImage: "lock.shield"
+                    L10n.string("Analyze this meal photo?", defaultValue: "Analyze this meal photo?"),
+                    systemImage: "sparkles"
                 )
                 .appHeadingFont(.title3, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
 
-                ForEach(Array(consentFacts.enumerated()), id: \.offset) { _, fact in
-                    HStack(alignment: .top, spacing: AppTheme.spacing12) {
-                        Image(systemName: fact.systemImage)
-                            .foregroundStyle(AppTheme.premiumEditorAccentColor)
-                            .frame(width: 28, height: 28)
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                            Text(fact.title)
-                                .appFont(.subheadline, weight: .semibold)
-                                .foregroundStyle(AppTheme.primaryText)
-                            Text(fact.detail)
-                                .appFont(.caption)
-                                .foregroundStyle(AppTheme.secondaryText)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
-                }
+                Text(L10n.string(
+                    "CycleBalance uses AI to create an editable estimate of foods, portions, and nutrition.",
+                    defaultValue: "CycleBalance uses AI to create an editable estimate of foods, portions, and nutrition."
+                ))
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.mealScannerBodyText)
+                .fixedSize(horizontal: false, vertical: true)
+
+                consentLine(
+                    L10n.string(
+                        "Google Gemini receives one compressed copy and may retain the photo and response for up to 55 days.",
+                        defaultValue: "Google Gemini receives one compressed copy and may retain the photo and response for up to 55 days."
+                    ),
+                    systemImage: "clock"
+                )
+                consentLine(
+                    L10n.string(
+                        "CycleBalance does not retain the uploaded photo on its servers.",
+                        defaultValue: "CycleBalance does not retain the uploaded photo on its servers."
+                    ),
+                    systemImage: "lock.shield"
+                )
+                consentLine(
+                    L10n.string(
+                        "Your edited estimate is added to the meal log only after you choose Save meal.",
+                        defaultValue: "Your edited estimate is added to the meal log only after you choose Save meal."
+                    ),
+                    systemImage: "checkmark.circle"
+                )
+                consentLine(
+                    L10n.string(
+                        "The photo is saved locally only when Keep Saved Meal Photos is enabled.",
+                        defaultValue: "The photo is saved locally only when Keep Saved Meal Photos is enabled."
+                    ),
+                    systemImage: "iphone"
+                )
 
                 DisclosureGroup(
                     isExpanded: $isShowingTechnicalDetails,
@@ -324,65 +301,32 @@ struct MealScanRemoteConsentView: View {
                         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                             technicalDetail(
                                 L10n.string(
-                                    "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
-                                    defaultValue: "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients."
+                                    "Google does not use paid API photos or responses to improve its products. Retention may still apply for abuse monitoring and legal or regulatory requirements.",
+                                    defaultValue: "Google does not use paid API photos or responses to improve its products. Retention may still apply for abuse monitoring and legal or regulatory requirements."
                                 )
                             )
                             technicalDetail(
                                 L10n.string(
-                                    "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
-                                    defaultValue: "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server."
+                                    "CycleBalance may keep a structured estimate for up to 24 hours so the exact photo can be reused without another upload.",
+                                    defaultValue: "CycleBalance may keep a structured estimate for up to 24 hours so the exact photo can be reused without another upload."
                                 )
                             )
                             technicalDetail(
                                 L10n.string(
-                                    "You will review and edit the estimate before anything is added to your meal log.",
-                                    defaultValue: "You will review and edit the estimate before anything is added to your meal log."
-                                )
-                            )
-                            technicalDetail(
-                                L10n.string(
-                                    "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
-                                    defaultValue: "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call."
-                                )
-                            )
-                            technicalDetail(
-                                L10n.string(
-                                    "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis.",
-                                    defaultValue: "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis."
+                                    "Scan limits depend on your access. Reusing a cached estimate does not use a scan.",
+                                    defaultValue: "Scan limits depend on your access. Reusing a cached estimate does not use a scan."
                                 )
                             )
                         }
                         .padding(.top, AppTheme.spacing8)
                     },
                     label: {
-                        Text(L10n.string("Full technical details", defaultValue: "Full technical details"))
+                        Text(L10n.string("Privacy details", defaultValue: "Privacy details"))
                             .appFont(.subheadline, weight: .semibold)
                     }
                 )
-                .tint(AppTheme.premiumEditorAccentColor)
-
-                if viewModel.mealScanQuota?.remaining == 0 {
-                    Label(
-                        L10n.string(
-                            "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis.",
-                            defaultValue: "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis."
-                        ),
-                        systemImage: "hourglass"
-                    )
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-
-                    if let resetText = viewModel.quotaResetAtLocalText {
-                        Text(L10n.format(
-                            "Next rolling-window reset in your local time: %@.",
-                            defaultValue: "Next rolling-window reset in your local time: %@.",
-                            resetText
-                        ))
-                        .appFont(.caption)
-                        .foregroundStyle(AppTheme.secondaryText)
-                    }
-                }
+                .tint(AppTheme.mealScannerActionBackground)
+                .accessibilityIdentifier("meal_scan.remote_consent.privacy_details")
             }
             .padding(AppTheme.spacing16)
             .mealScanCard()
@@ -392,48 +336,37 @@ struct MealScanRemoteConsentView: View {
                     isSubmitting = true
                     Task {
                         defer { isSubmitting = false }
-                        do {
-                            try await viewModel.confirmRemotePhotoEstimate()
-                        } catch {
-                            viewModel.errorMessage = L10n.string(
-                                "The photo estimate could not start. You can try another photo or enter the meal manually.",
-                                defaultValue: "The photo estimate could not start. You can try another photo or enter the meal manually."
-                            )
-                            viewModel.phase = .manualFallback
-                        }
+                        try? await viewModel.confirmRemotePhotoEstimate()
                     }
                 } label: {
                     Label(
-                        viewModel.canStartFreshAnalysis
-                            ? L10n.string("Send to Google Gemini", defaultValue: "Send to Google Gemini")
-                            : L10n.string("Check for cached result", defaultValue: "Check for cached result"),
-                        systemImage: viewModel.canStartFreshAnalysis ? "arrow.up.circle.fill" : "clock.arrow.circlepath"
+                        L10n.string("Analyze photo", defaultValue: "Analyze photo"),
+                        systemImage: "sparkles"
                     )
                     .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.premiumEditorAccentColor)
+                .mealScanPrimaryActionStyle()
                 .disabled(isSubmitting)
                 .accessibilityIdentifier("meal_scan.remote_consent.continue")
-
-                Button(action: onChooseManual) {
-                    Label(L10n.string("Enter Manually", defaultValue: "Enter Manually"), systemImage: "square.and.pencil")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.bordered)
-                .disabled(isSubmitting)
-                .accessibilityIdentifier("meal_scan.remote_consent.manual")
 
                 Button {
                     viewModel.retake()
                 } label: {
-                    Label(L10n.string("Choose Another Photo", defaultValue: "Choose Another Photo"), systemImage: "photo.on.rectangle")
+                    Label(L10n.string("Choose another photo", defaultValue: "Choose another photo"), systemImage: "photo.on.rectangle")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isSubmitting)
+                .accessibilityIdentifier("meal_scan.remote_consent.retake")
+
+                Button(action: onChooseManual) {
+                    Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(AppTheme.secondaryText)
                 .disabled(isSubmitting)
-                .accessibilityIdentifier("meal_scan.remote_consent.retake")
+                .accessibilityIdentifier("meal_scan.remote_consent.manual")
             }
         }
         .accessibilityElement(children: .contain)
@@ -444,168 +377,19 @@ struct MealScanRemoteConsentView: View {
     private func technicalDetail(_ text: String) -> some View {
         Text(text)
             .appFont(.caption)
-            .foregroundStyle(AppTheme.secondaryText)
+            .foregroundStyle(AppTheme.mealScannerBodyText)
             .fixedSize(horizontal: false, vertical: true)
     }
-}
 
-struct MealScanEntryView: View {
-    let viewModel: MealScanViewModel
-    let onChooseManual: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-                HStack(alignment: .top, spacing: AppTheme.spacing12) {
-                    VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                        Text(L10n.string("Start with a photo", defaultValue: "Start with a photo"))
-                            .appHeadingFont(.largeTitle, weight: .regular)
-                            .foregroundStyle(AppTheme.primaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(L10n.string(
-                            "Start with a photo-based draft, then review every food and portion before anything is saved.",
-                            defaultValue: "Start with a photo-based draft, then review every food and portion before anything is saved."
-                        ))
-                        .appFont(.subheadline)
-                        .foregroundStyle(AppTheme.secondaryText)
-                    }
-                    Spacer(minLength: AppTheme.spacing8)
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
-                        .frame(width: 56, height: 56)
-                        .background(Circle().fill(AppTheme.premiumEditorAccentGradient))
-                        .accessibilityHidden(true)
-                }
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: AppTheme.spacing8) { phasePills }
-                    VStack(alignment: .leading, spacing: AppTheme.spacing8) { phasePills }
-                }
-            }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
-            .accessibilityIdentifier("meal_scan.lunar.header")
-
-            MealScanPrivacyNoticeView()
-
-            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-                Label(L10n.string("Choose a starting point", defaultValue: "Choose a starting point"), systemImage: "sparkles")
-                    .appHeadingFont(.headline, weight: .regular)
-                    .foregroundStyle(AppTheme.primaryText)
-
-                Button {
-                    viewModel.startScan()
-                } label: {
-                    actionRow(
-                        title: L10n.string("Choose meal photo", defaultValue: "Choose meal photo"),
-                        subtitle: L10n.string("Use the camera or import a photo", defaultValue: "Use the camera or import a photo"),
-                        systemImage: "camera.viewfinder",
-                        accent: AppTheme.premiumEditorAccentColor,
-                        isPrimary: true
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("meal_scan.scan_button")
-                .accessibilityLabel(L10n.string("Choose meal photo", defaultValue: "Choose meal photo"))
-
-                Button(action: onChooseManual) {
-                    actionRow(
-                        title: L10n.string("Enter manually", defaultValue: "Enter manually"),
-                        subtitle: L10n.string("Build an editable estimate yourself", defaultValue: "Build an editable estimate yourself"),
-                        systemImage: "square.and.pencil",
-                        accent: AppTheme.premiumEditorSecondaryAccentColor,
-                        isPrimary: false
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("meal_scan.manual_button")
-            }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("meal_scan.lunar.actions")
-
-            Text(L10n.string(
-                "Nutrition values are estimates and can vary with preparation, ingredients, and portion size. Use them as a starting point, not a judgment.",
-                defaultValue: "Nutrition values are estimates and can vary with preparation, ingredients, and portion size. Use them as a starting point, not a judgment."
-            ))
+    private func consentLine(_ text: String, systemImage: String) -> some View {
+        Label(text, systemImage: systemImage)
             .appFont(.caption)
-            .foregroundStyle(AppTheme.secondaryText)
+            .foregroundStyle(AppTheme.mealScannerBodyText)
             .fixedSize(horizontal: false, vertical: true)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("meal_scan.lunar.entry")
-    }
-
-    @ViewBuilder
-    private var phasePills: some View {
-        stepPill(title: L10n.string("Photo", defaultValue: "Photo"), systemImage: "camera.fill")
-        stepPill(title: L10n.string("Review", defaultValue: "Review"), systemImage: "slider.horizontal.3")
-        stepPill(title: L10n.string("Save", defaultValue: "Save"), systemImage: "checkmark.seal.fill")
-    }
-
-    private func stepPill(title: String, systemImage: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: systemImage)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(AppTheme.premiumEditorAccentColor)
-            Text(title)
-                .appFont(.caption2, weight: .semibold)
-                .foregroundStyle(AppTheme.primaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.76)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppTheme.spacing8)
-        .background(Capsule().fill(AppTheme.premiumEditorSurface.opacity(0.74)))
-        .overlay(Capsule().stroke(AppTheme.premiumEditorBorder.opacity(0.54), lineWidth: 0.8))
-    }
-
-    private func actionRow(
-        title: String,
-        subtitle: String,
-        systemImage: String,
-        accent: Color,
-        isPrimary: Bool
-    ) -> some View {
-        HStack(spacing: AppTheme.spacing12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(isPrimary ? AppTheme.premiumEditorCTAForeground : accent)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(isPrimary ? AnyShapeStyle(AppTheme.premiumEditorAccentGradient) : AnyShapeStyle(accent.opacity(0.14))))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .appFont(.subheadline, weight: .semibold)
-                    .foregroundStyle(AppTheme.primaryText)
-                Text(subtitle)
-                    .appFont(.caption)
-                    .foregroundStyle(AppTheme.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(AppTheme.secondaryText)
-        }
-        .padding(AppTheme.spacing12)
-        .frame(minHeight: 56)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                .fill(AppTheme.premiumEditorSurface.opacity(isPrimary ? 0.88 : 0.7))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                .stroke(isPrimary ? AppTheme.premiumEditorBorderGradient : LinearGradient(colors: [AppTheme.premiumEditorBorder.opacity(0.58)], startPoint: .leading, endPoint: .trailing), lineWidth: 0.8)
-        )
     }
 }
 
-struct MealCameraView: View {
+struct MealPhotoChoiceView: View {
     @Environment(AppState.self) private var appState
     let viewModel: MealScanViewModel
     let onChooseBarcode: () -> Void
@@ -619,72 +403,51 @@ struct MealCameraView: View {
         VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(
-                    L10n.string("Photo quality", defaultValue: "Photo quality"),
+                    L10n.string("Choose a meal photo", defaultValue: "Choose a meal photo"),
                     systemImage: "viewfinder"
                 )
                 .appHeadingFont(.headline, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 Text(L10n.string(
-                    "Choose a clear photo with the whole plate visible and steady, even lighting.",
-                    defaultValue: "Choose a clear photo with the whole plate visible and steady, even lighting."
+                    "For the clearest estimate, show the whole plate in good light.",
+                    defaultValue: "For the clearest estimate, show the whole plate in good light."
                 ))
                 .appFont(.subheadline)
-                .foregroundStyle(AppTheme.secondaryText)
+                .foregroundStyle(AppTheme.mealScannerBodyText)
                 .fixedSize(horizontal: false, vertical: true)
             }
             .padding(AppTheme.spacing16)
             .mealScanCard()
 
-            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Label(
-                    L10n.string("Camera permission", defaultValue: "Camera permission"),
-                    systemImage: cameraPermissionSystemImage
-                )
-                .appHeadingFont(.headline, weight: .regular)
-                .foregroundStyle(AppTheme.primaryText)
-                Text(cameraPermissionStatusText)
-                    .appFont(.subheadline, weight: .semibold)
+            if shouldShowCameraPermissionHelp {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Label(
+                        L10n.string("Camera needs attention", defaultValue: "Camera needs attention"),
+                        systemImage: cameraPermissionSystemImage
+                    )
+                    .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
-                Text(cameraPermissionDetail)
-                    .appFont(.caption)
-                    .foregroundStyle(AppTheme.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text(cameraPermissionDetail)
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.mealScannerBodyText)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                if cameraAuthorizationStatus == .denied || cameraAuthorizationStatus == .restricted {
-                    Button(action: openSettings) {
-                        Label(L10n.string("Open Settings", defaultValue: "Open Settings"), systemImage: "gear")
-                            .frame(maxWidth: .infinity, minHeight: 44)
+                    if cameraAuthorizationStatus == .denied {
+                        Button(action: openSettings) {
+                            Label(L10n.string("Open Settings", defaultValue: "Open Settings"), systemImage: "gear")
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("meal_scan.camera.open_settings")
                     }
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("meal_scan.camera.open_settings")
                 }
+                .padding(AppTheme.spacing16)
+                .mealScanCard()
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("meal_scan.camera.permission")
             }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("meal_scan.camera.permission")
 
             VStack(spacing: AppTheme.spacing12) {
-                if appState.allowsPremiumAccess {
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Label(L10n.string("Import meal photo", defaultValue: "Import meal photo"), systemImage: "photo.on.rectangle")
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppTheme.premiumEditorAccentColor)
-                    .accessibilityIdentifier("meal_scan.import_photo_button")
-                } else {
-                    Button {
-                        presentMealScanPaywall()
-                    } label: {
-                        Label(L10n.string("Import meal photo", defaultValue: "Import meal photo"), systemImage: "photo.on.rectangle")
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppTheme.premiumEditorAccentColor)
-                    .accessibilityIdentifier("meal_scan.import_photo_button")
-                }
-
                 Button {
                     guard appState.allowsPremiumAccess else {
                         presentMealScanPaywall()
@@ -692,11 +455,29 @@ struct MealCameraView: View {
                     }
                     presentCamera()
                 } label: {
-                    Label(L10n.string("Take meal photo", defaultValue: "Take meal photo"), systemImage: "camera")
+                    Label(L10n.string("Take Photo", defaultValue: "Take Photo"), systemImage: "camera.fill")
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.bordered)
+                .mealScanPrimaryActionStyle()
                 .accessibilityIdentifier("meal_scan.take_photo_button")
+
+                if appState.allowsPremiumAccess {
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        Label(L10n.string("Choose from Library", defaultValue: "Choose from Library"), systemImage: "photo.on.rectangle")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("meal_scan.import_photo_button")
+                } else {
+                    Button {
+                        presentMealScanPaywall()
+                    } label: {
+                        Label(L10n.string("Choose from Library", defaultValue: "Choose from Library"), systemImage: "photo.on.rectangle")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("meal_scan.import_photo_button")
+                }
 
                 if MealScanFeatureFlags.current.enableMockMealScanData {
                     Button {
@@ -709,19 +490,10 @@ struct MealCameraView: View {
                     .accessibilityIdentifier("meal_scan.mock_photo_button")
                 }
 
-                Button(action: onChooseBarcode) {
-                    Label(L10n.string("Scan a barcode", defaultValue: "Scan a barcode"), systemImage: "barcode.viewfinder")
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: AppTheme.spacing8) { compactAlternatives }
+                    VStack(spacing: AppTheme.spacing8) { compactAlternatives }
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("meal_scan.camera.barcode")
-
-                Button(action: onChooseManual) {
-                    Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("meal_scan.camera.manual")
             }
             .padding(AppTheme.spacing16)
             .mealScanCard()
@@ -730,21 +502,16 @@ struct MealCameraView: View {
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label(cameraError, systemImage: "exclamationmark.triangle.fill")
                         .appFont(.subheadline, weight: .semibold)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                    Text(L10n.string("No fresh AI photo analysis was used.", defaultValue: "No fresh AI photo analysis was used."))
+                        .foregroundStyle(AppTheme.mealScannerErrorText)
+                    Text(L10n.string("No scan was used.", defaultValue: "No scan was used."))
                         .appFont(.caption)
-                        .foregroundStyle(AppTheme.secondaryText)
+                        .foregroundStyle(AppTheme.mealScannerBodyText)
                 }
                 .padding(AppTheme.spacing16)
                 .mealScanCard()
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("meal_scan.camera.error")
             }
-
-            Text(MealScanPrivacyNoticeView.remoteAnalysisDisclosure)
-                .appFont(.caption)
-                .foregroundStyle(AppTheme.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .sheet(isPresented: $showingCamera) {
             MealCameraImagePicker { image in
@@ -762,21 +529,38 @@ struct MealCameraView: View {
                 do {
                     guard let data = try await newItem.loadTransferable(type: Data.self),
                           let image = UIImage(data: data) else {
+                        viewModel.rejectUnreadableSelectedPhoto()
                         return
                     }
                     await viewModel.scanWithFallback(image: image)
                 } catch {
-                    cameraError = L10n.format(
-                        "Could not import photo. %@",
-                        defaultValue: "Could not import photo. %@",
-                        error.localizedDescription
-                    )
+                    viewModel.rejectUnreadableSelectedPhoto()
                 }
             }
         }
         .onAppear {
-            cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+            cameraAuthorizationStatus = initialCameraAuthorizationStatus
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("meal_scan.photo_choice")
+    }
+
+    @ViewBuilder
+    private var compactAlternatives: some View {
+        Button(action: onChooseBarcode) {
+            Label(L10n.string("Barcode", defaultValue: "Barcode"), systemImage: "barcode.viewfinder")
+                .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel(L10n.string("Scan a barcode", defaultValue: "Scan a barcode"))
+        .accessibilityIdentifier("meal_scan.camera.barcode")
+
+        Button(action: onChooseManual) {
+            Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
+                .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("meal_scan.camera.manual")
     }
 
     private var cameraPermissionSystemImage: String {
@@ -788,10 +572,24 @@ struct MealCameraView: View {
         }
     }
 
+    private var shouldShowCameraPermissionHelp: Bool {
+        cameraAuthorizationStatus == .denied || cameraAuthorizationStatus == .restricted
+    }
+
+    private var initialCameraAuthorizationStatus: AVAuthorizationStatus {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("UITestMode"),
+           let fixtureIndex = arguments.firstIndex(of: "-mealScan.fixture"),
+           arguments.indices.contains(fixtureIndex + 1) {
+            return arguments[fixtureIndex + 1] == "permissionDenied" ? .denied : .authorized
+        }
+        #endif
+        return AVCaptureDevice.authorizationStatus(for: .video)
+    }
+
     private var cameraPermissionDetail: String {
         switch cameraAuthorizationStatus {
-        case .authorized:
-            L10n.string("The camera is available for meal photos.", defaultValue: "The camera is available for meal photos.")
         case .denied:
             L10n.string(
                 "The camera permission was denied. Open Settings to allow it, or use another entry method.",
@@ -799,28 +597,13 @@ struct MealCameraView: View {
             )
         case .restricted:
             L10n.string(
-                "The camera is restricted on this device. You can import a photo, scan a barcode, or enter the meal manually.",
-                defaultValue: "The camera is restricted on this device. You can import a photo, scan a barcode, or enter the meal manually."
+                "The camera is restricted on this device. Choose a photo from your library, scan a barcode, or enter the meal manually.",
+                defaultValue: "The camera is restricted on this device. Choose a photo from your library, scan a barcode, or enter the meal manually."
             )
-        case .notDetermined:
-            L10n.string("The camera has not asked for access yet.", defaultValue: "The camera has not asked for access yet.")
+        case .authorized, .notDetermined:
+            ""
         @unknown default:
-            L10n.string("The camera has not asked for access yet.", defaultValue: "The camera has not asked for access yet.")
-        }
-    }
-
-    private var cameraPermissionStatusText: String {
-        switch cameraAuthorizationStatus {
-        case .authorized:
-            L10n.string("Allowed", defaultValue: "Allowed")
-        case .denied:
-            L10n.string("Denied", defaultValue: "Denied")
-        case .restricted:
-            L10n.string("Restricted", defaultValue: "Restricted")
-        case .notDetermined:
-            L10n.string("Not requested", defaultValue: "Not requested")
-        @unknown default:
-            L10n.string("Not requested", defaultValue: "Not requested")
+            ""
         }
     }
 
@@ -881,7 +664,7 @@ struct MealScanProcessingView: View {
         VStack(spacing: AppTheme.spacing16) {
             ProgressView()
                 .controlSize(.large)
-                .tint(AppTheme.premiumEditorAccentColor)
+                .tint(AppTheme.mealScannerActionBackground)
             Text(stageTitle)
                 .appHeadingFont(.headline, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
@@ -913,290 +696,379 @@ struct MealScanProcessingView: View {
 
 struct MealScanReviewView: View {
     @Bindable var viewModel: MealScanViewModel
-    @State private var saveError: String?
-    private let adaptiveReviewColumns = [GridItem(.adaptive(minimum: 220), spacing: AppTheme.spacing12)]
+    @State private var isShowingMoreDetails = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-            LazyVGrid(columns: adaptiveReviewColumns, alignment: .leading, spacing: AppTheme.spacing12) {
-                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label(
-                        viewModel.confidence.displayName,
-                        systemImage: "checkmark.seal"
-                    )
-                    .appFont(.headline, weight: .semibold)
-                    .foregroundStyle(AppTheme.premiumEditorAccentColor)
-                    .accessibilityLabel(L10n.format(
-                        "Confidence: %@",
-                        defaultValue: "Confidence: %@",
-                        viewModel.confidence.displayName
-                    ))
-
-                    TextField(
-                        L10n.string("Meal name", defaultValue: "Meal name"),
-                        text: $viewModel.mealName
-                    )
-                    .textFieldStyle(.plain)
-                    .padding(AppTheme.spacing12)
-                    .background(AppTheme.premiumEditorRaisedSurface.opacity(0.75))
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous))
-                    .accessibilityIdentifier("meal_scan.meal_name")
+        VStack(alignment: .leading, spacing: dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing12 : AppTheme.spacing16) {
+            VStack(alignment: .leading, spacing: dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing8 : AppTheme.spacing12) {
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Label(L10n.string("Meal and portions", defaultValue: "Meal and portions"), systemImage: "fork.knife")
+                        .appHeadingFont(.headline, weight: .regular)
+                        .foregroundStyle(AppTheme.primaryText)
                 }
-                .padding(AppTheme.spacing16)
-                .mealScanCard()
 
-                if let image = viewModel.selectedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 132)
-                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
-                        .accessibilityLabel(L10n.string("Selected meal photo", defaultValue: "Selected meal photo"))
-                }
-            }
-
-            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
-                Label(L10n.string("Foods", defaultValue: "Foods"), systemImage: "fork.knife")
-                    .appHeadingFont(.headline, weight: .regular)
-                    .foregroundStyle(AppTheme.primaryText)
+                TextField(
+                    L10n.string("Meal name", defaultValue: "Meal name"),
+                    text: $viewModel.mealName
+                )
+                .textFieldStyle(.plain)
+                .padding(dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing8 : AppTheme.spacing12)
+                .background(AppTheme.premiumEditorRaisedSurface.opacity(0.75))
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous))
+                .accessibilityIdentifier("meal_scan.meal_name")
 
                 ForEach(viewModel.draftItems) { item in
-                    HStack(spacing: AppTheme.spacing8) {
-                        NavigationLink {
-                            MealFoodItemEditView(initialItem: item, viewModel: viewModel) { updated in
-                                viewModel.replaceItem(updated)
+                    VStack(alignment: .leading, spacing: dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing4 : AppTheme.spacing8) {
+                        HStack(spacing: AppTheme.spacing8) {
+                            NavigationLink {
+                                MealFoodItemEditView(initialItem: item, viewModel: viewModel) { updated in
+                                    viewModel.replaceItem(updated)
+                                }
+                            } label: {
+                                MealScanFoodItemRow(item: item)
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .contentShape(Rectangle())
                             }
-                        } label: {
-                            MealScanFoodItemRow(item: item)
-                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityHint(L10n.string("Double tap to edit this food and portion.", defaultValue: "Double tap to edit this food and portion."))
-                        .accessibilityIdentifier("meal_scan.edit_food_item")
+                            .buttonStyle(.plain)
+                            .accessibilityHint(L10n.string(
+                                "Double tap to edit this food or enter an exact portion.",
+                                defaultValue: "Double tap to edit this food or enter an exact portion."
+                            ))
+                            .accessibilityIdentifier("meal_scan.edit_food_item")
 
-                        Button {
-                            viewModel.removeItem(id: item.id)
-                        } label: {
-                            Image(systemName: "trash")
-                                .frame(width: 44, height: 44)
+                            Button {
+                                viewModel.removeItem(id: item.id)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .frame(width: 44, height: 44)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                            .accessibilityLabel(L10n.format(
+                                "Remove %@",
+                                defaultValue: "Remove %@",
+                                item.displayName
+                            ))
                         }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                        .accessibilityLabel(L10n.format(
-                            "Remove %@",
-                            defaultValue: "Remove %@",
-                            item.displayName
-                        ))
+
+                        HStack(spacing: AppTheme.spacing12) {
+                            portionButton(
+                                systemImage: "minus",
+                                label: L10n.format(
+                                    "Decrease %@ portion",
+                                    defaultValue: "Decrease %@ portion",
+                                    item.displayName
+                                ),
+                                value: item.estimatedGrams
+                            ) {
+                                viewModel.adjustPortion(id: item.id, byGrams: -25)
+                            }
+
+                            Text(dynamicTypeSize.isAccessibilitySize
+                                ? "\(MealNutritionCalculator.displayMacro(item.estimatedGrams)) g"
+                                : L10n.format(
+                                    "%@ grams",
+                                    defaultValue: "%@ grams",
+                                    MealNutritionCalculator.displayMacro(item.estimatedGrams)
+                                ))
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.primaryText)
+                            .frame(maxWidth: .infinity)
+                            .accessibilityIdentifier("meal_scan.portion.value")
+
+                            portionButton(
+                                systemImage: "plus",
+                                label: L10n.format(
+                                    "Increase %@ portion",
+                                    defaultValue: "Increase %@ portion",
+                                    item.displayName
+                                ),
+                                value: item.estimatedGrams
+                            ) {
+                                viewModel.adjustPortion(id: item.id, byGrams: 25)
+                            }
+                        }
                     }
+                    .padding(dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing8 : AppTheme.spacing12)
+                    .background(AppTheme.premiumEditorSurface.opacity(0.54))
+                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
                 }
 
-                Button {
-                    viewModel.addManualFood(named: L10n.string("Added food", defaultValue: "Added food"))
+                NavigationLink {
+                    MealFoodItemEditView(initialItem: viewModel.newManualFoodDraft(), viewModel: viewModel) { newItem in
+                        viewModel.appendItem(newItem)
+                    }
                 } label: {
-                    Label(L10n.string("Add Food", defaultValue: "Add Food"), systemImage: "plus")
+                    Label(L10n.string("Add food", defaultValue: "Add food"), systemImage: "plus")
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("meal_scan.add_food")
             }
-            .padding(AppTheme.spacing16)
+            .padding(dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing8 : AppTheme.spacing16)
             .mealScanCard()
 
             VStack(alignment: .leading, spacing: AppTheme.spacing12) {
                 Label(L10n.string("Nutrition estimate", defaultValue: "Nutrition estimate"), systemImage: "chart.bar")
                     .appHeadingFont(.headline, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
-                MealNutritionSummaryView(nutrition: viewModel.totalNutrition)
+                MealNutritionSummaryView(nutrition: viewModel.totalNutrition, mode: .core)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(MealNutritionSummaryView.accessibilityLabel(for: viewModel.totalNutrition))
+                    .accessibilityLabel(MealNutritionSummaryView.accessibilityLabel(
+                        for: viewModel.totalNutrition,
+                        mode: .core
+                    ))
+                    .accessibilityIdentifier("meal_scan.core_nutrition")
             }
             .padding(AppTheme.spacing16)
             .mealScanCard()
 
-            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Picker(
-                    L10n.string(
-                        "Was this cooked with oil, butter, dressing, or sauce?",
-                        defaultValue: "Was this cooked with oil, butter, dressing, or sauce?"
-                    ),
-                    selection: $viewModel.hiddenIngredientEstimate
-                ) {
-                    ForEach(HiddenIngredientEstimate.allCases) { estimate in
-                        Text(estimate.displayName).tag(estimate)
-                    }
-                }
-                .pickerStyle(.menu)
-                .onChange(of: viewModel.hiddenIngredientEstimate) { _, newValue in
-                    viewModel.applyHiddenIngredientEstimate(newValue)
-                }
-                Text(L10n.string(
-                    "Hidden oil, dressing, or sauces can change calories and fats, especially for restaurant meals and mixed dishes.",
-                    defaultValue: "Hidden oil, dressing, or sauces can change calories and fats, especially for restaurant meals and mixed dishes."
-                ))
-                .appFont(.caption)
-                .foregroundStyle(AppTheme.secondaryText)
-            }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
+            DisclosureGroup(isExpanded: $isShowingMoreDetails) {
+                VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                    MealNutritionSummaryView(nutrition: viewModel.totalNutrition, mode: .advanced)
 
-            if let profile = viewModel.metabolicProfile {
-                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
                     Label(
                         L10n.format(
-                            "Estimated glycemic context: %@",
-                            defaultValue: "Estimated glycemic context: %@",
-                            profile.estimatedGlycemicImpact.displayName
+                            "Confidence: %@",
+                            defaultValue: "Confidence: %@",
+                            viewModel.confidence.displayName
                         ),
-                        systemImage: "chart.line.uptrend.xyaxis"
+                        systemImage: "checkmark.seal"
                     )
                     .appFont(.subheadline, weight: .semibold)
-                    .foregroundStyle(AppTheme.premiumEditorSecondaryAccentColor)
-                    Text(profile.explanation)
-                        .appFont(.caption)
-                        .foregroundStyle(AppTheme.secondaryText)
-                    if let caution = profile.caution {
-                        Text(caution)
-                            .appFont(.caption2)
-                            .foregroundStyle(AppTheme.secondaryText)
+
+                    Picker(
+                        L10n.string(
+                            "Oil, butter, dressing, or sauce",
+                            defaultValue: "Oil, butter, dressing, or sauce"
+                        ),
+                        selection: $viewModel.hiddenIngredientEstimate
+                    ) {
+                        ForEach(HiddenIngredientEstimate.allCases) { estimate in
+                            Text(estimate.displayName).tag(estimate)
+                        }
                     }
-                }
-                .padding(AppTheme.spacing16)
-                .mealScanCard()
-            }
-
-            quotaCard
-
-            if !viewModel.warnings.isEmpty {
-                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                    Label(L10n.string("Estimate notes", defaultValue: "Estimate notes"), systemImage: "exclamationmark.triangle")
-                        .appHeadingFont(.headline, weight: .regular)
-                    ForEach(viewModel.warnings, id: \.self) { warning in
-                        Text(warning)
-                            .appFont(.caption)
-                            .foregroundStyle(AppTheme.secondaryText)
+                    .pickerStyle(.menu)
+                    .onChange(of: viewModel.hiddenIngredientEstimate) { _, value in
+                        viewModel.applyHiddenIngredientEstimate(value)
                     }
-                }
-                .padding(AppTheme.spacing16)
-                .mealScanCard()
-            }
 
-            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Label(L10n.string("Estimate, not diagnosis", defaultValue: "Estimate, not diagnosis"), systemImage: "info.circle")
-                    .appFont(.subheadline, weight: .semibold)
-                Text(L10n.string(
-                    "Review and edit before saving. Nutrition and glycemic context are estimates, not a diagnosis or medical advice.",
-                    defaultValue: "Review and edit before saving. Nutrition and glycemic context are estimates, not a diagnosis or medical advice."
-                ))
-                .appFont(.caption)
-                .foregroundStyle(AppTheme.secondaryText)
+                    if let profile = viewModel.metabolicProfile {
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text(L10n.format(
+                                "Estimated glycemic context: %@",
+                                defaultValue: "Estimated glycemic context: %@",
+                                profile.estimatedGlycemicImpact.displayName
+                            ))
+                            .appFont(.subheadline, weight: .semibold)
+                            Text(profile.explanation)
+                                .appFont(.caption)
+                                .foregroundStyle(AppTheme.secondaryText)
+                        }
+                    }
+
+                    quotaDetails
+
+                    if !reviewWarnings.isEmpty {
+                        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                            Text(L10n.string("Estimate notes", defaultValue: "Estimate notes"))
+                                .appFont(.subheadline, weight: .semibold)
+                            ForEach(reviewWarnings, id: \.self) { warning in
+                                Text(warning)
+                                    .appFont(.caption)
+                                    .foregroundStyle(AppTheme.mealScannerErrorText)
+                            }
+                        }
+                    }
+
+                    Text(L10n.string(
+                        "Review and edit before saving. Nutrition and glycemic context are estimates, not a diagnosis or medical advice.",
+                        defaultValue: "Review and edit before saving. Nutrition and glycemic context are estimates, not a diagnosis or medical advice."
+                    ))
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+                }
+                .padding(.top, AppTheme.spacing12)
+            } label: {
+                Label(L10n.string("More details", defaultValue: "More details"), systemImage: "ellipsis.circle")
+                    .appHeadingFont(.headline, weight: .regular)
             }
+            .tint(AppTheme.mealScannerActionBackground)
             .padding(AppTheme.spacing16)
             .mealScanCard()
+            .accessibilityIdentifier("meal_scan.more_details")
 
-            VStack(spacing: AppTheme.spacing12) {
-                Button {
-                    Task { await save() }
-                } label: {
-                    Label(L10n.string("Save Meal", defaultValue: "Save Meal"), systemImage: "checkmark.circle.fill")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.premiumEditorAccentColor)
-                .accessibilityIdentifier("meal_scan.save_button")
-
-                Button {
-                    viewModel.retake()
-                } label: {
-                    Label(L10n.string("Retake Photo", defaultValue: "Retake Photo"), systemImage: "arrow.clockwise")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("meal_scan.retake_photo_button")
-
-                if let saveError {
-                    Label(saveError, systemImage: "exclamationmark.triangle.fill")
-                        .appFont(.caption)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                        .accessibilityLabel(saveError)
-                        .accessibilityIdentifier("meal_scan.save_error")
-                }
+            Button {
+                viewModel.retake()
+            } label: {
+                Label(L10n.string("Retake", defaultValue: "Retake"), systemImage: "arrow.clockwise")
+                    .frame(maxWidth: .infinity, minHeight: 44)
             }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
+            .buttonStyle(.bordered)
+            .accessibilityHint(L10n.string(
+                "Returns to photo choices without saving this estimate.",
+                defaultValue: "Returns to photo choices without saving this estimate."
+            ))
+            .accessibilityIdentifier("meal_scan.retake_photo_button")
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("meal_scan.review")
+    }
+
+    private func portionButton(
+        systemImage: String,
+        label: String,
+        value: Double,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .frame(width: 44, height: 44)
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel(label)
+        .accessibilityValue(L10n.format(
+            "%@ grams",
+            defaultValue: "%@ grams",
+            MealNutritionCalculator.displayMacro(value)
+        ))
+        .accessibilityHint(L10n.string(
+            "Changes the portion by 25 grams.",
+            defaultValue: "Changes the portion by 25 grams."
+        ))
+        .accessibilityIdentifier(systemImage == "minus" ? "meal_scan.portion.decrease" : "meal_scan.portion.increase")
+    }
+
+    private var reviewWarnings: [String] {
+        var seen = Set<String>()
+        return (viewModel.warnings + viewModel.draftItems.compactMap(\.warning)).compactMap { warning in
+            let trimmed = warning.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, seen.insert(trimmed).inserted else { return nil }
+            return trimmed
         }
     }
 
     @ViewBuilder
-    private var quotaCard: some View {
+    private var quotaDetails: some View {
         if let disposition = viewModel.mealScanCacheDisposition {
-            VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Label(L10n.string("AI photo allowance", defaultValue: "AI photo allowance"), systemImage: "gauge.with.dots.needle.50percent")
-                    .appHeadingFont(.headline, weight: .regular)
-                if disposition == .fresh, let quota = viewModel.mealScanQuota {
-                    Text(L10n.format(
-                        "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
-                        defaultValue: "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
-                        Int64(quota.remaining),
-                        Int64(quota.limit),
-                        quota.localizedTierDisplayName
-                    ))
-                    .appFont(.subheadline, weight: .medium)
+            if disposition == .fresh, let quota = viewModel.mealScanQuota {
+                Text(L10n.format(
+                    "%lld of %lld scans remain in the current rolling window.",
+                    defaultValue: "%lld of %lld scans remain in the current rolling window.",
+                    Int64(quota.remaining),
+                    Int64(quota.limit)
+                ))
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+            } else {
+                Text(L10n.string(
+                    "This estimate was reused from cache. No scan was used.",
+                    defaultValue: "This estimate was reused from cache. No scan was used."
+                ))
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+            }
+        }
+    }
+}
 
-                    if let resetText = viewModel.quotaResetAtLocalText {
-                        Text(L10n.format(
-                            "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
-                            defaultValue: "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
-                            resetText
-                        ))
-                        .appFont(.caption)
-                        .foregroundStyle(AppTheme.secondaryText)
-                    }
+struct MealScanReviewActionPanel: View {
+    let viewModel: MealScanViewModel
+    @State private var isSaving = false
+    @AccessibilityFocusState private var isSaveErrorFocused: Bool
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-                    if viewModel.shouldWarnAboutRemainingAnalyses {
-                        Label(
-                            L10n.format(
-                                "Only %lld fresh AI photo analyses remain in this rolling window.",
-                                defaultValue: "Only %lld fresh AI photo analyses remain in this rolling window.",
-                                Int64(quota.remaining)
-                            ),
-                            systemImage: "exclamationmark.triangle.fill"
-                        )
-                        .appFont(.caption, weight: .semibold)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                    }
-                    Text(L10n.string("A fresh AI photo analysis was used.", defaultValue: "A fresh AI photo analysis was used."))
-                        .appFont(.caption)
-                } else {
+    var body: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            if viewModel.failure?.kind == .saveFailed {
+                VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                     Label(
                         L10n.string(
-                            "Cached result — no fresh AI photo analysis was used.",
-                            defaultValue: "Cached result — no fresh AI photo analysis was used."
+                            "Your edits are still here. Try saving again.",
+                            defaultValue: "Your edits are still here. Try saving again."
                         ),
-                        systemImage: "clock.arrow.circlepath"
+                        systemImage: "exclamationmark.triangle.fill"
                     )
-                    .appFont(.subheadline, weight: .medium)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.mealScannerErrorText)
+                    .accessibilityFocused($isSaveErrorFocused)
+                    .accessibilityIdentifier("meal_scan.save_error")
+
+                    Text(consumptionStatus)
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.mealScannerBodyText)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else if let validationMessage = viewModel.saveValidationMessage {
+                Text(validationMessage)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(AppTheme.mealScannerErrorText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("meal_scan.save_validation")
             }
-            .padding(AppTheme.spacing16)
-            .mealScanCard()
+
+            Button {
+                isSaving = true
+                Task {
+                    defer { isSaving = false }
+                    try? await viewModel.save()
+                }
+            } label: {
+                Label(
+                    viewModel.failure?.kind == .saveFailed
+                        ? L10n.string("Try saving again", defaultValue: "Try saving again")
+                        : L10n.string("Save meal", defaultValue: "Save meal"),
+                    systemImage: "checkmark.circle.fill"
+                )
+                .appFont(dynamicTypeSize.isAccessibilitySize ? .caption : .body, weight: .semibold)
+                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .mealScanPrimaryActionStyle()
+            .disabled(isSaving || !viewModel.canSaveMeal)
+            .accessibilityHint(L10n.string(
+                "Saves the edited meal estimate to your meal log.",
+                defaultValue: "Saves the edited meal estimate to your meal log."
+            ))
+            .accessibilityIdentifier("meal_scan.save_button")
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, AppTheme.spacing16)
+        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? AppTheme.spacing4 : AppTheme.spacing12)
+        .background(AppTheme.premiumEditorBackground.opacity(0.98))
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(AppTheme.premiumEditorBorder.opacity(0.75))
+                .frame(height: 1)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("meal_scan.save_action_panel")
+        .task(id: viewModel.failureOccurrence) {
+            guard viewModel.failure?.kind == .saveFailed else { return }
+            isSaveErrorFocused = false
+            await Task.yield()
+            isSaveErrorFocused = true
         }
     }
 
-    private func save() async {
-        do {
-            try await viewModel.save()
-        } catch {
-            saveError = L10n.format(
-                "Could not save meal: %@",
-                defaultValue: "Could not save meal: %@",
-                error.localizedDescription
-            )
+    private var consumptionStatus: String {
+        switch viewModel.failure?.consumption ?? viewModel.scanConsumption {
+        case .notUsed:
+            L10n.string("No scan was used.", defaultValue: "No scan was used.")
+        case .used:
+            L10n.string("A scan was used.", defaultValue: "A scan was used.")
+        case .unknown:
+            L10n.string("Scan status is still unknown.", defaultValue: "Scan status is still unknown.")
         }
     }
 }
 
 struct MealFoodItemEditView: View {
+    private enum FocusedField: Hashable {
+        case name
+        case grams
+    }
+
     @Environment(\.dismiss) private var dismiss
     let initialItem: MealFoodItemDraft
     let viewModel: MealScanViewModel
@@ -1206,6 +1078,7 @@ struct MealFoodItemEditView: View {
     @State private var gramsText: String
     @State private var selectedFood: FoodNutritionRecord?
     @State private var validationError: String?
+    @FocusState private var focusedField: FocusedField?
 
     init(
         initialItem: MealFoodItemDraft,
@@ -1216,7 +1089,7 @@ struct MealFoodItemEditView: View {
         self.viewModel = viewModel
         self.onSave = onSave
         _query = State(initialValue: initialItem.displayName)
-        _gramsText = State(initialValue: MealNutritionCalculator.displayMacro(initialItem.estimatedGrams))
+        _gramsText = State(initialValue: Self.formatGrams(initialItem.estimatedGrams, locale: .current))
         _selectedFood = State(initialValue: SampleNutritionFixtures.records.first { $0.id == initialItem.canonicalFoodId })
     }
 
@@ -1250,6 +1123,7 @@ struct MealFoodItemEditView: View {
                         .padding(AppTheme.spacing12)
                         .background(AppTheme.premiumEditorRaisedSurface.opacity(0.75))
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous))
+                        .focused($focusedField, equals: .name)
                         .accessibilityIdentifier("meal_scan.edit_food.name")
 
                     TextField(L10n.string("Grams", defaultValue: "Grams"), text: $gramsText)
@@ -1258,6 +1132,7 @@ struct MealFoodItemEditView: View {
                         .padding(AppTheme.spacing12)
                         .background(AppTheme.premiumEditorRaisedSurface.opacity(0.75))
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous))
+                        .focused($focusedField, equals: .grams)
                         .accessibilityIdentifier("meal_scan.edit_food.grams")
                 }
                 .padding(AppTheme.spacing16)
@@ -1288,7 +1163,7 @@ struct MealFoodItemEditView: View {
                                 Spacer()
                                 if selectedFood?.id == food.id {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                                        .foregroundStyle(AppTheme.mealScannerActionBackground)
                                 }
                             }
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -1303,7 +1178,7 @@ struct MealFoodItemEditView: View {
                 if let validationError {
                     Label(validationError, systemImage: "exclamationmark.triangle.fill")
                         .appFont(.caption, weight: .semibold)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                        .foregroundStyle(AppTheme.mealScannerErrorText)
                         .padding(AppTheme.spacing12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .mealScanCard()
@@ -1311,13 +1186,34 @@ struct MealFoodItemEditView: View {
                         .accessibilityIdentifier("meal_scan.edit_food.validation_error")
                 }
 
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if focusedField == nil {
                 Button(action: save) {
                     Label(L10n.string("Save", defaultValue: "Save"), systemImage: "checkmark.circle.fill")
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.premiumEditorAccentColor)
+                .mealScanPrimaryActionStyle()
+                .padding(.horizontal, AppTheme.spacing16)
+                .padding(.vertical, AppTheme.spacing12)
+                .background(AppTheme.premiumEditorBackground.opacity(0.98))
                 .accessibilityIdentifier("meal_scan.edit_food.save")
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if focusedField == .name {
+                    Button(L10n.string("Next", defaultValue: "Next")) {
+                        focusedField = .grams
+                    }
+                    .accessibilityIdentifier("meal_scan.keyboard.next")
+                }
+                Spacer()
+                Button(L10n.string("Done", defaultValue: "Done")) {
+                    focusedField = nil
+                }
+                .accessibilityIdentifier("meal_scan.keyboard.done")
             }
         }
         .accessibilityElement(children: .contain)
@@ -1330,7 +1226,9 @@ struct MealFoodItemEditView: View {
             validationError = L10n.string("Enter a food name.", defaultValue: "Enter a food name.")
             return
         }
-        guard let grams = Double(gramsText), grams.isFinite, grams > 0 else {
+        guard let grams = Self.parseGrams(gramsText, locale: .current),
+              grams.isFinite,
+              grams > 0 else {
             validationError = L10n.string(
                 "Enter a portion greater than 0 grams.",
                 defaultValue: "Enter a portion greater than 0 grams."
@@ -1340,23 +1238,65 @@ struct MealFoodItemEditView: View {
         let updatedItem: MealFoodItemDraft
         if let selectedFood {
             var item = viewModel.draftItem(for: selectedFood, grams: grams, existingID: initialItem.id)
+            item = Self.editedItem(item, displayName: trimmedName, grams: grams)
             item.wasPortionAdjusted = initialItem.wasPortionAdjusted
             item.recordUserEdit(previousEstimatedGrams: initialItem.estimatedGrams)
             updatedItem = item
         } else {
-            var item = initialItem
-            item.displayName = trimmedName
-            item.estimatedGrams = grams
+            var item = Self.editedItem(initialItem, displayName: trimmedName, grams: grams)
             item.recordUserEdit(previousEstimatedGrams: initialItem.estimatedGrams)
             updatedItem = item
         }
         onSave(updatedItem)
         dismiss()
     }
+
+    static func parseGrams(_ text: String, locale: Locale) -> Double? {
+        gramsFormatter(locale: locale).number(
+            from: text.trimmingCharacters(in: .whitespacesAndNewlines)
+        )?.doubleValue
+    }
+
+    static func formatGrams(_ grams: Double, locale: Locale) -> String {
+        gramsFormatter(locale: locale).string(from: NSNumber(value: grams)) ?? "\(grams)"
+    }
+
+    private static func gramsFormatter(locale: Locale) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .decimal
+        formatter.isLenient = false
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 1
+        return formatter
+    }
+
+    static func editedItem(
+        _ item: MealFoodItemDraft,
+        displayName: String,
+        grams: Double
+    ) -> MealFoodItemDraft {
+        var edited = item
+        let priorGrams = item.estimatedGrams
+        edited.displayName = displayName
+        edited.estimatedGrams = grams
+        if priorGrams.isFinite, priorGrams > 0, grams.isFinite, grams >= 0 {
+            edited.nutrition = item.nutrition.scaled(by: grams / priorGrams)
+        }
+        return edited
+    }
 }
 
 struct MealNutritionSummaryView: View {
+    enum Mode {
+        case core
+        case advanced
+        case all
+    }
+
     let nutrition: NutritionSnapshot
+    var mode: Mode = .all
     private let columns = [GridItem(.adaptive(minimum: 112), spacing: AppTheme.spacing8)]
 
     private struct NutrientMetric: Identifiable {
@@ -1367,7 +1307,7 @@ struct MealNutritionSummaryView: View {
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: AppTheme.spacing8) {
-            ForEach(Self.metrics(for: nutrition)) { metric in
+            ForEach(Self.metrics(for: nutrition, mode: mode)) { metric in
                 nutrient(metric.label, metric.value)
             }
         }
@@ -1390,34 +1330,41 @@ struct MealNutritionSummaryView: View {
         .accessibilityLabel("\(label), \(value)")
     }
 
-    static func accessibilityLabel(for nutrition: NutritionSnapshot) -> String {
-        metrics(for: nutrition)
+    static func accessibilityLabel(for nutrition: NutritionSnapshot, mode: Mode = .all) -> String {
+        metrics(for: nutrition, mode: mode)
             .map { "\($0.label), \($0.value)" }
             .joined(separator: ", ")
     }
 
-    private static func metrics(for nutrition: NutritionSnapshot) -> [NutrientMetric] {
-        var metrics = [
+    private static func metrics(for nutrition: NutritionSnapshot, mode: Mode) -> [NutrientMetric] {
+        let core = [
+            NutrientMetric(
+                label: L10n.string("Calories", defaultValue: "Calories"),
+                value: "\(MealNutritionCalculator.displayCalories(nutrition.caloriesKcal)) kcal"
+            ),
             NutrientMetric(
                 label: L10n.string("Protein", defaultValue: "Protein"),
                 value: "\(MealNutritionCalculator.displayMacro(nutrition.proteinGrams)) g"
             ),
             NutrientMetric(
+                label: L10n.string("Carbs", defaultValue: "Carbs"),
+                value: "\(MealNutritionCalculator.displayMacro(nutrition.carbsGrams)) g"
+            ),
+            NutrientMetric(
+                label: L10n.string("Fat", defaultValue: "Fat"),
+                value: "\(MealNutritionCalculator.displayMacro(nutrition.fatGrams)) g"
+            ),
+        ]
+
+        let advanced = [
+            NutrientMetric(
                 label: L10n.string("Fiber", defaultValue: "Fiber"),
                 value: "\(MealNutritionCalculator.displayMacro(nutrition.fiberGrams)) g"
             ),
             NutrientMetric(
-                label: L10n.string("Carbs", defaultValue: "Carbs"),
-                value: "\(MealNutritionCalculator.displayMacro(nutrition.carbsGrams)) g"
-            ),
-        ]
-        metrics.append(
-            NutrientMetric(
                 label: L10n.string("Net carbs", defaultValue: "Net carbs"),
                 value: "\(MealNutritionCalculator.displayMacro(nutrition.netCarbsGrams)) g"
-            )
-        )
-        metrics.append(contentsOf: [
+            ),
             NutrientMetric(
                 label: L10n.string("Sugar", defaultValue: "Sugar"),
                 value: "\(MealNutritionCalculator.displayMacro(nutrition.sugarGrams)) g"
@@ -1426,40 +1373,40 @@ struct MealNutritionSummaryView: View {
                 label: L10n.string("Sodium", defaultValue: "Sodium"),
                 value: "\(MealNutritionCalculator.displaySodium(nutrition.sodiumMg)) mg"
             ),
-            NutrientMetric(
-                label: L10n.string("Calories", defaultValue: "Calories"),
-                value: "\(MealNutritionCalculator.displayCalories(nutrition.caloriesKcal)) kcal"
-            ),
-            NutrientMetric(
-                label: L10n.string("Fat", defaultValue: "Fat"),
-                value: "\(MealNutritionCalculator.displayMacro(nutrition.fatGrams)) g"
-            ),
-        ])
-        return metrics
+        ]
+
+        switch mode {
+        case .core:
+            return core
+        case .advanced:
+            return advanced
+        case .all:
+            return core + advanced
+        }
     }
 }
 
 struct MealScanFoodItemRow: View {
     let item: MealFoodItemDraft
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         HStack(spacing: AppTheme.spacing8) {
             VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                 Text(item.displayName)
                     .appFont(.subheadline, weight: .medium)
-                Text("\(MealNutritionCalculator.displayMacro(item.estimatedGrams)) g · \(MealNutritionCalculator.displayCalories(item.nutrition.caloriesKcal)) kcal")
-                    .appFont(.caption)
-                    .foregroundStyle(AppTheme.secondaryText)
-                if let warning = item.warning {
-                    Text(warning)
-                        .appFont(.caption2)
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text("\(MealNutritionCalculator.displayMacro(item.estimatedGrams)) g · \(MealNutritionCalculator.displayCalories(item.nutrition.caloriesKcal)) kcal")
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
                 }
             }
             Spacer()
-            Text(item.confidence.displayName)
-                .appFont(.caption2)
-                .foregroundStyle(AppTheme.secondaryText)
+            if !dynamicTypeSize.isAccessibilitySize {
+                Text(item.confidence.displayName)
+                    .appFont(.caption2)
+                    .foregroundStyle(AppTheme.secondaryText)
+            }
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .accessibilityElement(children: .ignore)
@@ -1476,72 +1423,210 @@ struct MealScanFoodItemRow: View {
             MealNutritionCalculator.displayCalories(item.nutrition.caloriesKcal),
             item.confidence.displayName
         )
-        guard let warning = item.warning?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !warning.isEmpty else {
-            return context
-        }
-        return "\(context) \(warning)"
+        return context
     }
 }
 
-struct MealScanManualFallbackView: View {
+struct MealScanFailureView: View {
     let viewModel: MealScanViewModel
     let onChooseBarcode: () -> Void
     let onChooseManual: () -> Void
     @State private var isRetryingPhoto = false
 
     private var title: String {
-        if viewModel.mealScanQuota?.remaining == 0 {
-            return L10n.string("Fresh AI photo allowance used", defaultValue: "Fresh AI photo allowance used")
+        switch viewModel.failure?.kind {
+        case .serviceDisabled:
+            L10n.string("Scanner unavailable", defaultValue: "Scanner unavailable")
+        case .offlineBeforeDispatch:
+            L10n.string("You're offline", defaultValue: "You're offline")
+        case .connectionInterruptedAfterDispatch:
+            L10n.string("Connection interrupted", defaultValue: "Connection interrupted")
+        case .appIntegrity:
+            L10n.string("App verification needed", defaultValue: "App verification needed")
+        case .entitlement:
+            L10n.string("Check your subscription", defaultValue: "Check your subscription")
+        case .quotaExhausted:
+            L10n.string("Scan limit reached", defaultValue: "Scan limit reached")
+        case .unreadableMeal:
+            L10n.string("We couldn't read this meal", defaultValue: "We couldn't read this meal")
+        case .ambiguousResult:
+            L10n.string("We couldn't confirm the result", defaultValue: "We couldn't confirm the result")
+        case .saveFailed:
+            L10n.string("Meal not saved", defaultValue: "Meal not saved")
+        case nil:
+            L10n.string("Scanner unavailable", defaultValue: "Scanner unavailable")
         }
-        return L10n.string("Photo analysis unavailable", defaultValue: "Photo analysis unavailable")
+    }
+
+    private var detail: String {
+        Self.detail(for: viewModel.failure)
+    }
+
+    static func detail(for failure: MealScanFailure?) -> String {
+        switch failure?.kind {
+        case .serviceDisabled:
+            L10n.string(
+                "The CycleBalance AI scanner is unavailable right now. Enter the meal manually or scan a barcode.",
+                defaultValue: "The CycleBalance AI scanner is unavailable right now. Enter the meal manually or scan a barcode."
+            )
+        case .offlineBeforeDispatch:
+            L10n.string(
+                "Reconnect, then try this same photo again. Your photo is still ready.",
+                defaultValue: "Reconnect, then try this same photo again. Your photo is still ready."
+            )
+        case .connectionInterruptedAfterDispatch:
+            L10n.string(
+                "The connection was lost after the scan started. Check again before starting another scan.",
+                defaultValue: "The connection was lost after the scan started. Check again before starting another scan."
+            )
+        case .appIntegrity:
+            L10n.string(
+                "Update CycleBalance if an update is available, reopen the app, then try this photo again.",
+                defaultValue: "Update CycleBalance if an update is available, reopen the app, then try this photo again."
+            )
+        case .entitlement:
+            L10n.string(
+                "Check Subscription in Settings, then try this photo again, or enter the meal manually.",
+                defaultValue: "Check Subscription in Settings, then try this photo again, or enter the meal manually."
+            )
+        case .quotaExhausted:
+            L10n.string(
+                "Your current scan allowance is used. Enter the meal manually or scan a barcode while it resets.",
+                defaultValue: "Your current scan allowance is used. Enter the meal manually or scan a barcode while it resets."
+            )
+        case .unreadableMeal:
+            L10n.string(
+                "Try a brighter, closer photo with the whole plate visible, or enter the foods manually.",
+                defaultValue: "Try a brighter, closer photo with the whole plate visible, or enter the foods manually."
+            )
+        case .ambiguousResult:
+            if failure?.retryBehavior == .checkSameRequest {
+                L10n.string(
+                    "CycleBalance could not confidently identify the result. Check again, choose another photo, or enter it manually.",
+                    defaultValue: "CycleBalance could not confidently identify the result. Check again, choose another photo, or enter it manually."
+                )
+            } else {
+                L10n.string(
+                    "We couldn't finish this estimate. Choose another photo or enter the meal manually.",
+                    defaultValue: "We couldn't finish this estimate. Choose another photo or enter the meal manually."
+                )
+            }
+        case .saveFailed:
+            L10n.string(
+                "Your edits are still available in Review. Try saving again.",
+                defaultValue: "Your edits are still available in Review. Try saving again."
+            )
+        case nil:
+            L10n.string(
+                "Choose another photo, scan a barcode, or enter the meal manually.",
+                defaultValue: "Choose another photo, scan a barcode, or enter the meal manually."
+            )
+        }
+    }
+
+    private var consumptionStatus: String {
+        switch viewModel.failure?.consumption ?? .unknown {
+        case .notUsed:
+            L10n.string("No scan was used.", defaultValue: "No scan was used.")
+        case .used:
+            L10n.string("A scan was used.", defaultValue: "A scan was used.")
+        case .unknown:
+            L10n.string("Scan status is still unknown.", defaultValue: "Scan status is still unknown.")
+        }
     }
 
     @ViewBuilder
-    private var retrySamePhotoControl: some View {
-        if viewModel.hasRetryablePendingPhoto {
-            Text(
-                L10n.string(
-                    "That request stopped before AI dispatch, so no fresh analysis was used. Trying again reuses the same request.",
-                    defaultValue: "That request stopped before AI dispatch, so no fresh analysis was used. Trying again reuses the same request."
-                )
-            )
-                .appFont(.caption, weight: .medium)
-                .foregroundStyle(AppTheme.secondaryText)
-                .multilineTextAlignment(.center)
-
-            if let retryTime = viewModel.pendingPhotoRetryAvailableAtLocalText {
-                Text(
-                    L10n.format(
-                        "You can try the same photo again at %@.",
-                        defaultValue: "You can try the same photo again at %@.",
-                        retryTime
-                    )
-                )
-                    .appFont(.caption)
-                    .foregroundStyle(AppTheme.secondaryText)
-                    .multilineTextAlignment(.center)
-            }
-
+    private var recoveryControl: some View {
+        switch viewModel.failure?.retryBehavior {
+        case .retrySameRequest:
             TimelineView(.periodic(from: .now, by: 1)) { context in
-                Button {
-                    isRetryingPhoto = true
-                    Task {
-                        defer { isRetryingPhoto = false }
-                        try? await viewModel.retryPendingPhoto()
+                let guidance = retryAvailabilityGuidance(at: context.date, for: .retrySameRequest)
+                VStack(spacing: AppTheme.spacing4) {
+                    Button {
+                        isRetryingPhoto = true
+                        Task {
+                            defer { isRetryingPhoto = false }
+                            try? await viewModel.retryPendingPhoto()
+                        }
+                    } label: {
+                        Label(L10n.string("Try again", defaultValue: "Try again"), systemImage: "arrow.clockwise")
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
-                } label: {
-                    Label(
-                        L10n.string("Try the same photo again", defaultValue: "Try the same photo again"),
-                        systemImage: "arrow.clockwise"
-                    )
-                        .frame(maxWidth: .infinity)
+                    .mealScanPrimaryActionStyle()
+                    .disabled(isRetryingPhoto || !viewModel.canRetryPendingPhoto(at: context.date))
+                    .accessibilityHint(L10n.string(
+                        "Retries this photo without starting a separate scan.",
+                        defaultValue: "Retries this photo without starting a separate scan."
+                    ))
+                    .accessibilityValue(retryAvailabilityGuidance(at: context.date, for: .retrySameRequest))
+                    .accessibilityIdentifier("meal_scan.failure.retry")
+
+                    if !guidance.isEmpty {
+                        Text(guidance)
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.mealScannerBodyText)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(isRetryingPhoto || !viewModel.canRetryPendingPhoto(at: context.date))
-                .accessibilityIdentifier("meal_scan.fallback.retry_same_photo")
             }
+        case .checkSameRequest:
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                let guidance = retryAvailabilityGuidance(at: context.date, for: .checkSameRequest)
+                VStack(spacing: AppTheme.spacing4) {
+                    Button {
+                        isRetryingPhoto = true
+                        Task {
+                            defer { isRetryingPhoto = false }
+                            try? await viewModel.retryAmbiguousOutcome()
+                        }
+                    } label: {
+                        Label(L10n.string("Check again", defaultValue: "Check again"), systemImage: "arrow.clockwise")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .mealScanPrimaryActionStyle()
+                    .disabled(isRetryingPhoto || !viewModel.canRetryAmbiguousOutcome(at: context.date))
+                    .accessibilityHint(L10n.string(
+                        "Checks the same scan without starting another one.",
+                        defaultValue: "Checks the same scan without starting another one."
+                    ))
+                    .accessibilityValue(retryAvailabilityGuidance(at: context.date, for: .checkSameRequest))
+                    .accessibilityIdentifier("meal_scan.failure.check_again")
+
+                    if !guidance.isEmpty {
+                        Text(guidance)
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.mealScannerBodyText)
+                    }
+                }
+            }
+        case .some(.none), .some(.retrySave), nil:
+            EmptyView()
         }
+    }
+
+    private func retryAvailabilityGuidance(
+        at date: Date,
+        for behavior: MealScanRetryBehavior
+    ) -> String {
+        let remainingSeconds: Int?
+        let format: String
+        switch behavior {
+        case .retrySameRequest:
+            remainingSeconds = viewModel.pendingPhotoRetryRemainingSeconds(at: date)
+            format = L10n.string("Try again in %@.", defaultValue: "Try again in %@.")
+        case .checkSameRequest:
+            remainingSeconds = viewModel.pendingRetryRemainingSeconds(at: date)
+            format = L10n.string("Check again in %@.", defaultValue: "Check again in %@.")
+        case .none, .retrySave:
+            return ""
+        }
+        guard let remainingSeconds, remainingSeconds > 0 else { return "" }
+
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = remainingSeconds >= 60 ? [.minute, .second] : [.second]
+        formatter.unitsStyle = .full
+        formatter.maximumUnitCount = 1
+        let duration = formatter.string(from: TimeInterval(remainingSeconds)) ?? "\(remainingSeconds)"
+        return String(format: format, locale: .current, duration)
     }
 
     var body: some View {
@@ -1554,17 +1639,14 @@ struct MealScanManualFallbackView: View {
             Text(title)
                 .appHeadingFont(.title3, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
-            Text(viewModel.errorMessage ?? L10n.string(
-                "You can retake the photo or add the meal manually.",
-                defaultValue: "You can retake the photo or add the meal manually."
-            ))
+            Text(detail)
             .appFont(.subheadline)
-            .foregroundStyle(AppTheme.secondaryText)
+            .foregroundStyle(AppTheme.mealScannerBodyText)
             .multilineTextAlignment(.center)
 
-            Text(freshAnalysisStatement)
+            Text(consumptionStatus)
                 .appFont(.caption, weight: .semibold)
-                .foregroundStyle(AppTheme.primaryText)
+                .foregroundStyle(AppTheme.mealScannerBodyText)
                 .multilineTextAlignment(.center)
 
             if viewModel.mealScanQuota?.remaining == 0,
@@ -1579,289 +1661,47 @@ struct MealScanManualFallbackView: View {
                 .multilineTextAlignment(.center)
             }
 
-            retrySamePhotoControl
+            recoveryControl
+
+            if viewModel.failure?.retryBehavior == .checkSameRequest,
+               viewModel.canStartFreshAnalysis {
+                Button {
+                    viewModel.requestNewAnalysisAfterAmbiguousOutcome()
+                } label: {
+                    Label(L10n.string("Start another scan", defaultValue: "Start another scan"), systemImage: "plus.circle")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("meal_scan.failure.start_another")
+            }
 
             Button(action: onChooseManual) {
-                Label(L10n.string("Enter nutrition manually", defaultValue: "Enter nutrition manually"), systemImage: "square.and.pencil")
+                Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(AppTheme.premiumEditorAccentColor)
-            .accessibilityIdentifier("meal_scan.fallback.manual")
+            .mealScanPrimaryActionStyle()
+            .accessibilityIdentifier("meal_scan.failure.manual")
 
             Button(action: onChooseBarcode) {
                 Label(L10n.string("Scan a barcode", defaultValue: "Scan a barcode"), systemImage: "barcode.viewfinder")
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(.bordered)
-            .accessibilityIdentifier("meal_scan.fallback.barcode")
+            .accessibilityIdentifier("meal_scan.failure.barcode")
 
             Button {
                 viewModel.retake()
             } label: {
-                Label(L10n.string("Retake photo", defaultValue: "Retake photo"), systemImage: "camera")
+                Label(L10n.string("Choose another photo", defaultValue: "Choose another photo"), systemImage: "camera")
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(.bordered)
-            .accessibilityIdentifier("meal_scan.fallback.retake")
+            .accessibilityIdentifier("meal_scan.failure.choose_photo")
         }
         .padding(AppTheme.spacing24)
         .mealScanCard()
-        .accessibilityIdentifier("meal_scan.lunar.manual_fallback")
-    }
-
-    private var freshAnalysisStatement: String {
-        let noFreshStatement = L10n.string(
-            "No fresh AI photo analysis was used.",
-            defaultValue: "No fresh AI photo analysis was used."
-        )
-        if viewModel.hasRetryablePendingPhoto || viewModel.errorMessage?.contains(noFreshStatement) == true {
-            return noFreshStatement
-        }
-        return L10n.string(
-            "CycleBalance cannot confirm whether a fresh AI photo analysis was used.",
-            defaultValue: "CycleBalance cannot confirm whether a fresh AI photo analysis was used."
-        )
-    }
-}
-
-struct MealScanAmbiguousOutcomeView: View {
-    let viewModel: MealScanViewModel
-    let onChooseBarcode: () -> Void
-    let onChooseManual: () -> Void
-    @State private var isChecking = false
-
-    var body: some View {
-        VStack(spacing: AppTheme.spacing16) {
-                    Image(systemName: "questionmark.diamond.fill")
-                        .font(.system(size: 46, weight: .semibold))
-                        .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                        .accessibilityHidden(true)
-
-                    Text(viewModel.isRequestPending
-                        ? L10n.string("Analysis still processing", defaultValue: "Analysis still processing")
-                        : L10n.string("Analysis status unknown", defaultValue: "Analysis status unknown"))
-                        .appHeadingFont(.title3, weight: .regular)
-                        .foregroundStyle(AppTheme.primaryText)
-
-                    Text(
-                        viewModel.errorMessage ?? L10n.string(
-                            "CycleBalance could not confirm whether the previous analysis completed.",
-                            defaultValue: "CycleBalance could not confirm whether the previous analysis completed."
-                        )
-                    )
-                        .appFont(.subheadline)
-                        .foregroundStyle(AppTheme.secondaryText)
-                        .multilineTextAlignment(.center)
-
-                    Text(L10n.string(
-                        "CycleBalance cannot confirm whether a fresh AI photo analysis was used.",
-                        defaultValue: "CycleBalance cannot confirm whether a fresh AI photo analysis was used."
-                    ))
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(AppTheme.primaryText)
-                    .multilineTextAlignment(.center)
-
-                    Text(
-                        L10n.string(
-                            "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.",
-                            defaultValue: "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis."
-                        )
-                    )
-                        .appFont(.caption, weight: .medium)
-                        .foregroundStyle(AppTheme.primaryText)
-                        .multilineTextAlignment(.center)
-
-                    if let retryTime = viewModel.pendingRetryAvailableAtLocalText {
-                        Text(
-                            L10n.format(
-                                "The server asked CycleBalance to wait before checking again. Next check: %@.",
-                                defaultValue: "The server asked CycleBalance to wait before checking again. Next check: %@.",
-                                retryTime
-                            )
-                        )
-                            .appFont(.caption)
-                            .foregroundStyle(AppTheme.secondaryText)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        Button {
-                            isChecking = true
-                            Task {
-                                defer { isChecking = false }
-                                try? await viewModel.retryAmbiguousOutcome()
-                            }
-                        } label: {
-                            Label(
-                                L10n.string("Check the same request", defaultValue: "Check the same request"),
-                                systemImage: "arrow.clockwise"
-                            )
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isChecking || !viewModel.canRetryAmbiguousOutcome(at: context.date))
-                        .accessibilityIdentifier("meal_scan.unknown.retry_same_request")
-                    }
-
-                    if !viewModel.canRetryAmbiguousOutcome,
-                       viewModel.pendingRetryAvailableAtLocalText == nil {
-                        Text(
-                            L10n.string(
-                                "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.",
-                                defaultValue: "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later."
-                            )
-                        )
-                            .appFont(.caption)
-                            .foregroundStyle(AppTheme.secondaryText)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button {
-                        viewModel.requestNewAnalysisAfterAmbiguousOutcome()
-                    } label: {
-                        Label(
-                            L10n.string("Consider a new analysis", defaultValue: "Consider a new analysis"),
-                            systemImage: "plus.circle"
-                        )
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(isChecking || !viewModel.canStartFreshAnalysis)
-                    .accessibilityIdentifier("meal_scan.unknown.request_new")
-
-                    Button(action: onChooseBarcode) {
-                        Label(
-                            L10n.string("Scan a barcode", defaultValue: "Scan a barcode"),
-                            systemImage: "barcode.viewfinder"
-                        )
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(action: onChooseManual) {
-                        Label(
-                            L10n.string("Enter manually", defaultValue: "Enter manually"),
-                            systemImage: "square.and.pencil"
-                        )
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(.plain)
-        }
-        .padding(AppTheme.spacing24)
-        .mealScanCard()
-        .accessibilityIdentifier("meal_scan.unknown_outcome")
-    }
-}
-
-struct MealScanNewAttemptConfirmationView: View {
-    let viewModel: MealScanViewModel
-    let onChooseBarcode: () -> Void
-    let onChooseManual: () -> Void
-    @State private var isSubmitting = false
-
-    var body: some View {
-        VStack(spacing: AppTheme.spacing16) {
-                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                    .font(.system(size: 42, weight: .semibold))
-                    .foregroundStyle(AppTheme.premiumEditorWarningAccentColor)
-                    .accessibilityHidden(true)
-
-                Text(L10n.string("Start a separate analysis?", defaultValue: "Start a separate analysis?"))
-                    .appHeadingFont(.title3, weight: .regular)
-                    .foregroundStyle(AppTheme.primaryText)
-
-                Text(
-                    L10n.string(
-                        "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.",
-                        defaultValue: "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed."
-                    )
-                )
-                    .appFont(.subheadline)
-                    .foregroundStyle(AppTheme.secondaryText)
-                    .multilineTextAlignment(.center)
-
-                Text(L10n.string(
-                    "CycleBalance cannot confirm whether a fresh AI photo analysis was used.",
-                    defaultValue: "CycleBalance cannot confirm whether a fresh AI photo analysis was used."
-                ))
-                .appFont(.caption, weight: .semibold)
-                .foregroundStyle(AppTheme.primaryText)
-                .multilineTextAlignment(.center)
-
-                Button {
-                    isSubmitting = true
-                    Task {
-                        defer { isSubmitting = false }
-                        try? await viewModel.confirmNewAnalysisAfterAmbiguousOutcome()
-                    }
-                } label: {
-                    Label(
-                        L10n.string("Start a new billable analysis", defaultValue: "Start a new billable analysis"),
-                        systemImage: "arrow.up.circle.fill"
-                    )
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.premiumEditorWarningAccentColor)
-                .disabled(isSubmitting || !viewModel.canStartFreshAnalysis)
-                .accessibilityIdentifier("meal_scan.unknown.confirm_new")
-
-                Button(action: onChooseBarcode) {
-                    Label(
-                        L10n.string("Scan a barcode", defaultValue: "Scan a barcode"),
-                        systemImage: "barcode.viewfinder"
-                    )
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.bordered)
-                .disabled(isSubmitting)
-
-                Button(action: onChooseManual) {
-                    Label(
-                        L10n.string("Enter manually", defaultValue: "Enter manually"),
-                        systemImage: "square.and.pencil"
-                    )
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.plain)
-                .disabled(isSubmitting)
-
-                Button(L10n.string("Go back", defaultValue: "Go back")) {
-                    viewModel.cancelNewAnalysisConfirmation()
-                }
-                .buttonStyle(.bordered)
-                .disabled(isSubmitting)
-        }
-        .padding(AppTheme.spacing24)
-        .mealScanCard()
-        .accessibilityIdentifier("meal_scan.new_attempt_confirmation")
-    }
-}
-
-struct MealScanPrivacyNoticeView: View {
-    static var remoteAnalysisDisclosure: String {
-        L10n.string(
-            "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
-            defaultValue: "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device."
-        )
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-            Label(L10n.string("Private by design", defaultValue: "Private by design"), systemImage: "lock.shield")
-                .appFont(.subheadline, weight: .semibold)
-                .foregroundStyle(AppTheme.premiumEditorAccentColor)
-            Text(Self.remoteAnalysisDisclosure)
-                .appFont(.caption)
-                .foregroundStyle(AppTheme.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(AppTheme.spacing16)
-        .mealScanCard()
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("meal_scan.lunar.privacy")
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("meal_scan.failure")
     }
 }
 
@@ -2096,8 +1936,7 @@ private struct MealScanSavedContextView: View {
                             )
                             .frame(maxWidth: .infinity, minHeight: 44)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppTheme.premiumEditorAccentColor)
+                        .mealScanPrimaryActionStyle()
                         .accessibilityIdentifier("meal_scan.context.save")
                     } else if errorMessage == nil {
                         ProgressView()
@@ -2234,8 +2073,7 @@ private struct ScannerShareComposerView: View {
                     )
                     .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppTheme.premiumEditorAccentColor)
+                .mealScanPrimaryActionStyle()
                 .accessibilityIdentifier("meal_scan.share.open_sheet")
             }
         }
@@ -2258,7 +2096,7 @@ private struct ScannerShareComposerView: View {
 
     private func shareToggle(_ title: String, isOn: Binding<Bool>) -> some View {
         Toggle(title, isOn: isOn)
-            .tint(AppTheme.premiumEditorAccentColor)
+            .tint(AppTheme.mealScannerActionBackground)
             .frame(minHeight: 52)
     }
 
@@ -2290,7 +2128,7 @@ private struct ScannerShareCardArtwork: View {
                 HStack {
                     Image(systemName: "fork.knife.circle.fill")
                         .font(.system(size: 36, weight: .semibold))
-                        .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                        .foregroundStyle(AppTheme.mealScannerActionBackground)
                     Spacer()
                     Text(card.brandName)
                         .appFont(.headline, weight: .bold)
@@ -2363,7 +2201,7 @@ private struct ScannerShareCardArtwork: View {
         VStack(alignment: .leading, spacing: AppTheme.spacing4) {
             Text("\(value)")
                 .appFont(.title2, weight: .bold)
-                .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                .foregroundStyle(AppTheme.mealScannerActionBackground)
             Text(label)
                 .appFont(.caption, weight: .semibold)
                 .foregroundStyle(AppTheme.secondaryText)
@@ -2394,7 +2232,7 @@ private struct LunarMealScanLoadingView: View {
     var body: some View {
         ProgressView()
             .controlSize(.large)
-            .tint(AppTheme.premiumEditorAccentColor)
+            .tint(AppTheme.mealScannerActionBackground)
             .frame(maxWidth: .infinity, minHeight: 160)
             .mealScanCard()
             .accessibilityLabel(L10n.string("Loading meal scanner", defaultValue: "Loading meal scanner"))
@@ -2403,20 +2241,16 @@ private struct LunarMealScanLoadingView: View {
 }
 
 private extension View {
+    func mealScanPrimaryActionStyle() -> some View {
+        self.buttonStyle(.borderedProminent)
+            .tint(AppTheme.mealScannerActionBackground)
+            .foregroundStyle(AppTheme.mealScannerActionForeground)
+    }
+
     func mealScanCard() -> some View {
         background(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            AppTheme.premiumEditorRaisedSurface.opacity(0.92),
-                            AppTheme.premiumEditorSurface.opacity(0.78),
-                            AppTheme.premiumEditorBackground.opacity(0.9)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(AppTheme.mealScannerSurface)
         )
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)

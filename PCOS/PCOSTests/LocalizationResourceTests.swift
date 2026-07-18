@@ -70,6 +70,78 @@ private func loadSourceFile(
     return try String(contentsOf: fileURL, encoding: .utf8)
 }
 
+private struct ScannerSwiftSource {
+    let relativePath: String
+    let contents: String
+}
+
+private struct LiteralLocalizationCall {
+    let key: String
+    let defaultValue: String
+    let relativePath: String
+}
+
+private func loadScannerSwiftSources(projectRoot: URL) throws -> [ScannerSwiftSource] {
+    let scannerDirectory = projectRoot.appendingPathComponent(
+        "PCOS/PCOS/Features/Meals/MealScan",
+        isDirectory: true
+    )
+    guard let enumerator = FileManager.default.enumerator(
+        at: scannerDirectory,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    ) else {
+        throw NSError(
+            domain: "LocalizationResourceTests",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Unable to enumerate scanner Swift sources."]
+        )
+    }
+
+    let projectRootPrefix = projectRoot.path + "/"
+    return try enumerator
+        .compactMap { $0 as? URL }
+        .filter { $0.pathExtension == "swift" }
+        .map { fileURL in
+            ScannerSwiftSource(
+                relativePath: fileURL.path.replacingOccurrences(of: projectRootPrefix, with: ""),
+                contents: try String(contentsOf: fileURL, encoding: .utf8)
+            )
+        }
+        .sorted { $0.relativePath < $1.relativePath }
+}
+
+private func literalLocalizationKeys(in source: ScannerSwiftSource) throws -> [String] {
+    let expression = try NSRegularExpression(
+        pattern: #"L10n\.(?:string|format)\s*\(\s*"((?:\\.|[^"\\])*)""#,
+        options: [.dotMatchesLineSeparators]
+    )
+    let range = NSRange(source.contents.startIndex..., in: source.contents)
+    return expression.matches(in: source.contents, range: range).compactMap { match in
+        guard let range = Range(match.range(at: 1), in: source.contents) else { return nil }
+        return String(source.contents[range])
+    }
+}
+
+private func literalLocalizationCalls(in source: ScannerSwiftSource) throws -> [LiteralLocalizationCall] {
+    let expression = try NSRegularExpression(
+        pattern: #"L10n\.(?:string|format)\s*\(\s*"((?:\\.|[^"\\])*)"\s*,\s*defaultValue:\s*"((?:\\.|[^"\\])*)""#,
+        options: [.dotMatchesLineSeparators]
+    )
+    let range = NSRange(source.contents.startIndex..., in: source.contents)
+    return expression.matches(in: source.contents, range: range).compactMap { match in
+        guard let keyRange = Range(match.range(at: 1), in: source.contents),
+              let defaultRange = Range(match.range(at: 2), in: source.contents) else {
+            return nil
+        }
+        return LiteralLocalizationCall(
+            key: String(source.contents[keyRange]),
+            defaultValue: String(source.contents[defaultRange]),
+            relativePath: source.relativePath
+        )
+    }
+}
+
 private func printfPlaceholders(in value: String) -> [String] {
     let expression = try? NSRegularExpression(pattern: #"%(?:\d+\$)?(?:lld|ld|d|@|(?:\.\d+)?f)"#)
     let range = NSRange(value.startIndex..., in: value)
@@ -114,202 +186,33 @@ struct LocalizationResourceTests {
         "Scan as New",
         "last logged %@",
     ]
-    private let scannerReleaseLocalizationKeys = [
+    private let obsoleteScannerLocalizationKeys = [
         "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
-        "AI photo allowance",
-        "Analysis status unknown",
-        "Analysis still processing",
-        "Cached result — no fresh AI photo analysis was used.",
         "Check for cached result",
-        "Check the same request",
         "Checking again uses the same request ID and cannot create a second charge for this request. Starting a new analysis uses a new request ID and may consume another fresh analysis.",
-        "Choose Another Photo",
-        "Consider a new analysis",
-        "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis.",
         "CycleBalance could not confirm whether the previous analysis completed.",
-        "CycleBalance could not find a verified active monthly or annual subscription.",
-        "CycleBalance could not prepare this meal photo for a cloud estimate.",
-        "CycleBalance could not reduce this photo to the secure upload limit.",
-        "CycleBalance could not verify an active App Store subscription for this analysis.",
-        "CycleBalance could not verify this app install. Update the app and try again.",
-        "CycleBalance did not receive complete nutrition for %@. Nothing was added to your meal log.",
-        "Enter Manually",
-        "Enter manually",
-        "Enter nutrition manually",
         "Fresh AI photo allowance used",
-        "Gemini did not return any foods to review.",
-        "Gemini estimate only; review and edit before saving.",
-        "Gemini returned a meal estimate CycleBalance could not read.",
-        "Go back",
-        "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
-        "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
-        "Next rolling-window reset in your local time: %@.",
-        "No fresh AI photo analysis was used.",
-        "Only %lld fresh AI photo analyses remain in this rolling window.",
-        "Photo analysis unavailable",
-        "Photo estimate",
-        "Photo estimates are not configured. Scan a barcode or enter the meal manually.",
-        "Photo estimates are temporarily unavailable. Close Photo Estimate to scan a barcode, or enter the meal manually.",
-        "Photo estimates are unavailable right now. Close Photo Estimate to scan a barcode, or enter the meal manually.",
-        "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
-        "Photo meal estimates require an active trial or subscription.",
-        "paid",
-        "Scan a barcode",
-        "sandbox",
-        "Send this photo to Google Gemini?",
-        "Send to Google Gemini",
-        "standard",
-        "Start a new billable analysis",
-        "Start a separate analysis?",
-        "That photo is too large to estimate. Try another photo or enter the meal manually.",
-        "That photo could not be reduced to the secure upload limit. Try another photo or enter the meal manually.",
-        "That photo request is too large to send. Try another photo or enter the meal manually.",
-        "The photo estimate could not start. You can try another photo or enter the meal manually.",
-        "The photo estimate timed out. Try again, close Photo Estimate to scan a barcode, or enter the meal manually.",
-        "The previous outcome is still unknown. A separate request may consume another fresh AI photo analysis even if the first request completed.",
-        "The safe same-request check limit has been reached for now. Use barcode or manual entry, or return later.",
-        "The server asked CycleBalance to wait before checking again. Next check: %@.",
-        "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis.",
-        "This rolling window resets as earlier analyses age out; the next reset is shown in your local time: %@.",
-        "This analysis is still processing. Check the same request again in about %lld seconds.",
-        "This analysis is still processing. Check the same request again shortly.",
-        "trial",
-        "UPC codes are sent to Open Food Facts for a keyless product lookup. You can review and edit the result before adding it to this meal.",
-        "You will review and edit the estimate before anything is added to your meal log.",
-        "You've used all %lld fresh AI photo analyses in the current rolling 24-hour %@ allowance. Scan a barcode or enter the meal manually while the window resets.",
-        "You've used all fresh AI photo analyses in the current rolling 24-hour allowance. Scan a barcode or enter the meal manually while the window resets.",
-        "You've used the lifetime trial AI photo analysis allowance. Scan a barcode or enter the meal manually.",
-        "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis.",
-        "%lld of %lld fresh AI photo analyses remain in your rolling 24-hour %@ allowance.",
-        "A fresh AI photo analysis was used.",
-        "Add Context",
-        "Add meal context",
-        "After %@",
-        "Add energy, fullness or hunger, cravings, digestion or bloating, and symptom context. This can help compare patterns over time; it does not show that a meal caused a change.",
-        "Adjusted portions",
-        "An after-meal glucose reading is saved separately. Opening it does not change or duplicate this meal.",
-        "Allowed",
-        "Camera permission",
-        "Choose a clear photo with the whole plate visible and steady, even lighting.",
-        "CycleBalance cannot confirm whether a fresh AI photo analysis was used.",
-        "Denied",
-        "Edit food",
-        "Editable draft: check foods, portions, and hidden ingredients before saving.",
-        "Enter a portion greater than 0 grams.",
-        "Estimate, not diagnosis",
-        "Food name",
-        "Foods reviewed",
         "Full technical details",
         "Google Gemini estimates foods, portions, and nutrition.",
-        "Glucose context",
-        "How noticeable was the context? Choose 1 for slight through 5 for strong.",
-        "Import meal photo",
-        "Include food names",
-        "Include meal photo",
-        "Include nutrition macros",
-        "Local foods",
-        "Meal photo",
-        "Meal saved",
-        "Not requested",
+        "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
+        "Google may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements.",
+        "Google retention",
+        "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
+        "No fresh AI photo analysis was used.",
         "One compressed copy of this meal photo, only after you confirm.",
-        "Open Settings",
-        "Optional details are off until you turn them on. Review this preview before sharing.",
-        "Photo estimate — reviewed by me",
-        "Preparing photo and checking for a previous estimate",
-        "Restricted",
-        "Review and edit before saving. Nutrition and glycemic context are estimates, not a diagnosis or medical advice.",
+        "Only nutrition you review and save is added to your meal log. CycleBalance does not retain the uploaded photo on its server.",
         "Review photo privacy",
-        "Review your estimate",
-        "Selected meal photo",
-        "Share",
-        "Save context",
-        "Share preview",
-        "Take meal photo",
-        "The saved meal could not be opened. Your meal remains saved.",
-        "Context could not be saved. Your meal remains unchanged.",
-        "The camera has not asked for access yet.",
-        "The camera is available for meal photos.",
-        "The camera is restricted on this device. You can import a photo, scan a barcode, or enter the meal manually.",
-        "The camera permission was denied. Open Settings to allow it, or use another entry method.",
-        "Turn meal photos into editable nutrition drafts you review before saving.",
-        "View Meal",
-        "Your check-in will update this saved meal without creating another meal.",
+        "Send this photo to Google Gemini?",
+        "Send to Google Gemini",
+        "Start a new billable analysis",
+        "The standard paid allowance is 10 fresh AI photo analyses in any rolling 24 hours. Trial, sandbox, or temporary service-safeguard limits may be lower. Cached results do not use a fresh analysis.",
         "What CycleBalance saves",
         "What is sent",
         "Who processes it",
-        "Google retention",
-        "Google may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements.",
-        "Only nutrition you review and save is added to your meal log. CycleBalance does not retain the uploaded photo on its server.",
-        "%@ g protein • %@ g carbs • %@ g fat",
-        "%@: %@ g, %@ kcal, confidence %@.",
-        "Context intensity %lld of 5",
-        "e.g., steady energy, comfortably full, hungry soon, craving later, or bloated",
-        "Add Food",
-        "Added food",
-        "Build an editable estimate yourself",
-        "Calories",
-        "Choose a starting point",
-        "Confidence: %@",
-        "Double tap to edit this food and portion.",
-        "Enter a food name.",
-        "Estimate notes",
-        "Estimated glycemic context: %@",
-        "Estimating foods and portions...",
-        "Fiber",
-        "Foods",
-        "Grams",
-        "Hidden oil, dressing, or sauces can change calories and fats, especially for restaurant meals and mixed dishes.",
-        "Included meal photo",
-        "Loading meal scanner",
-        "Meal name",
-        "Net carbs",
-        "Nutrition added to your CycleBalance log",
-        "Nutrition estimate",
-        "Nutrition values are estimates and can vary with preparation, ingredients, and portion size. Use them as a starting point, not a judgment.",
-        "Photo",
-        "Photo quality",
-        "Portion",
-        "Preparing photo",
-        "Private by default",
-        "Private by design",
-        "Remove %@",
-        "Retake Photo",
-        "Review",
-        "Saved meal",
-        "Share card",
-        "Share meal",
-        "Sodium",
-        "Start with a photo-based draft, then review every food and portion before anything is saved.",
-        "Sugar",
-        "Use sample meal",
-        "Use the camera or import a photo",
-        "Was this cooked with oil, butter, dressing, or sauce?",
-        "You'll be able to edit everything before saving.",
-        "kcal",
-        "Good estimate",
-        "Review suggested",
-        "Needs confirmation",
-        "Manual estimate",
-        "No",
-        "A little",
-        "Moderate",
-        "A lot",
-        "Not sure",
-        "Low",
-        "Moderate-high",
-        "High",
-        "Unknown",
-        "Photo meal estimate",
-        "Manual food",
-        "Food",
-        "Olive oil estimate",
-        "Added from hidden oil, butter, dressing, or sauce prompt.",
-        "This meal may have a low glucose impact. Protein and fiber may help balance the meal.",
-        "This meal may have a moderate glucose impact. Protein and fiber may help balance the meal.",
-        "This meal may have a moderate-high glucose impact, mostly from visible carbs.",
-        "This meal may have a higher glucose impact, mostly from visible carbs and lower fiber.",
-        "This meal needs review before CycleBalance can estimate glucose impact.",
-        "Nutrition values are estimates and can vary with preparation, ingredients, oil, dressing, sauces, and portion size. CycleBalance is not a medical device.",
+        "Your fresh AI photo allowance is used for the current rolling window. You can still check for an existing cached result; a cache miss will not dispatch a fresh model analysis.",
+    ]
+    private let scannerTranslationsAllowedToMatchEnglish: [String: Set<String>] = [
+        "de": ["Protein"],
     ]
     private let representativeLocalizableKeys = [
         "Spotting",
@@ -671,14 +574,15 @@ struct LocalizationResourceTests {
         "Look up packaged food",
         "Type nutrition details",
         "Every option stays editable until you save the meal.",
-        "Send this photo to Google Gemini?",
-        "If this exact photo has not already been processed on this device, CycleBalance will send one compressed copy to Google Gemini to estimate foods, portions, and nutrients.",
-        "Google does not use paid API photos or responses to improve its products, but it may retain the photo and response for up to 55 days for abuse monitoring and legal or regulatory requirements. CycleBalance does not retain the uploaded photo on its server.",
-        "You will review and edit the estimate before anything is added to your meal log.",
-        "A structured estimate may be cached for up to 24 hours so the same request can be reused without another model call.",
-        "Send to Google Gemini",
+        "Analyze this meal photo?",
+        "CycleBalance uses AI to create an editable estimate of foods, portions, and nutrition.",
+        "Google Gemini receives one compressed copy and may retain the photo and response for up to 55 days.",
+        "CycleBalance does not retain the uploaded photo on its servers.",
+        "Your edited estimate is added to the meal log only after you choose Save meal.",
+        "CycleBalance may keep a structured estimate for up to 24 hours so the exact photo can be reused without another upload.",
+        "Analyze photo",
         "Enter Manually",
-        "Choose Another Photo",
+        "Choose another photo",
         "The photo estimate could not start. You can try another photo or enter the meal manually.",
         "No food was confidently detected. You can retake the photo or add the meal manually.",
         "Could not import photo. %@",
@@ -697,7 +601,6 @@ struct LocalizationResourceTests {
         "You can retake the photo or add the meal manually.",
         "Add manually",
         "Retake photo",
-        "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
         "Review the source notes, then scan a barcode or log your next meal to see how new entries fit in.",
         "Choose one quick log, scan a barcode, or enter your next meal manually.",
     ]
@@ -1020,13 +923,54 @@ struct LocalizationResourceTests {
         }
     }
 
-    @Test("Scanner release strings are translated for all supported languages")
-    func scannerReleaseStringsAreTranslated() throws {
+    @Test("Every scanner literal localization call has a matching English default")
+    func scannerLiteralLocalizationCallsHaveMatchingDefaults() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
             Issue.record("Unable to locate the localized app resource directory from the test bundle.")
             return
         }
+        let projectRoot = appDirectory.deletingLastPathComponent().deletingLastPathComponent()
+        let sources = try loadScannerSwiftSources(projectRoot: projectRoot)
+        let literalKeys = try sources.flatMap { try literalLocalizationKeys(in: $0) }
+        let calls = try sources.flatMap { try literalLocalizationCalls(in: $0) }
+
+        #expect(!literalKeys.isEmpty, "No literal scanner localization calls were extracted.")
+        #expect(
+            calls.count == literalKeys.count,
+            "Every literal L10n.string/format scanner key must declare a literal defaultValue. Extracted \(literalKeys.count) keys but only \(calls.count) complete calls."
+        )
+        for call in calls {
+            #expect(
+                call.defaultValue == call.key,
+                "Scanner localization default must match its English key in \(call.relativePath): '\(call.key)' != '\(call.defaultValue)'."
+            )
+            #expect(
+                printfPlaceholders(in: call.defaultValue) == printfPlaceholders(in: call.key),
+                "Scanner localization default placeholders must match for '\(call.key)' in \(call.relativePath)."
+            )
+        }
+
+        let source = sources.map(\.contents).joined(separator: "\n")
+        #expect(
+            !source.contains("quota.tier"),
+            "Scanner UI must format a localized tier display label, not the raw backend tier token."
+        )
+    }
+
+    @Test("Every scanner literal localization key is translated for all supported languages")
+    func scannerLiteralLocalizationKeysAreTranslated() throws {
+        let testFileURL = URL(fileURLWithPath: #filePath)
+        guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
+            Issue.record("Unable to locate the localized app resource directory from the test bundle.")
+            return
+        }
+        let projectRoot = appDirectory.deletingLastPathComponent().deletingLastPathComponent()
+        let sources = try loadScannerSwiftSources(projectRoot: projectRoot)
+        let calls = try sources.flatMap { try literalLocalizationCalls(in: $0) }
+        let scannerLocalizationKeys = Set(calls.map(\.key)).sorted()
+
+        #expect(!scannerLocalizationKeys.isEmpty, "No scanner localization keys were extracted.")
 
         for languageIdentifier in L10n.supportedLanguageIdentifiers {
             guard let table = loadStringsTable(named: "Localizable", languageIdentifier: languageIdentifier, appDirectory: appDirectory) else {
@@ -1034,10 +978,13 @@ struct LocalizationResourceTests {
                 continue
             }
 
-            for key in scannerReleaseLocalizationKeys {
+            for key in scannerLocalizationKeys {
                 let value = table[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 #expect(!value.isEmpty, "Missing scanner localized value for '\(key)' in \(languageIdentifier).")
-                #expect(value != key, "Scanner localized value for '\(key)' in \(languageIdentifier) fell back to English.")
+                #expect(
+                    value != key || scannerTranslationsAllowedToMatchEnglish[languageIdentifier]?.contains(key) == true,
+                    "Scanner localized value for '\(key)' in \(languageIdentifier) fell back to English."
+                )
                 #expect(
                     printfPlaceholders(in: value) == printfPlaceholders(in: key),
                     "Scanner placeholders for '\(key)' do not match in \(languageIdentifier): '\(value)'."
@@ -1046,42 +993,31 @@ struct LocalizationResourceTests {
         }
     }
 
-    @Test("Scanner release source routes user-visible copy through L10n")
-    func scannerReleaseSourceUsesLocalizationHelpers() throws {
+    @Test("Obsolete scanner customer-facing technical keys are absent")
+    func obsoleteScannerCustomerTechnicalKeysAreAbsent() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         guard let appDirectory = resolveLocalizedAppDirectory(from: testFileURL) else {
             Issue.record("Unable to locate the localized app resource directory from the test bundle.")
             return
         }
         let projectRoot = appDirectory.deletingLastPathComponent().deletingLastPathComponent()
-        let sourcePaths = [
-            "PCOS/PCOS/Features/Meals/MealScan/Remote/GeminiMealScanRemote.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/Remote/MealScanImageNormalizer.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/Models/MealScanModels.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/Services/MealScanServices.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/RepeatMeal/RepeatMealSuggestionView.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/ViewModels/MealScanViewModel.swift",
-            "PCOS/PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift",
-            "PCOS/PCOS/Features/Meals/Views/MealLogView.swift",
-            "PCOS/PCOS/Features/Onboarding/Views/OnboardingMealScanDemoView.swift",
-            "PCOS/PCOS/Core/StoreKit/PaywallView.swift",
-        ]
-        let source = try sourcePaths
-            .map { try loadSourceFile(relativePath: $0, projectRoot: projectRoot) }
+        let source = try loadScannerSwiftSources(projectRoot: projectRoot)
+            .map(\.contents)
             .joined(separator: "\n")
 
-        for key in scannerReleaseLocalizationKeys {
-            let quotedKey = NSRegularExpression.escapedPattern(for: "\"\(key)\"")
-            let localizedCallPattern = #"(?:L10n\.)?(?:string|format)\s*\(\s*"# + quotedKey
-            #expect(
-                source.range(of: localizedCallPattern, options: .regularExpression) != nil,
-                "Scanner release key is not routed through L10n.string or L10n.format: '\(key)'."
-            )
+        for key in obsoleteScannerLocalizationKeys {
+            #expect(!source.contains(key), "Obsolete scanner copy remains in source: '\(key)'.")
         }
-        #expect(
-            !source.contains("quota.tier"),
-            "Scanner UI must format a localized tier display label, not the raw backend tier token."
-        )
+
+        for languageIdentifier in L10n.supportedLanguageIdentifiers {
+            guard let table = loadStringsTable(named: "Localizable", languageIdentifier: languageIdentifier, appDirectory: appDirectory) else {
+                Issue.record("Unable to load Localizable.strings for \(languageIdentifier).")
+                continue
+            }
+            for key in obsoleteScannerLocalizationKeys {
+                #expect(table[key] == nil, "Obsolete scanner key remains in \(languageIdentifier): '\(key)'.")
+            }
+        }
     }
 
     @Test("Insight explanation strings are translated for all supported languages")

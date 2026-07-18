@@ -168,6 +168,44 @@ struct AppearancePreferencesTests {
         }
     }
 
+    @Test("Meal scanner semantic body and error colors meet 4.5 to 1 contrast")
+    func mealScannerSemanticTextColorsMeetWCAGContrast() {
+        for theme in [
+            ThemeOption.lunarCalm,
+            .botanicalJournal,
+            .fruitGrove,
+            .highContrast,
+        ] {
+            let surface = theme.mealScannerSurfaceRGB
+            #expect(
+                contrastRatio(theme.mealScannerBodyTextRGB, surface) >= 4.5,
+                "\(theme.rawValue) scanner body text must meet 4.5:1 contrast."
+            )
+            #expect(
+                contrastRatio(theme.mealScannerErrorTextRGB, surface) >= 4.5,
+                "\(theme.rawValue) scanner error text must meet 4.5:1 contrast."
+            )
+        }
+    }
+
+    @Test("Meal scanner primary action labels meet 4.5 to 1 contrast")
+    func mealScannerPrimaryActionLabelsMeetWCAGContrast() {
+        for theme in [
+            ThemeOption.lunarCalm,
+            .botanicalJournal,
+            .fruitGrove,
+            .highContrast,
+        ] {
+            #expect(
+                contrastRatio(
+                    theme.mealScannerActionForegroundRGB,
+                    theme.mealScannerActionBackgroundRGB
+                ) >= 4.5,
+                "\(theme.rawValue) scanner primary action label must meet 4.5:1 contrast."
+            )
+        }
+    }
+
     @Test("Botanical Journal palette matches the soft wellness art direction")
     func botanicalJournalPaletteMatchesArtDirection() {
         let palette = ThemeOption.botanicalJournal.palette
@@ -736,6 +774,24 @@ private extension AppearancePreferencesTests {
             palette.flowMediumDark,
             palette.flowHeavyDark,
         ].flatMap { [$0.red, $0.green, $0.blue] }
+    }
+
+    func contrastRatio(_ foreground: ThemeRGB, _ background: ThemeRGB) -> Double {
+        let foregroundLuminance = relativeLuminance(foreground)
+        let backgroundLuminance = relativeLuminance(background)
+        return (max(foregroundLuminance, backgroundLuminance) + 0.05)
+            / (min(foregroundLuminance, backgroundLuminance) + 0.05)
+    }
+
+    func relativeLuminance(_ color: ThemeRGB) -> Double {
+        func linearized(_ component: Double) -> Double {
+            component <= 0.04045
+                ? component / 12.92
+                : pow((component + 0.055) / 1.055, 2.4)
+        }
+        return (0.2126 * linearized(color.red))
+            + (0.7152 * linearized(color.green))
+            + (0.0722 * linearized(color.blue))
     }
 }
 

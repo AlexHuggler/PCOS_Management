@@ -2,6 +2,175 @@ import Foundation
 import CoreGraphics
 import UIKit
 
+enum MealScanFailureKind: CaseIterable, Equatable, Sendable {
+    case serviceDisabled
+    case offlineBeforeDispatch
+    case connectionInterruptedAfterDispatch
+    case appIntegrity
+    case entitlement
+    case quotaExhausted
+    case unreadableMeal
+    case ambiguousResult
+    case saveFailed
+}
+
+enum MealScanConsumptionState: CaseIterable, Equatable, Sendable {
+    case notUsed
+    case used
+    case unknown
+
+    func preservingStrongestTruth(with other: Self) -> Self {
+        if self == .used || other == .used {
+            return .used
+        }
+        if self == .unknown || other == .unknown {
+            return .unknown
+        }
+        return .notUsed
+    }
+}
+
+enum MealScanFailureCause: CaseIterable, Equatable, Sendable {
+    case featureDisabled
+    case serviceControlUnavailable
+    case budgetDispatchDisabled
+    case offline
+    case transportOutcomeUnknown
+    case appIntegrityRejected
+    case appIntegrityEvidenceUnavailable
+    case entitlementRejected
+    case entitlementEvidenceUnavailable
+    case requestRateLimited
+    case quotaExhausted
+    case invalidImage
+    case invalidRequest
+    case idempotencyConflict
+    case requestPending
+    case serverOutcomeUnknown
+    case providerResponseInvalid
+    case providerRequestFailed
+    case providerTimeout
+    case providerDispatchOutcomeUnknown
+    case saveFailed
+    case unclassified
+}
+
+enum MealScanRetryBehavior: CaseIterable, Equatable, Sendable {
+    case none
+    case retrySameRequest
+    case checkSameRequest
+    case retrySave
+}
+
+enum MealScanRecovery: Equatable, Sendable {
+    case none
+    case retrySameRequest(afterSeconds: Int?)
+    case checkSameRequest(afterSeconds: Int?)
+    case retrySave
+
+    var retryBehavior: MealScanRetryBehavior {
+        switch self {
+        case .none: .none
+        case .retrySameRequest: .retrySameRequest
+        case .checkSameRequest: .checkSameRequest
+        case .retrySave: .retrySave
+        }
+    }
+
+    var retryAfterSeconds: Int? {
+        switch self {
+        case .retrySameRequest(let afterSeconds), .checkSameRequest(let afterSeconds):
+            afterSeconds
+        case .none, .retrySave:
+            nil
+        }
+    }
+
+    init(retryBehavior: MealScanRetryBehavior, retryAfterSeconds: Int?) {
+        switch retryBehavior {
+        case .none:
+            self = .none
+        case .retrySameRequest:
+            self = .retrySameRequest(afterSeconds: retryAfterSeconds)
+        case .checkSameRequest:
+            self = .checkSameRequest(afterSeconds: retryAfterSeconds)
+        case .retrySave:
+            self = .retrySave
+        }
+    }
+}
+
+enum MealScanAnalysisSource: CaseIterable, Equatable, Sendable {
+    case exactPrevious
+    case localCache
+    case serverCache
+    case fresh
+
+    var consumption: MealScanConsumptionState {
+        switch self {
+        case .exactPrevious, .localCache, .serverCache:
+            .notUsed
+        case .fresh:
+            .used
+        }
+    }
+}
+
+struct MealScanFailure: Error, Equatable, Sendable {
+    var kind: MealScanFailureKind
+    var cause: MealScanFailureCause
+    var consumption: MealScanConsumptionState
+    var recovery: MealScanRecovery
+    var quota: MealScanQuota?
+    var retryAfterSeconds: Int?
+
+    var retryBehavior: MealScanRetryBehavior {
+        recovery.retryBehavior
+    }
+
+    init(
+        kind: MealScanFailureKind,
+        cause: MealScanFailureCause = .unclassified,
+        consumption: MealScanConsumptionState,
+        recovery: MealScanRecovery,
+        quota: MealScanQuota? = nil
+    ) {
+        self.kind = kind
+        self.cause = cause
+        self.consumption = consumption
+        self.recovery = recovery
+        self.quota = quota
+        retryAfterSeconds = recovery.retryAfterSeconds ?? quota?.retryAfterSeconds
+    }
+
+    init(
+        kind: MealScanFailureKind,
+        cause: MealScanFailureCause = .unclassified,
+        consumption: MealScanConsumptionState,
+        retryBehavior: MealScanRetryBehavior,
+        quota: MealScanQuota? = nil,
+        retryAfterSeconds: Int? = nil
+    ) {
+        self.kind = kind
+        self.cause = cause
+        self.consumption = consumption
+        recovery = MealScanRecovery(
+            retryBehavior: retryBehavior,
+            retryAfterSeconds: retryAfterSeconds
+        )
+        self.quota = quota
+        self.retryAfterSeconds = retryAfterSeconds
+    }
+}
+
+protocol MealScanFailureProviding: Error, Sendable {
+    var mealScanFailure: MealScanFailure { get }
+}
+
+extension MealScanFailure: MealScanFailureProviding {
+    var mealScanFailure: MealScanFailure { self }
+}
+
 enum NutritionDataSource: String, Codable, CaseIterable, Sendable {
     case usda
     case openFoodFacts
@@ -204,6 +373,7 @@ struct NutritionSnapshot: Codable, Equatable, Sendable {
             caloriesKcal: caloriesKcal + other.caloriesKcal,
             proteinGrams: proteinGrams + other.proteinGrams,
             carbsGrams: carbsGrams + other.carbsGrams,
+            netCarbsGrams: netCarbsGrams + other.netCarbsGrams,
             fatGrams: fatGrams + other.fatGrams,
             fiberGrams: fiberGrams + other.fiberGrams,
             sugarGrams: sugarGrams + other.sugarGrams,
@@ -213,6 +383,25 @@ struct NutritionSnapshot: Codable, Equatable, Sendable {
             potassiumMg: potassiumMg + other.potassiumMg,
             calciumMg: calciumMg + other.calciumMg,
             ironMg: ironMg + other.ironMg
+        )
+    }
+
+    func scaled(by factor: Double) -> NutritionSnapshot {
+        guard factor.isFinite, factor >= 0 else { return self }
+        return NutritionSnapshot(
+            caloriesKcal: caloriesKcal * factor,
+            proteinGrams: proteinGrams * factor,
+            carbsGrams: carbsGrams * factor,
+            netCarbsGrams: netCarbsGrams * factor,
+            fatGrams: fatGrams * factor,
+            fiberGrams: fiberGrams * factor,
+            sugarGrams: sugarGrams * factor,
+            sodiumMg: sodiumMg * factor,
+            saturatedFatGrams: saturatedFatGrams * factor,
+            cholesterolMg: cholesterolMg * factor,
+            potassiumMg: potassiumMg * factor,
+            calciumMg: calciumMg * factor,
+            ironMg: ironMg * factor
         )
     }
 }

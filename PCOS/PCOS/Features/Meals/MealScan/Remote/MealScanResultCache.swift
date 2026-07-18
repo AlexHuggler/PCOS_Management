@@ -6,6 +6,8 @@ import SwiftData
 protocol MealScanResultCaching: AnyObject {
     func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String?
 
+    func removeCachedResponse(for cacheKey: String) throws
+
     func saveResponseJSON(
         _ responseJSON: String,
         cacheKey: String,
@@ -16,6 +18,10 @@ protocol MealScanResultCaching: AnyObject {
         sourceImageHash: String,
         now: Date
     ) throws
+}
+
+extension MealScanResultCaching {
+    func removeCachedResponse(for cacheKey: String) throws {}
 }
 
 @MainActor
@@ -95,6 +101,12 @@ final class MealScanResultCache: MealScanResultCaching {
         if record.modelContext == nil {
             modelContext.insert(record)
         }
+        try modelContext.save()
+    }
+
+    func removeCachedResponse(for cacheKey: String) throws {
+        guard let record = try record(for: cacheKey) else { return }
+        modelContext.delete(record)
         try modelContext.save()
     }
 

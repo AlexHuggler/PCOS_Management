@@ -7,6 +7,117 @@ import UIKit
 @Suite("Gemini Meal Scan Remote Integration", .serialized)
 @MainActor
 struct GeminiMealScanTests {
+    @Test("meal scan failure taxonomy is exact and carries recovery metadata")
+    func mealScanFailureTaxonomyIsExact() {
+        #expect(MealScanFailureKind.allCases == [
+            .serviceDisabled,
+            .offlineBeforeDispatch,
+            .connectionInterruptedAfterDispatch,
+            .appIntegrity,
+            .entitlement,
+            .quotaExhausted,
+            .unreadableMeal,
+            .ambiguousResult,
+            .saveFailed,
+        ])
+        #expect(MealScanConsumptionState.allCases == [.notUsed, .used, .unknown])
+        #expect(MealScanConsumptionState.notUsed.preservingStrongestTruth(with: .unknown) == .unknown)
+        #expect(MealScanConsumptionState.unknown.preservingStrongestTruth(with: .used) == .used)
+        #expect(MealScanConsumptionState.used.preservingStrongestTruth(with: .notUsed) == .used)
+        #expect(MealScanRetryBehavior.allCases == [.none, .retrySameRequest, .checkSameRequest, .retrySave])
+        #expect(MealScanFailureCause.allCases == [
+            .featureDisabled,
+            .serviceControlUnavailable,
+            .budgetDispatchDisabled,
+            .offline,
+            .transportOutcomeUnknown,
+            .appIntegrityRejected,
+            .appIntegrityEvidenceUnavailable,
+            .entitlementRejected,
+            .entitlementEvidenceUnavailable,
+            .requestRateLimited,
+            .quotaExhausted,
+            .invalidImage,
+            .invalidRequest,
+            .idempotencyConflict,
+            .requestPending,
+            .serverOutcomeUnknown,
+            .providerResponseInvalid,
+            .providerRequestFailed,
+            .providerTimeout,
+            .providerDispatchOutcomeUnknown,
+            .saveFailed,
+            .unclassified,
+        ])
+        #expect(MealScanAnalysisSource.allCases == [
+            .exactPrevious,
+            .localCache,
+            .serverCache,
+            .fresh,
+        ])
+
+        let quota = MealScanQuota(
+            tier: "paid",
+            used: 10,
+            limit: 10,
+            remaining: 0,
+            windowSeconds: 86_400,
+            resetAt: "2026-07-17T01:02:03.000Z",
+            retryAfterSeconds: 120
+        )
+        #expect(MealScanFailure(
+            kind: .quotaExhausted,
+            cause: .quotaExhausted,
+            consumption: .notUsed,
+            recovery: .none,
+            quota: quota
+        ) == MealScanFailure(
+            kind: .quotaExhausted,
+            cause: .quotaExhausted,
+            consumption: .notUsed,
+            retryBehavior: .none,
+            quota: quota,
+            retryAfterSeconds: 120
+        ))
+
+        let pending = MealScanFailure(
+            kind: .ambiguousResult,
+            cause: .requestPending,
+            consumption: .unknown,
+            recovery: .checkSameRequest(afterSeconds: 9)
+        )
+        #expect(pending.retryBehavior == .checkSameRequest)
+        #expect(pending.retryAfterSeconds == 9)
+        #expect(pending.recovery == .checkSameRequest(afterSeconds: 9))
+    }
+
+    @Test("analysis source is the only source of successful consumption truth")
+    func analysisSourceOwnsSuccessfulConsumptionTruth() {
+        let result = Self.sourceTestResult
+        let exactPrevious = MealScanOutcome(result: result, quota: nil, source: .exactPrevious)
+        let local = MealScanOutcome(result: result, quota: nil, source: .localCache)
+        let server = MealScanOutcome(result: result, quota: nil, source: .serverCache)
+        let fresh = MealScanOutcome(result: result, quota: nil, source: .fresh)
+
+        #expect(exactPrevious.consumption == .notUsed)
+        #expect(local.consumption == .notUsed)
+        #expect(server.consumption == .notUsed)
+        #expect(fresh.consumption == .used)
+        #expect(exactPrevious.cacheDisposition == .local)
+        #expect(local.cacheDisposition == .local)
+        #expect(server.cacheDisposition == .server)
+        #expect(fresh.cacheDisposition == .fresh)
+
+        let contradictoryLegacyOutcome = MealScanOutcome(
+            result: result,
+            quota: nil,
+            cacheDisposition: .fresh,
+            consumption: .notUsed
+        )
+        #expect(contradictoryLegacyOutcome.source == .fresh)
+        #expect(contradictoryLegacyOutcome.consumption == .used)
+    }
+
     @Test("proxy request matches the backend allowlist and carries StoreKit evidence")
     func proxyRequestMatchesBackendAllowlist() async throws {
         let requestID = UUID(uuidString: "4D99A795-D22C-4F50-BBBA-461DA7A4D94C")!
@@ -80,6 +191,37 @@ struct GeminiMealScanTests {
         ))
     }
 
+    @Test("proxy requires nonempty App Check evidence before URL transport")
+    func proxyRequiresNonemptyAppCheckBeforeTransport() async throws {
+        var transportCallCount = 0
+        MockMealScanURLProtocol.handler = { request in
+            transportCallCount += 1
+            return (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data()
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        let client = GeminiMealScanProxyClient(
+            endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+            urlSession: .mealScanTestSession()
+        )
+        for token in [nil, "", " \n\t"] as [String?] {
+            await #expect(throws: MealScanRemoteError.appIntegrityEvidenceUnavailable) {
+                _ = try await client.estimateMeal(
+                    request: .testDefault(firebaseAppCheckToken: token)
+                )
+            }
+        }
+        #expect(transportCallCount == 0)
+    }
+
     @Test("transport failures are an ambiguous outcome for the same request ID")
     func transportFailurePreservesAmbiguousRequestID() async throws {
         let requestID = UUID(uuidString: "D9AC9B94-A0C2-4FF4-8F8E-FF06BD349A84")!
@@ -88,12 +230,56 @@ struct GeminiMealScanTests {
         }
         defer { MockMealScanURLProtocol.handler = nil }
 
-        await #expect(throws: MealScanRemoteError.outcomeUnknown(requestID: requestID)) {
+        do {
             _ = try await GeminiMealScanProxyClient(
                 endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
                 urlSession: .mealScanTestSession()
             ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected the transport loss to preserve an unknown outcome")
+        } catch let error as MealScanRemoteError {
+            guard case .outcomeUnknown(let actualRequestID) = error else {
+                Issue.record("Expected outcomeUnknown, received \(error)")
+                return
+            }
+            #expect(actualRequestID == requestID)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .transportOutcomeUnknown,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest
+            ))
         }
+    }
+
+    @Test("definite pre-dispatch URL failures report offline without using a scan")
+    func definitePreDispatchURLFailuresMapToOffline() async throws {
+        for code in [
+            URLError.notConnectedToInternet,
+            .cannotFindHost,
+            .cannotConnectToHost,
+            .dnsLookupFailed,
+        ] {
+            MockMealScanURLProtocol.handler = { _ in
+                throw URLError(code)
+            }
+
+            do {
+                _ = try await GeminiMealScanProxyClient(
+                    endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                    urlSession: .mealScanTestSession()
+                ).estimateMeal(request: .testDefault())
+                Issue.record("Expected \(code) to remain a definite pre-dispatch failure")
+            } catch let error as MealScanRemoteError {
+                #expect(error == .offlineBeforeDispatch)
+                #expect(error.mealScanFailure == MealScanFailure(
+                    kind: .offlineBeforeDispatch,
+                    cause: .offline,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                ))
+            }
+        }
+        MockMealScanURLProtocol.handler = nil
     }
 
     @Test("proxy unknown outcome preserves the same typed request ID")
@@ -119,11 +305,78 @@ struct GeminiMealScanTests {
         }
         defer { MockMealScanURLProtocol.handler = nil }
 
-        await #expect(throws: MealScanRemoteError.outcomeUnknown(requestID: requestID)) {
+        do {
             _ = try await GeminiMealScanProxyClient(
                 endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
                 urlSession: .mealScanTestSession()
             ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected a confirmed provider timeout")
+        } catch let error as MealScanRemoteError {
+            guard case .providerTimeoutAfterDispatch(
+                let actualRequestID,
+                let retryAfterSeconds
+            ) = error else {
+                Issue.record("Expected providerTimeoutAfterDispatch, received \(error)")
+                return
+            }
+            #expect(actualRequestID == requestID)
+            #expect(retryAfterSeconds == nil)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .connectionInterruptedAfterDispatch,
+                cause: .providerTimeout,
+                consumption: .used,
+                retryBehavior: .checkSameRequest
+            ))
+        }
+    }
+
+    @Test("server idempotency unknown is used and checks the same request")
+    func serverIdempotencyUnknownMapsToUsedRecovery() async throws {
+        let requestID = UUID(uuidString: "7B42E5CA-1866-4DB9-AE82-3D19D327B9F8")!
+        MockMealScanURLProtocol.handler = { request in
+            (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 409,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data("""
+                {
+                  "error": "meal_scan_outcome_unknown",
+                  "reason": "idempotency_state_unknown",
+                  "retryable": false,
+                  "retryAfterSeconds": 9,
+                  "idempotency": {"state": "unknown"}
+                }
+                """.utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        do {
+            _ = try await GeminiMealScanProxyClient(
+                endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                urlSession: .mealScanTestSession()
+            ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected an unknown server idempotency state")
+        } catch let error as MealScanRemoteError {
+            guard case .serverOutcomeUnknown(
+                let actualRequestID,
+                let retryAfterSeconds
+            ) = error else {
+                Issue.record("Expected serverOutcomeUnknown, received \(error)")
+                return
+            }
+            #expect(actualRequestID == requestID)
+            #expect(retryAfterSeconds == 9)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .serverOutcomeUnknown,
+                consumption: .used,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: 9
+            ))
         }
     }
 
@@ -151,14 +404,179 @@ struct GeminiMealScanTests {
         }
         defer { MockMealScanURLProtocol.handler = nil }
 
-        await #expect(throws: MealScanRemoteError.requestPending(
-            requestID: requestID,
-            retryAfterSeconds: 7
-        )) {
+        do {
             _ = try await GeminiMealScanProxyClient(
                 endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
                 urlSession: .mealScanTestSession()
             ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected a pending idempotent request")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .requestPending(requestID: requestID, retryAfterSeconds: 7))
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .requestPending,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: 7
+            ))
+        }
+    }
+
+    @Test("principal dispatch contention retries the same request and reports no scan used")
+    func principalDispatchContentionMapsToTimedRetryWithoutConsumption() async throws {
+        let requestID = UUID(uuidString: "FD5A8503-B1FC-4A71-B81C-4F2BBE4B0F29")!
+        MockMealScanURLProtocol.handler = { request in
+            (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 409,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data("""
+                {
+                  "error": "meal_scan_in_progress",
+                  "reason": "principal_dispatch_in_progress",
+                  "retryable": true,
+                  "retryAfterSeconds": 11,
+                  "idempotency": {"state": "pending"}
+                }
+                """.utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        do {
+            _ = try await GeminiMealScanProxyClient(
+                endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                urlSession: .mealScanTestSession()
+            ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected principal dispatch contention")
+        } catch let error as MealScanRemoteError {
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .serviceDisabled,
+                cause: .requestPending,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest,
+                retryAfterSeconds: 11
+            ))
+        }
+    }
+
+    @Test("invalid success response leaves consumption unknown for the same request")
+    func invalidSuccessResponseMapsToUnknownTransportFailure() async throws {
+        let requestID = UUID(uuidString: "E82AD61C-4566-4E99-B57F-76D378520581")!
+        MockMealScanURLProtocol.handler = { request in
+            (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data("not-json".utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        do {
+            _ = try await GeminiMealScanProxyClient(
+                endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                urlSession: .mealScanTestSession()
+            ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected an unknown response outcome")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .outcomeUnknown(requestID: requestID))
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .transportOutcomeUnknown,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest
+            ))
+        }
+    }
+
+    @Test("undecodable non-success response stays unknown for the same request")
+    func undecodableNonSuccessResponsePreservesUnknownRequestID() async throws {
+        let requestID = UUID(uuidString: "D7FFDB45-E2F0-4DBF-9150-D33E3C208048")!
+        MockMealScanURLProtocol.handler = { request in
+            let body = try request.mealScanBodyData()
+            let root = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            #expect(root["requestId"] as? String == requestID.uuidString.lowercased())
+            return (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 502,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "text/html"]
+                )!,
+                Data("<html>bad gateway</html>".utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        do {
+            _ = try await GeminiMealScanProxyClient(
+                endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                urlSession: .mealScanTestSession()
+            ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected an undecodable post-dispatch response to remain unknown")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .outcomeUnknown(requestID: requestID))
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .transportOutcomeUnknown,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest
+            ))
+        } catch {
+            Issue.record("Expected typed outcomeUnknown for the same request, received \(error)")
+        }
+    }
+
+    @Test("provider dispatch unknown remains distinct through the proxy client")
+    func providerDispatchUnknownRemainsDistinctThroughProxyClient() async throws {
+        let requestID = UUID(uuidString: "20E9B584-6D29-4F67-B6E7-806D155D6C89")!
+        MockMealScanURLProtocol.handler = { request in
+            let body = try request.mealScanBodyData()
+            let root = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            #expect(root["requestId"] as? String == requestID.uuidString.lowercased())
+            return (
+                HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 503,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "application/json"]
+                )!,
+                Data("""
+                {
+                  "error": "meal_scan_outcome_unknown",
+                  "reason": "provider_dispatch_outcome_unknown",
+                  "retryable": false,
+                  "retryAfterSeconds": 13,
+                  "idempotency": {"state": "unknown"}
+                }
+                """.utf8)
+            )
+        }
+        defer { MockMealScanURLProtocol.handler = nil }
+
+        do {
+            _ = try await GeminiMealScanProxyClient(
+                endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
+                urlSession: .mealScanTestSession()
+            ).estimateMeal(request: .testDefault(requestID: requestID))
+            Issue.record("Expected a distinct provider dispatch outcome")
+        } catch let error as any MealScanFailureProviding {
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .providerDispatchOutcomeUnknown,
+                consumption: .used,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: 13
+            ))
+        } catch {
+            Issue.record("Expected a typed provider dispatch outcome, received \(error)")
         }
     }
 
@@ -278,8 +696,9 @@ struct GeminiMealScanTests {
         #expect(item.canonicalFoodId == "gemini-estimate-restaurant-special")
         #expect(item.nutritionSource == .aiEstimate)
         #expect(item.confidence == .low)
-        #expect(item.warning?.localizedCaseInsensitiveContains("Gemini estimate") == true)
+        #expect(item.warning == nil)
         #expect(result.confidence == .low)
+        #expect(result.warnings.isEmpty)
     }
 
     @Test("Gemini mapper rejects an item without cloud nutrition")
@@ -407,6 +826,131 @@ struct GeminiMealScanTests {
         #expect(remaining.isEmpty)
     }
 
+    @Test("cache supports explicit eviction of a corrupt structured result")
+    func cacheSupportsExplicitEviction() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let cache = MealScanResultCache(modelContext: container.mainContext)
+        let now = Date(timeIntervalSince1970: 2_000_000)
+        try cache.saveResponseJSON(
+            "not-json",
+            cacheKey: "corrupt-key",
+            modelID: "server-model",
+            schemaVersion: "meal-scan-gemini-v1",
+            promptVersion: "meal-scan-prompt-v1",
+            confidenceScore: 0,
+            sourceImageHash: "hash",
+            now: now
+        )
+
+        try cache.removeCachedResponse(for: "corrupt-key")
+
+        #expect(try cache.cachedResponseJSON(for: "corrupt-key", now: now) == nil)
+    }
+
+    @Test("corrupt local cache is evicted before fresh transport continues")
+    func corruptLocalCacheIsEvictedAndTransportContinues() async throws {
+        let cache = CorruptMealScanResultCache()
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: cache,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
+            appCheckTokenProvider: RecordingLimitedUseAppCheckTokenProvider(),
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+
+        let outcome = try await service.scan(image: UIImage(), mealType: .lunch)
+
+        #expect(cache.readCount == 1)
+        #expect(cache.removedCacheKeys.count == 1)
+        #expect(cache.savedResponseJSON == Self.simpleResponseJSON)
+        #expect(remote.callCount == 1)
+        #expect(outcome.source == .fresh)
+        #expect(outcome.consumption == .used)
+    }
+
+    @Test("persistent cache read errors are safe misses for cache lookup and scan")
+    func persistentCacheReadErrorsAreSafeMisses() async throws {
+        let cache = PersistentReadFailureMealScanResultCache()
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: cache,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .online),
+            appCheckTokenProvider: RecordingLimitedUseAppCheckTokenProvider(),
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+        let normalizedImage = NormalizedMealScanImage(
+            jpegData: Data("normalized-image".utf8),
+            sourceImageHash: MealScanImageNormalizer.sha256Hex(Data("normalized-image".utf8)),
+            width: 10,
+            height: 10
+        )
+
+        let cachedOutcome = try await service.cachedOutcome(
+            normalizedImage: normalizedImage,
+            mealType: .lunch
+        )
+        let scanOutcome = try await service.scan(
+            normalizedImage: normalizedImage,
+            mealType: .lunch,
+            requestID: UUID(uuidString: "907926AF-6C71-468B-BE10-D20D44A6D4B1")!
+        )
+
+        #expect(cachedOutcome == nil)
+        #expect(cache.readCount == 2)
+        #expect(remote.callCount == 1)
+        #expect(scanOutcome.source == .fresh)
+        #expect(scanOutcome.consumption == .used)
+    }
+
+    @Test("failed corrupt cache eviction blocks transport as not used")
+    func failedCorruptCacheEvictionBlocksTransportAsNotUsed() async throws {
+        let cache = UnremovableCorruptMealScanResultCache()
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: cache,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .online),
+            appCheckTokenProvider: RecordingLimitedUseAppCheckTokenProvider(),
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+
+        do {
+            _ = try await service.scan(
+                image: UIImage(),
+                mealType: .lunch,
+                requestID: UUID(uuidString: "2EB200C8-429B-4460-9513-593F65F1CD1D")!
+            )
+            Issue.record("Expected failed corrupt-cache eviction to stop before transport")
+        } catch let error as any MealScanFailureProviding {
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .unclassified,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            ))
+        } catch {
+            Issue.record("Expected a typed pre-dispatch cache failure, received \(error)")
+        }
+
+        #expect(cache.readCount == 1)
+        #expect(cache.removeCount == 1)
+        #expect(remote.callCount == 0)
+    }
+
     @Test("cached remote estimator avoids repeat proxy calls")
     func cachedRemoteEstimatorAvoidsRepeatProxyCalls() async throws {
         let container = try TestHelpers.makeModelContainer()
@@ -419,6 +963,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
 
@@ -429,8 +974,112 @@ struct GeminiMealScanTests {
         #expect(second.result.mealName == "Rice bowl")
         #expect(remote.callCount == 1)
         #expect(first.cacheDisposition == .fresh)
+        #expect(first.consumption == .used)
         #expect(second.cacheDisposition == .local)
+        #expect(second.consumption == .notUsed)
         #expect(second.result.modelVersion.contains("cache"))
+    }
+
+    @Test("exact local cache returns before connectivity is checked")
+    func exactLocalCacheReturnsBeforeConnectivityCheck() async throws {
+        let cache = StaticReadMealScanResultCache(responseJSON: Self.simpleResponseJSON)
+        let connectivity = RecordingMealScanConnectivityChecker(status: .offline)
+        let evidenceProvider = RecordingStoreKitEvidenceProvider()
+        let appCheckTokenProvider = RecordingLimitedUseAppCheckTokenProvider()
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: cache,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: connectivity,
+            appCheckTokenProvider: appCheckTokenProvider,
+            storeKitEvidenceProvider: evidenceProvider
+        )
+
+        let outcome = try await service.scan(image: UIImage(), mealType: .lunch)
+
+        #expect(outcome.cacheDisposition == .local)
+        #expect(outcome.consumption == .notUsed)
+        #expect(cache.readCount == 1)
+        #expect(connectivity.callCount == 0)
+        #expect(evidenceProvider.callCount == 0)
+        #expect(appCheckTokenProvider.limitedUseTokenCallCount == 0)
+        #expect(remote.callCount == 0)
+    }
+
+    @Test("confirmed offline fails before StoreKit, App Check, or transport")
+    func confirmedOfflineFailsBeforeEvidenceAndTransport() async throws {
+        let connectivity = RecordingMealScanConnectivityChecker(status: .offline)
+        let evidenceProvider = RecordingStoreKitEvidenceProvider()
+        let appCheckTokenProvider = RecordingLimitedUseAppCheckTokenProvider()
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: connectivity,
+            appCheckTokenProvider: appCheckTokenProvider,
+            storeKitEvidenceProvider: evidenceProvider
+        )
+
+        do {
+            _ = try await service.scan(image: UIImage(), mealType: .lunch)
+            Issue.record("Expected confirmed offline to stop before dispatch")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .offlineBeforeDispatch)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .offlineBeforeDispatch,
+                cause: .offline,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            ))
+        }
+
+        #expect(connectivity.callCount == 1)
+        #expect(evidenceProvider.callCount == 0)
+        #expect(appCheckTokenProvider.limitedUseTokenCallCount == 0)
+        #expect(remote.callCount == 0)
+    }
+
+    @Test("unknown connectivity proceeds through evidence, App Check, and transport in order")
+    func unknownConnectivityProceedsInSecurityOrder() async throws {
+        let recorder = MealScanCallSequenceRecorder()
+        let connectivity = RecordingMealScanConnectivityChecker(
+            status: .unknown,
+            onCall: { recorder.record("connectivity") }
+        )
+        let evidenceProvider = RecordingStoreKitEvidenceProvider {
+            recorder.record("storekit")
+        }
+        let appCheckTokenProvider = RecordingLimitedUseAppCheckTokenProvider {
+            recorder.record("appcheck")
+        }
+        let remote = CountingRemoteMealScanEstimator(
+            responseJSON: Self.simpleResponseJSON,
+            onCall: { recorder.record("transport") }
+        )
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: connectivity,
+            appCheckTokenProvider: appCheckTokenProvider,
+            storeKitEvidenceProvider: evidenceProvider
+        )
+
+        let outcome = try await service.scan(image: UIImage(), mealType: .lunch)
+
+        #expect(outcome.consumption == .used)
+        #expect(recorder.events == ["connectivity", "storekit", "appcheck", "transport"])
     }
 
     @Test("same photo with a different meal type does not reuse a cached estimate")
@@ -444,6 +1093,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
 
@@ -470,6 +1120,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
 
@@ -508,6 +1159,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             appCheckTokenProvider: appCheckTokenProvider,
             storeKitEvidenceProvider: evidenceProvider
         )
@@ -532,6 +1184,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             appCheckTokenProvider: appCheckTokenProvider,
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
@@ -556,6 +1209,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             appCheckTokenProvider: appCheckTokenProvider,
             storeKitEvidenceProvider: evidenceProvider
         )
@@ -567,6 +1221,8 @@ struct GeminiMealScanTests {
         _ = try await service.scan(image: UIImage(), mealType: .lunch, requestID: requestID)
 
         #expect(remote.receivedRequests.map(\.requestID) == [requestID, requestID])
+        #expect(remote.receivedRequests[0].normalizedImageJPEGData == remote.receivedRequests[1].normalizedImageJPEGData)
+        #expect(remote.receivedRequests[0].sourceImageHash == remote.receivedRequests[1].sourceImageHash)
         #expect(remote.receivedRequests.map(\.signedTransactionJWS) == [
             "header.evidence-1.signature", "header.evidence-2.signature"
         ])
@@ -589,15 +1245,58 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             appCheckTokenProvider: appCheckTokenProvider,
             storeKitEvidenceProvider: ThrowingStoreKitEvidenceProvider()
         )
 
-        await #expect(throws: MealScanRemoteError.subscriptionEvidenceUnavailable) {
+        do {
             _ = try await service.scan(image: UIImage(), mealType: .lunch)
+            Issue.record("Expected missing StoreKit evidence to fail closed")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .subscriptionEvidenceUnavailable)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .entitlement,
+                cause: .entitlementEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            ))
         }
         #expect(remote.callCount == 0)
         #expect(appCheckTokenProvider.limitedUseTokenCallCount == 0)
+    }
+
+    @Test("App Check token failure is integrity not used before transport")
+    func appCheckFailureMapsToIntegrityNotUsed() async throws {
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.simpleResponseJSON)
+        let appCheckTokenProvider = ThrowingLimitedUseAppCheckTokenProvider()
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .online),
+            appCheckTokenProvider: appCheckTokenProvider,
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+
+        do {
+            _ = try await service.scan(image: UIImage(), mealType: .lunch)
+            Issue.record("Expected App Check acquisition to fail closed")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .appIntegrityEvidenceUnavailable)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .appIntegrity,
+                cause: .appIntegrityEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            ))
+        }
+
+        #expect(appCheckTokenProvider.callCount == 1)
+        #expect(remote.callCount == 0)
     }
 
     @Test("server cache maps to a server cache outcome")
@@ -613,12 +1312,77 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
 
         let outcome = try await service.scan(image: UIImage(), mealType: .lunch)
 
         #expect(outcome.cacheDisposition == .server)
+        #expect(outcome.consumption == .notUsed)
+    }
+
+    @Test("fresh response mapping failure is unreadable and uses a scan")
+    func freshResponseMappingFailureIsUnreadableAndUsed() async throws {
+        let remote = CountingRemoteMealScanEstimator(responseJSON: Self.missingNutritionResponseJSON)
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .online),
+            appCheckTokenProvider: RecordingLimitedUseAppCheckTokenProvider(),
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+
+        do {
+            _ = try await service.scan(image: UIImage(), mealType: .lunch)
+            Issue.record("Expected the completed fresh response to fail typed mapping")
+        } catch let error as any MealScanFailureProviding {
+            #expect(error.mealScanFailure.kind == .unreadableMeal)
+            #expect(error.mealScanFailure.cause == .providerResponseInvalid)
+            #expect(error.mealScanFailure.consumption == .used)
+            #expect(error.mealScanFailure.retryBehavior == .none)
+        } catch {
+            Issue.record("Expected a typed unreadable provider result, received \(error)")
+        }
+
+        #expect(remote.callCount == 1)
+    }
+
+    @Test("server-cache mapping failure is unreadable without using a scan")
+    func serverCacheMappingFailureIsUnreadableAndNotUsed() async throws {
+        let remote = CountingRemoteMealScanEstimator(
+            responseJSON: Self.missingNutritionResponseJSON,
+            cacheHit: true
+        )
+        let service = GeminiRemoteMealScanService(
+            remoteEstimator: remote,
+            resultCache: nil,
+            imageNormalizer: StubMealScanImageNormalizer(jpegData: Data("normalized-image".utf8)),
+            nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
+            calculator: MealNutritionCalculator(),
+            configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .online),
+            appCheckTokenProvider: RecordingLimitedUseAppCheckTokenProvider(),
+            storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
+        )
+
+        do {
+            _ = try await service.scan(image: UIImage(), mealType: .lunch)
+            Issue.record("Expected the server-cache response to fail typed mapping")
+        } catch let error as any MealScanFailureProviding {
+            #expect(error.mealScanFailure.kind == .unreadableMeal)
+            #expect(error.mealScanFailure.cause == .providerResponseInvalid)
+            #expect(error.mealScanFailure.consumption == .notUsed)
+            #expect(error.mealScanFailure.retryBehavior == .none)
+        } catch {
+            Issue.record("Expected a typed unreadable server-cache result, received \(error)")
+        }
+
+        #expect(remote.callCount == 1)
     }
 
     @Test("local cache write failure preserves a valid paid outcome")
@@ -631,6 +1395,7 @@ struct GeminiMealScanTests {
             nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records),
             calculator: MealNutritionCalculator(),
             configuration: .testDefault,
+            connectivityChecker: RecordingMealScanConnectivityChecker(status: .unknown),
             storeKitEvidenceProvider: FixedStoreKitEvidenceProvider()
         )
 
@@ -650,14 +1415,23 @@ struct GeminiMealScanTests {
             count: GeminiMealScanProxyClient.maximumImageBytes + 1
         )
 
-        await #expect(throws: MealScanRemoteError.imageTooLarge(
-            actualBytes: GeminiMealScanProxyClient.maximumImageBytes + 1,
-            maximumBytes: GeminiMealScanProxyClient.maximumImageBytes
-        )) {
+        do {
             _ = try await GeminiMealScanProxyClient(
                 endpointURL: URL(string: "https://proxy.example/v1/meal-scans/estimate")!,
                 urlSession: .mealScanTestSession()
             ).estimateMeal(request: request)
+            Issue.record("Expected the local image-size guard to reject the photo")
+        } catch let error as MealScanRemoteError {
+            #expect(error == .imageTooLarge(
+                actualBytes: GeminiMealScanProxyClient.maximumImageBytes + 1,
+                maximumBytes: GeminiMealScanProxyClient.maximumImageBytes
+            ))
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .unreadableMeal,
+                cause: .invalidImage,
+                consumption: .notUsed,
+                retryBehavior: .none
+            ))
         }
     }
 
@@ -683,6 +1457,12 @@ struct GeminiMealScanTests {
             }
             #expect(actualBytes > maximumBytes)
             #expect(maximumBytes == 2_200_000)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .unreadableMeal,
+                cause: .invalidImage,
+                consumption: .notUsed,
+                retryBehavior: .none
+            ))
         }
     }
 
@@ -896,6 +1676,367 @@ struct GeminiMealScanTests {
             #expect(error.reason == "rolling_window_exceeded")
             #expect(error.quota?.remaining == 0)
             #expect(error.errorDescription?.localizedCaseInsensitiveContains("rolling 24-hour") == true)
+            #expect(error.mealScanFailure == MealScanFailure(
+                kind: .quotaExhausted,
+                cause: .quotaExhausted,
+                consumption: .notUsed,
+                retryBehavior: .none,
+                quota: error.quota,
+                retryAfterSeconds: 120
+            ))
+        }
+    }
+
+    @Test("current server error and reason combinations map to exact causes and consumption truth")
+    func currentServerErrorsMapToExactCausesAndConsumptionTruth() {
+        let quota = MealScanQuota(
+            tier: "subscriber",
+            used: 10,
+            limit: 10,
+            remaining: 0,
+            windowSeconds: 86_400,
+            resetAt: "2026-07-17T01:02:03.000Z",
+            retryAfterSeconds: 120
+        )
+
+        let mappings: [(GeminiMealScanProxyError, MealScanFailure)] = [
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_unavailable",
+                    reason: "feature_disabled",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .featureDisabled,
+                    consumption: .notUsed,
+                    retryBehavior: .none
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_unavailable",
+                    reason: "request_control_unavailable",
+                    quota: nil,
+                    retryable: true
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .serviceControlUnavailable,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_unavailable",
+                    reason: "monthly_budget_exceeded",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .budgetDispatchDisabled,
+                    consumption: .notUsed,
+                    retryBehavior: .none
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 429,
+                    error: "provider_dispatch_rate_limited",
+                    reason: "global_provider_dispatch_limit_exceeded",
+                    quota: nil,
+                    retryable: true,
+                    retryAfterSeconds: 17
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .requestRateLimited,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest,
+                    retryAfterSeconds: 17
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 401,
+                    error: "app_integrity_required",
+                    reason: "app_check_rejected",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .appIntegrity,
+                    cause: .appIntegrityRejected,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_unavailable",
+                    reason: "integrity_service_timeout",
+                    quota: nil,
+                    retryable: true
+                ),
+                MealScanFailure(
+                    kind: .appIntegrity,
+                    cause: .appIntegrityEvidenceUnavailable,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 403,
+                    error: "premium_entitlement_required",
+                    reason: "subscription_inactive",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .entitlement,
+                    cause: .entitlementRejected,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_unavailable",
+                    reason: "storekit_verification_unavailable",
+                    quota: nil,
+                    retryable: true
+                ),
+                MealScanFailure(
+                    kind: .entitlement,
+                    cause: .entitlementEvidenceUnavailable,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 429,
+                    error: "meal_scan_request_rate_limited",
+                    reason: "principal_attempt_minute_limit_exceeded",
+                    quota: nil,
+                    retryable: true,
+                    retryAfterSeconds: 17
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .requestRateLimited,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest,
+                    retryAfterSeconds: 17
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 429,
+                    error: "rolling_scan_quota_exceeded",
+                    reason: "rolling_quota_exceeded",
+                    quota: quota,
+                    retryable: true
+                ),
+                MealScanFailure(
+                    kind: .quotaExhausted,
+                    cause: .quotaExhausted,
+                    consumption: .notUsed,
+                    retryBehavior: .none,
+                    quota: quota,
+                    retryAfterSeconds: 120
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 400,
+                    error: "invalid_request",
+                    reason: nil,
+                    quota: nil,
+                    retryable: false,
+                    detail: "jpeg image could not be decoded"
+                ),
+                MealScanFailure(
+                    kind: .unreadableMeal,
+                    cause: .invalidImage,
+                    consumption: .notUsed,
+                    retryBehavior: .none
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 400,
+                    error: "invalid_request",
+                    reason: nil,
+                    quota: nil,
+                    retryable: false,
+                    detail: "signedTransactionJWS is invalid"
+                ),
+                MealScanFailure(
+                    kind: .entitlement,
+                    cause: .entitlementRejected,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 400,
+                    error: "invalid_json",
+                    reason: "request_body_invalid",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .invalidRequest,
+                    consumption: .notUsed,
+                    retryBehavior: .none
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 409,
+                    error: "idempotency_conflict",
+                    reason: "request_body_mismatch",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .idempotencyConflict,
+                    consumption: .unknown,
+                    retryBehavior: .none
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 409,
+                    error: "meal_scan_in_progress",
+                    reason: "principal_dispatch_in_progress",
+                    quota: nil,
+                    retryable: true,
+                    retryAfterSeconds: 11
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .requestPending,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest,
+                    retryAfterSeconds: 11
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 409,
+                    error: "meal_scan_in_progress",
+                    reason: "duplicate_request_in_progress",
+                    quota: nil,
+                    retryable: true,
+                    retryAfterSeconds: 7
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .requestPending,
+                    consumption: .unknown,
+                    retryBehavior: .checkSameRequest,
+                    retryAfterSeconds: 7
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 502,
+                    error: "meal_scan_parse_error",
+                    reason: "provider_response_invalid",
+                    quota: quota,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .unreadableMeal,
+                    cause: .providerResponseInvalid,
+                    consumption: .used,
+                    retryBehavior: .none,
+                    quota: quota,
+                    retryAfterSeconds: 120
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 502,
+                    error: "meal_scan_provider_error",
+                    reason: "provider_request_failed",
+                    quota: quota,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .providerRequestFailed,
+                    consumption: .used,
+                    retryBehavior: .checkSameRequest,
+                    quota: quota,
+                    retryAfterSeconds: 120
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 503,
+                    error: "meal_scan_outcome_unknown",
+                    reason: "provider_dispatch_outcome_unknown",
+                    quota: nil,
+                    retryable: false
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .providerDispatchOutcomeUnknown,
+                    consumption: .used,
+                    retryBehavior: .checkSameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 500,
+                    error: "meal_scan_proxy_error",
+                    reason: nil,
+                    quota: nil,
+                    retryable: nil
+                ),
+                MealScanFailure(
+                    kind: .serviceDisabled,
+                    cause: .serviceControlUnavailable,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            ),
+            (
+                GeminiMealScanProxyError(
+                    statusCode: 500,
+                    error: "future_proxy_failure",
+                    reason: "future_reason",
+                    quota: nil,
+                    retryable: nil,
+                    retryAfterSeconds: 17
+                ),
+                MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .unclassified,
+                    consumption: .unknown,
+                    retryBehavior: .checkSameRequest,
+                    retryAfterSeconds: 17
+                )
+            ),
+        ]
+
+        for (proxyError, expectedFailure) in mappings {
+            #expect(proxyError.mealScanFailure == expectedFailure)
         }
     }
 
@@ -973,6 +2114,52 @@ struct GeminiMealScanTests {
     }
     """
 
+    private static let missingNutritionResponseJSON = """
+    {
+      "meal_name": "Incomplete provider meal",
+      "confidence": "medium",
+      "warnings": [],
+      "items": [
+        {
+          "display_name": "Unknown food",
+          "canonical_query": "unknown food",
+          "estimated_grams": 100,
+          "serving_description": null,
+          "confidence": "medium",
+          "is_mixed_dish": false,
+          "nutrition_fallback": null
+        }
+      ]
+    }
+    """
+
+    private static let sourceTestResult = MealScanResult(
+        mealName: "Source test meal",
+        mealType: .lunch,
+        detectedItems: [],
+        nutrition: NutritionSnapshot(
+            caloriesKcal: 0,
+            proteinGrams: 0,
+            carbsGrams: 0,
+            fatGrams: 0,
+            fiberGrams: 0
+        ),
+        metabolicProfile: MealMetabolicProfile(
+            carbLoadCategory: .low,
+            proteinAdequacy: .low,
+            fiberAdequacy: .low,
+            fatLevel: .low,
+            estimatedGlycemicImpact: .low,
+            mealBalanceScore: 0,
+            explanation: "Test"
+        ),
+        confidence: .low,
+        warnings: [],
+        originalPredictionJSON: "{}",
+        modelVersion: "test",
+        pipelineVersion: "test"
+    )
+
     fileprivate static let testSignedTransactionJWS = "eyJhbGciOiJFUzI1NiJ9.eyJ0eCI6InRlc3QifQ.signature"
 }
 
@@ -980,16 +2167,23 @@ struct GeminiMealScanTests {
 private final class CountingRemoteMealScanEstimator: RemoteMealScanEstimating {
     private let responseJSON: String
     private let cacheHit: Bool
+    private let onCall: (() -> Void)?
     var callCount = 0
     var receivedRequests: [RemoteMealScanRequest] = []
     var receivedFirebaseAppCheckTokens: [String?] = []
 
-    init(responseJSON: String, cacheHit: Bool = false) {
+    init(
+        responseJSON: String,
+        cacheHit: Bool = false,
+        onCall: (() -> Void)? = nil
+    ) {
         self.responseJSON = responseJSON
         self.cacheHit = cacheHit
+        self.onCall = onCall
     }
 
     func estimateMeal(request: RemoteMealScanRequest) async throws -> RemoteMealScanEstimate {
+        onCall?()
         callCount += 1
         receivedRequests.append(request)
         receivedFirebaseAppCheckTokens.append(request.firebaseAppCheckToken)
@@ -1079,10 +2273,93 @@ private final class ThrowingWriteMealScanResultCache: MealScanResultCaching {
 }
 
 @MainActor
+private final class CorruptMealScanResultCache: MealScanResultCaching {
+    private(set) var readCount = 0
+    private(set) var removedCacheKeys: [String] = []
+    private(set) var savedResponseJSON: String?
+
+    func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String? {
+        readCount += 1
+        return readCount == 1 ? "not-json" : nil
+    }
+
+    func removeCachedResponse(for cacheKey: String) throws {
+        removedCacheKeys.append(cacheKey)
+    }
+
+    func saveResponseJSON(
+        _ responseJSON: String,
+        cacheKey: String,
+        modelID: String,
+        schemaVersion: String,
+        promptVersion: String,
+        confidenceScore: Double,
+        sourceImageHash: String,
+        now: Date
+    ) throws {
+        savedResponseJSON = responseJSON
+    }
+}
+
+@MainActor
+private final class PersistentReadFailureMealScanResultCache: MealScanResultCaching {
+    private(set) var readCount = 0
+
+    func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String? {
+        readCount += 1
+        throw CocoaError(.fileReadCorruptFile)
+    }
+
+    func saveResponseJSON(
+        _ responseJSON: String,
+        cacheKey: String,
+        modelID: String,
+        schemaVersion: String,
+        promptVersion: String,
+        confidenceScore: Double,
+        sourceImageHash: String,
+        now: Date
+    ) throws {}
+}
+
+@MainActor
+private final class UnremovableCorruptMealScanResultCache: MealScanResultCaching {
+    private(set) var readCount = 0
+    private(set) var removeCount = 0
+
+    func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String? {
+        readCount += 1
+        return "not-json"
+    }
+
+    func removeCachedResponse(for cacheKey: String) throws {
+        removeCount += 1
+        throw CocoaError(.fileWriteNoPermission)
+    }
+
+    func saveResponseJSON(
+        _ responseJSON: String,
+        cacheKey: String,
+        modelID: String,
+        schemaVersion: String,
+        promptVersion: String,
+        confidenceScore: Double,
+        sourceImageHash: String,
+        now: Date
+    ) throws {}
+}
+
+@MainActor
 private final class RecordingLimitedUseAppCheckTokenProvider: MealScanLimitedUseAppCheckTokenProviding {
     var limitedUseTokenCallCount = 0
+    private let onCall: (() -> Void)?
+
+    init(onCall: (() -> Void)? = nil) {
+        self.onCall = onCall
+    }
 
     func limitedUseToken() async throws -> String {
+        onCall?()
         limitedUseTokenCallCount += 1
         return "limited-use-token-\(limitedUseTokenCallCount)"
     }
@@ -1098,8 +2375,14 @@ private struct FixedStoreKitEvidenceProvider: MealScanStoreKitEvidenceProviding 
 @MainActor
 private final class RecordingStoreKitEvidenceProvider: MealScanStoreKitEvidenceProviding {
     private(set) var callCount = 0
+    private let onCall: (() -> Void)?
+
+    init(onCall: (() -> Void)? = nil) {
+        self.onCall = onCall
+    }
 
     func signedTransactionJWS() async throws -> String {
+        onCall?()
         callCount += 1
         return "header.evidence-\(callCount).signature"
     }
@@ -1109,6 +2392,69 @@ private final class RecordingStoreKitEvidenceProvider: MealScanStoreKitEvidenceP
 private struct ThrowingStoreKitEvidenceProvider: MealScanStoreKitEvidenceProviding {
     func signedTransactionJWS() async throws -> String {
         throw MealScanStoreKitEvidenceError.noVerifiedActiveSubscription
+    }
+}
+
+@MainActor
+private final class ThrowingLimitedUseAppCheckTokenProvider: MealScanLimitedUseAppCheckTokenProviding {
+    private(set) var callCount = 0
+
+    func limitedUseToken() async throws -> String {
+        callCount += 1
+        throw URLError(.userAuthenticationRequired)
+    }
+}
+
+@MainActor
+private final class RecordingMealScanConnectivityChecker: MealScanConnectivityChecking {
+    let status: MealScanConnectivityStatus
+    private let onCall: (() -> Void)?
+    private(set) var callCount = 0
+
+    init(status: MealScanConnectivityStatus, onCall: (() -> Void)? = nil) {
+        self.status = status
+        self.onCall = onCall
+    }
+
+    func connectivityStatus() -> MealScanConnectivityStatus {
+        onCall?()
+        callCount += 1
+        return status
+    }
+}
+
+@MainActor
+private final class StaticReadMealScanResultCache: MealScanResultCaching {
+    private let responseJSON: String
+    private(set) var readCount = 0
+
+    init(responseJSON: String) {
+        self.responseJSON = responseJSON
+    }
+
+    func cachedResponseJSON(for cacheKey: String, now: Date) throws -> String? {
+        readCount += 1
+        return responseJSON
+    }
+
+    func saveResponseJSON(
+        _ responseJSON: String,
+        cacheKey: String,
+        modelID: String,
+        schemaVersion: String,
+        promptVersion: String,
+        confidenceScore: Double,
+        sourceImageHash: String,
+        now: Date
+    ) throws {}
+}
+
+@MainActor
+private final class MealScanCallSequenceRecorder {
+    private(set) var events: [String] = []
+
+    func record(_ event: String) {
+        events.append(event)
     }
 }
 
@@ -1137,7 +2483,7 @@ private extension GeminiRemoteMealScanConfiguration {
 private extension RemoteMealScanRequest {
     static func testDefault(
         requestID: UUID = UUID(),
-        firebaseAppCheckToken: String? = nil
+        firebaseAppCheckToken: String? = "limited-use-token"
     ) -> RemoteMealScanRequest {
         RemoteMealScanRequest(
             requestID: requestID,

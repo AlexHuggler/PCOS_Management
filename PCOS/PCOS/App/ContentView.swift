@@ -540,6 +540,7 @@ struct TrackingHubView: View {
             .onAppear {
                 recentShortcut = UserEntryDefaultsStore.shared.lastLoggerShortcut
                 openPendingNotificationRouteIfNeeded()
+                openMealScanUITestFixtureIfNeeded()
             }
             .onChange(of: appState.pendingNotificationRoute) { _, _ in
                 openPendingNotificationRouteIfNeeded()
@@ -975,6 +976,16 @@ struct TrackingHubView: View {
         activeMealLogDestination = .form
         Logger.meals.info("TrackingHubView requested AI meal scan.")
         showingMealScan = true
+    }
+
+    private func openMealScanUITestFixtureIfNeeded() {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        guard arguments.contains("UITestMode"),
+              arguments.contains("-mealScan.openOnTrack"),
+              MealScanFeatureFlags.current.enableMealScanV2 else { return }
+        showingMealScan = true
+        #endif
     }
 
     private func routeMealScanFallback(to destination: MealLogInitialDestination) {

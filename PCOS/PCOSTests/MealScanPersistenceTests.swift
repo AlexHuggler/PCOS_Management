@@ -89,6 +89,198 @@ struct MealScanPersistenceTests {
         }
     }
 
+    @Test("saving the same confirmed meal UUID twice is idempotent")
+    func sameMealUUIDRetryIsIdempotent() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        let confirmed = ConfirmedMealScan(
+            id: UUID(),
+            scanResult: result,
+            mealType: .lunch,
+            userConfirmed: true
+        )
+        let repository = SwiftDataMealLogRepository(modelContext: context)
+
+        try await repository.saveMealScan(confirmed)
+        try await repository.saveMealScan(confirmed)
+
+        #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<MealScanFoodItem>()).count == result.detectedItems.count)
+        #expect(try context.fetch(FetchDescriptor<MealScanNutritionSummary>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<MealScanMetadata>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<NutritionImportRecord>()).count == 1)
+    }
+
+    @Test("failed context save rolls back every inserted meal scan record")
+    func failedSaveRollsBackAllInsertedRecords() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        let confirmed = ConfirmedMealScan(scanResult: result, mealType: .lunch, userConfirmed: true)
+        let repository = SwiftDataMealLogRepository(
+            modelContext: context,
+            saveModelContext: { _ in
+                throw MealScanPersistenceTestError.forcedSaveFailure
+            }
+        )
+
+        await #expect(throws: MealScanPersistenceTestError.forcedSaveFailure) {
+            try await repository.saveMealScan(confirmed)
+        }
+
+        try expectNoMealScanRecords(in: context)
+    }
+
+    @Test("failed context save deletes a newly created retained meal photo")
+    func failedSaveDeletesNewlyCreatedPhoto() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: directory) }
+
+        let mealID = UUID()
+        let photoURL = directory.appendingPathComponent("\(mealID.uuidString).jpg")
+        let photoStore = TestMealPhotoStore(fileURL: photoURL)
+        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        let confirmed = ConfirmedMealScan(
+            id: mealID,
+            scanResult: result,
+            mealType: .lunch,
+            userConfirmed: true,
+            photoData: Data([0x01, 0x02, 0x03])
+        )
+        var photoExistedWhenSaveWasAttempted = false
+        let repository = SwiftDataMealLogRepository(
+            modelContext: context,
+            photoStore: photoStore,
+            featureFlags: .passOneDefaults,
+            saveModelContext: { _ in
+                photoExistedWhenSaveWasAttempted = fileManager.fileExists(atPath: photoURL.path)
+                throw MealScanPersistenceTestError.forcedSaveFailure
+            }
+        )
+
+        await #expect(throws: MealScanPersistenceTestError.forcedSaveFailure) {
+            try await repository.saveMealScan(confirmed)
+        }
+
+        #expect(photoExistedWhenSaveWasAttempted)
+        #expect(!fileManager.fileExists(atPath: photoURL.path))
+        #expect(photoStore.deletedPaths == [photoURL.path])
+        try expectNoMealScanRecords(in: context)
+    }
+
+    @Test("failed context save preserves a pre-existing retained meal photo")
+    func failedSavePreservesPreExistingPhoto() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: directory) }
+
+        let mealID = UUID()
+        let photoURL = directory.appendingPathComponent("\(mealID.uuidString).jpg")
+        try Data([0x00]).write(to: photoURL)
+        let photoStore = TestMealPhotoStore(fileURL: photoURL)
+        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        let confirmed = ConfirmedMealScan(
+            id: mealID,
+            scanResult: result,
+            mealType: .lunch,
+            userConfirmed: true,
+            photoData: Data([0x01, 0x02, 0x03])
+        )
+        let repository = SwiftDataMealLogRepository(
+            modelContext: context,
+            photoStore: photoStore,
+            featureFlags: .passOneDefaults,
+            saveModelContext: { _ in
+                throw MealScanPersistenceTestError.forcedSaveFailure
+            }
+        )
+
+        await #expect(throws: MealScanPersistenceTestError.forcedSaveFailure) {
+            try await repository.saveMealScan(confirmed)
+        }
+
+        #expect(fileManager.fileExists(atPath: photoURL.path))
+        #expect(photoStore.deletedPaths.isEmpty)
+        try expectNoMealScanRecords(in: context)
+    }
+
+    @Test("failed scanner save preserves unrelated pending data and same-meal retry stays idempotent")
+    func failedScannerSavePreservesUnrelatedPendingData() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: directory) }
+
+        let pendingLogID = UUID()
+        context.insert(
+            DailyLog(
+                id: pendingLogID,
+                date: Date(timeIntervalSince1970: 1_779_331_200),
+                privateNote: "Keep this pending check-in"
+            )
+        )
+
+        let mealID = UUID()
+        let photoURL = directory.appendingPathComponent("\(mealID.uuidString).jpg")
+        let photoStore = TestMealPhotoStore(fileURL: photoURL)
+        let result = try await MealScanPipeline.mock().scan(image: UIImage(), mealType: .lunch)
+        let confirmed = ConfirmedMealScan(
+            id: mealID,
+            scanResult: result,
+            mealType: .lunch,
+            userConfirmed: true,
+            photoData: Data([0x01, 0x02, 0x03])
+        )
+        let failingRepository = SwiftDataMealLogRepository(
+            modelContext: context,
+            photoStore: photoStore,
+            featureFlags: .passOneDefaults,
+            saveModelContext: { _ in
+                throw MealScanPersistenceTestError.forcedSaveFailure
+            }
+        )
+
+        await #expect(throws: MealScanPersistenceTestError.forcedSaveFailure) {
+            try await failingRepository.saveMealScan(confirmed)
+        }
+
+        #expect(!fileManager.fileExists(atPath: photoURL.path))
+        #expect(photoStore.deletedPaths == [photoURL.path])
+        try expectNoMealScanRecords(in: context)
+
+        let pendingLogs = try context.fetch(FetchDescriptor<DailyLog>())
+        #expect(pendingLogs.contains { $0.id == pendingLogID })
+        #expect(context.hasChanges)
+
+        let retryRepository = SwiftDataMealLogRepository(
+            modelContext: context,
+            photoStore: photoStore,
+            featureFlags: .passOneDefaults
+        )
+        try await retryRepository.saveMealScan(confirmed)
+        try await retryRepository.saveMealScan(confirmed)
+
+        #expect(try context.fetch(FetchDescriptor<DailyLog>()).contains { $0.id == pendingLogID })
+        #expect(try context.fetch(FetchDescriptor<MealEntry>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<MealScanFoodItem>()).count == result.detectedItems.count)
+        #expect(try context.fetch(FetchDescriptor<MealScanNutritionSummary>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<MealScanMetadata>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<NutritionImportRecord>()).count == 1)
+    }
+
     @Test("schema v5 backup round trips AI meal scan metadata")
     func backupRoundTripsMealScanFields() async throws {
         let source = try TestHelpers.makeModelContainer()
@@ -118,5 +310,37 @@ struct MealScanPersistenceTests {
                 .first(where: { $0.id == result.detectedItems[0].id })?
                 .wasPortionAdjusted == true
         )
+    }
+
+    private func expectNoMealScanRecords(in context: ModelContext) throws {
+        #expect(try context.fetch(FetchDescriptor<MealEntry>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<MealScanFoodItem>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<MealScanNutritionSummary>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<MealScanMetadata>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<NutritionImportRecord>()).isEmpty)
+    }
+}
+
+private enum MealScanPersistenceTestError: Error {
+    case forcedSaveFailure
+}
+
+private final class TestMealPhotoStore: MealPhotoStoring {
+    let fileURL: URL
+    private(set) var deletedPaths: [String] = []
+
+    init(fileURL: URL) {
+        self.fileURL = fileURL
+    }
+
+    func saveMealPhoto(_ data: Data, mealID: UUID) throws -> StoredMealPhoto {
+        let wasNewlyCreated = !FileManager.default.fileExists(atPath: fileURL.path)
+        try data.write(to: fileURL, options: .atomic)
+        return StoredMealPhoto(path: fileURL.path, wasNewlyCreated: wasNewlyCreated)
+    }
+
+    func deleteMealPhoto(at path: String) throws {
+        deletedPaths.append(path)
+        try FileManager.default.removeItem(atPath: path)
     }
 }

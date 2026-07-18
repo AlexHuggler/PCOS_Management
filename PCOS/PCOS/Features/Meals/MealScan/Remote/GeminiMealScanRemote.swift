@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import Network
 import SwiftData
 import StoreKit
 import UIKit
@@ -191,10 +192,7 @@ struct GeminiMealScanResultMapper {
             servingDescription: item.servingDescription,
             nutrition: nutrition,
             confidence: .low,
-            warning: item.warning ?? L10n.string(
-                "Gemini estimate only; review and edit before saving.",
-                defaultValue: "Gemini estimate only; review and edit before saving."
-            ),
+            warning: item.warning,
             detectionSource: "gemini_cloud_estimate",
             portionEstimationMethod: .servingSizeHeuristic,
             isMixedDish: item.isMixedDish
@@ -282,6 +280,64 @@ struct StoreKitMealScanEvidenceProvider: MealScanStoreKitEvidenceProviding {
     }
 }
 
+enum MealScanConnectivityStatus: Equatable, Sendable {
+    case online
+    case offline
+    case unknown
+}
+
+@MainActor
+protocol MealScanConnectivityChecking: AnyObject {
+    func connectivityStatus() -> MealScanConnectivityStatus
+}
+
+final class NetworkMealScanConnectivityChecker: MealScanConnectivityChecking, @unchecked Sendable {
+    static let shared = NetworkMealScanConnectivityChecker()
+
+    private let monitor: NWPathMonitor
+    private let lock = NSLock()
+    private var latestStatus: MealScanConnectivityStatus = .unknown
+
+    private init() {
+        let monitor = NWPathMonitor()
+        self.monitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                self?.updateStatus(for: path.status)
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "com.cyclebalance.meal-scan-connectivity"))
+    }
+
+    deinit {
+        monitor.cancel()
+    }
+
+    func connectivityStatus() -> MealScanConnectivityStatus {
+        lock.lock()
+        defer { lock.unlock() }
+        return latestStatus
+    }
+
+    private func updateStatus(for status: NWPath.Status) {
+        let resolvedStatus: MealScanConnectivityStatus
+        switch status {
+        case .satisfied:
+            resolvedStatus = .online
+        case .unsatisfied:
+            resolvedStatus = .offline
+        case .requiresConnection:
+            resolvedStatus = .unknown
+        @unknown default:
+            resolvedStatus = .unknown
+        }
+
+        lock.lock()
+        latestStatus = resolvedStatus
+        lock.unlock()
+    }
+}
+
 enum MealScanCacheDisposition: String, Codable, Equatable, Sendable {
     case fresh
     case server
@@ -314,7 +370,47 @@ struct MealScanQuota: Codable, Equatable, Sendable {
 struct MealScanOutcome: Equatable, Sendable {
     var result: MealScanResult
     var quota: MealScanQuota?
-    var cacheDisposition: MealScanCacheDisposition
+    var source: MealScanAnalysisSource
+
+    var cacheDisposition: MealScanCacheDisposition {
+        switch source {
+        case .exactPrevious, .localCache:
+            .local
+        case .serverCache:
+            .server
+        case .fresh:
+            .fresh
+        }
+    }
+
+    var consumption: MealScanConsumptionState {
+        source.consumption
+    }
+
+    init(
+        result: MealScanResult,
+        quota: MealScanQuota?,
+        source: MealScanAnalysisSource
+    ) {
+        self.result = result
+        self.quota = quota
+        self.source = source
+    }
+
+    init(
+        result: MealScanResult,
+        quota: MealScanQuota?,
+        cacheDisposition: MealScanCacheDisposition,
+        consumption _: MealScanConsumptionState? = nil
+    ) {
+        self.result = result
+        self.quota = quota
+        source = switch cacheDisposition {
+        case .fresh: .fresh
+        case .server: .serverCache
+        case .local: .localCache
+        }
+    }
 }
 
 struct RemoteMealScanEstimate: Equatable, Sendable {
@@ -333,13 +429,281 @@ struct RemoteMealScanUsage: Codable, Equatable, Sendable {
     var estimatedCostUSD: Double?
 }
 
-struct GeminiMealScanProxyError: LocalizedError, Equatable, Sendable {
+struct GeminiMealScanProxyError: LocalizedError, Equatable, Sendable, MealScanFailureProviding {
     var statusCode: Int
     var error: String
     var reason: String?
     var quota: MealScanQuota?
     var retryable: Bool?
     var retryAfterSeconds: Int? = nil
+    var detail: String? = nil
+    var idempotencyState: String? = nil
+
+    var mealScanFailure: MealScanFailure {
+        let errorKey = error.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let reasonKey = reason?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let detailKey = detail?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let retryTiming = retryAfterSeconds ?? quota?.retryAfterSeconds
+
+        func failure(
+            kind: MealScanFailureKind,
+            cause: MealScanFailureCause,
+            consumption: MealScanConsumptionState,
+            retryBehavior: MealScanRetryBehavior
+        ) -> MealScanFailure {
+            MealScanFailure(
+                kind: kind,
+                cause: cause,
+                consumption: consumption,
+                retryBehavior: retryBehavior,
+                quota: quota,
+                retryAfterSeconds: retryTiming
+            )
+        }
+
+        if errorKey == "feature_disabled" || reasonKey == "feature_disabled" {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .featureDisabled,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        let configurationReasons = Set([
+            "storekit_verifier_unconfigured",
+            "subscription_status_unconfigured",
+            "revenuecat_subscription_unconfigured",
+            "app_check_verifier_unconfigured",
+        ])
+        if configurationReasons.contains(reasonKey ?? "") {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .serviceControlUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        let budgetReasons = Set([
+            "monthly_budget_exceeded",
+            "trial_dispatch_disabled_by_budget",
+        ])
+        if budgetReasons.contains(reasonKey ?? "") {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .budgetDispatchDisabled,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        let unavailableEntitlementReasons = Set([
+            "storekit_verification_unavailable",
+            "subscription_status_unavailable",
+            "revenuecat_subscription_unavailable",
+            "revenuecat_subscription_not_synced",
+        ])
+        if unavailableEntitlementReasons.contains(reasonKey ?? "") {
+            return failure(
+                kind: .entitlement,
+                cause: .entitlementEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if reasonKey == "integrity_service_timeout" {
+            return failure(
+                kind: .appIntegrity,
+                cause: .appIntegrityEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if errorKey == "meal_scan_unavailable" {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .serviceControlUnavailable,
+                consumption: .notUsed,
+                retryBehavior: retryable == true ? .retrySameRequest : .none
+            )
+        }
+
+        if errorKey == "app_integrity_required"
+            || errorKey.contains("app_integrity")
+            || reasonKey?.hasPrefix("app_check_") == true
+            || reasonKey == "integrity_failed" {
+            return failure(
+                kind: .appIntegrity,
+                cause: .appIntegrityRejected,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if errorKey == "premium_entitlement_required"
+            || errorKey.contains("entitlement") {
+            return failure(
+                kind: .entitlement,
+                cause: .entitlementRejected,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if errorKey == "meal_scan_request_rate_limited"
+            || errorKey == "provider_dispatch_rate_limited" {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .requestRateLimited,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if errorKey == "rolling_scan_quota_exceeded"
+            || errorKey == "quota_exceeded"
+            || reasonKey?.contains("quota_exceeded") == true {
+            return failure(
+                kind: .quotaExhausted,
+                cause: .quotaExhausted,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "invalid_request" {
+            if detailKey?.contains("signedtransactionjws") == true {
+                return failure(
+                    kind: .entitlement,
+                    cause: .entitlementRejected,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            }
+            let imageDetail = ["jpeg", "image", "pixel", "canonical"]
+                .contains { detailKey?.contains($0) == true }
+            return failure(
+                kind: imageDetail ? .unreadableMeal : .ambiguousResult,
+                cause: imageDetail ? .invalidImage : .invalidRequest,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "invalid_json" {
+            return failure(
+                kind: .ambiguousResult,
+                cause: .invalidRequest,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "request_too_large"
+            || errorKey == "image_too_large"
+            || reasonKey == "image_too_large" {
+            return failure(
+                kind: .unreadableMeal,
+                cause: .invalidImage,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "idempotency_conflict" {
+            return failure(
+                kind: .ambiguousResult,
+                cause: .idempotencyConflict,
+                consumption: .unknown,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "meal_scan_in_progress" {
+            if reasonKey == "principal_dispatch_in_progress" {
+                return failure(
+                    kind: .serviceDisabled,
+                    cause: .requestPending,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            }
+            return failure(
+                kind: .ambiguousResult,
+                cause: .requestPending,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest
+            )
+        }
+
+        if errorKey == "meal_scan_parse_error" {
+            return failure(
+                kind: .unreadableMeal,
+                cause: .providerResponseInvalid,
+                consumption: .used,
+                retryBehavior: .none
+            )
+        }
+
+        if errorKey == "meal_scan_provider_error" {
+            return failure(
+                kind: .ambiguousResult,
+                cause: .providerRequestFailed,
+                consumption: .used,
+                retryBehavior: .checkSameRequest
+            )
+        }
+
+        if errorKey == "gemini_timeout"
+            || errorKey == "provider_timeout"
+            || reasonKey == "provider_timeout" {
+            return failure(
+                kind: .connectionInterruptedAfterDispatch,
+                cause: .providerTimeout,
+                consumption: .used,
+                retryBehavior: .checkSameRequest
+            )
+        }
+
+        if errorKey == "meal_scan_outcome_unknown" {
+            return failure(
+                kind: .ambiguousResult,
+                cause: reasonKey == "provider_dispatch_outcome_unknown"
+                    ? .providerDispatchOutcomeUnknown
+                    : .serverOutcomeUnknown,
+                consumption: .used,
+                retryBehavior: .checkSameRequest
+            )
+        }
+
+        if errorKey == "meal_scan_proxy_error" {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .serviceControlUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        }
+
+        if errorKey == "not_found" {
+            return failure(
+                kind: .serviceDisabled,
+                cause: .invalidRequest,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        }
+
+        return failure(
+            kind: .ambiguousResult,
+            cause: .unclassified,
+            consumption: .unknown,
+            retryBehavior: .checkSameRequest
+        )
+    }
 
     var errorDescription: String? {
         switch error {
@@ -387,12 +751,98 @@ struct GeminiMealScanProxyError: LocalizedError, Equatable, Sendable {
     }
 }
 
-enum MealScanRemoteError: LocalizedError, Equatable, Sendable {
+enum MealScanRemoteError: LocalizedError, Equatable, Sendable, MealScanFailureProviding {
     case imageTooLarge(actualBytes: Int, maximumBytes: Int)
     case requestBodyTooLarge(actualBytes: Int, maximumBytes: Int)
     case subscriptionEvidenceUnavailable
+    case appIntegrityEvidenceUnavailable
+    case offlineBeforeDispatch
     case outcomeUnknown(requestID: UUID)
+    case providerTimeoutAfterDispatch(requestID: UUID, retryAfterSeconds: Int?)
+    case providerDispatchOutcomeUnknown(requestID: UUID, retryAfterSeconds: Int?)
+    case serverOutcomeUnknown(requestID: UUID, retryAfterSeconds: Int?)
     case requestPending(requestID: UUID, retryAfterSeconds: Int?)
+    case principalDispatchInProgress(requestID: UUID, retryAfterSeconds: Int?)
+
+    var mealScanFailure: MealScanFailure {
+        switch self {
+        case .imageTooLarge, .requestBodyTooLarge:
+            MealScanFailure(
+                kind: .unreadableMeal,
+                cause: .invalidImage,
+                consumption: .notUsed,
+                retryBehavior: .none
+            )
+        case .subscriptionEvidenceUnavailable:
+            MealScanFailure(
+                kind: .entitlement,
+                cause: .entitlementEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        case .appIntegrityEvidenceUnavailable:
+            MealScanFailure(
+                kind: .appIntegrity,
+                cause: .appIntegrityEvidenceUnavailable,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        case .offlineBeforeDispatch:
+            MealScanFailure(
+                kind: .offlineBeforeDispatch,
+                cause: .offline,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest
+            )
+        case .outcomeUnknown:
+            MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .transportOutcomeUnknown,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest
+            )
+        case .providerTimeoutAfterDispatch(_, let retryAfterSeconds):
+            MealScanFailure(
+                kind: .connectionInterruptedAfterDispatch,
+                cause: .providerTimeout,
+                consumption: .used,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: retryAfterSeconds
+            )
+        case .providerDispatchOutcomeUnknown(_, let retryAfterSeconds):
+            MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .providerDispatchOutcomeUnknown,
+                consumption: .used,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: retryAfterSeconds
+            )
+        case .serverOutcomeUnknown(_, let retryAfterSeconds):
+            MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .serverOutcomeUnknown,
+                consumption: .used,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: retryAfterSeconds
+            )
+        case .requestPending(_, let retryAfterSeconds):
+            MealScanFailure(
+                kind: .ambiguousResult,
+                cause: .requestPending,
+                consumption: .unknown,
+                retryBehavior: .checkSameRequest,
+                retryAfterSeconds: retryAfterSeconds
+            )
+        case .principalDispatchInProgress(_, let retryAfterSeconds):
+            MealScanFailure(
+                kind: .serviceDisabled,
+                cause: .requestPending,
+                consumption: .notUsed,
+                retryBehavior: .retrySameRequest,
+                retryAfterSeconds: retryAfterSeconds
+            )
+        }
+    }
 
     var errorDescription: String? {
         switch self {
@@ -411,10 +861,30 @@ enum MealScanRemoteError: LocalizedError, Equatable, Sendable {
                 "CycleBalance could not verify an active App Store subscription for this analysis.",
                 defaultValue: "CycleBalance could not verify an active App Store subscription for this analysis."
             )
+        case .appIntegrityEvidenceUnavailable:
+            L10n.string(
+                "CycleBalance could not verify this app install. Update the app and try again.",
+                defaultValue: "CycleBalance could not verify this app install. Update the app and try again."
+            )
+        case .offlineBeforeDispatch:
+            L10n.string(
+                "You're offline. Reconnect and try this photo again.",
+                defaultValue: "You're offline. Reconnect and try this photo again."
+            )
         case .outcomeUnknown:
             L10n.string(
                 "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis.",
                 defaultValue: "CycleBalance could not confirm whether this analysis completed. Checking again with the same request is safe; starting a new analysis may use another fresh analysis."
+            )
+        case .providerTimeoutAfterDispatch:
+            L10n.string(
+                "The connection was interrupted after analysis started. Check this photo again before starting a new analysis.",
+                defaultValue: "The connection was interrupted after analysis started. Check this photo again before starting a new analysis."
+            )
+        case .providerDispatchOutcomeUnknown, .serverOutcomeUnknown:
+            L10n.string(
+                "CycleBalance could not confirm the previous result. Check this photo again before starting a new analysis.",
+                defaultValue: "CycleBalance could not confirm the previous result. Check this photo again before starting a new analysis."
             )
         case .requestPending(_, let retryAfterSeconds):
             if let retryAfterSeconds {
@@ -429,6 +899,11 @@ enum MealScanRemoteError: LocalizedError, Equatable, Sendable {
                     defaultValue: "This analysis is still processing. Check the same request again shortly."
                 )
             }
+        case .principalDispatchInProgress:
+            L10n.string(
+                "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually.",
+                defaultValue: "Photo estimates are unavailable right now. Scan a barcode or enter the meal manually."
+            )
         }
     }
 }
@@ -582,12 +1057,17 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
             )
         }
 
+        guard let firebaseAppCheckToken = request.firebaseAppCheckToken?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !firebaseAppCheckToken.isEmpty
+        else {
+            throw MealScanRemoteError.appIntegrityEvidenceUnavailable
+        }
+
         var urlRequest = URLRequest(url: endpointURL)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let firebaseAppCheckToken = request.firebaseAppCheckToken {
-            urlRequest.setValue(firebaseAppCheckToken, forHTTPHeaderField: "X-Firebase-AppCheck")
-        }
+        urlRequest.setValue(firebaseAppCheckToken, forHTTPHeaderField: "X-Firebase-AppCheck")
         let canaryOperationTag: String?
         if let canaryCorrelation {
             canaryOperationTag = canaryCorrelation.operationTag(for: request.requestID)
@@ -634,6 +1114,8 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
             (data, response) = try await urlSession.data(for: urlRequest)
         } catch is CancellationError {
             throw CancellationError()
+        } catch let error as URLError where Self.isDefinitePreDispatchFailure(error.code) {
+            throw MealScanRemoteError.offlineBeforeDispatch
         } catch {
             throw MealScanRemoteError.outcomeUnknown(requestID: request.requestID)
         }
@@ -677,14 +1159,36 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
         requestID: UUID
     ) -> any Error {
         if let payload = try? JSONDecoder().decode(ProxyErrorPayload.self, from: data) {
+            if payload.reason == "principal_dispatch_in_progress" {
+                return MealScanRemoteError.principalDispatchInProgress(
+                    requestID: requestID,
+                    retryAfterSeconds: payload.retryAfterSeconds
+                )
+            }
             if payload.error == "meal_scan_in_progress" || payload.idempotency?.state == "pending" {
                 return MealScanRemoteError.requestPending(
                     requestID: requestID,
                     retryAfterSeconds: payload.retryAfterSeconds
                 )
             }
-            if payload.error == "meal_scan_outcome_unknown" || payload.idempotency?.state == "unknown" {
-                return MealScanRemoteError.outcomeUnknown(requestID: requestID)
+            if payload.error == "meal_scan_outcome_unknown", payload.reason == "provider_timeout" {
+                return MealScanRemoteError.providerTimeoutAfterDispatch(
+                    requestID: requestID,
+                    retryAfterSeconds: payload.retryAfterSeconds
+                )
+            }
+            if payload.error == "meal_scan_outcome_unknown",
+               payload.reason == "provider_dispatch_outcome_unknown" {
+                return MealScanRemoteError.providerDispatchOutcomeUnknown(
+                    requestID: requestID,
+                    retryAfterSeconds: payload.retryAfterSeconds
+                )
+            }
+            if payload.error == "meal_scan_outcome_unknown" {
+                return MealScanRemoteError.serverOutcomeUnknown(
+                    requestID: requestID,
+                    retryAfterSeconds: payload.retryAfterSeconds
+                )
             }
             return GeminiMealScanProxyError(
                 statusCode: statusCode,
@@ -692,17 +1196,22 @@ final class GeminiMealScanProxyClient: RemoteMealScanEstimating {
                 reason: payload.reason,
                 quota: payload.quota,
                 retryable: payload.retryable,
-                retryAfterSeconds: payload.retryAfterSeconds
+                retryAfterSeconds: payload.retryAfterSeconds,
+                detail: payload.detail,
+                idempotencyState: payload.idempotency?.state
             )
         }
 
-        return GeminiMealScanProxyError(
-            statusCode: statusCode,
-            error: "meal_scan_proxy_error",
-            reason: nil,
-            quota: nil,
-            retryable: nil
-        )
+        return MealScanRemoteError.outcomeUnknown(requestID: requestID)
+    }
+
+    private static func isDefinitePreDispatchFailure(_ code: URLError.Code) -> Bool {
+        switch code {
+        case .notConnectedToInternet, .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
+            true
+        default:
+            false
+        }
     }
 }
 
@@ -739,6 +1248,7 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
     private let nutritionLookupService: any NutritionLookupService
     private let calculator: any MealNutritionCalculating
     private let configuration: GeminiRemoteMealScanConfiguration
+    private let connectivityChecker: any MealScanConnectivityChecking
     private let appCheckTokenProvider: (any MealScanLimitedUseAppCheckTokenProviding)?
     private let storeKitEvidenceProvider: any MealScanStoreKitEvidenceProviding
     private let parser = GeminiMealScanResponseParser()
@@ -751,6 +1261,7 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
         nutritionLookupService: any NutritionLookupService,
         calculator: any MealNutritionCalculating,
         configuration: GeminiRemoteMealScanConfiguration,
+        connectivityChecker: any MealScanConnectivityChecking = NetworkMealScanConnectivityChecker.shared,
         appCheckTokenProvider: (any MealScanLimitedUseAppCheckTokenProviding)? = nil,
         storeKitEvidenceProvider: any MealScanStoreKitEvidenceProviding = StoreKitMealScanEvidenceProvider()
     ) {
@@ -760,6 +1271,7 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
         self.nutritionLookupService = nutritionLookupService
         self.calculator = calculator
         self.configuration = configuration
+        self.connectivityChecker = connectivityChecker
         self.appCheckTokenProvider = appCheckTokenProvider
         self.storeKitEvidenceProvider = storeKitEvidenceProvider
     }
@@ -787,14 +1299,27 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
             return cachedOutcome
         }
 
+        if connectivityChecker.connectivityStatus() == .offline {
+            throw MealScanRemoteError.offlineBeforeDispatch
+        }
+
         let signedTransactionJWS: String
         do {
             signedTransactionJWS = try await storeKitEvidenceProvider.signedTransactionJWS()
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             throw MealScanRemoteError.subscriptionEvidenceUnavailable
         }
 
-        let firebaseAppCheckToken = try await appCheckTokenProvider?.limitedUseToken()
+        let firebaseAppCheckToken: String?
+        do {
+            firebaseAppCheckToken = try await appCheckTokenProvider?.limitedUseToken()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw MealScanRemoteError.appIntegrityEvidenceUnavailable
+        }
         let estimate = try await remoteEstimator.estimateMeal(
             request: RemoteMealScanRequest(
                 requestID: requestID,
@@ -809,15 +1334,28 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
             )
         )
 
-        let result = try await mapper.map(
-            response: estimate.response,
-            originalResponseJSON: estimate.originalResponseJSON,
-            mealType: mealType,
-            modelID: estimate.modelID,
-            pipelineVersion: MealScanPipeline.pipelineVersion,
-            nutritionLookupService: nutritionLookupService,
-            calculator: calculator
-        )
+        let result: MealScanResult
+        do {
+            result = try await mapper.map(
+                response: estimate.response,
+                originalResponseJSON: estimate.originalResponseJSON,
+                mealType: mealType,
+                modelID: estimate.modelID,
+                pipelineVersion: MealScanPipeline.pipelineVersion,
+                nutritionLookupService: nutritionLookupService,
+                calculator: calculator
+            )
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw MealScanFailure(
+                kind: .unreadableMeal,
+                cause: .providerResponseInvalid,
+                consumption: estimate.cacheHit ? .notUsed : .used,
+                retryBehavior: .none,
+                quota: estimate.quota
+            )
+        }
         try? resultCache?.saveResponseJSON(
             estimate.originalResponseJSON,
             cacheKey: cacheKey,
@@ -831,7 +1369,7 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
         return MealScanOutcome(
             result: result,
             quota: estimate.quota,
-            cacheDisposition: estimate.cacheHit ? .server : .fresh
+            source: estimate.cacheHit ? .serverCache : .fresh
         )
     }
 
@@ -840,20 +1378,58 @@ final class GeminiRemoteMealScanService: RemoteMealScanServing {
         mealType: MealType
     ) async throws -> MealScanOutcome? {
         let cacheKey = cacheKey(for: normalizedImage, mealType: mealType)
-        guard let cachedJSON = try resultCache?.cachedResponseJSON(for: cacheKey, now: Date()) else {
+        guard let resultCache else {
             return nil
         }
-        let response = try parser.parseResponseJSON(cachedJSON)
-        let result = try await mapper.map(
-            response: response,
-            originalResponseJSON: cachedJSON,
-            mealType: mealType,
-            modelID: "\(GeminiRemoteMealScanConfiguration.localCacheNamespace)-local-cache",
-            pipelineVersion: MealScanPipeline.pipelineVersion,
-            nutritionLookupService: nutritionLookupService,
-            calculator: calculator
-        )
-        return MealScanOutcome(result: result, quota: nil, cacheDisposition: .local)
+
+        let cachedJSON: String
+        do {
+            guard let responseJSON = try resultCache.cachedResponseJSON(
+                for: cacheKey,
+                now: Date()
+            ) else {
+                return nil
+            }
+            cachedJSON = responseJSON
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            return nil
+        }
+
+        do {
+            let response = try parser.parseResponseJSON(cachedJSON)
+            let result = try await mapper.map(
+                response: response,
+                originalResponseJSON: cachedJSON,
+                mealType: mealType,
+                modelID: "\(GeminiRemoteMealScanConfiguration.localCacheNamespace)-local-cache",
+                pipelineVersion: MealScanPipeline.pipelineVersion,
+                nutritionLookupService: nutritionLookupService,
+                calculator: calculator
+            )
+            return MealScanOutcome(
+                result: result,
+                quota: nil,
+                source: .localCache
+            )
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            do {
+                try resultCache.removeCachedResponse(for: cacheKey)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw MealScanFailure(
+                    kind: .ambiguousResult,
+                    cause: .unclassified,
+                    consumption: .notUsed,
+                    retryBehavior: .retrySameRequest
+                )
+            }
+            return nil
+        }
     }
 
     private func cacheKey(
@@ -900,6 +1476,7 @@ private struct ProxyResponsePayload: Decodable {
 private struct ProxyErrorPayload: Decodable {
     var error: String
     var reason: String?
+    var detail: String?
     var quota: MealScanQuota?
     var retryable: Bool?
     var retryAfterSeconds: Int?

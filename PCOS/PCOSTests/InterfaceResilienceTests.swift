@@ -12,6 +12,8 @@ private let bloodSugarHistorySourceRelativePath = "../PCOS/Features/BloodSugar/V
 private let todayViewSourceRelativePath = "../PCOS/Features/Cycle/Views/TodayView.swift"
 private let mealLogSourceRelativePath = "../PCOS/Features/Meals/Views/MealLogView.swift"
 private let mealScanFlowSourceRelativePath = "../PCOS/Features/Meals/MealScan/Views/MealScanFlowView.swift"
+private let mealScanModelsSourceRelativePath = "../PCOS/Features/Meals/MealScan/Models/MealScanModels.swift"
+private let mealScanViewModelSourceRelativePath = "../PCOS/Features/Meals/MealScan/ViewModels/MealScanViewModel.swift"
 private let repeatMealSuggestionSourceRelativePath = "../PCOS/Features/Meals/MealScan/RepeatMeal/RepeatMealSuggestionView.swift"
 private let mealScanFeatureFlagsSourceRelativePath = "../PCOS/Features/Meals/MealScan/MealScanFeatureFlags.swift"
 private let onboardingContainerSourceRelativePath = "../PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"
@@ -42,6 +44,22 @@ struct InterfaceResilienceTests {
             .appendingPathComponent(relativePath)
             .standardizedFileURL
         return try String(contentsOf: sourceURL, encoding: .utf8)
+    }
+
+    private func sourceSlice(
+        _ source: String,
+        from startMarker: String,
+        to endMarker: String
+    ) throws -> Substring {
+        guard let start = source.range(of: startMarker),
+              let end = source.range(of: endMarker, range: start.upperBound..<source.endIndex) else {
+            throw NSError(
+                domain: "InterfaceResilienceTests",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "Unable to locate source slice from \(startMarker) to \(endMarker)."]
+            )
+        }
+        return source[start.lowerBound..<end.lowerBound]
     }
 
     private func loadSharedScheme(named name: String) throws -> String {
@@ -159,9 +177,10 @@ struct InterfaceResilienceTests {
         #expect(!source.contains("L10n.string(\"Photo Estimate\""))
     }
 
-    @Test("Meal scan preview opens without root premium gate while real photos present contextual paywall")
-    func mealScanPreviewSeparatesSampleFromPremiumPhotoActions() throws {
+    @Test("Meal scan opens at photo choice and keeps concise consent transparent")
+    func mealScanUsesDirectPhotoChoiceAndConciseConsent() throws {
         let flowSource = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let viewModelSource = try loadSource(relativePath: mealScanViewModelSourceRelativePath)
         let featureFlagsSource = try loadSource(relativePath: mealScanFeatureFlagsSourceRelativePath)
         let settingsSource = try loadSource(relativePath: settingsSourceRelativePath)
         let onboardingSource = try loadSource(relativePath: onboardingMealScanDemoSourceRelativePath)
@@ -171,24 +190,31 @@ struct InterfaceResilienceTests {
         #expect(flowSource.contains("presentPremiumPaywall(reason: .mealScan)"))
         #expect(flowSource.contains("Use sample meal"))
         #expect(flowSource.contains("if MealScanFeatureFlags.current.enableMockMealScanData {"))
+        #expect(viewModelSource.contains("case photoChoice"))
+        #expect(viewModelSource.contains("var phase: Phase = .photoChoice"))
+        #expect(!viewModelSource.contains("case entry"))
         #expect(flowSource.contains("case .remoteConsent:"))
-        #expect(flowSource.contains("Send this photo to Google Gemini?"))
-        #expect(flowSource.contains("Send to Google Gemini"))
+        #expect(flowSource.contains("Analyze this meal photo?"))
+        #expect(flowSource.contains("Analyze photo"))
+        #expect(flowSource.contains("Choose another photo"))
+        #expect(flowSource.contains("Privacy details"))
+        #expect(flowSource.contains("CycleBalance uses AI to create an editable estimate of foods, portions, and nutrition."))
+        #expect(!flowSource.contains("Send this photo to Google Gemini?"))
+        #expect(!flowSource.contains("Send to Google Gemini"))
         #expect(!flowSource.contains("Continue with Photo Estimate"))
-        #expect(flowSource.contains("Enter Manually"))
+        #expect(flowSource.contains("Enter manually"))
         #expect(flowSource.contains("meal_scan.remote_consent"))
         #expect(flowSource.contains("meal_scan.remote_consent.continue"))
         #expect(flowSource.contains("meal_scan.remote_consent.manual"))
-        #expect(flowSource.contains(".frame(height: 168)"))
+        #expect(flowSource.contains(".frame(height: 176)"))
         #expect(flowSource.contains("Google does not use paid API photos or responses to improve its products"))
         #expect(flowSource.contains("retain the photo and response for up to 55 days"))
         #expect(flowSource.contains("abuse monitoring and legal or regulatory requirements"))
-        #expect(flowSource.contains("before anything is added to your meal log"))
-        #expect(flowSource.contains("structured estimate may be cached for up to 24 hours"))
+        #expect(flowSource.contains("Your edited estimate is added to the meal log only after you choose Save meal."))
+        #expect(flowSource.contains("structured estimate for up to 24 hours so the exact photo can be reused without another upload"))
         #expect(!flowSource.contains("our AI service"))
-        #expect(flowSource.contains("CycleBalance does not retain the uploaded photo on its server"))
-        #expect(flowSource.contains("By default, only nutrition you review and save is kept"))
-        #expect(flowSource.contains("Keep Saved Meal Photos in Settings"))
+        #expect(flowSource.contains("CycleBalance does not retain the uploaded photo on its servers."))
+        #expect(flowSource.contains("The photo is saved locally only when Keep Saved Meal Photos is enabled."))
         #expect(featureFlagsSource.contains("enableMealPhotoRetention: boolValue(key: \"mealScan.enableMealPhotoRetention\", launchArgument: \"enableMealPhotoRetention\", debugDefault: true, releaseDefault: false)"))
         #expect(settingsSource.contains("@AppStorage(\"mealScan.enableMealPhotoRetention\") private var enableMealPhotoRetention = false"))
         #expect(!flowSource.contains("Meal estimates stay on your device unless you choose to sync through iCloud."))
@@ -198,6 +224,151 @@ struct InterfaceResilienceTests {
         #expect(!contentSource.contains("tracking.card.meal_scan"))
         #expect(!contentSource.contains("AI Meal Scan"))
         #expect(!contentSource.contains("guard appState.allowsPremiumAccess else {\n            appState.presentPremiumPaywall()\n            return\n        }\n        showingMealScan = true"))
+    }
+
+    @Test("Meal scan review keeps portions first and Save persistently reachable")
+    func mealScanReviewUsesInlinePortionsCollapsedDetailsAndStickySave() throws {
+        let source = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let review = try sourceSlice(
+            source,
+            from: "struct MealScanReviewView: View",
+            to: "struct MealScanReviewActionPanel: View"
+        )
+        let stickyPanel = try sourceSlice(
+            source,
+            from: "struct MealScanReviewActionPanel: View",
+            to: "struct MealFoodItemEditView: View"
+        )
+
+        #expect(source.contains("adjustPortion"))
+        #expect(source.contains("25"))
+        #expect(source.contains("Decrease %@ portion"))
+        #expect(source.contains("Increase %@ portion"))
+        #expect(source.contains("Changes the portion by 25 grams."))
+        #expect(source.contains(".accessibilityValue("))
+        #expect(source.contains("DisclosureGroup("))
+        #expect(source.contains("More details"))
+        #expect(source.contains(".safeAreaInset(edge: .bottom"))
+        #expect(source.contains("meal_scan.save_action_panel"))
+        #expect(source.contains("Save meal"))
+        #expect(review.contains("Retake"), "Retake belongs in scrolling review content.")
+        #expect(!stickyPanel.contains("Retake"), "Only Save may remain sticky at the bottom.")
+        #expect(review.contains("viewModel.newManualFoodDraft()"))
+        #expect(review.contains("NavigationLink"), "Add food must open a draft editor before appending.")
+        #expect(stickyPanel.contains("viewModel.canSaveMeal"))
+        #expect(stickyPanel.contains("@AccessibilityFocusState private var isSaveErrorFocused"))
+        #expect(stickyPanel.contains(".accessibilityFocused($isSaveErrorFocused)"))
+        #expect(stickyPanel.contains("isSaveErrorFocused = false"), "Every save failure must create a fresh VoiceOver focus transition.")
+        #expect(source.contains("@FocusState private var focusedField"))
+        #expect(source.contains("ToolbarItemGroup(placement: .keyboard)"))
+        #expect(source.contains(".scrollDismissesKeyboard(.interactively)"))
+
+        for deadView in [
+            "MealScanEntryView",
+            "LegacyMealScanReviewView",
+            "MealScanAmbiguousOutcomeView",
+            "MealScanNewAttemptConfirmationView",
+            "MealScanPrivacyNoticeView",
+        ] {
+            #expect(!source.contains("struct \(deadView)"), "Obsolete scanner view must be removed: \(deadView).")
+        }
+    }
+
+    @Test("Meal scanner buttons use contrast-safe themed action styles")
+    func mealScannerButtonsUseContrastSafeThemedActionStyles() throws {
+        let source = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+
+        #expect(source.contains("func mealScanPrimaryActionStyle() -> some View"))
+        #expect(source.contains(".foregroundStyle(AppTheme.mealScannerActionForeground)"))
+        #expect(source.contains(".tint(AppTheme.mealScannerActionBackground)"))
+        #expect(
+            source.components(separatedBy: ".buttonStyle(.borderedProminent)").count - 1 == 1,
+            "Prominent scanner actions must route through the contrast-safe shared style."
+        )
+    }
+
+    @Test("Meal scan failures use typed kind, consumption, and recovery state")
+    func mealScanFailuresAreTypedAndAvoidTechnicalCustomerCopy() throws {
+        let modelsSource = try loadSource(relativePath: mealScanModelsSourceRelativePath)
+        let viewModelSource = try loadSource(relativePath: mealScanViewModelSourceRelativePath)
+        let flowSource = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+
+        for requiredType in [
+            "enum MealScanFailureKind",
+            "enum MealScanFailureCause",
+            "enum MealScanConsumptionState",
+            "enum MealScanRetryBehavior",
+            "enum MealScanRecovery",
+            "enum MealScanAnalysisSource",
+            "struct MealScanFailure",
+        ] {
+            #expect(modelsSource.contains(requiredType))
+        }
+
+        for requiredKind in [
+            "serviceDisabled",
+            "offlineBeforeDispatch",
+            "connectionInterruptedAfterDispatch",
+            "appIntegrity",
+            "entitlement",
+            "quotaExhausted",
+            "unreadableMeal",
+            "ambiguousResult",
+            "saveFailed",
+        ] {
+            #expect(modelsSource.contains("case \(requiredKind)"))
+        }
+
+        #expect(viewModelSource.contains("private(set) var failure: MealScanFailure?"))
+        #expect(!viewModelSource.contains("var errorMessage:"))
+        #expect(flowSource.contains("No scan was used."))
+        #expect(flowSource.contains("A scan was used."))
+        #expect(flowSource.contains("Scan status is still unknown."))
+        #expect(flowSource.contains("AppTheme.mealScannerBodyText"))
+        #expect(flowSource.contains("AppTheme.mealScannerErrorText"))
+
+        for bannedCopy in ["request ID", "billable analysis", "provider call", "fresh AI debit"] {
+            #expect(!flowSource.localizedCaseInsensitiveContains(bannedCopy))
+        }
+    }
+
+    @Test("Food editor formats and parses portions with the same locale")
+    func mealFoodEditorUsesOneLocaleForPortionRoundTrip() throws {
+        let source = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let editor = try sourceSlice(
+            source,
+            from: "struct MealFoodItemEditView: View",
+            to: "struct MealNutritionSummaryView: View"
+        )
+
+        #expect(editor.contains("Self.formatGrams(initialItem.estimatedGrams, locale: .current)"))
+        #expect(editor.contains("static func formatGrams(_ grams: Double, locale: Locale) -> String"))
+        #expect(editor.contains("formatter.locale = locale"))
+        #expect(editor.contains("formatter.numberStyle = .decimal"))
+        #expect(editor.contains("formatter.maximumFractionDigits = 1"))
+    }
+
+    @Test("Meal scan item warnings stay in collapsed review details and use semantic contrast")
+    func mealScanWarningsAreCollapsedAndReadable() throws {
+        let source = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+        let row = try sourceSlice(
+            source,
+            from: "struct MealScanFoodItemRow: View",
+            to: "struct MealScanFailureView: View"
+        )
+
+        #expect(!row.contains("Text(warning)"))
+        #expect(source.contains("private var reviewWarnings"))
+        #expect(source.contains("AppTheme.mealScannerErrorText"))
+    }
+
+    @Test("Timed scanner recovery explains disabled controls to sighted and VoiceOver users")
+    func timedScannerRecoveryExplainsAvailability() throws {
+        let source = try loadSource(relativePath: mealScanFlowSourceRelativePath)
+
+        #expect(source.contains("private func retryAvailabilityGuidance"))
+        #expect(source.contains(".accessibilityValue(retryAvailabilityGuidance"))
+        #expect(source.contains("Try again in %@."))
     }
 
     @Test("Onboarding scanner copy follows availability and describes its preview honestly")

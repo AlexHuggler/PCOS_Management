@@ -198,6 +198,65 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
             )
         }
     }
+
+    /// Solid surface used when evaluating scanner text contrast. Scanner cards
+    /// use this semantic pair instead of accent colors, which are not reliably
+    /// legible as paragraph or error text across every appearance.
+    var mealScannerSurfaceRGB: ThemeRGB {
+        switch self {
+        case .lunarCalm:
+            ThemeRGB(hex: 0x151621)
+        case .highContrast:
+            ThemeRGB(hex: 0xFDFDFC)
+        default:
+            palette.warmNeutralLight
+        }
+    }
+
+    var mealScannerBodyTextRGB: ThemeRGB {
+        switch self {
+        case .lunarCalm:
+            ThemeRGB(hex: 0xF7F2EE)
+        case .botanicalJournal:
+            ThemeRGB(hex: 0x173D36)
+        case .fruitGrove:
+            ThemeRGB(hex: 0x75313F)
+        case .highContrast:
+            ThemeRGB(hex: 0x000000)
+        default:
+            palette.accent.darkened(by: 0.18)
+        }
+    }
+
+    var mealScannerErrorTextRGB: ThemeRGB {
+        switch self {
+        case .lunarCalm:
+            ThemeRGB(hex: 0xFFAAA0)
+        case .botanicalJournal:
+            ThemeRGB(hex: 0x8C3B55)
+        case .fruitGrove:
+            ThemeRGB(hex: 0x7C2E3A)
+        case .highContrast:
+            ThemeRGB(hex: 0x7A2613)
+        default:
+            palette.flowHeavyLight.darkened(by: 0.08)
+        }
+    }
+
+    var mealScannerActionBackgroundRGB: ThemeRGB {
+        switch self {
+        case .fruitGrove:
+            palette.flowHeavyLight
+        default:
+            palette.accent
+        }
+    }
+
+    var mealScannerActionForegroundRGB: ThemeRGB {
+        self == .lunarCalm
+            ? ThemeRGB(hex: 0x05060D)
+            : ThemeRGB(hex: 0xFFFFFF)
+    }
 }
 
 enum FontOption: String, CaseIterable, Identifiable, Codable {
