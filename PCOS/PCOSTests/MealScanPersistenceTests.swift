@@ -293,7 +293,7 @@ struct MealScanPersistenceTests {
 
         let backup = try SettingsDataBackupService(modelContext: source.mainContext)
             .makeBackupFile(source: .userExport)
-        #expect(backup.schemaVersion == 5)
+        #expect(backup.schemaVersion == SettingsDataBackupFile.currentSchemaVersion)
         #expect(backup.records.mealScanFoodItems.count == result.detectedItems.count)
         #expect(backup.records.mealScanNutritionSummaries.count == 1)
         #expect(backup.records.mealScanMetadata.count == 1)

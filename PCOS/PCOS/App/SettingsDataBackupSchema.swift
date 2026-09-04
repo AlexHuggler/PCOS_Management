@@ -51,7 +51,7 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
 }
 
 struct SettingsDataBackupFile: Codable, Sendable {
-    static let currentSchemaVersion = 5
+    static let currentSchemaVersion = 6
 
     var schemaVersion: Int = currentSchemaVersion
     var exportedAt: Date
@@ -391,6 +391,9 @@ struct DailyLogRecord: Codable, Sendable {
     var stressLevel: Int?
     var energyLevel: Int?
     var waterOz: Int?
+    var painLevel0To10: Int?
+    var privateNote: String?
+    var positiveActionRawValues: String?
 }
 
 struct InsightRecord: Codable, Sendable {

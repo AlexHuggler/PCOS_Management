@@ -8,15 +8,26 @@ struct SettingsDataBackupService {
 
     private let modelContext: ModelContext
     private let dataWriter: DataWriter
+    private let photoEncryptor: any PhotoEncrypting
 
     init(
         modelContext: ModelContext,
         dataWriter: @escaping DataWriter = { data, url in
             try data.write(to: url, options: .atomic)
-        }
+        },
+        photoEncryptor: any PhotoEncrypting = PhotoEncryptionService()
     ) {
         self.modelContext = modelContext
         self.dataWriter = dataWriter
+        self.photoEncryptor = photoEncryptor
+    }
+
+    /// True for files this service wrote into the temporary directory for sharing, so the caller can
+    /// delete the plaintext copy once the share sheet is dismissed.
+    static func isTemporaryExport(_ url: URL, temporaryDirectory: URL = FileManager.default.temporaryDirectory) -> Bool {
+        let filePath = url.standardizedFileURL.path
+        let directoryPath = temporaryDirectory.standardizedFileURL.path
+        return filePath.hasPrefix(directoryPath.hasSuffix("/") ? directoryPath : directoryPath + "/")
     }
 
     func generateJSONBackup(
@@ -170,7 +181,7 @@ private extension SettingsDataBackupService {
                     id: $0.id,
                     date: $0.date,
                     photoType: $0.photoType,
-                    photoData: $0.photoData,
+                    photoData: photoEncryptor.decrypt($0.photoData) ?? $0.photoData,
                     notes: $0.notes,
                     analysisResult: $0.analysisResult
                 )
@@ -185,7 +196,10 @@ private extension SettingsDataBackupService {
                     restingHeartRateBPM: $0.restingHeartRateBPM,
                     stressLevel: $0.stressLevel,
                     energyLevel: $0.energyLevel,
-                    waterOz: $0.waterOz
+                    waterOz: $0.waterOz,
+                    painLevel0To10: $0.painLevel0To10,
+                    privateNote: $0.privateNote,
+                    positiveActionRawValues: $0.positiveActionRawValues.isEmpty ? nil : $0.positiveActionRawValues
                 )
             },
             insights: insights.map {

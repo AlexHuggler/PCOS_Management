@@ -75,6 +75,8 @@ struct SettingsDataImportService {
         var counts: SettingsDataRecordCounts
         var changeCounts: ImportChangeCounts
         var issues: [ImportIssue] = []
+        /// Where the pre-import copy of the replaced data was written, when a snapshot store is configured.
+        var preImportSnapshotURL: URL? = nil
 
         var schemaVersion: Int? {
             guard case let .jsonBackup(schemaVersion, _) = channel else {
@@ -98,9 +100,17 @@ struct SettingsDataImportService {
     }
 
     private let modelContext: ModelContext
+    private let snapshotStore: PreImportSnapshotStore?
+    private let photoEncryptor: any PhotoEncrypting
 
-    init(modelContext: ModelContext) {
+    init(
+        modelContext: ModelContext,
+        snapshotStore: PreImportSnapshotStore? = PreImportSnapshotStore(),
+        photoEncryptor: any PhotoEncrypting = PhotoEncryptionService()
+    ) {
         self.modelContext = modelContext
+        self.snapshotStore = snapshotStore
+        self.photoEncryptor = photoEncryptor
     }
 
     func importJSONBackup(
@@ -147,17 +157,21 @@ struct SettingsDataImportService {
 
         do {
             try validateReferences(in: backup.records)
+            // Keep a copy of what is about to be replaced so a wrong file is recoverable.
+            let snapshotURL = try snapshotStore?.saveSnapshot(of: modelContext)
             try clearAllTrackedModels()
             let counts = try importRecords(from: backup.records)
             try modelContext.save()
 
             Logger.database.info("Imported backup with \(counts.total) records (schema v\(backup.schemaVersion))")
-            return ImportSummary(
+            var summary = ImportSummary(
                 importedAt: Date(),
                 channel: .jsonBackup(schemaVersion: backup.schemaVersion, source: backup.source),
                 counts: counts,
                 changeCounts: ImportChangeCounts(inserted: counts.total)
             )
+            summary.preImportSnapshotURL = snapshotURL
+            return summary
         } catch let importError as ImportError {
             modelContext.rollback()
             throw importError
@@ -617,6 +631,11 @@ private extension SettingsDataImportService {
             throw RecordValidationError.invalid("Invalid energyLevel. Expected a value between 1 and 5.")
         }
 
+        let painLevel0To10 = try optionalInt(field: "painLevel0To10", in: object, location: location)
+        if let painLevel0To10, !(0...10).contains(painLevel0To10) {
+            throw RecordValidationError.invalid("Invalid painLevel0To10. Expected a value between 0 and 10.")
+        }
+
         return DailyLogRecord(
             id: try optionalUUID(field: "id", in: object, location: location) ?? UUID(),
             date: try requiredDate(field: "date", in: object, location: location),
@@ -626,7 +645,10 @@ private extension SettingsDataImportService {
             restingHeartRateBPM: try optionalDouble(field: "restingHeartRateBPM", in: object, location: location),
             stressLevel: stressLevel,
             energyLevel: energyLevel,
-            waterOz: try optionalInt(field: "waterOz", in: object, location: location)
+            waterOz: try optionalInt(field: "waterOz", in: object, location: location),
+            painLevel0To10: painLevel0To10,
+            privateNote: try optionalString(field: "privateNote", in: object, location: location),
+            positiveActionRawValues: try optionalString(field: "positiveActionRawValues", in: object, location: location)
         )
     }
 
@@ -1278,7 +1300,7 @@ private extension SettingsDataImportService {
                     id: record.id,
                     date: record.date,
                     photoType: record.photoType,
-                    photoData: record.photoData,
+                    photoData: photoEncryptor.encrypt(record.photoData) ?? record.photoData,
                     notes: record.notes,
                     analysisResult: record.analysisResult
                 )
@@ -1296,7 +1318,10 @@ private extension SettingsDataImportService {
                     restingHeartRateBPM: record.restingHeartRateBPM,
                     stressLevel: record.stressLevel,
                     energyLevel: record.energyLevel,
-                    waterOz: record.waterOz
+                    waterOz: record.waterOz,
+                    painLevel0To10: record.painLevel0To10,
+                    privateNote: record.privateNote,
+                    positiveActionRawValues: record.positiveActionRawValues ?? ""
                 )
             )
         }

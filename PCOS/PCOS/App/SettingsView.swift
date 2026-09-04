@@ -133,6 +133,9 @@ struct SettingsView: View {
     @State private var pendingJSONImportSource: PendingJSONImportSource?
     @State private var activeFileImportRequest: SettingsFileImportRequest?
     @State private var activeSheet: SettingsSheet?
+    @State private var lastSharedExportURL: URL?
+    @State private var preImportSnapshotURL: URL?
+    @State private var showRestoreSnapshotConfirmation = false
     @State private var showingCSVImportGuide = false
     @State private var importResult: ImportResultPresentation?
     @State private var showImportConfirmation = false
@@ -525,6 +528,25 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings.import_json_backup")
 
                     Button {
+                        showRestoreSnapshotConfirmation = true
+                    } label: {
+                        Label(L10n.string("Restore Data From Before Last Import", defaultValue: "Restore Data From Before Last Import"), systemImage: "arrow.uturn.backward.circle")
+                    }
+                    .disabled(preImportSnapshotURL == nil)
+                    .task { refreshPreImportSnapshot() }
+                    .confirmationDialog(
+                        L10n.string("Restore the data you had before your last import?", defaultValue: "Restore the data you had before your last import?"),
+                        isPresented: $showRestoreSnapshotConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button(L10n.string("Restore", defaultValue: "Restore"), role: .destructive, action: restorePreImportSnapshot)
+                        Button(L10n.string("Cancel", defaultValue: "Cancel"), role: .cancel) {}
+                    } message: {
+                        Text(L10n.string("Your current data is saved as a new snapshot first, so you can switch back again.", defaultValue: "Your current data is saved as a new snapshot first, so you can switch back again."))
+                    }
+                    .accessibilityIdentifier("settings.restore_pre_import_snapshot")
+
+                    Button {
                         triggerExternalCSVImport()
                     } label: {
                         Label(L10n.string("Import External Data (CSV)", defaultValue: "Import External Data (CSV)"), systemImage: "square.and.arrow.down")
@@ -746,7 +768,7 @@ struct SettingsView: View {
             .lunarSettingsPresentation(isPresented: $showingPrivateJournal) {
                 DailyJournalEditorView()
             }
-            .sheet(item: $activeSheet) { sheet in
+            .sheet(item: $activeSheet, onDismiss: removeSharedExportFile) { sheet in
                 switch sheet {
                 case .csvImportGuide:
                     SettingsCSVImportGuideView()
@@ -804,7 +826,7 @@ struct SettingsView: View {
                     pendingJSONImportSource = nil
                 }
             } message: {
-                Text(L10n.string("Importing a backup will replace all existing app data.", defaultValue: "Importing a backup will replace all existing app data."))
+                Text(L10n.string("This replaces your current data with the backup. A copy of your current data is saved on this device first, and you can restore it from Settings > Data.", defaultValue: "This replaces your current data with the backup. A copy of your current data is saved on this device first, and you can restore it from Settings > Data."))
             }
             .alert(L10n.string("Delete All Data?", defaultValue: "Delete All Data?"), isPresented: $showDeleteConfirmation) {
                 Button(L10n.string("Delete Everything", defaultValue: "Delete Everything"), role: .destructive) {
@@ -814,8 +836,8 @@ struct SettingsView: View {
             } message: {
                 Text(
                     L10n.string(
-                        "This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone.",
-                        defaultValue: "This will permanently delete all your cycle data, symptoms, and insights. This action cannot be undone."
+                        "This permanently deletes everything CycleBalance stores on this device: cycles, symptoms, glucose, supplements, meals, photos, daily check-ins, pregnancy records, insights and imported Apple Health context. Export a backup first if you might want it later. This cannot be undone.",
+                        defaultValue: "This permanently deletes everything CycleBalance stores on this device: cycles, symptoms, glucose, supplements, meals, photos, daily check-ins, pregnancy records, insights and imported Apple Health context. Export a backup first if you might want it later. This cannot be undone."
                     )
                 )
             }
@@ -1363,7 +1385,26 @@ struct SettingsView: View {
     }
 
     private func presentShareSheet(for url: URL, kind: PendingSharePayload.Kind) {
+        lastSharedExportURL = url
         activeSheet = .share(PendingSharePayload(kind: kind, url: url))
+    }
+
+    /// Exports are plaintext health data written to tmp for the share sheet; remove them afterwards.
+    private func removeSharedExportFile() {
+        guard let url = lastSharedExportURL else { return }
+        lastSharedExportURL = nil
+        guard SettingsDataBackupService.isTemporaryExport(url) else { return }
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private func refreshPreImportSnapshot() {
+        preImportSnapshotURL = PreImportSnapshotStore().latestSnapshotURL
+    }
+
+    private func restorePreImportSnapshot() {
+        guard let url = preImportSnapshotURL else { return }
+        importBackup(from: url)
+        refreshPreImportSnapshot()
     }
 
     private func triggerJSONBackupImport() {
@@ -1501,6 +1542,7 @@ struct SettingsView: View {
     }
 
     private func handleImportSummary(_ summary: SettingsDataImportService.ImportSummary) {
+        refreshPreImportSnapshot()
         if summary.changeCounts.successful > 0 || !summary.hasIssues {
             recordImport(summary)
         }
@@ -1617,6 +1659,8 @@ struct SettingsView: View {
             try service.deleteAllData()
             deleteSuccessToggle.toggle()
         } catch {
+            // Autosave must not commit a half-applied deletion after we told the user it failed.
+            modelContext.rollback()
             Logger.database.error("Failed to delete all data: \(error.localizedDescription)")
             operationError = String(
                 localized: "Failed to delete data: \(error.localizedDescription)",

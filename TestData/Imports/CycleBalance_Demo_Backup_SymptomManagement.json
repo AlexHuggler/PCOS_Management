@@ -3022,7 +3022,7 @@
       }
     ]
   },
-  "schemaVersion" : 5,
+  "schemaVersion" : 6,
   "source" : {
     "kind" : "demo_scenario",
     "scenarioID" : "symptomManagement"
