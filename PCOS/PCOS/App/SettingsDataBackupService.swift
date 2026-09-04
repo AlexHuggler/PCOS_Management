@@ -128,6 +128,7 @@ private extension SettingsDataBackupService {
                     date: $0.date,
                     supplementName: $0.supplementName,
                     dosageMg: $0.dosageMg,
+                    dosageUnit: $0.dosageUnitRawValue,
                     timeTaken: $0.timeTaken,
                     taken: $0.taken,
                     brand: $0.brand

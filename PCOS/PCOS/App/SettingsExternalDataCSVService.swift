@@ -15,6 +15,7 @@ enum SettingsExternalCSVSchema {
         case mealContext = "meal_context"
         case supplementName = "supplement_name"
         case dosageMg = "dosage_mg"
+        case dosageUnit = "dosage_unit"
         case timeTaken = "time_taken"
         case taken
         case brand
@@ -108,13 +109,13 @@ enum SettingsExternalCSVSchema {
     ]
 
     static let v3HeaderColumns = Column.allCases.filter {
-        !nutritionHeaderColumns.contains($0)
+        !nutritionHeaderColumns.contains($0) && $0 != .dosageUnit
     }
 
     static let v3Header = v3HeaderColumns.map(\.rawValue)
 
     static let legacyHeaderColumns = Column.allCases.filter {
-        ![Column.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult].contains($0)
+        ![Column.basalBodyTemperatureCelsius, .cervicalMucus, .lhTestResult, .dosageUnit].contains($0)
             && !nutritionHeaderColumns.contains($0)
     }
 
@@ -168,7 +169,7 @@ enum SettingsExternalCSVSchema {
         RecordDefinition(
             type: .supplement,
             requiredFields: [.recordType, .date, .supplementName, .timeTaken],
-            optionalFields: [.dosageMg, .taken, .brand],
+            optionalFields: [.dosageMg, .dosageUnit, .taken, .brand],
             noteKey: nil,
             noteDefaultValue: nil
         ),
@@ -412,6 +413,7 @@ struct SettingsExternalDataCSVService {
         let date: Date
         let supplementName: String
         let dosageMg: Double?
+        let dosageUnit: DosageUnit
         let timeTaken: Date
         let taken: Bool
         let brand: String?
@@ -503,6 +505,7 @@ struct SettingsExternalDataCSVService {
         let day: DayKey
         let supplementName: String
         let dosageMg: Int64?
+        let dosageUnit: String
         let timeTaken: Date
         let taken: Bool
         let brand: String?
@@ -803,6 +806,7 @@ private extension SettingsExternalDataCSVService {
             date: date,
             supplementName: try requiredValue(.supplementName, in: row),
             dosageMg: try optionalDouble(column: .dosageMg, in: row),
+            dosageUnit: try parseDosageUnit(in: row),
             timeTaken: try parseTimeTaken(for: date, in: row),
             taken: try parseBool(column: .taken, in: row, defaultValue: true),
             brand: cleanedText(row.value(.brand))
@@ -1065,6 +1069,22 @@ private extension SettingsExternalDataCSVService {
         }
 
         return value
+    }
+
+    /// `dosage_unit` is optional; files written before the column existed are milligrams.
+    private func parseDosageUnit(in row: CSVRow) throws -> DosageUnit {
+        guard let rawValue = cleanedText(row.value(.dosageUnit)), !rawValue.isEmpty else {
+            return .milligram
+        }
+        if let unit = DosageUnit.allCases.first(where: { $0.rawValue.caseInsensitiveCompare(rawValue) == .orderedSame }) {
+            return unit
+        }
+        throw ImportError.invalidValue(
+            row: row.rowNumber,
+            column: Column.dosageUnit.rawValue,
+            value: rawValue,
+            reason: "Expected one of: \(DosageUnit.allCases.map(\.rawValue).joined(separator: ", "))."
+        )
     }
 
     private func optionalDouble(column: Column, in row: CSVRow) throws -> Double? {
@@ -1352,6 +1372,7 @@ private extension SettingsExternalDataCSVService {
                     date: row.date,
                     supplementName: row.supplementName,
                     dosageMg: row.dosageMg,
+                    dosageUnit: row.dosageUnit,
                     timeTaken: row.timeTaken,
                     taken: row.taken,
                     brand: row.brand
@@ -1621,6 +1642,7 @@ private extension SettingsExternalDataCSVService {
             day: dayKey(for: log.date),
             supplementName: dedupeText(log.supplementName) ?? "",
             dosageMg: log.dosageMg.map(scaledNumberKey),
+            dosageUnit: log.dosageUnitRawValue,
             timeTaken: log.timeTaken,
             taken: log.taken,
             brand: dedupeText(log.brand)
@@ -1632,6 +1654,7 @@ private extension SettingsExternalDataCSVService {
             day: dayKey(for: row.date),
             supplementName: dedupeText(row.supplementName) ?? "",
             dosageMg: row.dosageMg.map(scaledNumberKey),
+            dosageUnit: row.dosageUnit.rawValue,
             timeTaken: row.timeTaken,
             taken: row.taken,
             brand: dedupeText(row.brand)

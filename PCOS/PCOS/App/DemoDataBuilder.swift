@@ -340,6 +340,7 @@ private extension DemoDataBuilder {
                     date: date,
                     supplementName: primarySupplement.name,
                     dosageMg: dosage,
+                    dosageUnit: Self.demoDosageUnit(for: primarySupplement.name).rawValue,
                     timeTaken: addingHours(-(dayOffset % 3), to: date),
                     taken: dayOffset % 6 != 0,
                     brand: primarySupplement.brand
@@ -734,6 +735,13 @@ private extension DemoDataBuilder {
             "high-fiber breakfast"
         ]
         return contexts[dayOffset % contexts.count]
+    }
+
+    static func demoDosageUnit(for supplementName: String) -> DosageUnit {
+        let normalized = supplementName.lowercased()
+        if normalized.contains("vitamin d") { return .internationalUnit }
+        if normalized.contains("folate") || normalized.contains("chromium") { return .microgram }
+        return .milligram
     }
 
     func adjustedSupplementDosage(

@@ -17,6 +17,7 @@ struct SupplementLogView: View {
     @State private var selectedCatalogSupplement: PCOSSupplement?
     @State private var supplementNameText = ""
     @State private var dosageText = ""
+    @State private var selectedDosageUnit: DosageUnit = .milligram
     @State private var brandText = ""
     @State private var scheduledTime = Date()
     @State private var addFormDirtyTracker: FormDirtyTracker<AddFormSnapshot>?
@@ -398,7 +399,7 @@ struct SupplementLogView: View {
 
                 HStack(spacing: AppTheme.spacing8) {
                     if let dosage = log.dosageMg, dosage > 0 {
-                        Text("\(Int(dosage)) mg")
+                        Text(DosageUnit.formatted(dosage, unit: log.dosageUnit))
                             .appFont(.caption)
                             .foregroundStyle(AppTheme.secondaryText)
                     }
@@ -524,7 +525,7 @@ struct SupplementLogView: View {
                                     Spacer()
 
                                     if let dosage = result.defaultDosage, dosage > 0 {
-                                        Text("\(Int(dosage)) mg")
+                                        Text(DosageUnit.formatted(dosage, unit: result.defaultDosageUnit))
                                             .appFont(.caption)
                                             .foregroundStyle(.tertiary)
                                     }
@@ -548,7 +549,7 @@ struct SupplementLogView: View {
                 }
 
                 Section {
-                    if let selected = selectedCatalogSupplement, selected.defaultDosageMg > 0 {
+                    if let selected = selectedCatalogSupplement, selected.defaultDosage > 0 {
                         HStack {
                             Text(viewModel?.recommendedDosageLabel(for: selected) ?? "")
                                 .appFont(.caption)
@@ -568,15 +569,21 @@ struct SupplementLogView: View {
                         TextField("Dosage", text: $dosageText)
                             .keyboardType(.decimalPad)
                             .focused($addSheetFocusedField, equals: .dosage)
-                        Text("mg")
-                            .appFont(.subheadline)
-                            .foregroundStyle(.secondary)
+                        Picker(L10n.string("Dosage unit", defaultValue: "Dosage unit"), selection: $selectedDosageUnit) {
+                            ForEach(DosageUnit.allCases) { unit in
+                                Text(unit.symbol).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .accessibilityLabel(L10n.string("Dosage unit", defaultValue: "Dosage unit"))
+                        .accessibilityIdentifier("supplements.add.dosage_unit")
                     }
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: AppTheme.spacing8) {
                             ForEach(["30", "200", "400", "500", "600", "1000", "2000", "4000"], id: \.self) { amount in
-                                ChipButton(title: "\(amount) mg", color: AppTheme.sage) {
+                                ChipButton(title: "\(amount) \(selectedDosageUnit.symbol)", color: AppTheme.sage) {
                                     dosageText = amount
                                 }
                             }
@@ -725,7 +732,8 @@ struct SupplementLogView: View {
         supplementNameText = result.name
         if case .catalog(let supplement) = result {
             selectedCatalogSupplement = supplement
-            if supplement.defaultDosageMg > 0 {
+            selectedDosageUnit = supplement.defaultDosageUnit
+            if supplement.defaultDosage > 0 {
                 dosageText = viewModel?.recommendedDosageValue(for: supplement) ?? ""
             }
         } else {
@@ -765,6 +773,7 @@ struct SupplementLogView: View {
             selectedCatalogSupplement = nil
             supplementNameText = ""
             dosageText = ""
+            selectedDosageUnit = .milligram
             brandText = ""
             scheduledTime = Date()
             addFormDirtyTracker = FormDirtyTracker(initial: addFormSnapshot)
@@ -815,6 +824,7 @@ struct SupplementLogView: View {
             try viewModel?.logSupplement(
                 name: name,
                 dosageMg: dosage,
+                dosageUnit: selectedDosageUnit,
                 brand: brand.isEmpty ? nil : brand,
                 time: scheduledTime
             )
@@ -948,8 +958,13 @@ private enum SupplementSearchResult: Identifiable {
     }
 
     var defaultDosage: Double? {
-        if case .catalog(let s) = self { return s.defaultDosageMg }
+        if case .catalog(let s) = self { return s.defaultDosage }
         return nil
+    }
+
+    var defaultDosageUnit: DosageUnit {
+        if case .catalog(let s) = self { return s.defaultDosageUnit }
+        return .milligram
     }
 }
 

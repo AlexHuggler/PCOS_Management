@@ -52,6 +52,24 @@ struct DemoDataBuilderTests {
         #expect(normalizedFixtureData == generatedData)
     }
 
+    /// Rewrites the checked-in demo backup fixture from the deterministic builder.
+    /// To run it: `touch TestData/Imports/.regenerate-demo-fixture`, run
+    /// `-only-testing:PCOSTests/DemoDataBuilderTests/regenerateSymptomManagementFixture`, delete the
+    /// marker, then review the fixture diff. It is skipped whenever the marker is absent.
+    @Test("regenerate the symptom management fixture when the marker file is present", .enabled(if: TestHelpers.demoFixtureRegenerationRequested))
+    func regenerateSymptomManagementFixture() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        let referenceDate = formatter.date(from: "2026-03-15T12:00:00Z")!
+        let generatedBackup = DemoDataBuilder(calendar: calendar).makeBackup(for: .symptomManagement, referenceDate: referenceDate)
+        let generatedData = try SettingsDataBackupCoding.makeEncoder().encode(generatedBackup)
+        let fixtureURL = try TestHelpers.importFixtureURL(named: TestHelpers.demoBackupFixtureName, from: #filePath)
+        try generatedData.write(to: fixtureURL, options: .atomic)
+        #expect(FileManager.default.fileExists(atPath: fixtureURL.path))
+    }
+
     @Test("symptom management scenario includes showcase coverage for new features")
     func symptomManagementScenarioIncludesShowcaseCoverage() {
         var calendar = Calendar(identifier: .gregorian)

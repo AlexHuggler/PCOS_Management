@@ -209,6 +209,8 @@ struct SupplementLogRecord: Codable, Sendable {
     var date: Date
     var supplementName: String
     var dosageMg: Double?
+    /// Raw `DosageUnit`; nil in backups written before schema v6 and treated as milligrams.
+    var dosageUnit: String?
     var timeTaken: Date
     var taken: Bool
     var brand: String?

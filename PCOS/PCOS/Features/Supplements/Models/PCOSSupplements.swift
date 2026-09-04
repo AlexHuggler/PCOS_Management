@@ -4,13 +4,15 @@ import os
 struct PCOSSupplement: Identifiable {
     let key: String
     let name: String
-    let defaultDosageMg: Double
+    let defaultDosage: Double
+    let defaultDosageUnit: DosageUnit
     let description: String
     let evidenceSummary: String
     let evidenceStrength: EvidenceStrength
     let sources: [EvidenceReference]
 
     var id: String { key }
+
 }
 
 enum PCOSSupplements {
@@ -19,7 +21,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "inositol",
                 name: "Inositol",
-                defaultDosageMg: 4000,
+                defaultDosage: 4000,
+                defaultDosageUnit: .milligram,
                 description: "Studied in PCOS for insulin-sensitivity and cycle support.",
                 evidenceSummary: localized("Inositol has direct PCOS literature support, especially for insulin-related and reproductive outcomes, though benefit size varies across trials."),
                 evidenceStrength: .pcosStudied,
@@ -34,7 +37,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "vitamin_d",
                 name: "Vitamin D",
-                defaultDosageMg: 2000,
+                defaultDosage: 2000,
+                defaultDosageUnit: .internationalUnit,
                 description: "Studied in PCOS for metabolic and hormonal support, especially when deficiency is present.",
                 evidenceSummary: localized("Vitamin D has direct PCOS trial and meta-analysis support, but results vary and deficiency status may matter."),
                 evidenceStrength: .pcosStudied,
@@ -49,7 +53,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "omega_3",
                 name: "Omega-3",
-                defaultDosageMg: 1000,
+                defaultDosage: 1000,
+                defaultDosageUnit: .milligram,
                 description: "Studied in PCOS for cardiometabolic support.",
                 evidenceSummary: localized("Omega-3 has direct PCOS meta-analysis support for selected cardiometabolic markers, though effects are not uniform across outcomes."),
                 evidenceStrength: .pcosStudied,
@@ -64,7 +69,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "berberine",
                 name: "Berberine",
-                defaultDosageMg: 500,
+                defaultDosage: 500,
+                defaultDosageUnit: .milligram,
                 description: "Studied in PCOS for metabolic support, with still-limited trial depth.",
                 evidenceSummary: localized("Berberine has direct PCOS meta-analysis support for metabolic outcomes, but the trial base is smaller than for core guideline-backed therapies."),
                 evidenceStrength: .pcosStudied,
@@ -79,7 +85,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "nac",
                 name: "NAC",
-                defaultDosageMg: 600,
+                defaultDosage: 600,
+                defaultDosageUnit: .milligram,
                 description: "Studied in PCOS for metabolic and ovulatory support.",
                 evidenceSummary: localized("N-acetylcysteine has direct PCOS meta-analysis support, but findings are still interpreted cautiously alongside standard care."),
                 evidenceStrength: .pcosStudied,
@@ -94,7 +101,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "zinc",
                 name: "Zinc",
-                defaultDosageMg: 30,
+                defaultDosage: 30,
+                defaultDosageUnit: .milligram,
                 description: "Some PCOS studies suggest metabolic or skin-support benefits, but evidence remains mixed.",
                 evidenceSummary: localized("Zinc appears in newer mineral-supplement analyses for PCOS, but the overall evidence base is still mixed and not strong enough for a broad treatment claim."),
                 evidenceStrength: .mixedEvidence,
@@ -109,7 +117,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "magnesium",
                 name: "Magnesium",
-                defaultDosageMg: 400,
+                defaultDosage: 400,
+                defaultDosageUnit: .milligram,
                 description: "Some PCOS studies suggest metabolic-support benefits, but evidence remains emerging.",
                 evidenceSummary: localized("Magnesium appears in newer mineral-supplement analyses for PCOS, but the evidence base is still emerging and should be framed conservatively."),
                 evidenceStrength: .emergingEvidence,
@@ -124,7 +133,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "spearmint_tea",
                 name: "Spearmint Tea",
-                defaultDosageMg: 0,
+                defaultDosage: 0,
+                defaultDosageUnit: .cup,
                 description: "Small studies suggest androgen-support potential, but evidence is limited.",
                 evidenceSummary: localized("Spearmint tea has small-trial support for androgen-related symptoms, but the evidence base remains limited."),
                 evidenceStrength: .limitedEvidence,
@@ -139,7 +149,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "folate",
                 name: "Folate",
-                defaultDosageMg: 400,
+                defaultDosage: 400,
+                defaultDosageUnit: .microgram,
                 description: "Supports preconception nutrition and general reproductive health.",
                 evidenceSummary: localized("Folate is included as broader preconception and reproductive-health guidance rather than as a direct PCOS treatment recommendation."),
                 evidenceStrength: .generalGuidance,
@@ -154,7 +165,8 @@ enum PCOSSupplements {
             PCOSSupplement(
                 key: "chromium",
                 name: "Chromium",
-                defaultDosageMg: 200,
+                defaultDosage: 200,
+                defaultDosageUnit: .microgram,
                 description: "Studied for insulin-related markers in PCOS, with mixed evidence.",
                 evidenceSummary: localized("Chromium has direct PCOS meta-analysis support for some insulin-resistance markers, but the overall evidence remains mixed."),
                 evidenceStrength: .mixedEvidence,

@@ -83,9 +83,7 @@ struct SettingsDataExportService {
             let logs = try modelContext.fetch(suppDescriptor)
             for log in logs {
                 let dateStr = Self.isoFormatter.string(from: log.date)
-                let dosage = log.dosageMg.map {
-                    String(localized: "\(L10n.decimal($0, fractionDigits: 0)) mg", comment: "CSV export dosage value in milligrams.")
-                } ?? ""
+                let dosage = log.dosageMg.map { DosageUnit.formatted($0, unit: log.dosageUnit) } ?? ""
                 let status = log.taken
                     ? String(localized: "Taken", comment: "CSV export supplement status value.")
                     : String(localized: "Missed", comment: "CSV export supplement status value.")

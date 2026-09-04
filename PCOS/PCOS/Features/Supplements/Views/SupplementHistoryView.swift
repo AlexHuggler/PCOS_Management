@@ -342,7 +342,7 @@ struct SupplementHistoryView: View {
 
                         Spacer()
 
-                        Text("\(formattedDosage(change.previousDosageMg)) → \(formattedDosage(change.newDosageMg))")
+                        Text("\(formattedDosage(change.previousDosageMg, unit: change.dosageUnit)) → \(formattedDosage(change.newDosageMg, unit: change.dosageUnit))")
                             .appFont(.caption, weight: .medium)
                             .foregroundStyle(AppTheme.coralAccent)
                     }
@@ -409,11 +409,8 @@ struct SupplementHistoryView: View {
         dosageChanges = viewModel.dosageChanges(days: days)
     }
 
-    private func formattedDosage(_ dosage: Double) -> String {
-        let formatted = dosage.rounded(.towardZero) == dosage
-            ? L10n.decimal(dosage, fractionDigits: 0)
-            : L10n.decimal(dosage, fractionDigits: 1)
-        return "\(formatted) mg"
+    private func formattedDosage(_ dosage: Double, unit: DosageUnit) -> String {
+        DosageUnit.formatted(dosage, unit: unit)
     }
 }
 

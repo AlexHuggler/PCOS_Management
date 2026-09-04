@@ -555,6 +555,7 @@ private extension SettingsDataImportService {
             date: try requiredDate(field: "date", in: object, location: location),
             supplementName: try requiredString(field: "supplementName", in: object, location: location),
             dosageMg: try optionalDouble(field: "dosageMg", in: object, location: location),
+            dosageUnit: try optionalString(field: "dosageUnit", in: object, location: location),
             timeTaken: try requiredDate(field: "timeTaken", in: object, location: location),
             taken: try optionalBool(field: "taken", in: object, location: location) ?? true,
             brand: try optionalString(field: "brand", in: object, location: location)
@@ -1229,6 +1230,7 @@ private extension SettingsDataImportService {
                     date: record.date,
                     supplementName: record.supplementName,
                     dosageMg: record.dosageMg,
+                    dosageUnit: record.dosageUnit.flatMap(DosageUnit.init(rawValue:)) ?? .milligram,
                     timeTaken: record.timeTaken,
                     taken: record.taken,
                     brand: record.brand

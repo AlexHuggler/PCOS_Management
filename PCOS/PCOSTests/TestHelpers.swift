@@ -29,7 +29,13 @@ enum TestHelpers {
         )
     }
 
-    static func projectRoot(from filePath: StaticString = #filePath) throws -> URL {
+    /// True when `TestData/Imports/.regenerate-demo-fixture` exists next to the fixtures.
+    nonisolated static var demoFixtureRegenerationRequested: Bool {
+        guard let root = try? projectRoot() else { return false }
+        return FileManager.default.fileExists(atPath: root.appendingPathComponent("TestData/Imports/.regenerate-demo-fixture").path)
+    }
+
+    nonisolated static func projectRoot(from filePath: StaticString = #filePath) throws -> URL {
         let sourceFileURL = URL(fileURLWithPath: "\(filePath)")
         var candidateURL = sourceFileURL.deletingLastPathComponent()
         let fileManager = FileManager.default

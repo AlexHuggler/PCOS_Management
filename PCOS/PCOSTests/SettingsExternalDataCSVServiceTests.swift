@@ -54,7 +54,7 @@ struct SettingsExternalDataCSVServiceTests {
         #expect(definitions[.bloodSugar]?.optionalFields == [.mealContext, .notes])
 
         #expect(definitions[.supplement]?.requiredFields == [.recordType, .date, .supplementName, .timeTaken])
-        #expect(definitions[.supplement]?.optionalFields == [.dosageMg, .taken, .brand])
+        #expect(definitions[.supplement]?.optionalFields == [.dosageMg, .dosageUnit, .taken, .brand])
 
         #expect(definitions[.meal]?.requiredFields == [.recordType, .timestamp, .mealType, .mealDescription, .glycemicImpact])
         #expect(definitions[.meal]?.optionalFields == [.carbsGrams, .proteinGrams, .fatGrams, .notes])

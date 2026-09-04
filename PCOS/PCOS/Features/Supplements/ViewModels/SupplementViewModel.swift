@@ -16,6 +16,7 @@ struct SupplementDosageChange: Identifiable {
     let date: Date
     let previousDosageMg: Double
     let newDosageMg: Double
+    let dosageUnit: DosageUnit
 }
 
 @Observable
@@ -70,7 +71,7 @@ final class SupplementViewModel {
     // MARK: - CRUD
 
     /// Create a new supplement log entry.
-    func logSupplement(name: String, dosageMg: Double?, brand: String?, time: Date) throws {
+    func logSupplement(name: String, dosageMg: Double?, dosageUnit: DosageUnit = .milligram, brand: String?, time: Date) throws {
         let calendar = Calendar.current
         let logDate = calendar.startOfDay(for: time)
 
@@ -78,6 +79,7 @@ final class SupplementViewModel {
             date: logDate,
             supplementName: name,
             dosageMg: dosageMg,
+            dosageUnit: dosageUnit,
             timeTaken: time,
             taken: true,
             brand: brand
@@ -217,6 +219,7 @@ final class SupplementViewModel {
                     date: todayStart,
                     supplementName: trimmedName,
                     dosageMg: log.dosageMg,
+                    dosageUnit: log.dosageUnit,
                     timeTaken: repeatedTime,
                     taken: true,
                     brand: trimmedBrand?.isEmpty == false ? trimmedBrand : nil
@@ -261,7 +264,8 @@ final class SupplementViewModel {
                             supplementName: name,
                             date: entry.timeTaken,
                             previousDosageMg: lastDosage,
-                            newDosageMg: dosage
+                            newDosageMg: dosage,
+                            dosageUnit: entry.dosageUnit
                         )
                     )
                 }
@@ -291,25 +295,25 @@ final class SupplementViewModel {
         scheduledTime = preferredSupplementTime
     }
 
-    func recommendedDosageMg(for supplement: PCOSSupplement?) -> Double? {
-        guard let supplement, supplement.defaultDosageMg > 0 else {
+    func recommendedDosage(for supplement: PCOSSupplement?) -> Double? {
+        guard let supplement, supplement.defaultDosage > 0 else {
             return nil
         }
-        return supplement.defaultDosageMg
+        return supplement.defaultDosage
     }
 
     func recommendedDosageLabel(for supplement: PCOSSupplement?) -> String {
-        guard let dosage = recommendedDosageMg(for: supplement) else {
+        guard let supplement, let dosage = recommendedDosage(for: supplement) else {
             return String(localized: "No default dosage", comment: "Supplement picker helper text when a supplement has no default dosage.")
         }
         return String(
-            localized: "Recommended dosage: \(formattedDosage(dosage)) mg",
-            comment: "Supplement picker helper text showing the recommended dosage in milligrams."
+            localized: "Recommended dosage: \(formattedDosage(dosage)) \(supplement.defaultDosageUnit.symbol)",
+            comment: "Supplement picker helper text showing the recommended dosage with its unit."
         )
     }
 
     func recommendedDosageValue(for supplement: PCOSSupplement?) -> String? {
-        guard let dosage = recommendedDosageMg(for: supplement) else { return nil }
+        guard let dosage = recommendedDosage(for: supplement) else { return nil }
         return formattedDosage(dosage)
     }
 
