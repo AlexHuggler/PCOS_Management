@@ -43,6 +43,12 @@ xcodebuild -project PCOS.xcodeproj -scheme PCOS -destination 'platform=iOS Simul
 
 Run those commands sequentially if you are scripting them; `xcodebuild` will lock the build database if two jobs share the same DerivedData directory.
 
+Add `-disableAutomaticPackageResolution -skipPackageUpdates` to every `xcodebuild` invocation; without them `xcodebuild test` can hang at "Resolve Package Graph" on the Firebase dependency graph. For a fast loop run `build-for-testing` once and then `test-without-building -only-testing:PCOSTests/<SuiteName>`.
+
+### Regenerating the demo backup fixture
+
+`TestData/Imports/CycleBalance_Demo_Backup_SymptomManagement.json` must match the deterministic `DemoDataBuilder` output; a test fails when demo data or the backup schema changes. To regenerate: `touch TestData/Imports/.regenerate-demo-fixture`, run `-only-testing:PCOSTests/DemoDataBuilderTests`, delete the marker, review the diff.
+
 ## General Kenobi Scanner Canary
 
 From a clean RC worktree with the ignored local Xcode configuration present, stage the shared canary scheme and open the generated project:
