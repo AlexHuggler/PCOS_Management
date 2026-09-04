@@ -60,8 +60,6 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: CycleBalance
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos."
-        INFOPLIST_KEY_NSCameraUsageDescription: "CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos."
       configs:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"

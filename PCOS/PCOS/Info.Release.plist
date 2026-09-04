@@ -24,10 +24,22 @@
 	<string>$(APP_STORE_PROVIDER_TOKEN)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+#if MEAL_SCAN_RELEASE_UI_ENABLED_YES
 	<key>NSCameraUsageDescription</key>
 	<string>CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.</string>
+#else
+	<key>NSCameraUsageDescription</key>
+	<string>CycleBalance uses your camera to scan food barcodes and to add hair or skin journal photos.</string>
+#endif
+#if MEAL_SCAN_RELEASE_UI_ENABLED_YES
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.</string>
+#else
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CycleBalance uses your photo library when you add hair and skin journal photos.</string>
+#endif
 	<key>NSHealthShareUsageDescription</key>
 	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>

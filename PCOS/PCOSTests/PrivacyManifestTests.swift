@@ -331,6 +331,104 @@ struct AppStoreConfigTests {
         }
     }
 
+    @Test("Both Info.plist variants declare exempt encryption for App Store Connect")
+    @MainActor
+    func infoPlistsDeclareNonExemptEncryptionFalse() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        for relativePath in ["PCOS/PCOS/Info.plist", "PCOS/PCOS/Info.Release.plist"] {
+            let source = try String(
+                contentsOf: projectRoot.appendingPathComponent(relativePath),
+                encoding: .utf8
+            )
+            let pattern = "<key>ITSAppUsesNonExemptEncryption</key>\\s*<false/>"
+            let expression = try NSRegularExpression(pattern: pattern)
+            let range = NSRange(source.startIndex..., in: source)
+            #expect(
+                expression.firstMatch(in: source, range: range) != nil,
+                "\(relativePath) must declare ITSAppUsesNonExemptEncryption = false"
+            )
+        }
+    }
+
+    @Test("Hidden-scanner Release build does not advertise meal photo nutrition estimates in permission prompts")
+    @MainActor
+    func hiddenScannerReleaseUsageStringsDoNotAdvertiseNutritionEstimates() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let releasePlist = try String(
+            contentsOf: projectRoot.appendingPathComponent("PCOS/PCOS/Info.Release.plist"),
+            encoding: .utf8
+        )
+
+        for key in ["NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"] {
+            // The key must be wrapped in the scanner preprocessor gate with distinct enabled/hidden copy.
+            let gatedPattern = "#if MEAL_SCAN_RELEASE_UI_ENABLED_YES\\s*<key>\(key)</key>\\s*<string>([^<]*)</string>\\s*#else\\s*<key>\(key)</key>\\s*<string>([^<]*)</string>\\s*#endif"
+            let expression = try NSRegularExpression(pattern: gatedPattern)
+            let range = NSRange(releasePlist.startIndex..., in: releasePlist)
+            let match = try #require(
+                expression.firstMatch(in: releasePlist, range: range),
+                "\(key) must be gated on MEAL_SCAN_RELEASE_UI_ENABLED_YES in Info.Release.plist"
+            )
+            let hiddenCopy = String(releasePlist[Range(match.range(at: 2), in: releasePlist)!]).lowercased()
+            for forbidden in ["nutrition estimate", "meal photo", "photo estimate", "ai "] {
+                #expect(!hiddenCopy.contains(forbidden), "\(key) hidden-scanner copy must not mention '\(forbidden)'")
+            }
+            #expect(hiddenCopy.contains("barcode") || hiddenCopy.contains("hair"), "\(key) hidden copy must still explain barcode or journal use")
+        }
+
+        // project.yml must not carry an ungated duplicate of these strings.
+        let projectSource = try String(
+            contentsOf: projectRoot.appendingPathComponent("project.yml"),
+            encoding: .utf8
+        )
+        #expect(!projectSource.contains("INFOPLIST_KEY_NSCameraUsageDescription"))
+        #expect(!projectSource.contains("INFOPLIST_KEY_NSPhotoLibraryUsageDescription"))
+
+        // Localized InfoPlist.strings override the English plist for every build, so they must
+        // describe only the barcode scanner and the hair/skin journal while Photo Estimate is hidden.
+        let forbiddenByLocale: [String: [String]] = [
+            "de": ["Nährwertschätzung", "Mahlzeitenfoto", "Mahlzeiten für"],
+            "fr": ["valeurs nutritionnelles", "photos de repas", "photographier des repas"],
+            "it": ["valori nutrizionali", "foto dei pasti", "fotografare i pasti"],
+            "ja": ["栄養推定", "食事撮影", "食事写真"],
+            "ko": ["영양 추정", "식사 사진"],
+            "nl": ["voedingsschatting", "maaltijdfoto", "maaltijden te fotograferen"],
+        ]
+        for (locale, forbiddenTokens) in forbiddenByLocale {
+            let strings = try String(
+                contentsOf: projectRoot.appendingPathComponent("PCOS/PCOS/\(locale).lproj/InfoPlist.strings"),
+                encoding: .utf8
+            )
+            for token in forbiddenTokens {
+                #expect(!strings.contains(token), "\(locale) InfoPlist.strings must not mention '\(token)' while Photo Estimate is hidden")
+            }
+        }
+    }
+
+    @Test("Firebase is configured only when the Gemini scanner can run")
+    @MainActor
+    func firebaseConfigurationIsGatedOnScannerAvailability() throws {
+        var flags = MealScanFeatureFlags.passOneDefaults
+        flags.enableGeminiMealScan = false
+        #expect(CycleBalanceApp.shouldConfigureFirebase(flags: flags) == false)
+
+        flags.enableGeminiMealScan = true
+        #expect(CycleBalanceApp.shouldConfigureFirebase(flags: flags) == true)
+
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let appSource = try String(
+            contentsOf: projectRoot.appendingPathComponent("PCOS/PCOS/App/CycleBalanceApp.swift"),
+            encoding: .utf8
+        )
+        #expect(
+            appSource.contains("Self.configureFirebaseIfNeeded()"),
+            "App init must route Firebase configuration through the scanner gate"
+        )
+        #expect(
+            !appSource.contains("        Self.configureFirebase()\n"),
+            "App init must not configure Firebase unconditionally"
+        )
+    }
+
     @Test("Meal scan review packet documents hardened release limits")
     @MainActor
     func mealScanReviewPacketDocumentsHardenedReleaseLimits() throws {

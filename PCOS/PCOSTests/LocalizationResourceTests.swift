@@ -1083,28 +1083,28 @@ struct LocalizationResourceTests {
         ]
         let expectedPhotoUsageDescriptions = [
             "de": [
-                "NSCameraUsageDescription": "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen, Mahlzeiten für Nährwertschätzungen zu fotografieren und Fotos zu deinem Haar- oder Hauttagebuch hinzuzufügen.",
-                "NSPhotoLibraryUsageDescription": "CycleBalance verwendet deine Fotomediathek, wenn du Mahlzeitenfotos für Nährwertschätzungen auswählst oder Fotos zu deinem Haar- und Hauttagebuch hinzufügst.",
+                "NSCameraUsageDescription": "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen und Fotos zu deinem Haar- oder Hauttagebuch hinzuzufügen.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance verwendet deine Fotomediathek, wenn du Fotos zu deinem Haar- und Hauttagebuch hinzufügst.",
             ],
             "fr": [
-                "NSCameraUsageDescription": "CycleBalance utilise votre appareil photo pour scanner des codes-barres alimentaires, photographier des repas afin d'en estimer les valeurs nutritionnelles et ajouter des photos à votre journal des cheveux ou de la peau.",
-                "NSPhotoLibraryUsageDescription": "CycleBalance utilise votre photothèque lorsque vous choisissez des photos de repas pour estimer leurs valeurs nutritionnelles ou ajoutez des photos à votre journal des cheveux et de la peau.",
+                "NSCameraUsageDescription": "CycleBalance utilise votre appareil photo pour scanner des codes-barres alimentaires et ajouter des photos à votre journal des cheveux ou de la peau.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance utilise votre photothèque lorsque vous ajoutez des photos à votre journal des cheveux et de la peau.",
             ],
             "it": [
-                "NSCameraUsageDescription": "CycleBalance usa la fotocamera per scansionare codici a barre alimentari, fotografare i pasti per stimarne i valori nutrizionali e aggiungere foto al diario di capelli o pelle.",
-                "NSPhotoLibraryUsageDescription": "CycleBalance usa la libreria foto quando scegli foto dei pasti per stimarne i valori nutrizionali o aggiungi foto al diario di capelli e pelle.",
+                "NSCameraUsageDescription": "CycleBalance usa la fotocamera per scansionare codici a barre alimentari e aggiungere foto al diario di capelli o pelle.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance usa la libreria foto quando aggiungi foto al diario di capelli e pelle.",
             ],
             "ja": [
-                "NSCameraUsageDescription": "CycleBalance は、食品バーコードのスキャン、栄養推定用の食事撮影、髪や肌の日記への写真追加にカメラを使用します。",
-                "NSPhotoLibraryUsageDescription": "CycleBalance は、栄養推定用の食事写真を選ぶときや、髪・肌の日記に写真を追加するときに写真ライブラリを使用します。",
+                "NSCameraUsageDescription": "CycleBalance は、食品バーコードのスキャンと、髪や肌の日記への写真追加にカメラを使用します。",
+                "NSPhotoLibraryUsageDescription": "CycleBalance は、髪・肌の日記に写真を追加するときに写真ライブラリを使用します。",
             ],
             "ko": [
-                "NSCameraUsageDescription": "CycleBalance는 식품 바코드를 스캔하고, 영양 추정을 위한 식사 사진을 촬영하고, 모발 또는 피부 일지에 사진을 추가하는 데 카메라를 사용합니다.",
-                "NSPhotoLibraryUsageDescription": "CycleBalance는 영양 추정을 위한 식사 사진을 선택하거나 모발 및 피부 일지에 사진을 추가할 때 사진 보관함을 사용합니다.",
+                "NSCameraUsageDescription": "CycleBalance는 식품 바코드를 스캔하고 모발 또는 피부 일지에 사진을 추가하는 데 카메라를 사용합니다.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance는 모발 및 피부 일지에 사진을 추가할 때 사진 보관함을 사용합니다.",
             ],
             "nl": [
-                "NSCameraUsageDescription": "CycleBalance gebruikt je camera om voedselbarcodes te scannen, maaltijden te fotograferen voor voedingsschattingen en foto's toe te voegen aan je haar- of huiddagboek.",
-                "NSPhotoLibraryUsageDescription": "CycleBalance gebruikt je fotobibliotheek wanneer je maaltijdfoto's kiest voor voedingsschattingen of foto's toevoegt aan je haar- en huiddagboek.",
+                "NSCameraUsageDescription": "CycleBalance gebruikt je camera om voedselbarcodes te scannen en foto's toe te voegen aan je haar- of huiddagboek.",
+                "NSPhotoLibraryUsageDescription": "CycleBalance gebruikt je fotobibliotheek wanneer je foto's toevoegt aan je haar- en huiddagboek.",
             ],
         ]
 

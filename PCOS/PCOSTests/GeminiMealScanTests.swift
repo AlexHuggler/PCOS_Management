@@ -2559,3 +2559,16 @@ private extension URLRequest {
         return result
     }
 }
+
+@Suite("Firebase App Check token provider without configured Firebase")
+struct FirebaseMealScanAppCheckTokenProviderTests {
+    @Test("Provider throws instead of crashing when Firebase was not configured for this build")
+    @MainActor
+    func limitedUseTokenThrowsWhenFirebaseIsNotConfigured() async {
+        // The test host is a Debug build with the Gemini scanner disabled, so Firebase is never configured.
+        let provider = FirebaseMealScanAppCheckTokenProvider()
+        await #expect(throws: (any Error).self) {
+            _ = try await provider.limitedUseToken()
+        }
+    }
+}

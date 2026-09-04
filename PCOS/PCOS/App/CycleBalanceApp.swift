@@ -89,7 +89,7 @@ struct CycleBalanceApp: App {
         Self.applyUITestLaunchOverrides()
         Self.applyAppearanceLaunchOverridesIfNeeded()
         Self.applyStoredAppLanguageOverrideIfNeeded()
-        Self.configureFirebase()
+        Self.configureFirebaseIfNeeded()
         AppChromeTypography.apply()
         AppleAdsAttributionService.shared.captureLatestTokenIfAvailable()
         Self.configureRevenueCatIfPossible()
@@ -105,6 +105,21 @@ struct CycleBalanceApp: App {
 }
 
 extension CycleBalanceApp {
+    /// Firebase (App Check) exists solely to authorize the Gemini meal-photo proxy. A build that
+    /// cannot run the scanner must not initialize Firebase, so no Google traffic happens for users
+    /// of the hidden-scanner release.
+    static func shouldConfigureFirebase(flags: MealScanFeatureFlags) -> Bool {
+        flags.enableGeminiMealScan
+    }
+
+    static func configureFirebaseIfNeeded(flags: MealScanFeatureFlags = .current) {
+        guard shouldConfigureFirebase(flags: flags) else {
+            Logger.database.info("Skipping Firebase configuration: Gemini meal scan is disabled for this build")
+            return
+        }
+        configureFirebase()
+    }
+
     static func configureFirebase() {
         AppCheck.setAppCheckProviderFactory(CycleBalanceAppCheckProviderFactory())
         FirebaseApp.configure()

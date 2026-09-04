@@ -24,6 +24,8 @@
 	<string>$(APP_STORE_PROVIDER_TOKEN)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -5,7 +5,7 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance は、食品バーコードのスキャン、栄養推定用の食事撮影、髪や肌の日記への写真追加にカメラを使用します。";
+"NSCameraUsageDescription" = "CycleBalance は、食品バーコードのスキャンと、髪や肌の日記への写真追加にカメラを使用します。";
 
 /* Privacy - Health Share Usage Description */
 "NSHealthShareUsageDescription" = "CycleBalance は、許可された Apple Health データ（栄養、血糖、周期、症状、睡眠、活動、心拍、身体情報など）を読み取り、端末内の記録とインサイトに反映します。";
@@ -14,4 +14,4 @@
 "NSHealthUpdateUsageDescription" = "CycleBalance は、許可された Apple Health データ（栄養、血糖、周期、症状、睡眠、活動、心拍、身体情報など）を読み取り、端末内の記録とインサイトに反映します。アプリは Apple Health に書き込みません。";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance は、栄養推定用の食事写真を選ぶときや、髪・肌の日記に写真を追加するときに写真ライブラリを使用します。";
+"NSPhotoLibraryUsageDescription" = "CycleBalance は、髪・肌の日記に写真を追加するときに写真ライブラリを使用します。";

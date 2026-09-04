@@ -5,7 +5,7 @@
 "CFBundleName" = "PCOS";
 
 /* Privacy - Camera Usage Description */
-"NSCameraUsageDescription" = "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen, Mahlzeiten für Nährwertschätzungen zu fotografieren und Fotos zu deinem Haar- oder Hauttagebuch hinzuzufügen.";
+"NSCameraUsageDescription" = "CycleBalance verwendet deine Kamera, um Lebensmittel-Barcodes zu scannen und Fotos zu deinem Haar- oder Hauttagebuch hinzuzufügen.";
 
 /* Privacy - Health Share Usage Description */
 "NSHealthShareUsageDescription" = "CycleBalance liest die von Ihnen erlaubten Apple Health-Daten wie Ernährung, Glukose, Zyklus, Symptome, Schlaf, Aktivität, Herz- und Körperkontext, um lokale Protokolle und Einblicke zu füllen.";
@@ -14,4 +14,4 @@
 "NSHealthUpdateUsageDescription" = "CycleBalance liest die von Ihnen erlaubten Apple Health-Daten wie Ernährung, Glukose, Zyklus, Symptome, Schlaf, Aktivität, Herz- und Körperkontext, um lokale Protokolle und Einblicke zu füllen. Die App schreibt nicht in Apple Health.";
 
 /* Privacy - Photo Library Usage Description */
-"NSPhotoLibraryUsageDescription" = "CycleBalance verwendet deine Fotomediathek, wenn du Mahlzeitenfotos für Nährwertschätzungen auswählst oder Fotos zu deinem Haar- und Hauttagebuch hinzufügst.";
+"NSPhotoLibraryUsageDescription" = "CycleBalance verwendet deine Fotomediathek, wenn du Fotos zu deinem Haar- und Hauttagebuch hinzufügst.";
