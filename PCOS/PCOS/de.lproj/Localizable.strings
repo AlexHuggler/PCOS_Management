@@ -2933,3 +2933,34 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Try again in %@." = "Versuche es in %@ erneut.";
 "Check again in %@." = "Prüfe in %@ erneut.";
 "We couldn't finish this estimate. Choose another photo or enter the meal manually." = "Wir konnten diese Schätzung nicht abschließen. Wähle ein anderes Foto oder gib die Mahlzeit manuell ein.";
+
+/* 1.0.5 trust release: parity with the German table plus new dashboard, snapshot and supplement copy */
+"A gentle midday nudge can open meal logging so you can scan a barcode or enter nutrition manually." = "Eine sanfte Erinnerung am Mittag kann das Mahlzeitenprotokoll öffnen, damit du einen Barcode scannen oder Nährwerte manuell eingeben kannst.";
+"All reminders stay on your device. No data is shared with notification servers." = "Alle Erinnerungen bleiben auf deinem Gerät. Es werden keine Daten an Benachrichtigungsserver weitergegeben.";
+"Autocomplete" = "Autovervollständigung";
+"Completed cycles so far: %lld" = "Bisher abgeschlossene Zyklen: %lld";
+"Density Analysis" = "Dichteanalyse";
+"Fasting: 70–100 mg/dL normal" = "Nüchtern: 70–100 mg/dL normal";
+"Gentle reminders" = "Sanfte Erinnerungen";
+"Insight trend chart" = "Analysen-Trenddiagramm";
+"Keep the useful nudges on, leave the rest quiet." = "Lass die hilfreichen Erinnerungen an und den Rest stumm.";
+"Manual Entry" = "Manuelle Eingabe";
+"Meal Templates" = "Mahlzeitenvorlagen";
+"No dosage changes yet" = "Noch keine Dosierungsänderungen";
+"No Photo" = "Kein Foto";
+"No symptom history found for the selected range." = "Für den ausgewählten Zeitraum wurde kein Symptomverlauf gefunden.";
+"Not enough data for a trend yet" = "Noch nicht genug Daten für einen Trend";
+"Not logged" = "Nicht protokolliert";
+"Patterns appear after about 14 tracked symptom days." = "Muster erscheinen nach etwa 14 erfassten Symptomtagen.";
+"PCOS-friendly templates" = "PCOS-freundliche Vorlagen";
+"Phase comparisons unlock after 3 completed cycles with mood logs." = "Phasenvergleiche werden nach 3 abgeschlossenen Zyklen mit Stimmungsprotokollen freigeschaltet.";
+"Post-meal: under 140 mg/dL typical" = "Nach dem Essen: unter 140 mg/dL typisch";
+"Quick options" = "Schnelloptionen";
+"Recommended swaps" = "Empfohlene Alternativen";
+"Reminder schedule" = "Erinnerungsplan";
+"Review Result" = "Ergebnis prüfen";
+"Scan" = "Scannen";
+"Swap Suggestions" = "Alternativvorschläge";
+"System permission controls whether reminders can appear." = "Die Systemberechtigung bestimmt, ob Erinnerungen angezeigt werden können.";
+"The trend line appears once you have %lld insights. You have %lld." = "Die Trendlinie erscheint, sobald du %lld Analysen hast. Du hast %lld.";
+"When you log a different dosage for the same supplement, it will appear here." = "Wenn du für dasselbe Supplement eine andere Dosierung protokollierst, erscheint sie hier.";

@@ -372,25 +372,49 @@ enum L10n {
         return "en"
     }
 
+    /// Resolves the locale used for dates, numbers, units and first weekday.
+    ///
+    /// The language comes from the app-language setting (or the first supported preferred
+    /// language), while the region always comes from the device so an English speaker in the UK,
+    /// a German speaker in Switzerland, or a Spanish speaker whose language the app does not ship
+    /// yet still sees their own date order, 12/24h clock and week start. Strings continue to fall
+    /// back to English through the bundle when a language is not shipped.
     static func locale(
         for appLanguage: AppLanguage? = nil,
-        preferredLanguages: [String]? = nil
+        preferredLanguages: [String]? = nil,
+        deviceLocale: Locale = .current
     ) -> Locale {
         let resolvedAppLanguage = appLanguage ?? currentAppLanguage()
         let resolvedPreferredLanguages = preferredLanguages ?? currentPreferredLanguages()
 
-        if let localeIdentifier = resolvedAppLanguage.localeIdentifier {
-            return Locale(identifier: localeIdentifier)
+        if let languageIdentifier = resolvedAppLanguage.languageIdentifier {
+            let defaultRegion = resolvedAppLanguage.localeIdentifier.flatMap { Locale(identifier: $0).region }
+            return makeLocale(
+                languageCode: languageIdentifier,
+                region: deviceLocale.region ?? defaultRegion,
+                deviceLocale: deviceLocale
+            )
         }
 
         for preferredLanguage in resolvedPreferredLanguages {
             let normalized = normalizedLanguageIdentifier(from: preferredLanguage)
-            if allLanguageIdentifiers.contains(normalized) {
-                return Locale(identifier: preferredLanguage.replacingOccurrences(of: "-", with: "_"))
-            }
+            guard allLanguageIdentifiers.contains(normalized) else { continue }
+            let preferredLocale = Locale(identifier: preferredLanguage.replacingOccurrences(of: "-", with: "_"))
+            return makeLocale(
+                languageCode: normalized,
+                region: preferredLocale.region ?? deviceLocale.region,
+                deviceLocale: deviceLocale
+            )
         }
 
-        return Locale(identifier: "en_US")
+        return deviceLocale
+    }
+
+    private static func makeLocale(languageCode: String, region: Locale.Region?, deviceLocale: Locale) -> Locale {
+        var components = Locale.Components(locale: deviceLocale)
+        components.languageComponents = Locale.Language.Components(languageCode: Locale.LanguageCode(languageCode))
+        components.languageComponents.region = region
+        return Locale(components: components)
     }
 
     static func bundle(

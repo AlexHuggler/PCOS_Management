@@ -1569,3 +1569,95 @@ struct LocalizationResourceTests {
         }
     }
 }
+
+@Suite("Locale resolution keeps the device region")
+struct LocaleResolutionTests {
+    @Test("System language outside the shipped set keeps the device locale instead of forcing en_US")
+    func unsupportedSystemLanguageKeepsDeviceLocale() {
+        let locale = L10n.locale(
+            for: .system,
+            preferredLanguages: ["es-MX"],
+            deviceLocale: Locale(identifier: "es_MX")
+        )
+        #expect(locale.identifier != "en_US")
+        #expect(locale.language.languageCode?.identifier == "es")
+        #expect(locale.region?.identifier == "MX")
+    }
+
+    @Test("Explicit English keeps a non-US device region for dates, units and first weekday")
+    func explicitEnglishKeepsDeviceRegion() {
+        let locale = L10n.locale(for: .en, preferredLanguages: ["en-GB"], deviceLocale: Locale(identifier: "en_GB"))
+        #expect(locale.language.languageCode?.identifier == "en")
+        #expect(locale.region?.identifier == "GB")
+    }
+
+    @Test("Explicit German on a Swiss device resolves to de_CH")
+    func explicitGermanKeepsSwissRegion() {
+        let locale = L10n.locale(for: .de, preferredLanguages: ["de-CH"], deviceLocale: Locale(identifier: "de_CH"))
+        #expect(locale.language.languageCode?.identifier == "de")
+        #expect(locale.region?.identifier == "CH")
+    }
+
+    @Test("Explicit language falls back to its default region when the device has none")
+    func explicitLanguageFallsBackToDefaultRegion() {
+        let locale = L10n.locale(for: .ja, preferredLanguages: ["ja"], deviceLocale: Locale(identifier: "ja"))
+        #expect(locale.language.languageCode?.identifier == "ja")
+        #expect(locale.region?.identifier == "JP")
+    }
+
+    @Test("System language matching a shipped language without a region adopts the device region")
+    func systemLanguageWithoutRegionAdoptsDeviceRegion() {
+        let locale = L10n.locale(for: .system, preferredLanguages: ["fr"], deviceLocale: Locale(identifier: "fr_BE"))
+        #expect(locale.language.languageCode?.identifier == "fr")
+        #expect(locale.region?.identifier == "BE")
+    }
+}
+
+@Suite("Localization table parity")
+struct LocalizationTableParityTests {
+    private static let languages = ["de", "fr", "it", "ja", "ko", "nl"]
+
+    private func keys(for language: String, projectRoot: URL) throws -> Set<String> {
+        let url = projectRoot.appendingPathComponent("PCOS/PCOS/\(language).lproj/Localizable.strings")
+        let table = try #require(NSDictionary(contentsOf: url) as? [String: String], "Unable to parse \(language) table")
+        return Set(table.keys)
+    }
+
+    @Test("Every shipped table contains the same key set so no locale silently falls back to English")
+    func tablesShareOneKeySet() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        var keySets: [String: Set<String>] = [:]
+        for language in Self.languages {
+            keySets[language] = try keys(for: language, projectRoot: projectRoot)
+        }
+        let union = keySets.values.reduce(into: Set<String>()) { $0.formUnion($1) }
+        for (language, keySet) in keySets {
+            let missing = union.subtracting(keySet)
+            #expect(missing.isEmpty, "\(language) is missing \(missing.count) keys, e.g. \(Array(missing.prefix(3)))")
+        }
+    }
+
+    @Test("Today-screen and dashboard copy added in 1.0.5 is translated everywhere")
+    func criticalKeysAreTranslatedEverywhere() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let required = [
+            "Are you bleeding today?",
+            "Cycle day %lld",
+            "Not logged",
+            "Not enough data for a trend yet",
+            "Patterns appear after about 14 tracked symptom days.",
+            "Completed cycles so far: %lld",
+            "Gentle reminders",
+            "No symptom history found for the selected range.",
+        ]
+        for language in Self.languages {
+            let url = projectRoot.appendingPathComponent("PCOS/PCOS/\(language).lproj/Localizable.strings")
+            let table = try #require(NSDictionary(contentsOf: url) as? [String: String])
+            for key in required {
+                let value = table[key] ?? ""
+                #expect(!value.isEmpty, "\(language) lacks '\(key)'")
+                #expect(value != key, "\(language) left '\(key)' untranslated")
+            }
+        }
+    }
+}
