@@ -190,9 +190,16 @@ final class PregnancyViewModel {
         )
     }
 
+    /// End reason of the most recent completed pregnancy, used to choose supportive copy.
+    var latestEndedPregnancyEndReason: PregnancyEndReason? {
+        pregnancyHistory.first { !$0.isActive && $0.endDate != nil }?.endReason
+    }
+
+    /// Day count is only meaningful after a delivery; a loss or other ending must not show one.
     var postpartumDayCount: Int? {
         guard let lastPregnancy = pregnancyHistory.first,
               !lastPregnancy.isActive,
+              lastPregnancy.endReason == .delivery,
               let endDate = lastPregnancy.endDate else { return nil }
         return Calendar.current.dateComponents([.day], from: endDate, to: Date()).day.map { $0 + 1 }
     }

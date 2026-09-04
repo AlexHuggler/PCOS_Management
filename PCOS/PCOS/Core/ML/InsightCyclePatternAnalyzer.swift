@@ -14,7 +14,7 @@ struct CyclePatternInsightAnalyzer {
         let cycles: [Cycle] = try fetcher.fetch(descriptor, stage: .cyclePatterns)
 
         let completedCycles = cycles.filter { $0.lengthDays != nil && !$0.isPredicted }
-        guard completedCycles.count >= 3 else { return [] }
+        guard completedCycles.count >= InsightThresholds.completedCyclesForCyclePatterns else { return [] }
 
         let lengths = completedCycles.compactMap { $0.lengthDays }
         guard !lengths.isEmpty else { return [] }

@@ -74,6 +74,9 @@ struct SupplementLogView: View {
                                 if AppTheme.usesPremiumEditorStyling {
                                     lunarSupplementHeader
                                 }
+                                if appState.lifecycleMode == .pregnant {
+                                    pregnancyGuidanceBanner
+                                }
                                 utilityActionsSection(viewModel: viewModel)
                                 todaysSupplementsSection(viewModel: viewModel)
                                 addSupplementButton
@@ -549,6 +552,13 @@ struct SupplementLogView: View {
                 }
 
                 Section {
+                    if appState.lifecycleMode == .pregnant, let caution = SupplementPregnancyGuidance.caution(for: selectedCatalogSupplement) {
+                        Label(caution, systemImage: "exclamationmark.triangle.fill")
+                            .appFont(.caption)
+                            .foregroundStyle(AppTheme.coralAccent)
+                            .accessibilityIdentifier("supplements.add.pregnancy_caution")
+                    }
+
                     if let selected = selectedCatalogSupplement, selected.defaultDosage > 0 {
                         HStack {
                             Text(viewModel?.recommendedDosageLabel(for: selected) ?? "")
@@ -766,6 +776,26 @@ struct SupplementLogView: View {
             brandText: brandText,
             scheduledTime: scheduledTime
         )
+    }
+
+    private var pregnancyGuidanceBanner: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing8) {
+            Image(systemName: "heart.text.square.fill")
+                .foregroundStyle(AppTheme.coralAccent)
+                .accessibilityHidden(true)
+            Text(SupplementPregnancyGuidance.bannerText())
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(AppTheme.spacing12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
+                .fill(AppTheme.coralAccent.opacity(0.12))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("supplements.pregnancy_banner")
     }
 
     private func resetAddForm() {

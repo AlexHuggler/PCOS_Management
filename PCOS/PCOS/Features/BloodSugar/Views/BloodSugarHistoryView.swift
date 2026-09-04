@@ -84,7 +84,12 @@ struct BloodSugarHistoryView: View {
             Section {
                 irDashboard(metrics: irMetrics)
             } header: {
-                Text(localized("Insulin Resistance Indicators", defaultValue: "Insulin Resistance Indicators"))
+                Text(localized("Glucose patterns", defaultValue: "Glucose patterns"))
+            } footer: {
+                Text(localized(
+                    "Normal fingerstick glucose does not rule out insulin resistance. Ask your clinician about fasting insulin, HbA1c or an OGTT.",
+                    defaultValue: "Normal fingerstick glucose does not rule out insulin resistance. Ask your clinician about fasting insulin, HbA1c or an OGTT."
+                ))
             }
 
             Section {

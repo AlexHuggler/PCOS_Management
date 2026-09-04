@@ -4,6 +4,7 @@ struct PregnancyDashboardCard: View {
     let gestationalText: String?
     let postpartumDayCount: Int?
     let lifecycleMode: LifecycleMode
+    var lastPregnancyEndReason: PregnancyEndReason? = nil
 
     var body: some View {
         if AppTheme.usesPremiumEditorStyling {
@@ -30,30 +31,15 @@ struct PregnancyDashboardCard: View {
                         .multilineTextAlignment(.center)
                 }
             } else if lifecycleMode == .postpartum {
-                if let days = postpartumDayCount {
-                    Text(
-                        L10n.format(
-                            "Postpartum — Day %lld",
-                            defaultValue: "Postpartum — Day %lld",
-                            Int64(days)
-                        )
-                    )
+                Text(PregnancyCopy.postpartumHeadline(dayCount: postpartumDayCount, endReason: lastPregnancyEndReason))
                     .appFont(.largeTitle, weight: .bold)
                     .foregroundStyle(AppTheme.accentColor)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(L10n.string("Postpartum", defaultValue: "Postpartum"))
-                        .appFont(.title, weight: .semibold)
-                        .multilineTextAlignment(.center)
-                }
 
-                Text(L10n.string(
-                    "Log your first period to resume cycle tracking.",
-                    defaultValue: "Log your first period to resume cycle tracking."
-                ))
+                Text(PregnancyCopy.postpartumSubtitle(endReason: lastPregnancyEndReason))
                 .appFont(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -98,31 +84,15 @@ struct PregnancyDashboardCard: View {
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
             } else if lifecycleMode == .postpartum {
-                if let days = postpartumDayCount {
-                    Text(
-                        L10n.format(
-                            "Postpartum — Day %lld",
-                            defaultValue: "Postpartum — Day %lld",
-                            Int64(days)
-                        )
-                    )
+                Text(PregnancyCopy.postpartumHeadline(dayCount: postpartumDayCount, endReason: lastPregnancyEndReason))
                     .appHeadingFont(.largeTitle, weight: .regular)
                     .foregroundStyle(AppTheme.premiumEditorAccentGradient)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.78)
                     .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(L10n.string("Postpartum", defaultValue: "Postpartum"))
-                        .appHeadingFont(.largeTitle, weight: .regular)
-                        .foregroundStyle(AppTheme.premiumEditorAccentGradient)
-                        .multilineTextAlignment(.center)
-                }
 
-                Text(L10n.string(
-                    "Log your first period to resume cycle tracking.",
-                    defaultValue: "Log your first period to resume cycle tracking."
-                ))
+                Text(PregnancyCopy.postpartumSubtitle(endReason: lastPregnancyEndReason))
                 .appFont(.subheadline)
                 .foregroundStyle(AppTheme.secondaryText)
                 .multilineTextAlignment(.center)

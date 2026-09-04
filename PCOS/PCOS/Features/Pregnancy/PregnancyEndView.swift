@@ -53,10 +53,7 @@ struct PregnancyEndView: View {
                 }
                 Button(L10n.string("Cancel", defaultValue: "Cancel"), role: .cancel) {}
             } message: {
-                Text(L10n.string(
-                    "Cycle tracking will resume. Your pregnancy data will be preserved.",
-                    defaultValue: "Cycle tracking will resume. Your pregnancy data will be preserved."
-                ))
+                Text(PregnancyCopy.endConfirmationMessage(for: viewModel?.endReason ?? .delivery))
             }
             .onAppear {
                 if viewModel == nil {

@@ -48,6 +48,7 @@
 		21E1B51DD755B53512D126AD /* TaskCancellationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758109A0D599DBDFA605C3B /* TaskCancellationTests.swift */; };
 		22AE4D3E5B9F8898A2252643 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EF0B2BB1A43EB66C440D62 /* AppTheme.swift */; };
 		22D8E38817B8D566C44A0DC9 /* ReportConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78EAFA2C26DB5A67AB20C7D0 /* ReportConfigView.swift */; };
+		25240B564C032FCAEBC80844 /* PregnancyCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343553083CA130738973C114 /* PregnancyCopy.swift */; };
 		2527271B4E7D8FC18F32D6A2 /* CycleLengthChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F923A2C624DC0D6E8C0F64B /* CycleLengthChart.swift */; };
 		25EA595A64DFB49D8482B2E4 /* DemoDataBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD003F27833B5CDBB4E9BBB3 /* DemoDataBuilder.swift */; };
 		2656C546B8F266EF2EED8EF8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D52BFEB274F9702034D03AB8 /* Assets.xcassets */; };
@@ -61,6 +62,7 @@
 		2C492D7478F69BCB2C0984D2 /* InsightEvidenceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 316B79AA1AB1E208C837486D /* InsightEvidenceCatalog.swift */; };
 		2C5FD7104898C81A45479134 /* OvulationObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6410BB180DA35B80586FB8 /* OvulationObservation.swift */; };
 		2C6C4E2186D407D2BF038E63 /* TodayGreetingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34815484F83F8D77845BC9CD /* TodayGreetingTests.swift */; };
+		2E6F0F4C786A986EEE6D01E7 /* SupplementPregnancyGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB5DC11752A057309393260 /* SupplementPregnancyGuidance.swift */; };
 		2FEC7CD7068DB6D152F6444C /* PCOS.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 715B17A0D1F4B230CDDD7C83 /* PCOS.storekit */; };
 		31DD55C295C4374A6A551EF2 /* CycleLogServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4FF41D5F8D07D99D1001AC /* CycleLogServiceTests.swift */; };
 		3337FE84F0D0F864A6BD60A0 /* MealHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A933159AE9DF617B8DA0D5 /* MealHistoryView.swift */; };
@@ -163,6 +165,7 @@
 		89D9B4888FF93A001996A124 /* RepeatMealSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FD1F780A532FBC3FDDA894 /* RepeatMealSuggestionView.swift */; };
 		89E3E1E06DDE70C021E415B6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B61EEBC058DCADB4F98A1FAB /* InfoPlist.strings */; };
 		8AC1D4C2B94C443D8C569CE3 /* CloudKitStartupPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C64420FF87EA4900A35420D /* CloudKitStartupPolicy.swift */; };
+		8B5060A3D2AFCB0B2732D29F /* InsightThresholds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A4DE1EE10F401832BE67362 /* InsightThresholds.swift */; };
 		8BDEF32FB65443E8DDD97F4F /* HealthKitSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2729AF47015AFC657E866EFA /* HealthKitSettingsView.swift */; };
 		8D78CDD982CAEFF4AFD1E2C4 /* GuidedActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A411E557D5D242E4980194D /* GuidedActionView.swift */; };
 		8F8502BD25CF759940744B9E /* InsightSleepActivityAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3926175586345FC52057BE8 /* InsightSleepActivityAnalyzer.swift */; };
@@ -266,6 +269,8 @@
 		E0C70EF0F8AB4699DE100C5C /* HealthKitSyncWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B0B395FF8F191B3E880C7E /* HealthKitSyncWorker.swift */; };
 		E0E1E8C791DF0633854F4FB3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C347A5D88DAF092764387A5A /* InfoPlist.strings */; };
 		E1396CC86A5DCE02B28AB541 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2F523B7E5DD5ECABB2DCDB /* AppState.swift */; };
+		E1D5CEF12A3DF792497F3313 /* TrustCopyAndPregnancyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FC463E24CEF66CAC27B3D2 /* TrustCopyAndPregnancyTests.swift */; };
+		E369C1F8975CC6BF43E3400E /* OnboardingThresholdCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE9FFBFEBDC1D1E2AE6C6A2 /* OnboardingThresholdCopy.swift */; };
 		E3DE51E9C9116FC265C98A86 /* Insight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F53CBC2762E9D85D36FF3F6 /* Insight.swift */; };
 		E645AA71FBBC005DE94D954C /* SkeletonLoaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7A34B11D202BF01B8C8AB7 /* SkeletonLoaders.swift */; };
 		E8CA90BD16B77E59E5606836 /* LocaleMatrixInsightsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B4EFC435AC749AC0FE12E6 /* LocaleMatrixInsightsUITests.swift */; };
@@ -385,6 +390,7 @@
 		32EF4327CC8650652AD7191A /* PregnancyEndReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PregnancyEndReason.swift; sourceTree = "<group>"; };
 		339B5CA6A2521351823965CC /* MealScanPipelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealScanPipelineTests.swift; sourceTree = "<group>"; };
 		33A8A0D32DA6DD9A193EE5DE /* MealLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogView.swift; sourceTree = "<group>"; };
+		343553083CA130738973C114 /* PregnancyCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PregnancyCopy.swift; sourceTree = "<group>"; };
 		345A23704804E74FA4DBA638 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		34815484F83F8D77845BC9CD /* TodayGreetingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayGreetingTests.swift; sourceTree = "<group>"; };
 		375326144C69878F68F7E445 /* PhotoEncryptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoEncryptionService.swift; sourceTree = "<group>"; };
@@ -396,6 +402,7 @@
 		3C0C736CCBFAE2C80D90332D /* CalendarSafeDateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSafeDateTests.swift; sourceTree = "<group>"; };
 		3DB9E52492F6A1C93F5D2938 /* RevenueCatBillingClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatBillingClientTests.swift; sourceTree = "<group>"; };
 		3F5229230E79526C38A9B56A /* CycleQueryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleQueryService.swift; sourceTree = "<group>"; };
+		3FE9FFBFEBDC1D1E2AE6C6A2 /* OnboardingThresholdCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingThresholdCopy.swift; sourceTree = "<group>"; };
 		410AE28A22B2FCCF63C40003 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		417CB85EA333D52BB469BE7F /* CycleLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleLogView.swift; sourceTree = "<group>"; };
 		4196E04B1A70AF772EAB9497 /* QuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireView.swift; sourceTree = "<group>"; };
@@ -450,6 +457,7 @@
 		62E4517C4E2EAD4F9204D574 /* RepeatMealModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatMealModels.swift; sourceTree = "<group>"; };
 		62ED8942863CFE370A84916C /* PDFReportGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReportGeneratorTests.swift; sourceTree = "<group>"; };
 		62F55E4F40BAF0D3DA4D2AB0 /* CycleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleViewModel.swift; sourceTree = "<group>"; };
+		62FC463E24CEF66CAC27B3D2 /* TrustCopyAndPregnancyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustCopyAndPregnancyTests.swift; sourceTree = "<group>"; };
 		64A7CE6C23167DA9F7EC2DEE /* MedicalNecessityLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalNecessityLetterService.swift; sourceTree = "<group>"; };
 		64C6D477B13EC80760D543E5 /* SilkCometRingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilkCometRingModel.swift; sourceTree = "<group>"; };
 		67B05984AD2A2E8FC6DAE1F7 /* MealScanServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealScanServices.swift; sourceTree = "<group>"; };
@@ -485,6 +493,7 @@
 		8721B8D9BBE36DF294B57FF7 /* SymptomViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomViewModel.swift; sourceTree = "<group>"; };
 		875503BED26B643FBB59B72E /* CycleViewModelPredictionTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleViewModelPredictionTextTests.swift; sourceTree = "<group>"; };
 		895B1D927512F995DC0DDB40 /* SettingsDataDeletionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataDeletionServiceTests.swift; sourceTree = "<group>"; };
+		8A4DE1EE10F401832BE67362 /* InsightThresholds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightThresholds.swift; sourceTree = "<group>"; };
 		8BDE5055D438544C9E736CC5 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		8C64420FF87EA4900A35420D /* CloudKitStartupPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitStartupPolicy.swift; sourceTree = "<group>"; };
 		8DC19CFF842012E8E02099AD /* InsightDashboardDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightDashboardDataTests.swift; sourceTree = "<group>"; };
@@ -527,6 +536,7 @@
 		AD86FE5C7D58EF51B5554F0A /* PCOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PCOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE1C06B00357159AACB3EF8E /* InsightEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightEngineTests.swift; sourceTree = "<group>"; };
 		AE53822D88E1C700F54DA97F /* GlycemicImpactChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlycemicImpactChart.swift; sourceTree = "<group>"; };
+		AFB5DC11752A057309393260 /* SupplementPregnancyGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplementPregnancyGuidance.swift; sourceTree = "<group>"; };
 		B014981DA161F1AB613EF037 /* PregnancyCalendarOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PregnancyCalendarOverlay.swift; sourceTree = "<group>"; };
 		B0B3BD565D475470D60A2E30 /* MealScanResultCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealScanResultCache.swift; sourceTree = "<group>"; };
 		B1850EF54065A04AF7AE363D /* BloodSugarViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloodSugarViewModelTests.swift; sourceTree = "<group>"; };
@@ -807,6 +817,7 @@
 				D3926175586345FC52057BE8 /* InsightSleepActivityAnalyzer.swift */,
 				087D4AD7A6E97019BBA69A11 /* InsightSupplementEfficacyAnalyzer.swift */,
 				F4F4DE994D79976CD35848A9 /* InsightSymptomCorrelationAnalyzer.swift */,
+				8A4DE1EE10F401832BE67362 /* InsightThresholds.swift */,
 			);
 			path = ML;
 			sourceTree = "<group>";
@@ -865,6 +876,7 @@
 			children = (
 				F95F1A1D87623056EA728383 /* DosageUnit.swift */,
 				0D0690BF2346E03D4F8B3AA9 /* PCOSSupplements.swift */,
+				AFB5DC11752A057309393260 /* SupplementPregnancyGuidance.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -999,6 +1011,7 @@
 				1758109A0D599DBDFA605C3B /* TaskCancellationTests.swift */,
 				E3BAF2E6663966A292B5709F /* TestHelpers.swift */,
 				34815484F83F8D77845BC9CD /* TodayGreetingTests.swift */,
+				62FC463E24CEF66CAC27B3D2 /* TrustCopyAndPregnancyTests.swift */,
 				14B12B8B204F70D91979BF07 /* UITestDemoScenarioSeedingTests.swift */,
 				5D2872E55EF936DC480CC694 /* UserEntryDefaultsStoreTests.swift */,
 			);
@@ -1128,6 +1141,7 @@
 			isa = PBXGroup;
 			children = (
 				D9254BE2B8322631644FC7D5 /* OnboardingProfile.swift */,
+				3FE9FFBFEBDC1D1E2AE6C6A2 /* OnboardingThresholdCopy.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1305,6 +1319,7 @@
 			children = (
 				2D814439010A3580F24ED7EA /* PregnancyActivationView.swift */,
 				B014981DA161F1AB613EF037 /* PregnancyCalendarOverlay.swift */,
+				343553083CA130738973C114 /* PregnancyCopy.swift */,
 				743662BAFB72B465D02494E8 /* PregnancyDashboardCard.swift */,
 				917F8AEA55885AAF8C623701 /* PregnancyEndView.swift */,
 				31E657F1C49C42ED7D201922 /* PregnancyViewModel.swift */,
@@ -1712,6 +1727,7 @@
 				21E1B51DD755B53512D126AD /* TaskCancellationTests.swift in Sources */,
 				344721C24FD03A72AEF020CB /* TestHelpers.swift in Sources */,
 				2C6C4E2186D407D2BF038E63 /* TodayGreetingTests.swift in Sources */,
+				E1D5CEF12A3DF792497F3313 /* TrustCopyAndPregnancyTests.swift in Sources */,
 				08790D5CB947903C67D21FDC /* UITestDemoScenarioSeedingTests.swift in Sources */,
 				4F1631976E5ECFD7411C7232 /* UserEntryDefaultsStoreTests.swift in Sources */,
 			);
@@ -1792,6 +1808,7 @@
 				8F8502BD25CF759940744B9E /* InsightSleepActivityAnalyzer.swift in Sources */,
 				6CF5C8047A6D36FA3F3636B1 /* InsightSupplementEfficacyAnalyzer.swift in Sources */,
 				0E26993BC65C9637534B02BF /* InsightSymptomCorrelationAnalyzer.swift in Sources */,
+				8B5060A3D2AFCB0B2732D29F /* InsightThresholds.swift in Sources */,
 				F3EBA93FA962C5CA4B99D951 /* InsightsView.swift in Sources */,
 				056E739BEC8C04A4204ABAA1 /* InsightsViewModel.swift in Sources */,
 				4F237658098A97E669A645F2 /* InsulinResistanceMetricService.swift in Sources */,
@@ -1825,6 +1842,7 @@
 				5C74D0F5EBBC97043C713B15 /* OnboardingHealthContextRevealView.swift in Sources */,
 				79E1959FD4F95E770B33EE80 /* OnboardingMealScanDemoView.swift in Sources */,
 				1C91AD9A19FCEF012185B954 /* OnboardingProfile.swift in Sources */,
+				E369C1F8975CC6BF43E3400E /* OnboardingThresholdCopy.swift in Sources */,
 				805D304FFEF75B301C4F2D4E /* OvulationLogView.swift in Sources */,
 				2C5FD7104898C81A45479134 /* OvulationObservation.swift in Sources */,
 				DDAFD82AE7DB7894D8EDBC57 /* OvulationObservationStore.swift in Sources */,
@@ -1842,6 +1860,7 @@
 				538857DB2006F353A23187C3 /* PredictiveModelServices.swift in Sources */,
 				2B8476863A11477C8B754F5C /* PregnancyActivationView.swift in Sources */,
 				F6AD089F61BE7C447243F8E8 /* PregnancyCalendarOverlay.swift in Sources */,
+				25240B564C032FCAEBC80844 /* PregnancyCopy.swift in Sources */,
 				AF86C1B53D9A9B0483E25D77 /* PregnancyDashboardCard.swift in Sources */,
 				FF8F36574D239DDB21B76A3E /* PregnancyEndReason.swift in Sources */,
 				7C209B3DD214B6375DC72ACF /* PregnancyEndView.swift in Sources */,
@@ -1887,6 +1906,7 @@
 				15E364FC15C6A50F1289FF5E /* SupplementHistoryView.swift in Sources */,
 				BCD171FCE3679BE2EEDEE8E5 /* SupplementLog.swift in Sources */,
 				1B4F3D08319CB109A0793BE4 /* SupplementLogView.swift in Sources */,
+				2E6F0F4C786A986EEE6D01E7 /* SupplementPregnancyGuidance.swift in Sources */,
 				9B23EE7985A7C5427863BD3B /* SupplementViewModel.swift in Sources */,
 				11FCBF9CB04134E3D202DD79 /* SwiftDataMealLogRepository.swift in Sources */,
 				0F5CA9A0ACAD76F7CCAB26B4 /* SymptomEntry.swift in Sources */,

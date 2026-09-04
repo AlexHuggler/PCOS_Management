@@ -21,7 +21,7 @@ struct SymptomCorrelationInsightAnalyzer {
         // Check that symptoms span at least 14 distinct days
         let calendar = Calendar.current
         let distinctDays = Set(symptoms.map { calendar.startOfDay(for: $0.date) })
-        guard distinctDays.count >= 14 else { return [] }
+        guard distinctDays.count >= InsightThresholds.trackedSymptomDaysForCorrelations else { return [] }
 
         var insights: [Insight] = []
 
@@ -143,7 +143,7 @@ struct SymptomCorrelationInsightAnalyzer {
         }
 
         // --- Severity trend (improving/worsening) ---
-        if distinctDays.count >= 14 {
+        if distinctDays.count >= InsightThresholds.trackedSymptomDaysForCorrelations {
             let sortedDays = distinctDays.sorted()
             let midpoint = sortedDays.count / 2
             let firstHalfDays = Set(sortedDays.prefix(midpoint))

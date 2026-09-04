@@ -59,7 +59,7 @@ struct ContentView: View {
         }
         .task(id: appState.languageRenderKey) {
             do {
-                _ = try InsightLocalizationRefreshService(modelContext: modelContext)
+                _ = try InsightLocalizationRefreshService(modelContext: modelContext, lifecycleModeProvider: { appState.lifecycleMode })
                     .refreshIfNeeded(appLanguage: appState.selectedAppLanguage)
             } catch {
                 Logger.database.error(

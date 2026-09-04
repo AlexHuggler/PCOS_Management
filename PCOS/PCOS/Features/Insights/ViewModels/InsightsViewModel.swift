@@ -18,18 +18,22 @@ final class InsightsViewModel {
     var errorMessage: String?
     var readiness: InsightsDataReadiness = .empty
 
+    private let lifecycleModeProvider: () -> LifecycleMode
+
     init(
         modelContext: ModelContext,
         insightGenerator: InsightsGenerator? = nil,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        lifecycleModeProvider: @escaping () -> LifecycleMode = { .cycling }
     ) {
         self.modelContext = modelContext
         self.defaults = defaults
+        self.lifecycleModeProvider = lifecycleModeProvider
         if let insightGenerator {
             self.generateInsights = insightGenerator
         } else {
             let engine = InsightEngine(modelContext: modelContext)
-            self.generateInsights = { try engine.generateInsights() }
+            self.generateInsights = { try engine.generateInsights(lifecycleMode: lifecycleModeProvider()) }
         }
     }
 
@@ -221,13 +225,16 @@ struct InsightLocalizationRefreshService {
 
     private let modelContext: ModelContext
     private let defaults: UserDefaults
+    private let lifecycleModeProvider: () -> LifecycleMode
 
     init(
         modelContext: ModelContext,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        lifecycleModeProvider: @escaping () -> LifecycleMode = { .cycling }
     ) {
         self.modelContext = modelContext
         self.defaults = defaults
+        self.lifecycleModeProvider = lifecycleModeProvider
     }
 
     func refreshIfNeeded(
@@ -270,7 +277,7 @@ struct InsightLocalizationRefreshService {
                 appLanguage: resolvedAppLanguage,
                 preferredLanguages: preferredLanguages
             ) {
-                try InsightEngine(modelContext: modelContext).generateInsights()
+                try InsightEngine(modelContext: modelContext).generateInsights(lifecycleMode: lifecycleModeProvider())
             }
             for insight in regeneratedInsights {
                 modelContext.insert(insight)

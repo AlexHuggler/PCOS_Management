@@ -699,13 +699,18 @@ extension CycleBalanceApp {
         }
     }
 
+    /// Lifecycle mode persisted by `AppState`, read here because seeding runs before the app state exists.
+    static func storedLifecycleMode(defaults: UserDefaults = .standard) -> LifecycleMode {
+        LifecycleMode(rawValue: defaults.string(forKey: "lifecycle.mode") ?? "") ?? .cycling
+    }
+
     static func seedGeneratedInsights(in modelContext: ModelContext) throws {
         let appLanguage = resolvedSeedAppLanguage()
         let generatedInsights = try L10n.withOverrides(
             appLanguage: appLanguage,
             preferredLanguages: resolvedSeedPreferredLanguages(for: appLanguage)
         ) {
-            try InsightEngine(modelContext: modelContext).generateInsights()
+            try InsightEngine(modelContext: modelContext).generateInsights(lifecycleMode: storedLifecycleMode())
         }
         for insight in generatedInsights {
             modelContext.insert(insight)

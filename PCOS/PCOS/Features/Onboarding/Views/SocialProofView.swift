@@ -87,7 +87,7 @@ struct SocialProofView: View {
                             .foregroundStyle(AppTheme.coralAccent)
                             .accessibilityHidden(true)
 
-                        Text(String(localized: "Built to give women with PCOS the insights they deserve.", comment: "Founder note on the social proof screen."))
+                        Text(String(localized: "Built to give people with PCOS the insights they deserve.", comment: "Founder note on the social proof screen."))
                             .appFont(.subheadline)
                             .foregroundStyle(.secondary)
                     }

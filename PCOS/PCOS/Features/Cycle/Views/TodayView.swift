@@ -339,7 +339,8 @@ struct TodayView: View {
                 PregnancyDashboardCard(
                     gestationalText: pregnancyViewModel?.gestationalDisplayText,
                     postpartumDayCount: pregnancyViewModel?.postpartumDayCount,
-                    lifecycleMode: appState.lifecycleMode
+                    lifecycleMode: appState.lifecycleMode,
+                    lastPregnancyEndReason: pregnancyViewModel?.latestEndedPregnancyEndReason
                 )
             case .cycling:
                 cycleHeroCard

@@ -128,25 +128,10 @@ struct InsulinResistanceMetricService: InsulinResistanceMetricCalculating {
 
     // MARK: - Private
 
+    /// Phase assignment goes through the app's phase-inference policy so long, unstable or
+    /// anovulatory PCOS cycles are never bucketed into standard-cycle phases.
     private func approximatePhase(for date: Date, cycles: [Cycle]) -> CyclePhase? {
-        for cycle in cycles where !cycle.isPredicted {
-            let cycleStart = calendar.startOfDay(for: cycle.startDate)
-            let cycleLength = cycle.manualCycleLengthOverrideDays ?? cycle.lengthDays
-
-            guard let cycleLength, cycleLength > 0 else { continue }
-            guard let cycleEnd = calendar.date(byAdding: .day, value: cycleLength, to: cycleStart) else { continue }
-
-            let normalizedDate = calendar.startOfDay(for: date)
-            guard normalizedDate >= cycleStart && normalizedDate < cycleEnd else { continue }
-
-            let dayInCycle = calendar.dateComponents([.day], from: cycleStart, to: normalizedDate).day ?? 0
-            if dayInCycle < 5 { return .menstrual }
-            if dayInCycle < 13 { return .follicular }
-            if dayInCycle < 16 { return .ovulatory }
-            return .luteal
-        }
-
-        return nil
+        CyclePhaseInferencePolicy().approximatePhase(for: date, cycles: cycles, calendar: calendar)
     }
 
     private func median(of values: [Double]) -> Double? {

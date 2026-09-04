@@ -11,8 +11,10 @@ struct PCOSSupplement: Identifiable {
     let evidenceStrength: EvidenceStrength
     let sources: [EvidenceReference]
 
-    var id: String { key }
+    /// Shown in pregnancy mode; nil when the catalog has no specific caution.
+    var pregnancyCaution: String? = nil
 
+    var id: String { key }
 }
 
 enum PCOSSupplements {
@@ -81,6 +83,7 @@ enum PCOSSupplements {
                         url: "https://pubmed.ncbi.nlm.nih.gov/31915452/"
                     )
                 ].compactMap { $0 }
+,                pregnancyCaution: localized("Berberine is not recommended during pregnancy or while breastfeeding. Ask your prenatal team before continuing it.")
             ),
             PCOSSupplement(
                 key: "nac",

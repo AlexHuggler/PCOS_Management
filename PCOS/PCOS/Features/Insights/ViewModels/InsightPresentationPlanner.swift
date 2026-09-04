@@ -87,7 +87,7 @@ struct InsightPresentationPlanner {
         readiness: InsightsDataReadiness,
         preferences: InsightAudiencePreferences
     ) -> InsightEmptyStateContent {
-        if readiness.completedCycles < 3 && readiness.symptomDays < 14 {
+        if readiness.completedCycles < InsightThresholds.completedCyclesForCyclePatterns && readiness.symptomDays < InsightThresholds.trackedSymptomDaysForCorrelations {
             if preferences.primaryGoal == .understandSymptoms {
                 return InsightEmptyStateContent(
                     title: L10n.string("Build your first symptom insights", defaultValue: "Build your first symptom insights"),
@@ -107,7 +107,7 @@ struct InsightPresentationPlanner {
             )
         }
 
-        if readiness.completedCycles < 3 {
+        if readiness.completedCycles < InsightThresholds.completedCyclesForCyclePatterns {
             return InsightEmptyStateContent(
                 title: L10n.string("More cycle data will sharpen your insights", defaultValue: "More cycle data will sharpen your insights"),
                 message: L10n.string(
@@ -117,7 +117,7 @@ struct InsightPresentationPlanner {
             )
         }
 
-        if readiness.symptomDays < 14 {
+        if readiness.symptomDays < InsightThresholds.trackedSymptomDaysForCorrelations {
             return InsightEmptyStateContent(
                 title: L10n.string("More symptom days will unlock correlations", defaultValue: "More symptom days will unlock correlations"),
                 message: L10n.string(

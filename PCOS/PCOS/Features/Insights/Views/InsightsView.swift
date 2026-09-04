@@ -128,7 +128,7 @@ struct InsightsView: View {
             }
             .onAppear {
                 if viewModel == nil {
-                    viewModel = InsightsViewModel(modelContext: modelContext)
+                    viewModel = InsightsViewModel(modelContext: modelContext, lifecycleModeProvider: { appState.lifecycleMode })
                 }
                 Task {
                     await viewModel?.loadInsights()

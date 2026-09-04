@@ -152,9 +152,9 @@ struct OnboardingCompletionView: View {
         case .trackCycles:
             String(localized: "Everything's set. Log when you're ready — CycleBalance adapts to your rhythm, not the other way around.", comment: "Onboarding completion message for users focused on cycle tracking.")
         case .understandSymptoms:
-            String(localized: "Your tracking journey starts now. You're part of a growing community of women making sense of their symptoms.", comment: "Onboarding completion message for users focused on symptoms.")
+            String(localized: "Your tracking journey starts now. Your first symptom patterns can appear after about two weeks of check-ins.", comment: "Onboarding completion message for users focused on symptoms.")
         case nil:
-            String(localized: "You're part of a growing community of women taking control of their PCOS. We're glad you're here.", comment: "Generic onboarding completion message.")
+            String(localized: "Everything you log stays on this device, and your first patterns build with each check-in. We're glad you're here.", comment: "Generic onboarding completion message.")
         }
     }
 

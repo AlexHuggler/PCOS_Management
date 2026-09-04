@@ -74,10 +74,7 @@ struct YourPlanView: View {
 
                     // MARK: - Timeline Note
 
-                    Text(String(
-                        localized: "After 2 cycles, you'll see your first patterns.",
-                        comment: "Timeline note on the personalized plan screen."
-                    ))
+                    Text(OnboardingThresholdCopy.timelineNote(for: profile.primaryGoal))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
