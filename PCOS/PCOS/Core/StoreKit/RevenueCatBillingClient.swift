@@ -156,7 +156,8 @@ final class RevenueCatBillingClient: PremiumBillingClient {
             displayName: product.localizedTitle,
             displayPrice: product.localizedPriceString,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod),
+            currencyCode: product.currencyCode
         )
     }
 

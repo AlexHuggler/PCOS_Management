@@ -21,6 +21,7 @@
 
 ## App Store Connect Status
 
+- Pricing decision (2026-09-04): the live App Store tier is **$6.99/month and $39.99/year**; `PCOS.storekit`, paywall QA and screenshot plans now use those values. Any change must be made in App Store Connect first and mirrored here.
 - The 1.0.5 trust-release branch removed the AdServices attribution token capture and its debug diagnostics; before submitting build `18`, delete the Apple Ads attribution sentence from the App Review notes and the privacy policy's third-party list.
 - Build `18` was verified unused before the local `1.0.5 (18)` version bump. No signed distribution archive or export has been created, and it has not been uploaded, distributed through TestFlight, attached to a version, or submitted; this checklist does not authorize those actions.
 - The public App Store storefront was read back on July 13, 2026 and currently serves `1.0.4`, released July 4. The local `1.0.5 (18)` release candidate has not been uploaded or submitted.

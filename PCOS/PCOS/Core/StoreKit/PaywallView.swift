@@ -144,13 +144,20 @@ struct PaywallView: View {
                         }
                     }
 
+                    Text(SubscriptionDisclosure.autoRenewText(language: paywallLanguage))
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("paywall.auto_renew_disclosure")
+
                     PaywallFooterLinks(
                         language: paywallLanguage,
                         isRestoring: isRestoringPurchases,
                         isDisabled: isBusy,
                         restoreAction: restorePurchases,
                         privacyPolicyURL: AppLinks.privacyPolicy,
-                        termsOfServiceURL: AppLinks.termsOfService
+                        termsOfServiceURL: AppLinks.termsOfService,
+                        termsOfUseURL: AppLinks.appleStandardEULA
                     )
                 }
                 .padding(.horizontal, AppTheme.spacing16)
@@ -649,6 +656,13 @@ private struct PaywallPlanCard: View {
                 Text(product.displayPriceWithPeriod(language: language))
                     .appFont(.subheadline)
                     .foregroundStyle(.secondary)
+
+                if let monthlyEquivalent = product.monthlyEquivalentPriceText(language: language) {
+                    Text(monthlyEquivalent)
+                        .appFont(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("paywall.plan.\(product.id).monthly_equivalent")
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(AppTheme.spacing16)
@@ -683,8 +697,10 @@ private struct PaywallFooterLinks: View {
     let restoreAction: () -> Void
     let privacyPolicyURL: URL?
     let termsOfServiceURL: URL?
+    var termsOfUseURL: URL? = nil
 
     var body: some View {
+        VStack(spacing: AppTheme.spacing4) {
         HStack(spacing: AppTheme.spacing8) {
             Button(action: restoreAction) {
                 if isRestoring {
@@ -719,6 +735,15 @@ private struct PaywallFooterLinks: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("paywall.terms_of_service")
             }
+        }
+
+        if let termsOfUseURL {
+            Link(destination: termsOfUseURL) {
+                Text(SubscriptionDisclosure.termsOfUseLabel(language: language))
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("paywall.terms_of_use")
+        }
         }
         .appFont(.caption, weight: .medium)
         .foregroundStyle(.secondary)

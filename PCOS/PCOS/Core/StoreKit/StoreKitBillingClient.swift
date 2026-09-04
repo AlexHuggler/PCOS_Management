@@ -130,7 +130,8 @@ final class StoreKitBillingClient: PremiumBillingClient {
             displayName: product.displayName,
             displayPrice: product.displayPrice,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod),
+            currencyCode: product.priceFormatStyle.currencyCode
         )
     }
 

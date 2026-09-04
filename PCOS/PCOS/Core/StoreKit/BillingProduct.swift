@@ -84,6 +84,30 @@ struct BillingProduct: Identifiable, Equatable, Sendable {
     let displayPrice: String
     let price: Decimal
     let subscriptionPeriod: BillingPeriod?
+    /// ISO 4217 code of `price`; nil when the store did not provide one.
+    var currencyCode: String? = nil
+
+    /// Per-month equivalent of a yearly plan, e.g. "$3.33 / month", so the annual value is visible.
+    /// Nil for non-yearly plans or when the store gave no currency code.
+    func monthlyEquivalentPriceText(language: AppLanguage? = nil, base: Bundle = .main, preferredLanguages: [String]? = nil) -> String? {
+        guard let subscriptionPeriod,
+              subscriptionPeriod.unit == .year,
+              subscriptionPeriod.value > 0,
+              let currencyCode
+        else { return nil }
+
+        let perMonth = price / Decimal(12 * subscriptionPeriod.value)
+        let locale = L10n.locale(for: language, preferredLanguages: preferredLanguages)
+        let formattedPrice = perMonth.formatted(.currency(code: currencyCode).locale(locale).precision(.fractionLength(2)))
+        return L10n.format(
+            "%@ / month",
+            defaultValue: "%@ / month",
+            language: language,
+            base: base,
+            preferredLanguages: preferredLanguages,
+            formattedPrice
+        )
+    }
 
     var paywallDisplayName: String {
         paywallDisplayName()

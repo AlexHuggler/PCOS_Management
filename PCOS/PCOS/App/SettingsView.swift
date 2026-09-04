@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import StoreKit
 import UniformTypeIdentifiers
 import PhotosUI
 import UIKit
@@ -127,6 +128,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
 
+    @State private var showManageSubscriptions = false
     @State private var showDeleteConfirmation = false
     @State private var pendingJSONImportSource: PendingJSONImportSource?
     @State private var activeFileImportRequest: SettingsFileImportRequest?
@@ -175,30 +177,7 @@ struct SettingsView: View {
 
                 if appState.showsSubscriptionUI {
                     Section(L10n.string("Account", defaultValue: "Account")) {
-                        HStack {
-                            Label(L10n.string("Subscription", defaultValue: "Subscription"), systemImage: "star.circle")
-                            Spacer()
-                            Text(
-                                appState.isPremium
-                                    ? L10n.string("Premium", defaultValue: "Premium")
-                                    : L10n.string("Free", defaultValue: "Free")
-                            )
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right")
-                                .appFont(.caption, weight: .semibold)
-                                .foregroundStyle(.tertiary)
-                                .accessibilityHidden(true)
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            appState.showPremiumPaywall = true
-                        }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityAction {
-                            appState.showPremiumPaywall = true
-                        }
-                        .accessibilityIdentifier("settings.subscription.row")
+                        subscriptionRow
                     }
                 }
 
@@ -1665,6 +1644,36 @@ struct SettingsView: View {
                 localized: "Could not import demo data: \(error.localizedDescription)",
                 comment: "Fallback error shown when loading a debug demo scenario fails."
             )
+        }
+    }
+
+    /// Kept out of `body` so the type checker does not have to resolve it inline.
+    private var subscriptionRow: some View {
+        HStack {
+            Label(L10n.string("Subscription", defaultValue: "Subscription"), systemImage: "star.circle")
+            Spacer()
+            Text(appState.isPremium ? L10n.string("Premium", defaultValue: "Premium") : L10n.string("Free", defaultValue: "Free"))
+                .foregroundStyle(.secondary)
+            Image(systemName: "chevron.right")
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { openSubscriptionRow() }
+        .accessibilityIdentifier("settings.subscription.row")
+        .contentShape(Rectangle())
+        .onTapGesture(perform: openSubscriptionRow)
+        .manageSubscriptionsSheet(isPresented: $showManageSubscriptions)
+    }
+
+    /// Subscribers manage or cancel through the App Store sheet; free users see the paywall.
+    private func openSubscriptionRow() {
+        if appState.isPremium {
+            showManageSubscriptions = true
+        } else {
+            appState.presentPremiumPaywall()
         }
     }
 
