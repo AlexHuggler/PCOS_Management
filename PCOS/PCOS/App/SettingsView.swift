@@ -676,40 +676,6 @@ struct SettingsView: View {
                             Label("Open Paywall", systemImage: "creditcard")
                         }
                     }
-
-                    Section("Debug: Apple Ads Attribution") {
-                        LabeledContent(
-                            "Last Result",
-                            value: debugTools.appleAdsDiagnostics.lastResult?.debugDisplayName
-                                ?? String(localized: "Unknown", comment: "Fallback debug label when the Apple Ads attribution status is unavailable.")
-                        )
-
-                        if let lastAttemptedAt = debugTools.appleAdsDiagnostics.lastAttemptedAt {
-                            LabeledContent("Last Attempt", value: appleAdsDebugTimestamp(lastAttemptedAt))
-                        }
-
-                        if let latestSuccessfulFetchedAt = debugTools.appleAdsDiagnostics.latestSuccessfulFetchedAt {
-                            LabeledContent("Last Success", value: appleAdsDebugTimestamp(latestSuccessfulFetchedAt))
-                        }
-
-                        if let tokenPreview = debugTools.appleAdsDiagnostics.tokenPreview {
-                            LabeledContent("Token Preview", value: tokenPreview)
-                        }
-
-                        if let lastErrorDescription = debugTools.appleAdsDiagnostics.lastErrorDescription,
-                           !lastErrorDescription.isEmpty {
-                            Text(lastErrorDescription)
-                                .appFont(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Button {
-                            refreshAppleAdsDebugStatus()
-                        } label: {
-                            Label("Refresh Apple Ads Diagnostics", systemImage: "megaphone")
-                        }
-                        .disabled(debugTools.isRefreshingAppleAdsDiagnostics)
-                    }
                 }
 #endif
 
@@ -1706,13 +1672,6 @@ struct SettingsView: View {
         await debugTools.refreshPremiumStatus(appState: appState)
     }
 
-    private func refreshAppleAdsDebugStatus() {
-        debugTools.refreshAppleAdsDiagnostics()
-    }
-
-    private func appleAdsDebugTimestamp(_ date: Date) -> String {
-        date.formatted(date: .abbreviated, time: .shortened)
-    }
 
     private func uiTestJSONBackupFixtureData() -> Data? {
         let arguments = ProcessInfo.processInfo.arguments

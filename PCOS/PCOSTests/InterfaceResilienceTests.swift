@@ -544,10 +544,7 @@ struct InterfaceResilienceTests {
 
         #expect(settingsSource.contains("debugTools.billingBackendWarning"))
         #expect(settingsSource.contains("RevenueCat App User ID"))
-        #expect(settingsSource.contains("Debug: Apple Ads Attribution"))
-        #expect(settingsSource.contains("Refresh Apple Ads Diagnostics"))
         #expect(debugToolsSource.contains("var revenueCatAppUserID: String?"))
-        #expect(debugToolsSource.contains("var appleAdsDiagnostics = AppleAdsAttributionDiagnostics.empty"))
         #expect(debugToolsSource.contains("PCOS Local StoreKit"))
         #expect(debugToolsSource.contains("[Environment: Xcode]"))
         #expect(debugToolsSource.contains("PCOS.storekit"))

@@ -8,7 +8,7 @@ Purpose: first-pass data for App Store Connect human review and owner verificati
 
 - Apple App Privacy guidance: data processed only on device is not "collected"; data transmitted off device and retained by the developer or third-party partner generally must be declared.
 - RevenueCat bundled privacy manifest in the current dependency declares `Purchase History`, purpose `App Functionality`, not linked, not used for tracking.
-- CycleBalance release code uses local SwiftData storage, read-only HealthKit, optional barcode lookup, RevenueCat billing, and local Apple Ads attribution diagnostics.
+- CycleBalance release code uses local SwiftData storage, read-only HealthKit, optional barcode lookup, and RevenueCat billing. The 1.0.5 build no longer requests Apple Ads attribution tokens.
 - Meal Scan V2 is release-disabled by default unless explicitly enabled; barcode lookup is visible and user-initiated.
 
 ## App Store Connect URLs
@@ -41,7 +41,7 @@ Do not declare these for the current release behavior unless the archived build 
 
 First-pass disclosure:
 
-> CycleBalance does not display ads, does not include third-party advertising SDKs, and does not use App Tracking Transparency tracking. The app requests an Apple Ads attribution token through Apple's AdServices framework when available and stores attribution diagnostics locally for debugging Apple Search Ads attribution. Health logs, HealthKit samples, meal photos, symptom data, and journal photos are not sent to Apple Ads or ad networks.
+> CycleBalance does not display ads, does not include third-party advertising SDKs, and does not use App Tracking Transparency tracking. The 1.0.5 build does not request Apple Ads attribution tokens and does not link the AdServices framework (the 1.0.4 build captured a token locally for debugging only). Health logs, HealthKit samples, meal photos, symptom data, and journal photos are not sent to Apple Ads or ad networks.
 
 App Privacy label impact: no additional App Privacy data type for Apple Ads attribution unless the build starts sending the attribution token or derived attribution data off device to CycleBalance, RevenueCat, analytics, or another third party.
 
@@ -85,7 +85,7 @@ Status: saved in App Store Connect for iOS version 1.0.2 on 2026-06-22.
 >
 > Nutrition and meal features are estimates for personal tracking only and are not medical advice, nutrition counseling, diagnosis, treatment, or allergy guidance.
 >
-> The app does not display ads and does not include third-party advertising or analytics SDKs. It may request an Apple Ads attribution token through Apple's AdServices framework and stores attribution diagnostics locally for Apple Search Ads debugging. Health logs, HealthKit samples, meal photos, symptom data, and journal photos are not sent to Apple Ads or ad networks.
+> The app does not display ads and does not include third-party advertising or analytics SDKs. It does not request Apple Ads attribution tokens. Health logs, HealthKit samples, meal photos, symptom data, and journal photos are not sent to Apple Ads or ad networks.
 >
 > Native App Store review prompts are not shown during onboarding. They are only eligible after high-value moments such as a sustained logging streak, first insight, generated report, or saved photo progress.
 >
@@ -100,7 +100,7 @@ Updated in the GitHub Pages source tree:
 
 - Privacy policy last updated to June 22, 2026.
 - HealthKit scope now matches the app's current read-only categories.
-- Optional barcode lookup, RevenueCat purchases, and Apple Ads attribution diagnostics are disclosed separately.
+- Optional barcode lookup and RevenueCat purchases are disclosed separately.
 - Support FAQ no longer says "everything" stays on device; it now distinguishes local health logs from limited optional services.
 - Landing page no longer uses unsupported `10K+`, `4.9 App Store Rating`, or testimonial claims.
 

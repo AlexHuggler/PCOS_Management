@@ -32,14 +32,11 @@ final class SettingsDebugToolsState {
     var billingBackendWarning: String?
     var revenueCatAppUserID: String?
     var statusMessage: String?
-    var appleAdsDiagnostics = AppleAdsAttributionDiagnostics.empty
     var isRefreshingPremiumStatus = false
-    var isRefreshingAppleAdsDiagnostics = false
 
     func primePremiumStatus(
         statusProvider: any PremiumQAStatusProviding = SubscriptionManager.shared,
-        appState: AppState,
-        attributionService: AppleAdsAttributionService = .shared
+        appState: AppState
     ) {
         entitlementStatus = statusProvider.isPremium
             ? String(localized: "Premium active", comment: "Debug premium status label.")
@@ -49,14 +46,12 @@ final class SettingsDebugToolsState {
         billingBackendWarning = Self.warningMessage(for: statusProvider.backendMode)
         revenueCatAppUserID = statusProvider.revenueCatAppUserID
         statusMessage = statusProvider.statusMessage
-        appleAdsDiagnostics = attributionService.diagnostics()
         appState.isPremium = statusProvider.isPremium
     }
 
     func refreshPremiumStatus(
         statusProvider: any PremiumQAStatusProviding = SubscriptionManager.shared,
-        appState: AppState,
-        attributionService: AppleAdsAttributionService = .shared
+        appState: AppState
     ) async {
         isRefreshingPremiumStatus = true
         defer { isRefreshingPremiumStatus = false }
@@ -70,17 +65,7 @@ final class SettingsDebugToolsState {
         billingBackendWarning = Self.warningMessage(for: statusProvider.backendMode)
         revenueCatAppUserID = statusProvider.revenueCatAppUserID
         statusMessage = statusProvider.statusMessage
-        appleAdsDiagnostics = attributionService.diagnostics()
         appState.isPremium = statusProvider.isPremium
-    }
-
-    func refreshAppleAdsDiagnostics(
-        attributionService: AppleAdsAttributionService = .shared
-    ) {
-        isRefreshingAppleAdsDiagnostics = true
-        defer { isRefreshingAppleAdsDiagnostics = false }
-
-        appleAdsDiagnostics = attributionService.captureLatestTokenIfAvailable()
     }
 
     private static func warningMessage(for backendMode: BillingBackendMode) -> String? {

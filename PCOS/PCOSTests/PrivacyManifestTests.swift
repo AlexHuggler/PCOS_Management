@@ -429,6 +429,22 @@ struct AppStoreConfigTests {
         )
     }
 
+    @Test("App does not link AdServices or capture Apple Ads attribution tokens")
+    @MainActor
+    func appDoesNotCaptureAppleAdsAttribution() throws {
+        let projectRoot = try TestHelpers.projectRoot(from: #filePath)
+        let appSourceRoot = projectRoot.appendingPathComponent("PCOS/PCOS")
+        let enumerator = try #require(FileManager.default.enumerator(at: appSourceRoot, includingPropertiesForKeys: nil))
+        var offenders: [String] = []
+        for case let fileURL as URL in enumerator where fileURL.pathExtension == "swift" {
+            let source = try String(contentsOf: fileURL, encoding: .utf8)
+            for token in ["import AdServices", "AAAttribution", "AppleAdsAttributionService", "appleAds.attributionDiagnostics"] where source.contains(token) {
+                offenders.append("\(fileURL.lastPathComponent): \(token)")
+            }
+        }
+        #expect(offenders.isEmpty, "Apple Ads attribution capture was removed; found \(offenders)")
+    }
+
     @Test("Meal scan review packet documents hardened release limits")
     @MainActor
     func mealScanReviewPacketDocumentsHardenedReleaseLimits() throws {

@@ -21,6 +21,7 @@
 
 ## App Store Connect Status
 
+- The 1.0.5 trust-release branch removed the AdServices attribution token capture and its debug diagnostics; before submitting build `18`, delete the Apple Ads attribution sentence from the App Review notes and the privacy policy's third-party list.
 - Build `18` was verified unused before the local `1.0.5 (18)` version bump. No signed distribution archive or export has been created, and it has not been uploaded, distributed through TestFlight, attached to a version, or submitted; this checklist does not authorize those actions.
 - The public App Store storefront was read back on July 13, 2026 and currently serves `1.0.4`, released July 4. The local `1.0.5 (18)` release candidate has not been uploaded or submitted.
 - Build `1.0.4` (`17`) was archived, exported, uploaded, reviewed, and released. Its export is intentionally outside this RC worktree; the recorded IPA SHA-256 is `fde6cce8b26795ccd00727a93ca731391cf6c36101d46f21ce39a232e8e9196c`.

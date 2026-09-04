@@ -37,11 +37,6 @@ struct SettingsDebugToolsStateTests {
     func primePremiumStatusSurfacesState() {
         let state = SettingsDebugToolsState()
         let appState = AppState()
-        let diagnosticsService = AppleAdsAttributionService(
-            defaults: UserDefaults(suiteName: "SettingsDebugToolsStateTests.prime.\(UUID().uuidString)")!,
-            tokenProvider: MockTokenProvider(result: .success("token-123")),
-            now: { Date(timeIntervalSince1970: 100) }
-        )
         let provider = MockPremiumProvider(
             isPremium: true,
             purchasedProductIDs: [SubscriptionManager.monthlyProductID]
@@ -49,8 +44,7 @@ struct SettingsDebugToolsStateTests {
 
         state.primePremiumStatus(
             statusProvider: provider,
-            appState: appState,
-            attributionService: diagnosticsService
+            appState: appState
         )
 
         #expect(
@@ -62,7 +56,6 @@ struct SettingsDebugToolsStateTests {
         #expect(state.billingBackend == BillingBackendMode.localStoreKit.debugDisplayName)
         #expect(state.billingBackendWarning == nil)
         #expect(state.entitlementIDs == [SubscriptionManager.monthlyProductID])
-        #expect(state.appleAdsDiagnostics.lastResult == nil)
         #expect(appState.isPremium)
     }
 
@@ -70,20 +63,11 @@ struct SettingsDebugToolsStateTests {
     func refreshPremiumStatusUpdatesState() async {
         let state = SettingsDebugToolsState()
         let appState = AppState()
-        let diagnosticsSuiteName = "SettingsDebugToolsStateTests.refresh.\(UUID().uuidString)"
-        let diagnosticsDefaults = UserDefaults(suiteName: diagnosticsSuiteName)!
-        defer { diagnosticsDefaults.removePersistentDomain(forName: diagnosticsSuiteName) }
-        let diagnosticsService = AppleAdsAttributionService(
-            defaults: diagnosticsDefaults,
-            tokenProvider: MockTokenProvider(result: .success("token-456")),
-            now: { Date(timeIntervalSince1970: 200) }
-        )
         let provider = MockPremiumProvider(isPremium: false)
 
         await state.refreshPremiumStatus(
             statusProvider: provider,
-            appState: appState,
-            attributionService: diagnosticsService
+            appState: appState
         )
         #expect(provider.checkCallCount == 1)
         #expect(
@@ -101,11 +85,9 @@ struct SettingsDebugToolsStateTests {
         provider.purchasedProductIDs = [SubscriptionManager.yearlyProductID]
         provider.revenueCatAppUserID = "$RCAnonymousID:qa-user"
         provider.statusMessage = "entitlement mismatch"
-        diagnosticsService.captureLatestTokenIfAvailable()
         await state.refreshPremiumStatus(
             statusProvider: provider,
-            appState: appState,
-            attributionService: diagnosticsService
+            appState: appState
         )
 
         #expect(provider.checkCallCount == 2)
@@ -122,43 +104,10 @@ struct SettingsDebugToolsStateTests {
         #expect(state.billingBackendWarning?.contains("[Environment: Xcode]") == true)
         #expect(state.billingBackendWarning?.contains("PCOS.storekit") == true)
         #expect(state.statusMessage == "entitlement mismatch")
-        #expect(state.appleAdsDiagnostics.lastResult == .success)
         #expect(appState.isPremium)
     }
 
-    @Test("refreshAppleAdsDiagnostics updates the stored attribution snapshot")
-    func refreshAppleAdsDiagnosticsUpdatesState() {
-        let suiteName = "SettingsDebugToolsStateTests.appleAds.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        let state = SettingsDebugToolsState()
-        let diagnosticsService = AppleAdsAttributionService(
-            defaults: defaults,
-            tokenProvider: MockTokenProvider(result: .success("token-789")),
-            now: { Date(timeIntervalSince1970: 300) }
-        )
-
-        state.refreshAppleAdsDiagnostics(attributionService: diagnosticsService)
-
-        #expect(state.appleAdsDiagnostics.lastResult == .success)
-        #expect(state.appleAdsDiagnostics.tokenPreview == "token-789")
-    }
 }
 
-private enum MockTokenError: Error {
-    case unavailable
-}
 
-private final class MockTokenProvider: AppleAdsTokenProviding {
-    var result: Result<String, Error>
-
-    init(result: Result<String, Error>) {
-        self.result = result
-    }
-
-    func attributionToken() throws -> String {
-        try result.get()
-    }
-}
 #endif
