@@ -31,7 +31,13 @@ Landed with TDD (RED observed, then GREEN, full unit suite green before each com
 - `85db04b` Insights dashboard drawn from real data only (placeholders below thresholds); Today snapshot "Not logged"
 - `4f1895d` supplement dose units (IU/mcg/mg/g/cup) end to end incl. backup/CSV, unit picker, demo fixture; marker-gated fixture regeneration
 - `675638a` localization: 555 missing keys merged (fr/it +95, ja/ko/nl +112, de +29), table-parity test, locale keeps device region
-- In flight (chained): trust copy/pregnancy/glucose guardrails; weight units + energy/weight in check-in; paywall renewal terms/EULA/per-month/manage-subscriptions + live-tier prices; data-safety net (backup v6 parity, pre-import snapshots + restore, portable photos, tmp cleanup, delete-all rollback)
+- `fa3414d` trust copy: shared insight thresholds (3 cycles / 14 days) drive analyzers and onboarding copy; lifecycle-aware insight generation (no cycle insights while pregnant); pregnancy loss/other endings no longer produce postpartum copy; berberine pregnancy caution; "Glucose patterns" header; phase split via CyclePhaseInferencePolicy
+- `6e54622` weight: kilograms stored, locale unit shown (Today, PDF, logger); energy + weight in the daily check-in with validation; demo seeds in kg
+- `e0ada84` paywall: renewal/cancel disclosure, Apple EULA link, per-month equivalent with store currency, Settings row opens manage-subscriptions for subscribers; PCOS.storekit at 6.99/39.99
+- `e47d409` data safety: backup schema v6 (pain/private note/positive actions) with Mirror parity test; pre-import snapshots (last 3) + "Restore Data From Before Last Import"; photos decrypted on export and re-encrypted on import; tmp export cleanup; delete-all rollback + full-scope alert
+- `80d4a82` docs: owner handoff (`docs/owner_handoff_1.0.5_trust_release.md`), README test loop + fixture regen, checklist status, this plan under `docs/superpowers/plans/`
+
+Final state: 807 unit tests in 93 suites green; branch pushed to `origin/codex/1.0.5-trust-release`.
 
 Deferred to Tranche 2 (not started): HealthKit glucose provenance (needs UUID-bearing glucose fetcher), VersionedSchema + recovery sheet, owner App Store Connect/website actions (handoff drafted).
 

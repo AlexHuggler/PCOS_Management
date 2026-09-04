@@ -1669,28 +1669,6 @@ struct SettingsView: View {
         }
     }
 
-#if DEBUG
-    private func importDemoScenario(_ scenario: DemoDataScenario) {
-        do {
-            let backup = DemoDataBuilder().makeBackup(for: scenario)
-            let service = SettingsDataImportService(modelContext: modelContext)
-            let summary = try service.replaceAll(with: backup)
-            lastImportSummary = summary
-            debugTools.lastImportSummary = summary
-
-            appState.onboardingProfile.resetOnboarding()
-            scenario.applyOnboardingDefaults(to: appState.onboardingProfile)
-            appState.hasCompletedOnboarding = true
-
-            importSuccessToggle.toggle()
-        } catch {
-            operationError = (error as? LocalizedError)?.errorDescription ?? String(
-                localized: "Could not import demo data: \(error.localizedDescription)",
-                comment: "Fallback error shown when loading a debug demo scenario fails."
-            )
-        }
-    }
-
     /// Kept out of `body` so the type checker does not have to resolve it inline.
     private var subscriptionRow: some View {
         HStack {
@@ -1718,6 +1696,28 @@ struct SettingsView: View {
             showManageSubscriptions = true
         } else {
             appState.presentPremiumPaywall()
+        }
+    }
+
+#if DEBUG
+    private func importDemoScenario(_ scenario: DemoDataScenario) {
+        do {
+            let backup = DemoDataBuilder().makeBackup(for: scenario)
+            let service = SettingsDataImportService(modelContext: modelContext)
+            let summary = try service.replaceAll(with: backup)
+            lastImportSummary = summary
+            debugTools.lastImportSummary = summary
+
+            appState.onboardingProfile.resetOnboarding()
+            scenario.applyOnboardingDefaults(to: appState.onboardingProfile)
+            appState.hasCompletedOnboarding = true
+
+            importSuccessToggle.toggle()
+        } catch {
+            operationError = (error as? LocalizedError)?.errorDescription ?? String(
+                localized: "Could not import demo data: \(error.localizedDescription)",
+                comment: "Fallback error shown when loading a debug demo scenario fails."
+            )
         }
     }
 
