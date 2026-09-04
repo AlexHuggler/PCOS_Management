@@ -157,6 +157,7 @@
 		8199211FE6AC5A5D1BEF11AB /* InsightSeasonalPatternAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F709CE19C3B7D670B28260 /* InsightSeasonalPatternAnalyzer.swift */; };
 		81CFA350D7717BEBC025246C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 23F08C2EC51E609EA52E48EB /* InfoPlist.strings */; };
 		837E4ABB7C169085FA47C6AC /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF39B8B3198DD4D7A16CB770 /* Localizable.strings */; };
+		83BE78B9AF9E21A2C1615FCC /* WeightDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9BE708CE0DE06B30C646C3 /* WeightDisplay.swift */; };
 		84C22B207B83F16A63CEFED7 /* InsightGuidanceCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2DD07DDA7A7A55CD0A7322 /* InsightGuidanceCatalogTests.swift */; };
 		85ECC5C063133BC3F34B1F39 /* CycleEndReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578352D3A63578BDE20F198D /* CycleEndReason.swift */; };
 		87B13271881E07004901C32B /* PremiumGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25D3B1FB69D2F458FB9692F /* PremiumGate.swift */; };
@@ -171,6 +172,7 @@
 		8F8502BD25CF759940744B9E /* InsightSleepActivityAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3926175586345FC52057BE8 /* InsightSleepActivityAnalyzer.swift */; };
 		910BB6A3E364C8AF195D8E7B /* InsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7090307F2CEE2E9E0AA33B1 /* InsightEngine.swift */; };
 		916291F5DCC0693BB14E33A7 /* MealScanProductionScaffolds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4DA400450D92E07482840 /* MealScanProductionScaffolds.swift */; };
+		91BF5391C1B2E4E65C389830 /* WeightAndCheckInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78651E43A71ACAAFDA0B8D26 /* WeightAndCheckInTests.swift */; };
 		93E29FF62EEFFBFCBAA6C4A4 /* PermissionsStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD16291B4F568D873CDB7CDF /* PermissionsStepView.swift */; };
 		94398EC805DA7CF810581514 /* InsightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1C06B00357159AACB3EF8E /* InsightEngineTests.swift */; };
 		94C3D1D22EB5877BA41FC672 /* FoodAliases.json in Resources */ = {isa = PBXBuildFile; fileRef = 112DF6D3A0A18B22E024D88A /* FoodAliases.json */; };
@@ -396,6 +398,7 @@
 		375326144C69878F68F7E445 /* PhotoEncryptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoEncryptionService.swift; sourceTree = "<group>"; };
 		379742DE836F2ED57E0797F7 /* SettingsDebugToolsStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDebugToolsStateTests.swift; sourceTree = "<group>"; };
 		389D9E7234881C7896930E5F /* PCOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PCOS.entitlements; sourceTree = "<group>"; };
+		3A9BE708CE0DE06B30C646C3 /* WeightDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightDisplay.swift; sourceTree = "<group>"; };
 		3AE28898DD0D14F610B5C636 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		3B36C972C8303918131598DA /* AhaMomentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AhaMomentCard.swift; sourceTree = "<group>"; };
 		3BE004961D6267B3040308B8 /* PCOSUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCOSUITestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -476,6 +479,7 @@
 		75C2330644AFD9F02E86E6C2 /* MealScanFeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealScanFeatureFlags.swift; sourceTree = "<group>"; };
 		77E91988F825E994F3562A90 /* CyclePhaseInferencePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclePhaseInferencePolicyTests.swift; sourceTree = "<group>"; };
 		782E7EC7C0AAFDAF9A801967 /* ChipButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipButton.swift; sourceTree = "<group>"; };
+		78651E43A71ACAAFDA0B8D26 /* WeightAndCheckInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightAndCheckInTests.swift; sourceTree = "<group>"; };
 		78C8DAF5E9F005DC1517B80D /* MealViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealViewModelTests.swift; sourceTree = "<group>"; };
 		78D9563FC94969C2D3826F5C /* ReportAccessPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportAccessPolicyTests.swift; sourceTree = "<group>"; };
 		78EAFA2C26DB5A67AB20C7D0 /* ReportConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportConfigView.swift; sourceTree = "<group>"; };
@@ -934,6 +938,7 @@
 				0B7566D88D8CA7E2905D5E8F /* ReportAccessPolicy.swift */,
 				B1BAC6B9E032CF3F679CBB05 /* ReviewPromptService.swift */,
 				C1EA1B0F25627CE5F935AA45 /* RoadmapLocalServices.swift */,
+				3A9BE708CE0DE06B30C646C3 /* WeightDisplay.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1014,6 +1019,7 @@
 				62FC463E24CEF66CAC27B3D2 /* TrustCopyAndPregnancyTests.swift */,
 				14B12B8B204F70D91979BF07 /* UITestDemoScenarioSeedingTests.swift */,
 				5D2872E55EF936DC480CC694 /* UserEntryDefaultsStoreTests.swift */,
+				78651E43A71ACAAFDA0B8D26 /* WeightAndCheckInTests.swift */,
 			);
 			name = PCOSTests;
 			path = PCOS/PCOSTests;
@@ -1730,6 +1736,7 @@
 				E1D5CEF12A3DF792497F3313 /* TrustCopyAndPregnancyTests.swift in Sources */,
 				08790D5CB947903C67D21FDC /* UITestDemoScenarioSeedingTests.swift in Sources */,
 				4F1631976E5ECFD7411C7232 /* UserEntryDefaultsStoreTests.swift in Sources */,
+				91BF5391C1B2E4E65C389830 /* WeightAndCheckInTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1921,6 +1928,7 @@
 				9A25C4C70D128790769EB7D4 /* TooltipOverlay.swift in Sources */,
 				CB11BBFEFD232B1F78C2D8F3 /* UndoToast.swift in Sources */,
 				4C84EF3A8463B1801E5E8B0A /* UserEntryDefaultsStore.swift in Sources */,
+				83BE78B9AF9E21A2C1615FCC /* WeightDisplay.swift in Sources */,
 				521C6B525ACFE56ED3BC49F1 /* YourPlanView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

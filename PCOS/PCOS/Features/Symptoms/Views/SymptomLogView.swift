@@ -19,6 +19,9 @@ struct SymptomLogView: View {
     @State private var lunarFlowLevel = 0.54
     @State private var lunarPainLevel = 4.0
     @State private var lunarEnergyLevel = 6.0
+    @State private var initialLunarEnergyLevel = 6.0
+    @State private var lunarWeightText = ""
+    @State private var initialLunarWeightText = ""
     @State private var lunarStressLevel = 3.0
     @State private var lunarWaterOz = 0.0
     @State private var lunarNote = ""
@@ -37,6 +40,7 @@ struct SymptomLogView: View {
         var lunarEnergyLevel: Double
         var lunarStressLevel: Double
         var lunarWaterOz: Double
+        var lunarWeightText: String
         var lunarNote: String
     }
 
@@ -512,7 +516,34 @@ struct SymptomLogView: View {
                 tint: AppTheme.premiumEditorAccentColor,
                 accessibilityIdentifier: "symptom_log.lunar.slider.water"
             )
+
+            HStack(spacing: AppTheme.spacing12) {
+                Image(systemName: "scalemass")
+                    .foregroundStyle(AppTheme.premiumEditorAccentColor)
+                    .accessibilityHidden(true)
+                Text(L10n.string("Weight", defaultValue: "Weight"))
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                Spacer(minLength: AppTheme.spacing8)
+                TextField(L10n.string("Optional", defaultValue: "Optional"), text: $lunarWeightText)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 96)
+                    .accessibilityLabel(L10n.string("Weight", defaultValue: "Weight"))
+                    .accessibilityIdentifier("symptom_log.lunar.weight")
+                Text(WeightDisplay.unitSymbol(locale: L10n.locale()))
+                    .appFont(.caption)
+                    .foregroundStyle(AppTheme.secondaryText)
+            }
+            .padding(.horizontal, AppTheme.spacing4)
         }
+    }
+
+    /// Weight typed in the locale's unit, converted to kilograms for storage.
+    private var parsedLunarWeightKilograms: Double? {
+        let normalized = lunarWeightText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces)
+        guard let value = Double(normalized), value > 0 else { return nil }
+        return WeightDisplay.kilograms(fromDisplayValue: value, locale: L10n.locale())
     }
 
     private var lunarNotesSection: some View {
@@ -854,6 +885,8 @@ struct SymptomLogView: View {
         if !lunarNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return true }
         if lunarStressLevel != initialLunarStressLevel { return true }
         if lunarWaterOz != initialLunarWaterOz { return true }
+        if lunarWeightText != initialLunarWeightText, parsedLunarWeightKilograms != nil { return true }
+        if lunarEnergyLevel != initialLunarEnergyLevel { return true }
 
         let painLevel = Int(lunarPainLevel.rounded())
         return initialDailyPainLevel0To10.map { $0 != painLevel } ?? true
@@ -870,7 +903,9 @@ struct SymptomLogView: View {
                     painLevel0To10: Int(lunarPainLevel.rounded()),
                     privateNote: lunarNote,
                     stressLevel: lunarStressLevel == initialLunarStressLevel ? nil : Int(lunarStressLevel.rounded()),
-                    waterOz: lunarWaterOz == initialLunarWaterOz ? nil : Int(lunarWaterOz.rounded())
+                    waterOz: lunarWaterOz == initialLunarWaterOz ? nil : Int(lunarWaterOz.rounded()),
+                    energyLevel: lunarEnergyLevel == initialLunarEnergyLevel ? nil : max(1, min(5, Int((lunarEnergyLevel / 2).rounded()))),
+                    weightKg: lunarWeightText == initialLunarWeightText ? nil : parsedLunarWeightKilograms
                 )
             }
             try viewModel.saveSymptoms()
@@ -905,6 +940,11 @@ struct SymptomLogView: View {
         lunarEnergyLevel = energyCrashSeverity > 0
             ? Double(max(1, 10 - (energyCrashSeverity * 2)))
             : 6
+        initialLunarEnergyLevel = lunarEnergyLevel
+        lunarWeightText = dailyLog?.weight.map {
+            L10n.decimal(WeightDisplay.displayValue(kilograms: $0, locale: L10n.locale()), fractionDigits: 1)
+        } ?? ""
+        initialLunarWeightText = lunarWeightText
 
         lunarStressLevel = Double(dailyLog?.stressLevel ?? 3)
         initialLunarStressLevel = lunarStressLevel
@@ -1008,6 +1048,7 @@ struct SymptomLogView: View {
             lunarEnergyLevel: lunarEnergyLevel,
             lunarStressLevel: lunarStressLevel,
             lunarWaterOz: lunarWaterOz,
+            lunarWeightText: lunarWeightText,
             lunarNote: lunarNote
         )
     }

@@ -1446,7 +1446,7 @@ struct TodayView: View {
                     if let weight = todaysDailyLog.weight {
                         healthContextRow(
                             title: L10n.string("Weight", defaultValue: "Weight"),
-                            value: L10n.format("%.1f lb", defaultValue: "%.1f lb", weight),
+                            value: WeightDisplay.formatted(kilograms: weight, locale: L10n.locale()),
                             systemImage: "scalemass"
                         )
                     }

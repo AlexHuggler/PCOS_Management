@@ -99,6 +99,8 @@ struct DailyLogService {
         case invalidPainLevel
         case invalidStressLevel
         case invalidWaterOz
+        case invalidEnergyLevel
+        case invalidWeight
     }
 
     private let modelContext: ModelContext
@@ -162,7 +164,9 @@ struct DailyLogService {
         painLevel0To10: Int?,
         privateNote: String?,
         stressLevel: Int? = nil,
-        waterOz: Int? = nil
+        waterOz: Int? = nil,
+        energyLevel: Int? = nil,
+        weightKg: Double? = nil
     ) throws -> DailyLog {
         if let painLevel0To10, !(0...10).contains(painLevel0To10) {
             throw ValidationError.invalidPainLevel
@@ -173,6 +177,12 @@ struct DailyLogService {
         if let waterOz, waterOz < 0 {
             throw ValidationError.invalidWaterOz
         }
+        if let energyLevel, !(1...5).contains(energyLevel) {
+            throw ValidationError.invalidEnergyLevel
+        }
+        if let weightKg, !(20...400).contains(weightKg) {
+            throw ValidationError.invalidWeight
+        }
 
         let log = try upsertLog(on: date)
         log.painLevel0To10 = painLevel0To10
@@ -181,6 +191,12 @@ struct DailyLogService {
         }
         if let waterOz {
             log.waterOz = waterOz
+        }
+        if let energyLevel {
+            log.energyLevel = energyLevel
+        }
+        if let weightKg {
+            log.weight = weightKg
         }
 
         let trimmedNote = privateNote?.trimmingCharacters(in: .whitespacesAndNewlines)

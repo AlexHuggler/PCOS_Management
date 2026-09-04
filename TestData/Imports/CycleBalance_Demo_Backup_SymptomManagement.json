@@ -827,7 +827,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 2,
         "waterOz" : 56,
-        "weight" : 156
+        "weight" : 70.8
       },
       {
         "activeMinutes" : 29,
@@ -838,7 +838,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 3,
         "waterOz" : 62,
-        "weight" : 155.94
+        "weight" : 70.77
       },
       {
         "activeMinutes" : 36,
@@ -849,7 +849,7 @@
         "sleepHours" : 7,
         "stressLevel" : 4,
         "waterOz" : 68,
-        "weight" : 155.88
+        "weight" : 70.74
       },
       {
         "activeMinutes" : 43,
@@ -860,7 +860,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 5,
         "waterOz" : 74,
-        "weight" : 155.82
+        "weight" : 70.71
       },
       {
         "activeMinutes" : 50,
@@ -871,7 +871,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 2,
         "waterOz" : 80,
-        "weight" : 155.76
+        "weight" : 70.67999999999999
       },
       {
         "activeMinutes" : 57,
@@ -882,7 +882,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 3,
         "waterOz" : 56,
-        "weight" : 155.7
+        "weight" : 70.64999999999999
       },
       {
         "activeMinutes" : 22,
@@ -893,7 +893,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 4,
         "waterOz" : 62,
-        "weight" : 155.64
+        "weight" : 70.61999999999999
       },
       {
         "activeMinutes" : 29,
@@ -904,7 +904,7 @@
         "sleepHours" : 7,
         "stressLevel" : 5,
         "waterOz" : 68,
-        "weight" : 155.58
+        "weight" : 70.59
       },
       {
         "activeMinutes" : 36,
@@ -915,7 +915,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 2,
         "waterOz" : 74,
-        "weight" : 155.52
+        "weight" : 70.56
       },
       {
         "activeMinutes" : 43,
@@ -926,7 +926,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 3,
         "waterOz" : 80,
-        "weight" : 155.46
+        "weight" : 70.53
       },
       {
         "activeMinutes" : 50,
@@ -937,7 +937,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 4,
         "waterOz" : 56,
-        "weight" : 155.4
+        "weight" : 70.5
       },
       {
         "activeMinutes" : 57,
@@ -948,7 +948,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 5,
         "waterOz" : 62,
-        "weight" : 155.34
+        "weight" : 70.47
       },
       {
         "activeMinutes" : 22,
@@ -959,7 +959,7 @@
         "sleepHours" : 7,
         "stressLevel" : 2,
         "waterOz" : 68,
-        "weight" : 155.28
+        "weight" : 70.44
       },
       {
         "activeMinutes" : 29,
@@ -970,7 +970,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 3,
         "waterOz" : 74,
-        "weight" : 155.22
+        "weight" : 70.41
       },
       {
         "activeMinutes" : 36,
@@ -981,7 +981,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 4,
         "waterOz" : 80,
-        "weight" : 155.16
+        "weight" : 70.38
       },
       {
         "activeMinutes" : 43,
@@ -992,7 +992,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 5,
         "waterOz" : 56,
-        "weight" : 155.1
+        "weight" : 70.35
       },
       {
         "activeMinutes" : 50,
@@ -1003,7 +1003,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 2,
         "waterOz" : 62,
-        "weight" : 155.04
+        "weight" : 70.32
       },
       {
         "activeMinutes" : 57,
@@ -1014,7 +1014,7 @@
         "sleepHours" : 7,
         "stressLevel" : 3,
         "waterOz" : 68,
-        "weight" : 154.98
+        "weight" : 70.28999999999999
       },
       {
         "activeMinutes" : 22,
@@ -1025,7 +1025,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 4,
         "waterOz" : 74,
-        "weight" : 154.92
+        "weight" : 70.25999999999999
       },
       {
         "activeMinutes" : 29,
@@ -1036,7 +1036,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 5,
         "waterOz" : 80,
-        "weight" : 154.86
+        "weight" : 70.23
       },
       {
         "activeMinutes" : 36,
@@ -1047,7 +1047,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 2,
         "waterOz" : 56,
-        "weight" : 154.8
+        "weight" : 70.2
       },
       {
         "activeMinutes" : 43,
@@ -1058,7 +1058,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 3,
         "waterOz" : 62,
-        "weight" : 154.74
+        "weight" : 70.17
       },
       {
         "activeMinutes" : 50,
@@ -1069,7 +1069,7 @@
         "sleepHours" : 7,
         "stressLevel" : 4,
         "waterOz" : 68,
-        "weight" : 154.68
+        "weight" : 70.14
       },
       {
         "activeMinutes" : 57,
@@ -1080,7 +1080,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 5,
         "waterOz" : 74,
-        "weight" : 154.62
+        "weight" : 70.11
       },
       {
         "activeMinutes" : 22,
@@ -1091,7 +1091,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 2,
         "waterOz" : 80,
-        "weight" : 154.56
+        "weight" : 70.08
       },
       {
         "activeMinutes" : 29,
@@ -1102,7 +1102,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 3,
         "waterOz" : 56,
-        "weight" : 154.5
+        "weight" : 70.05
       },
       {
         "activeMinutes" : 36,
@@ -1113,7 +1113,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 4,
         "waterOz" : 62,
-        "weight" : 154.44
+        "weight" : 70.02
       },
       {
         "activeMinutes" : 43,
@@ -1124,7 +1124,7 @@
         "sleepHours" : 7,
         "stressLevel" : 5,
         "waterOz" : 68,
-        "weight" : 154.38
+        "weight" : 69.99
       },
       {
         "activeMinutes" : 50,
@@ -1135,7 +1135,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 2,
         "waterOz" : 74,
-        "weight" : 154.32
+        "weight" : 69.96
       },
       {
         "activeMinutes" : 57,
@@ -1146,7 +1146,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 3,
         "waterOz" : 80,
-        "weight" : 154.26
+        "weight" : 69.92999999999999
       },
       {
         "activeMinutes" : 22,
@@ -1157,7 +1157,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 4,
         "waterOz" : 56,
-        "weight" : 154.2
+        "weight" : 69.89999999999999
       },
       {
         "activeMinutes" : 29,
@@ -1168,7 +1168,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 5,
         "waterOz" : 62,
-        "weight" : 154.14
+        "weight" : 69.86999999999999
       },
       {
         "activeMinutes" : 36,
@@ -1179,7 +1179,7 @@
         "sleepHours" : 7,
         "stressLevel" : 2,
         "waterOz" : 68,
-        "weight" : 154.08
+        "weight" : 69.84
       },
       {
         "activeMinutes" : 43,
@@ -1190,7 +1190,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 3,
         "waterOz" : 74,
-        "weight" : 154.02
+        "weight" : 69.81
       },
       {
         "activeMinutes" : 50,
@@ -1201,7 +1201,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 4,
         "waterOz" : 80,
-        "weight" : 153.96
+        "weight" : 69.78
       },
       {
         "activeMinutes" : 57,
@@ -1212,7 +1212,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 5,
         "waterOz" : 56,
-        "weight" : 153.9
+        "weight" : 69.75
       },
       {
         "activeMinutes" : 22,
@@ -1223,7 +1223,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 2,
         "waterOz" : 62,
-        "weight" : 153.84
+        "weight" : 69.72
       },
       {
         "activeMinutes" : 29,
@@ -1234,7 +1234,7 @@
         "sleepHours" : 7,
         "stressLevel" : 3,
         "waterOz" : 68,
-        "weight" : 153.78
+        "weight" : 69.69
       },
       {
         "activeMinutes" : 36,
@@ -1245,7 +1245,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 4,
         "waterOz" : 74,
-        "weight" : 153.72
+        "weight" : 69.66
       },
       {
         "activeMinutes" : 43,
@@ -1256,7 +1256,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 5,
         "waterOz" : 80,
-        "weight" : 153.66
+        "weight" : 69.63
       },
       {
         "activeMinutes" : 50,
@@ -1267,7 +1267,7 @@
         "sleepHours" : 6.3,
         "stressLevel" : 2,
         "waterOz" : 56,
-        "weight" : 153.6
+        "weight" : 69.6
       },
       {
         "activeMinutes" : 57,
@@ -1278,7 +1278,7 @@
         "sleepHours" : 6.6499999999999995,
         "stressLevel" : 3,
         "waterOz" : 62,
-        "weight" : 153.54
+        "weight" : 69.57
       },
       {
         "activeMinutes" : 22,
@@ -1289,7 +1289,7 @@
         "sleepHours" : 7,
         "stressLevel" : 4,
         "waterOz" : 68,
-        "weight" : 153.48
+        "weight" : 69.53999999999999
       },
       {
         "activeMinutes" : 29,
@@ -1300,7 +1300,7 @@
         "sleepHours" : 7.35,
         "stressLevel" : 5,
         "waterOz" : 74,
-        "weight" : 153.42
+        "weight" : 69.50999999999999
       },
       {
         "activeMinutes" : 36,
@@ -1311,7 +1311,7 @@
         "sleepHours" : 7.699999999999999,
         "stressLevel" : 2,
         "waterOz" : 80,
-        "weight" : 153.36
+        "weight" : 69.48
       }
     ],
     "hairPhotos" : [

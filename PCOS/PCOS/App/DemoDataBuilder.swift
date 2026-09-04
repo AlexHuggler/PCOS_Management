@@ -383,7 +383,7 @@ private extension DemoDataBuilder {
                 DailyLogRecord(
                     id: idGenerator.uuid("dailyLog/\(dayOffset)"),
                     date: date,
-                    weight: 156.0 - Double(dayOffset) * 0.06,
+                    weight: 70.8 - Double(dayOffset) * 0.03,
                     sleepHours: 6.3 + Double(dayOffset % 5) * 0.35,
                     activeMinutes: 22 + (dayOffset % 6) * 7,
                     restingHeartRateBPM: 63 + Double((dayOffset % 7) - 3),

@@ -688,17 +688,17 @@ struct PDFReportGenerator {
         )
         drawBodyText(
             format(
-                "Average weight: %@ kg",
-                defaultValue: "Average weight: %@ kg",
-                decimal(average)
+                "Average weight: %@",
+                defaultValue: "Average weight: %@",
+                WeightDisplay.formatted(kilograms: average, locale: locale)
             ),
             cursor: &cursor
         )
         drawBodyText(
             format(
-                "Start to end change: %@ kg %@",
-                defaultValue: "Start to end change: %@ kg %@",
-                decimal(abs(delta)),
+                "Start to end change: %@ %@",
+                defaultValue: "Start to end change: %@ %@",
+                WeightDisplay.formatted(kilograms: abs(delta), locale: locale),
                 localized(delta >= 0 ? "increase" : "decrease", defaultValue: delta >= 0 ? "increase" : "decrease")
             ),
             cursor: &cursor
@@ -712,7 +712,7 @@ struct PDFReportGenerator {
 
         for entry in weightedLogs.suffix(10) {
             drawBodyText(
-                "\(displayDate(entry.date)): \(decimal(entry.weight)) kg",
+                "\(displayDate(entry.date)): \(WeightDisplay.formatted(kilograms: entry.weight, locale: locale))",
                 cursor: &cursor
             )
         }
