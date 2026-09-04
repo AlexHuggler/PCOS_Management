@@ -63,6 +63,7 @@
 		2FEC7CD7068DB6D152F6444C /* PCOS.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 715B17A0D1F4B230CDDD7C83 /* PCOS.storekit */; };
 		31DD55C295C4374A6A551EF2 /* CycleLogServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4FF41D5F8D07D99D1001AC /* CycleLogServiceTests.swift */; };
 		3337FE84F0D0F864A6BD60A0 /* MealHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A933159AE9DF617B8DA0D5 /* MealHistoryView.swift */; };
+		339872D5E6DB788B1CB2E68D /* TodaySnapshotText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3E33FE5EAC40DCAD71D364 /* TodaySnapshotText.swift */; };
 		340CA6CBDA8564DE08F9250E /* SettingsDataExportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130DDAC98657B84D2C04BA6C /* SettingsDataExportServiceTests.swift */; };
 		344721C24FD03A72AEF020CB /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF2E6663966A292B5709F /* TestHelpers.swift */; };
 		34B7C367FBC5DDDD3DBFD9C8 /* StreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F615469B97DE344553D57674 /* StreakService.swift */; };
@@ -74,6 +75,7 @@
 		394D5509A355F32B05511A65 /* CycleDeleteRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947182998B666293C58F5065 /* CycleDeleteRuleTests.swift */; };
 		39C496FE21DD8B5F4F43BDBF /* SavedFeedbackOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9152A606BF7F325EC1A69F /* SavedFeedbackOverlay.swift */; };
 		3A020A9B54A85295733F7453 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1538311050B87E06A8892C42 /* GoogleService-Info.plist */; };
+		3A2D752A48C41ECA1808D5E4 /* InsightDashboardData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBE0F96D61527E8A5718992 /* InsightDashboardData.swift */; };
 		3ABB9D826A8F6DD12C497E13 /* FirebaseMealScanAppCheckTokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755446BF62800797825CE571 /* FirebaseMealScanAppCheckTokenProvider.swift */; };
 		3B084459219F48AD529AD411 /* MealViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A5821F2534D8BB91E767FE /* MealViewModel.swift */; };
 		3C42E735EA346C106F3FFD8E /* FlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC926E8C6070DCA9135120A2 /* FlowLayoutTests.swift */; };
@@ -284,6 +286,7 @@
 		FA245F91D95B8F7F3A5E4D59 /* ReviewPromptServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A39BF54C284C9C6E2994C987 /* ReviewPromptServiceTests.swift */; };
 		FAD80DEF6E47D11BD8F309F8 /* AppLockManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D737F52415ED14756F7943D /* AppLockManagerTests.swift */; };
 		FB8F263449516DB1A37C7C43 /* PCOSSupplements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0690BF2346E03D4F8B3AA9 /* PCOSSupplements.swift */; };
+		FD72EFBC3E8A0C66B8BBA717 /* InsightDashboardDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC19CFF842012E8E02099AD /* InsightDashboardDataTests.swift */; };
 		FDD4294BDD1CBF96B18A6E71 /* CycleViewModelPredictionTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875503BED26B643FBB59B72E /* CycleViewModelPredictionTextTests.swift */; };
 		FF1CA83EDFBB90D08EBC0876 /* InsightNarrativeHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D7E4E4C0B3DDFEE7BB39CC /* InsightNarrativeHelpers.swift */; };
 		FF8F36574D239DDB21B76A3E /* PregnancyEndReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EF4327CC8650652AD7191A /* PregnancyEndReason.swift */; };
@@ -368,6 +371,7 @@
 		2BD97BE967577D7584B3493F /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2C555B4B9D777AB26D14AA1D /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
 		2D814439010A3580F24ED7EA /* PregnancyActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PregnancyActivationView.swift; sourceTree = "<group>"; };
+		2DBE0F96D61527E8A5718992 /* InsightDashboardData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightDashboardData.swift; sourceTree = "<group>"; };
 		2E2DD07DDA7A7A55CD0A7322 /* InsightGuidanceCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightGuidanceCatalogTests.swift; sourceTree = "<group>"; };
 		2F53CBC2762E9D85D36FF3F6 /* Insight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insight.swift; sourceTree = "<group>"; };
 		2F5ADB0CDB05422DBC9E5648 /* SettingsDataImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataImportService.swift; sourceTree = "<group>"; };
@@ -433,6 +437,7 @@
 		5B5D7C1E074468A04CD155D3 /* LifecycleMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleMode.swift; sourceTree = "<group>"; };
 		5C210303203FBB199E4C9A4B /* SymptomGridItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomGridItem.swift; sourceTree = "<group>"; };
 		5D2872E55EF936DC480CC694 /* UserEntryDefaultsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEntryDefaultsStoreTests.swift; sourceTree = "<group>"; };
+		5D3E33FE5EAC40DCAD71D364 /* TodaySnapshotText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaySnapshotText.swift; sourceTree = "<group>"; };
 		5D737F52415ED14756F7943D /* AppLockManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockManagerTests.swift; sourceTree = "<group>"; };
 		5EA27ACE54FD836B33E8803D /* HairPhotoEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HairPhotoEntry.swift; sourceTree = "<group>"; };
 		5F165AA30B080038BDC1FCB3 /* SettingsDataBackupImportServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataBackupImportServiceTests.swift; sourceTree = "<group>"; };
@@ -479,6 +484,7 @@
 		895B1D927512F995DC0DDB40 /* SettingsDataDeletionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataDeletionServiceTests.swift; sourceTree = "<group>"; };
 		8BDE5055D438544C9E736CC5 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		8C64420FF87EA4900A35420D /* CloudKitStartupPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitStartupPolicy.swift; sourceTree = "<group>"; };
+		8DC19CFF842012E8E02099AD /* InsightDashboardDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightDashboardDataTests.swift; sourceTree = "<group>"; };
 		8E7677BB1A23B44EBAD51593 /* PCOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PCOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E7917010CC3032C46A711E5 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		8F2599749B4ED35945128EFE /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
@@ -760,6 +766,7 @@
 				64C6D477B13EC80760D543E5 /* SilkCometRingModel.swift */,
 				F615469B97DE344553D57674 /* StreakService.swift */,
 				523ED366E01081ED80EEDB28 /* TodayGreeting.swift */,
+				5D3E33FE5EAC40DCAD71D364 /* TodaySnapshotText.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -842,6 +849,7 @@
 		54FB456B359BD5B543984B7A /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				2DBE0F96D61527E8A5718992 /* InsightDashboardData.swift */,
 				316B79AA1AB1E208C837486D /* InsightEvidenceCatalog.swift */,
 				51668728A60F9483DBEBCC9E /* InsightGuidanceCatalog.swift */,
 			);
@@ -937,6 +945,7 @@
 				FB948B2CFCBDD93D55BF2219 /* FormDirtyTrackerTests.swift */,
 				EE70FA766619B3E818980BEF /* GeminiMealScanTests.swift */,
 				EAA4BB71CEC1E1AE036900FD /* HealthKitManagerTests.swift */,
+				8DC19CFF842012E8E02099AD /* InsightDashboardDataTests.swift */,
 				AE1C06B00357159AACB3EF8E /* InsightEngineTests.swift */,
 				F321F39FDAC8B2642EA7FB5A /* InsightEvidenceCatalogTests.swift */,
 				2E2DD07DDA7A7A55CD0A7322 /* InsightGuidanceCatalogTests.swift */,
@@ -1649,6 +1658,7 @@
 				0843F1B1D52FF8AEC31024DF /* FormDirtyTrackerTests.swift in Sources */,
 				360A78EC18733F25C132D5EC /* GeminiMealScanTests.swift in Sources */,
 				C4AF4E6EDC8C0B7971567C1F /* HealthKitManagerTests.swift in Sources */,
+				FD72EFBC3E8A0C66B8BBA717 /* InsightDashboardDataTests.swift in Sources */,
 				94398EC805DA7CF810581514 /* InsightEngineTests.swift in Sources */,
 				BDFF9FD5F33BF174DF05EF58 /* InsightEvidenceCatalogTests.swift in Sources */,
 				84C22B207B83F16A63CEFED7 /* InsightGuidanceCatalogTests.swift in Sources */,
@@ -1759,6 +1769,7 @@
 				A3E7D2151D2ADF24DF859FEB /* HowAppHelpsView.swift in Sources */,
 				E3DE51E9C9116FC265C98A86 /* Insight.swift in Sources */,
 				DDAEEC3710E474748339C755 /* InsightCyclePatternAnalyzer.swift in Sources */,
+				3A2D752A48C41ECA1808D5E4 /* InsightDashboardData.swift in Sources */,
 				DC5B29E931CA50955E7AB4F3 /* InsightDataFetcher.swift in Sources */,
 				AC8BEDAEBB7603CE8BBB7446 /* InsightDeduplicator.swift in Sources */,
 				D5DE822B79DFC0657ADA025B /* InsightDietImpactAnalyzer.swift in Sources */,
@@ -1877,6 +1888,7 @@
 				89107D17CC9FFB093034D9C8 /* SymptomLogView.swift in Sources */,
 				C6B976A9BC9209137B569583 /* SymptomViewModel.swift in Sources */,
 				AD45284988C91879FEB618B3 /* TodayGreeting.swift in Sources */,
+				339872D5E6DB788B1CB2E68D /* TodaySnapshotText.swift in Sources */,
 				9656384B8B93A4C5F652C71F /* TodayView.swift in Sources */,
 				9A25C4C70D128790769EB7D4 /* TooltipOverlay.swift in Sources */,
 				CB11BBFEFD232B1F78C2D8F3 /* UndoToast.swift in Sources */,
@@ -2243,8 +2255,6 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PCOS/PCOS/Info.Release.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CycleBalance;
-				INFOPLIST_KEY_NSCameraUsageDescription = "CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_PREPROCESS = YES;
@@ -2276,8 +2286,6 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PCOS/PCOS/Info.Release.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CycleBalance;
-				INFOPLIST_KEY_NSCameraUsageDescription = "CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_PREPROCESS = YES;
@@ -2315,8 +2323,6 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = PCOS/PCOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CycleBalance;
-				INFOPLIST_KEY_NSCameraUsageDescription = "CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

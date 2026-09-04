@@ -749,22 +749,13 @@ struct TodayView: View {
     }
 
     private var lunarMoodText: String {
-        if todaysSymptoms.contains(where: { $0.symptomType.category == .mood }) {
-            return L10n.string("Tender", defaultValue: "Tender")
-        }
-        return L10n.string("Calm", defaultValue: "Calm")
+        TodaySnapshotText.mood(
+            hasMoodSymptomToday: todaysSymptoms.contains(where: { $0.symptomType.category == .mood })
+        )
     }
 
     private var lunarEnergyText: String {
-        guard let energy = todaysDailyLog?.energyLevel else {
-            return L10n.string("Medium", defaultValue: "Medium")
-        }
-        if energy >= 4 {
-            return L10n.string("High", defaultValue: "High")
-        } else if energy <= 2 {
-            return L10n.string("Low", defaultValue: "Low")
-        }
-        return L10n.string("Medium", defaultValue: "Medium")
+        TodaySnapshotText.energy(level: todaysDailyLog?.energyLevel)
     }
 
     private var lunarSleepText: String {

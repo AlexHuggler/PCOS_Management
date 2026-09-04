@@ -519,36 +519,12 @@ private struct LunarInsightsOverviewDashboard: View {
         }
     }
 
-    private var relatedPatternNames: [String] {
-        var seen = Set<String>()
-        var symptoms: [String] = []
-
-        for insight in insights {
-            for symptom in insight.relatedSymptoms {
-                let trimmed = symptom.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty, seen.insert(trimmed).inserted else { continue }
-                symptoms.append(trimmed)
-            }
-        }
-
-        if !symptoms.isEmpty {
-            return Array(symptoms.prefix(4))
-        }
-
-        return Array(insights.map { $0.insightType.displayName }.prefix(4))
+    private var patterns: [InsightDashboardPattern] {
+        InsightDashboardPatterns.make(from: insights)
     }
 
-    private var trendValues: [Double] {
-        let values = insights
-            .prefix(6)
-            .map { min(max($0.confidence, 0.22), 0.96) }
-            .reversed()
-
-        let resolved = Array(values)
-        guard resolved.count >= 3 else {
-            return [0.46, 0.72, 0.54, 0.82, 0.58, 0.76]
-        }
-        return resolved
+    private var trend: InsightDashboardTrend? {
+        InsightDashboardTrend.make(from: insights, locale: L10n.locale(for: language))
     }
 
     var body: some View {
@@ -625,20 +601,20 @@ private struct LunarInsightsOverviewDashboard: View {
                 completedCycleCount: completedCycleCount,
                 totalDataPoints: totalDataPoints,
                 strongestInsight: strongestInsight,
-                trendValues: trendValues,
+                trend: trend,
+                insightCount: insights.count,
                 language: language,
                 onOpenDisclosure: onOpenDisclosure
             )
 
             LunarInsightPhaseCard(
-                activeSignalCount: activeSignalCount,
+                completedCycleCount: completedCycleCount,
                 strongestInsight: strongestInsight,
                 language: language
             )
 
             LunarInsightTopPatternsCard(
-                patternNames: relatedPatternNames,
-                activeSignalCount: activeSignalCount,
+                patterns: patterns,
                 language: language
             )
         }
@@ -706,7 +682,8 @@ private struct LunarInsightMetricCard: View {
     let completedCycleCount: Int
     let totalDataPoints: Int
     let strongestInsight: Insight?
-    let trendValues: [Double]
+    let trend: InsightDashboardTrend?
+    let insightCount: Int
     let language: AppLanguage
     let onOpenDisclosure: (Insight) -> Void
 
@@ -823,8 +800,13 @@ private struct LunarInsightMetricCard: View {
                     .accessibilityIdentifier("insights.lunar_dashboard.metric_badge")
                 }
 
-                LunarInsightTrendChart(values: trendValues)
-                    .frame(height: 112)
+                if let trend {
+                    LunarInsightTrendChart(values: trend.values, labels: trend.labels)
+                        .frame(height: 112)
+                } else {
+                    LunarInsightTrendPlaceholder(insightCount: insightCount, language: language)
+                        .frame(height: 112)
+                }
 
                 Text(metricNote)
                     .appFont(.caption)
@@ -860,8 +842,7 @@ private struct LunarInsightMetricCard: View {
 
 private struct LunarInsightTrendChart: View {
     let values: [Double]
-
-    private let labels = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"]
+    let labels: [String]
 
     var body: some View {
         VStack(spacing: AppTheme.spacing8) {
@@ -915,12 +896,12 @@ private struct LunarInsightTrendChart: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Insight trend chart")
+        .accessibilityLabel(L10n.string("Insight trend chart", defaultValue: "Insight trend chart"))
         .accessibilityIdentifier("insights.lunar_dashboard.trend_chart")
     }
 
     private func normalizedPoints(in size: CGSize) -> [CGPoint] {
-        let resolvedValues = values.isEmpty ? [0.46, 0.72, 0.54, 0.82, 0.58, 0.76] : values
+        let resolvedValues = values
         guard resolvedValues.count > 1 else { return [] }
 
         let maxValue = max(resolvedValues.max() ?? 1, 0.01)
@@ -998,14 +979,9 @@ private struct LunarInsightTrendArea: Shape {
 }
 
 private struct LunarInsightPhaseCard: View {
-    let activeSignalCount: Int
+    let completedCycleCount: Int
     let strongestInsight: Insight?
     let language: AppLanguage
-
-    private var barValues: [Double] {
-        let strongest = strongestInsight?.confidence ?? 0.68
-        return [0.54, 0.62, strongest, 0.76]
-    }
 
     var body: some View {
         LunarInsightGlassCard(accessibilityIdentifier: "insights.lunar_dashboard.phase_card") {
@@ -1027,8 +1003,8 @@ private struct LunarInsightPhaseCard: View {
                             .foregroundStyle(AppTheme.secondaryText)
                     }
 
-                    LunarInsightBarChart(values: barValues)
-                        .frame(height: 116)
+                    LunarInsightPhasePlaceholder(completedCycleCount: completedCycleCount, language: language)
+                        .frame(minHeight: 116, alignment: .topLeading)
                 }
 
                 VStack(alignment: .leading, spacing: AppTheme.spacing8) {
@@ -1064,74 +1040,9 @@ private struct LunarInsightPhaseCard: View {
     }
 }
 
-private struct LunarInsightBarChart: View {
-    let values: [Double]
-
-    private let symbols = ["camera.macro", "cloud.fill", "circle.lefthalf.filled", "moon.fill"]
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: AppTheme.spacing12) {
-            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
-                VStack(spacing: AppTheme.spacing8) {
-                    GeometryReader { proxy in
-                        VStack {
-                            Spacer(minLength: 0)
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(barGradient(index: index))
-                                .frame(height: max(18, proxy.size.height * CGFloat(value)))
-                        }
-                    }
-
-                    Image(systemName: symbols[index % symbols.count])
-                        .appFont(.caption)
-                        .foregroundStyle(symbolColor(index: index))
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Cycle phase bar chart")
-        .accessibilityIdentifier("insights.lunar_dashboard.phase_bars")
-    }
-
-    private func barGradient(index: Int) -> LinearGradient {
-        let color = symbolColor(index: index)
-        return LinearGradient(
-            colors: [
-                color.opacity(0.96),
-                AppTheme.accentColor.opacity(0.72),
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
-    private func symbolColor(index: Int) -> Color {
-        let colors = [
-            AppTheme.premiumEditorSecondaryAccentColor,
-            AppTheme.lavenderAccent,
-            AppTheme.secondaryText,
-            AppTheme.premiumEditorAccentColor,
-        ]
-        return colors[index % colors.count]
-    }
-}
-
 private struct LunarInsightTopPatternsCard: View {
-    let patternNames: [String]
-    let activeSignalCount: Int
+    let patterns: [InsightDashboardPattern]
     let language: AppLanguage
-
-    private var rows: [String] {
-        if patternNames.isEmpty {
-            return [
-                L10n.string("Cycle timing", defaultValue: "Cycle timing", language: language),
-                L10n.string("Energy changes", defaultValue: "Energy changes", language: language),
-                L10n.string("Symptom clusters", defaultValue: "Symptom clusters", language: language),
-            ]
-        }
-        return patternNames
-    }
 
     var body: some View {
         LunarInsightGlassCard(accessibilityIdentifier: "insights.lunar_dashboard.patterns_card") {
@@ -1141,12 +1052,26 @@ private struct LunarInsightTopPatternsCard: View {
                         .appFont(.headline, weight: .semibold)
                         .foregroundStyle(AppTheme.primaryText)
 
-                    ForEach(Array(rows.prefix(4).enumerated()), id: \.offset) { index, row in
-                        LunarPatternRow(
-                            title: row,
-                            percent: patternPercent(index: index),
-                            color: patternColor(index: index)
+                    if patterns.isEmpty {
+                        Text(
+                            L10n.string(
+                                "Patterns appear after about 14 tracked symptom days.",
+                                defaultValue: "Patterns appear after about 14 tracked symptom days.",
+                                language: language
+                            )
                         )
+                        .appFont(.caption)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("insights.lunar_dashboard.patterns_placeholder")
+                    } else {
+                        ForEach(Array(patterns.enumerated()), id: \.element.id) { index, pattern in
+                            LunarPatternRow(
+                                title: pattern.name,
+                                percent: pattern.percent,
+                                color: patternColor(index: index)
+                            )
+                        }
                     }
                 }
 
@@ -1172,10 +1097,6 @@ private struct LunarInsightTopPatternsCard: View {
                 .frame(maxWidth: 124, alignment: .leading)
             }
         }
-    }
-
-    private func patternPercent(index: Int) -> Int {
-        max(28, 72 - index * max(8, activeSignalCount + 6))
     }
 
     private func patternColor(index: Int) -> Color {
@@ -1285,7 +1206,7 @@ private struct LunarInsightListRowModifier: ViewModifier {
 }
 
 private func normalizedPoints(in rect: CGRect, values: [Double]) -> [CGPoint] {
-    let resolvedValues = values.isEmpty ? [0.46, 0.72, 0.54, 0.82, 0.58, 0.76] : values
+    let resolvedValues = values
     guard resolvedValues.count > 1 else { return [] }
 
     let maxValue = max(resolvedValues.max() ?? 1, 0.01)
@@ -1675,4 +1596,71 @@ struct PremiumInsightTeaserCard: View {
         ], inMemory: true)
         .environment(AppState())
         .environment(ReportAccessPolicy())
+}
+
+private struct LunarInsightTrendPlaceholder: View {
+    let insightCount: Int
+    let language: AppLanguage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(
+                L10n.string(
+                    "Not enough data for a trend yet",
+                    defaultValue: "Not enough data for a trend yet",
+                    language: language
+                )
+            )
+            .appFont(.subheadline, weight: .semibold)
+            .foregroundStyle(AppTheme.primaryText)
+
+            Text(
+                L10n.format(
+                    "The trend line appears once you have %lld insights. You have %lld.",
+                    defaultValue: "The trend line appears once you have %lld insights. You have %lld.",
+                    Int64(InsightDashboardTrend.minimumInsightCount),
+                    Int64(insightCount)
+                )
+            )
+            .appFont(.caption)
+            .foregroundStyle(AppTheme.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights.lunar_dashboard.trend_placeholder")
+    }
+}
+
+private struct LunarInsightPhasePlaceholder: View {
+    let completedCycleCount: Int
+    let language: AppLanguage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(
+                L10n.string(
+                    "Phase comparisons unlock after 3 completed cycles with mood logs.",
+                    defaultValue: "Phase comparisons unlock after 3 completed cycles with mood logs.",
+                    language: language
+                )
+            )
+            .appFont(.caption)
+            .foregroundStyle(AppTheme.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Text(
+                L10n.format(
+                    "Completed cycles so far: %lld",
+                    defaultValue: "Completed cycles so far: %lld",
+                    Int64(completedCycleCount)
+                )
+            )
+            .appFont(.caption, weight: .semibold)
+            .foregroundStyle(AppTheme.primaryText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights.lunar_dashboard.phase_placeholder")
+    }
 }
