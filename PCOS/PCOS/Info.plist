@@ -23,9 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>CycleBalance uses your camera to scan food barcodes, capture meal photos for AI analysis, and capture hair growth/loss progress photos.</string>
+	<string>CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>CycleBalance uses your photo library to select meal photos for AI analysis and save or compare hair growth/loss progress photos.</string>
+	<string>CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>CycleBalance reads Apple Health data you allow, such as nutrition, glucose, cycle, symptoms, sleep, activity, heart, and body context, to populate local logs and insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>

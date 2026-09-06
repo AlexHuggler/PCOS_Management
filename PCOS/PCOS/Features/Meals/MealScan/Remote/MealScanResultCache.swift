@@ -51,12 +51,8 @@ final class MealScanResultCache: MealScanResultCaching {
     }
 
     func cachedResponseJSON(for cacheKey: String, now: Date = Date()) throws -> String? {
+        try purgeExpiredRecords(now: now)
         guard let record = try record(for: cacheKey) else { return nil }
-        guard record.expiresAt > now else {
-            modelContext.delete(record)
-            try modelContext.save()
-            return nil
-        }
 
         record.lastAccessedAt = now
         try modelContext.save()
@@ -73,6 +69,7 @@ final class MealScanResultCache: MealScanResultCaching {
         sourceImageHash: String,
         now: Date = Date()
     ) throws {
+        try purgeExpiredRecords(now: now)
         let record = try record(for: cacheKey) ?? MealScanResultCacheRecord(
             cacheKey: cacheKey,
             modelID: modelID,
@@ -97,6 +94,19 @@ final class MealScanResultCache: MealScanResultCaching {
 
         if record.modelContext == nil {
             modelContext.insert(record)
+        }
+        try modelContext.save()
+    }
+
+    private func purgeExpiredRecords(now: Date) throws {
+        let descriptor = FetchDescriptor<MealScanResultCacheRecord>(
+            predicate: #Predicate { $0.expiresAt <= now }
+        )
+        let expiredRecords = try modelContext.fetch(descriptor)
+        guard !expiredRecords.isEmpty else { return }
+
+        for record in expiredRecords {
+            modelContext.delete(record)
         }
         try modelContext.save()
     }

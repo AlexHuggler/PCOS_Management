@@ -53,8 +53,8 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: CycleBalance
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "CycleBalance uses your photo library to save or compare hair growth/loss progress photos."
-        INFOPLIST_KEY_NSCameraUsageDescription: "CycleBalance uses your camera to scan food barcodes and capture hair growth/loss progress photos for tracking."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "CycleBalance uses your photo library when you choose meal photos for nutrition estimates or add hair and skin journal photos."
+        INFOPLIST_KEY_NSCameraUsageDescription: "CycleBalance uses your camera to scan food barcodes, take meal photos for nutrition estimates, and add hair or skin journal photos."
       configs:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"
@@ -91,10 +91,29 @@ targets:
       - path: PCOS/PCOSTests
         excludes:
           - "**/.DS_Store"
+          - ProductionMealScanAppCheckProbeTests.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: alex.PCOSTests
         PRODUCT_NAME: PCOSTests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PCOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PCOS"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+    dependencies:
+      - target: PCOS
+
+  PCOSProductionProbeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PCOS/PCOSTests/ProductionMealScanAppCheckProbeTests.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: alex.PCOSProductionProbeTests
+        PRODUCT_NAME: PCOSProductionProbeTests
         GENERATE_INFOPLIST_FILE: "YES"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PCOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PCOS"
         BUNDLE_LOADER: "$(TEST_HOST)"
@@ -168,7 +187,7 @@ schemes:
     build:
       targets:
         PCOS: all
-        PCOSTests: [test]
+        PCOSProductionProbeTests: [test]
     run:
       config: Release
     test:
@@ -177,7 +196,7 @@ schemes:
       environmentVariables:
         RUN_PRODUCTION_MEAL_SCAN_INTEGRATION: "1"
       targets:
-        - name: PCOSTests
+        - name: PCOSProductionProbeTests
     profile:
       config: Release
     analyze:

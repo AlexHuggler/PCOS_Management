@@ -1,14 +1,14 @@
 # CycleBalance Website Meal Scan Policy Delta
 
-Date: 2026-07-11
+Date: 2026-07-12
 
-Status: owner and legal review draft. Do not publish this copy until the enabled build, Google retention posture, App Privacy answers, and in-app consent screen are final. The live privacy, terms, and support pages were verified on 2026-07-11 and still contain absolute on-device/no-server claims.
+Status: published and live. The privacy, terms, and support pages are current. The Privacy Policy uses Google's standard paid-API disclosure that request content may be retained for up to 55 days, and the Terms and Support FAQ describe the remote Photo Estimate path. Support was published in commit `e119045`. App Privacy answers and App Store screenshots remain incomplete and must not be represented as submitted.
 
-This is product/privacy drafting, not legal advice. Preserve the current website's RevenueCat, barcode, HealthKit, Apple Ads, support-form, and localization updates when applying it.
+This file records the live meal-scan policy delta; it is product/privacy documentation, not legal advice. The published pages preserve the website's RevenueCat, barcode, HealthKit, Apple Ads, support-form, and localization disclosures.
 
 ## Privacy Policy: Optional Photo Estimate
 
-Add a dedicated subsection under both `Information We Collect` and `Third-Party Services`:
+The live Privacy Policy includes the following substance under `Information We Collect` and `Third-Party Services`:
 
 > **Optional Photo Estimate.** When Photo Estimate is available, CycleBalance first normalizes the meal photo on your device and checks whether it exactly matches a meal you previously reviewed. If you choose **Use Previous Meal**, the reviewed draft is restored locally and the photo is not sent to CycleBalance, Google, RevenueCat, or any other remote service.
 >
@@ -18,45 +18,44 @@ Add a dedicated subsection under both `Information We Collect` and `Third-Party 
 >
 > Google states that paid Gemini requests are not used to improve its products. Under Google's standard paid-service posture, prompts, contextual information, and outputs may be retained for up to 55 days solely for abuse monitoring and required legal or regulatory disclosures. Google-authorized personnel may review content flagged by safety systems under controlled procedures.
 
-Replace the final paragraph above with this only after Zero Data Retention is verified for `cyclebalance-prod-20260710`:
+Do not replace the standard disclosure above unless project-specific Zero Data Retention approval is verified for `cyclebalance-prod-20260710`. There is currently no verified ZDR approval or evidence that a ZDR request was submitted. If approval is verified in the future, the replacement text is:
 
 > Google states that paid Gemini requests are not used to improve its products. Google has approved Zero Data Retention for CycleBalance's production project, so user content and identifiable metadata are cleared before abuse-monitoring logs are written. CycleBalance does not use Gemini grounding, Files, stored interactions, Live session resumption, or explicit context caching for meal estimates.
 
 ## Privacy Policy: Choices, Retention, And Deletion
 
-Add under `Your Rights and Choices`:
+The live Privacy Policy includes the following substance under `Your Rights and Choices`:
 
 > Photo Estimate is optional. You can use manual meal entry or barcode lookup instead, close the confirmation without uploading, or reuse an exact previously reviewed meal locally. Deleting a saved meal removes its local repeat-meal record. Deleting all CycleBalance data removes local meal photos, nutrition records, and repeat-meal fingerprints. Pseudonymous server cache and quota records expire automatically on the schedules described above.
 
-Before publishing, choose one final deletion sentence:
+Visual-similarity reuse is not part of the live policy posture. It remains disabled unless the private 100-image evaluation set passes the approved similarity-policy gate; exact on-device matching is separate.
 
-- Automatic-expiry posture: `CycleBalance does not maintain an account that can be used to retrieve these pseudonymous records; they are automatically deleted after their stated retention periods.`
-- Self-service posture: `You can also use Settings > Privacy > Clear Cloud Meal Scan Data to request deletion of the current app installation's pseudonymous meal-scan cache and quota records.`
+The live page uses the automatic-expiry posture: `CycleBalance does not maintain an account that can be used to retrieve these pseudonymous records; they are automatically deleted after their stated retention periods.` It does not claim that a self-service cloud deletion control is available.
 
 ## Terms: AI Meal Estimate Clause
 
-Add under `Description of Service` and cross-reference from `Data and Privacy`:
+The live Terms include the following substance under `Description of Service`, with the remote-photo exception cross-referenced from `Data and Privacy`:
 
 > **AI Meal Estimates.** Photo Estimate is an optional premium feature that creates an editable draft from a user-selected meal photo. A fresh estimate requires explicit confirmation before CycleBalance sends a compressed photo through its secure proxy to Google Gemini. Exact reuse of a previously reviewed meal remains on device. Availability may be limited by subscription or trial status, daily or trial quotas, provider availability, model safety controls, and CycleBalance budget safeguards.
 
-Add under `Medical Disclaimer`:
+The live Terms include the following substance under `Medical Disclaimer`:
 
 > AI meal estimates may be incomplete, inaccurate, or unable to identify hidden ingredients, oils, sauces, preparation methods, allergens, or exact portions. They are provided only as an editable starting point for personal tracking. Review food labels and consult a qualified professional for medical, nutrition, allergy, pregnancy, or treatment decisions.
 
 ## Support FAQ
 
-Replace the absolute `Everything stays on your device` answer with:
+The live Support FAQ, published in commit `e119045`, replaces the former absolute on-device answer with:
 
 > Your health logs remain local by default. Optional services are clearly separated: Apple and RevenueCat manage purchases, barcode lookup sends only the UPC/EAN you choose, and a fresh Photo Estimate sends one compressed meal photo to Google Gemini only after you confirm. Exact reuse of a previously reviewed meal stays on device. CycleBalance does not use third-party advertising or analytics SDKs for health logs. See the Privacy Policy for cache, quota, and provider-retention details.
 
-## Publication Checklist
+## Publication And Submission Checklist
 
-- [ ] Owner chooses verified Google ZDR or standard 55-day disclosure.
-- [ ] Owner chooses automatic expiry or self-service cloud deletion.
-- [ ] In-app consent copy exactly matches the selected retention posture.
-- [ ] English privacy, terms, support FAQ, metadata descriptions, and structured FAQ data are updated together.
-- [ ] German, French, Italian, Japanese, Korean, and Dutch legal/support pages receive reviewed translations of the same facts.
-- [ ] Legal links, language switchers, canonical URLs, and page dates remain correct.
-- [ ] Render and inspect every locale at desktop and mobile widths.
-- [ ] Publish only after owner approval, then verify `https://cyclebalance.app/privacy`, `/terms`, and `/support` from the live site.
+- [x] Use the standard paid-API disclosure that request content may be retained for up to 55 days; do not claim project-specific ZDR without verified approval.
+- [x] Publish and verify the privacy, terms, and support pages; support publication is commit `e119045`.
+- [x] Keep the live policy limited to exact on-device repeat matching while the private 100-image similarity evaluation remains pending.
+- [ ] Complete final owner/legal and native-speaker review of every published locale.
+- [ ] Confirm in-app consent copy exactly matches the live standard 55-day retention disclosure.
+- [ ] Recheck legal links, language switchers, canonical URLs, page dates, and desktop/mobile rendering for every locale before scanner enablement.
+- [ ] Complete and submit App Store Connect App Privacy answers.
+- [ ] Capture and upload the final App Store screenshot set from the archived review build.
 - [ ] Reconcile the live pages with App Store Connect App Privacy and the exact archived build before submission.

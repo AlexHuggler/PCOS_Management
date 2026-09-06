@@ -367,8 +367,8 @@ struct AppStoreConfigTests {
         #expect(!metadata.localizedCaseInsensitiveContains("no accounts, no servers, no exceptions"))
     }
 
-    @Test("Info.plist omits CloudKit push background mode")
-    func infoPlistOmitsRemoteNotificationBackgroundMode() throws {
+    @Test("Info.plist declares photo purposes and omits CloudKit push background mode")
+    func infoPlistDeclaresPhotoPurposesAndOmitsRemoteNotificationBackgroundMode() throws {
         let testFileURL = URL(fileURLWithPath: #filePath)
         let infoPlistURL = testFileURL
             .deletingLastPathComponent()
@@ -387,11 +387,11 @@ struct AppStoreConfigTests {
 
         let cameraUsageDescription = info["NSCameraUsageDescription"] as? String ?? ""
         #expect(cameraUsageDescription.localizedCaseInsensitiveContains("meal photo"))
-        #expect(cameraUsageDescription.localizedCaseInsensitiveContains("analysis"))
+        #expect(cameraUsageDescription.localizedCaseInsensitiveContains("nutrition estimate"))
 
         let photoLibraryUsageDescription = info["NSPhotoLibraryUsageDescription"] as? String ?? ""
         #expect(photoLibraryUsageDescription.localizedCaseInsensitiveContains("meal photo"))
-        #expect(photoLibraryUsageDescription.localizedCaseInsensitiveContains("analysis"))
+        #expect(photoLibraryUsageDescription.localizedCaseInsensitiveContains("nutrition estimate"))
 
         let backgroundModes = info["UIBackgroundModes"] as? [String] ?? []
         #expect(!backgroundModes.contains("remote-notification"))

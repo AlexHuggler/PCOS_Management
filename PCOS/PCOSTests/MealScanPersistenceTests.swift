@@ -35,7 +35,7 @@ struct MealScanPersistenceTests {
         #expect(metadata.count == 1)
         #expect(imports.count == 1)
         #expect(meal.mealDescription == "Chicken rice bowl")
-        #expect(meal.sourceLabel == "AI meal estimate")
+        #expect(meal.sourceLabel == "Photo meal estimate")
         #expect(meal.mealSource == "ai_meal_scan")
         #expect(meal.userConfirmed == true)
         #expect(meal.confidenceScore == result.confidence.score)

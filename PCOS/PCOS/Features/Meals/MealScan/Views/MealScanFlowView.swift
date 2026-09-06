@@ -45,7 +45,10 @@ struct MealScanFlowView: View {
                                         do {
                                             try await viewModel.scanPendingImageAsNew()
                                         } catch {
-                                            viewModel.errorMessage = "No food was confidently detected. You can retake the photo or add the meal manually."
+                                            viewModel.errorMessage = L10n.string(
+                                                "No food was confidently detected. You can retake the photo or add the meal manually.",
+                                                defaultValue: "No food was confidently detected. You can retake the photo or add the meal manually."
+                                            )
                                             viewModel.phase = .manualFallback
                                         }
                                     }
@@ -90,7 +93,7 @@ struct MealScanFlowView: View {
                     }
                 }
             }
-            .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : L10n.string("AI meal estimate", defaultValue: "AI meal estimate"))
+            .navigationTitle(AppTheme.usesPremiumEditorStyling ? "" : L10n.string("Photo estimate", defaultValue: "Photo estimate"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if AppTheme.usesPremiumEditorStyling {
@@ -307,7 +310,7 @@ struct MealScanEntryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppTheme.spacing20) {
                     BotanicalPosterHeader(
-                        title: L10n.string("AI meal estimate", defaultValue: "AI meal estimate"),
+                        title: L10n.string("Photo estimate", defaultValue: "Photo estimate"),
                         subtitle: L10n.string(
                             "Snap a meal, review the estimated foods and portions, then save carbs, protein, fats, calories, and fiber to your CycleBalance log.",
                             defaultValue: "Snap a meal, review the estimated foods and portions, then save carbs, protein, fats, calories, and fiber to your CycleBalance log."
@@ -321,14 +324,14 @@ struct MealScanEntryView: View {
                         Button {
                             viewModel.startScan()
                         } label: {
-                            Label(L10n.string("Scan meal", defaultValue: "Scan meal"), systemImage: "camera.viewfinder")
+                            Label(L10n.string("Choose meal photo", defaultValue: "Choose meal photo"), systemImage: "camera.viewfinder")
                                 .appFont(.headline)
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(AppTheme.sage)
                         .accessibilityIdentifier("meal_scan.scan_button")
-                        .accessibilityLabel("Scan meal")
+                        .accessibilityLabel(L10n.string("Choose meal photo", defaultValue: "Choose meal photo"))
 
                         Button(action: onChooseManual) {
                             Label(L10n.string("Enter manually", defaultValue: "Enter manually"), systemImage: "square.and.pencil")
@@ -361,7 +364,7 @@ struct MealScanEntryView: View {
                     VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                         HStack(alignment: .top, spacing: AppTheme.spacing12) {
                             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                                Text(L10n.string("Estimate meals gently", defaultValue: "Estimate meals gently"))
+                                Text(L10n.string("Start with a photo", defaultValue: "Start with a photo"))
                                     .appFont(.largeTitle, weight: .semibold)
                                     .foregroundStyle(AppTheme.primaryText)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -407,7 +410,7 @@ struct MealScanEntryView: View {
                             viewModel.startScan()
                         } label: {
                             lunarActionRow(
-                                title: L10n.string("Scan meal", defaultValue: "Scan meal"),
+                                title: L10n.string("Choose meal photo", defaultValue: "Choose meal photo"),
                                 subtitle: L10n.string("Use the camera or import a photo", defaultValue: "Use the camera or import a photo"),
                                 systemImage: "camera.viewfinder",
                                 accent: AppTheme.premiumEditorAccentColor,
@@ -416,7 +419,7 @@ struct MealScanEntryView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("meal_scan.scan_button")
-                        .accessibilityLabel(L10n.string("Scan meal", defaultValue: "Scan meal"))
+                        .accessibilityLabel(L10n.string("Choose meal photo", defaultValue: "Choose meal photo"))
 
                         Button(action: onChooseManual) {
                             lunarActionRow(
@@ -591,20 +594,30 @@ struct MealCameraView: View {
                     }
                     await viewModel.scanWithFallback(image: image)
                 } catch {
-                    cameraError = "Could not import photo: \(error.localizedDescription)"
+                    cameraError = L10n.format(
+                        "Could not import photo. %@",
+                        defaultValue: "Could not import photo. %@",
+                        error.localizedDescription
+                    )
                 }
             }
         }
     }
 
     private func presentMealScanPaywall() {
-        cameraError = "Subscribe to unlock real photo estimates."
+        cameraError = L10n.string(
+            "Subscribe to unlock photo estimates.",
+            defaultValue: "Subscribe to unlock photo estimates."
+        )
         appState.presentPremiumPaywall(reason: .mealScan)
     }
 
     private func presentCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            cameraError = "Camera is unavailable on this device. You can import a meal photo instead."
+            cameraError = L10n.string(
+                "Camera is unavailable on this device. You can import a meal photo instead.",
+                defaultValue: "Camera is unavailable on this device. You can import a meal photo instead."
+            )
             return
         }
 
@@ -617,12 +630,18 @@ struct MealCameraView: View {
                     if granted {
                         showingCamera = true
                     } else {
-                        cameraError = "Camera access is needed to take a meal photo. You can import a photo instead."
+                        cameraError = L10n.string(
+                            "Camera access is needed to take a meal photo. You can import a photo instead.",
+                            defaultValue: "Camera access is needed to take a meal photo. You can import a photo instead."
+                        )
                     }
                 }
             }
         default:
-            cameraError = "Camera access is needed to take a meal photo. You can import a photo instead."
+            cameraError = L10n.string(
+                "Camera access is needed to take a meal photo. You can import a photo instead.",
+                defaultValue: "Camera access is needed to take a meal photo. You can import a photo instead."
+            )
         }
     }
 }
@@ -1257,8 +1276,8 @@ struct MealScanNewAttemptConfirmationView: View {
 struct MealScanPrivacyNoticeView: View {
     static var remoteAnalysisDisclosure: String {
         L10n.string(
-            "When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
-            defaultValue: "When you choose a photo estimate, a compressed copy is sent securely to our AI service for analysis. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device."
+            "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device.",
+            defaultValue: "When you confirm a new photo estimate, CycleBalance may send one compressed copy to Google Gemini for analysis. Exact previous-meal reuse stays on this device. CycleBalance does not retain the uploaded photo on its server. By default, only nutrition you review and save is kept in your meal log; you can turn on Keep Saved Meal Photos in Settings to keep photos locally on this device."
         )
     }
 
@@ -1431,5 +1450,6 @@ private struct MealCameraImagePicker: UIViewControllerRepresentable {
             MealScanNutritionSummary.self,
             MealScanMetadata.self,
             NutritionImportRecord.self,
+            MealScanRepeatCacheRecord.self,
         ], inMemory: true)
 }

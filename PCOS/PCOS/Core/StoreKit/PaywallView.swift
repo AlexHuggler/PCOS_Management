@@ -379,7 +379,7 @@ private enum PaywallCopy {
     static func heroTitle(for language: AppLanguage, reason: PremiumPaywallReason) -> String {
         switch reason {
         case .mealScan:
-            string("Unlock AI meal estimates", defaultValue: "Unlock AI meal estimates", language: language)
+            string("Unlock photo meal estimates", defaultValue: "Unlock photo meal estimates", language: language)
         case .general:
             string("Unlock Premium", defaultValue: "Unlock Premium", language: language)
         }
