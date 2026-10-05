@@ -18,7 +18,8 @@ struct OnboardingProgressSegments: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.format("Step %lld of %lld", defaultValue: "Step %lld of %lld", Int64(current), Int64(total)))
+        .accessibilityLabel(L10n.string("Progress", defaultValue: "Progress"))
+        .accessibilityValue(L10n.format("Step %lld of %lld", defaultValue: "Step %lld of %lld", Int64(current), Int64(total)))
     }
 }
 
@@ -159,9 +160,11 @@ struct OnboardingStageStep: View {
                             Text(option.journeyTitle)
                                 .appFont(.headline)
                                 .foregroundStyle(AppTheme.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
                             Text(option.journeySubtitle)
                                 .appFont(.subheadline)
                                 .foregroundStyle(AppTheme.secondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: AppTheme.spacing8)
                         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
@@ -177,7 +180,7 @@ struct OnboardingStageStep: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
-                            .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.35), lineWidth: isSelected ? 1.5 : 1)
+                            .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: isSelected ? 1.5 : 1)
                     )
                     .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous))
                 }
@@ -218,7 +221,7 @@ struct OnboardingFocusStep: View {
                         .padding(.horizontal, AppTheme.spacing16)
                         .frame(minHeight: 44)
                         .background(Capsule().fill(isSelected ? AppTheme.accentColor : AppTheme.cardBackground))
-                        .overlay(Capsule().stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.45), lineWidth: 1))
+                        .overlay(Capsule().stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: 1))
                         .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -237,14 +240,14 @@ struct OnboardingFocusStep: View {
                     .submitLabel(.done)
                     .appFont(.body)
                     .padding(.horizontal, AppTheme.spacing16)
-                    .frame(minHeight: 48)
+                    .frame(minHeight: 52)
                     .background(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
                             .fill(AppTheme.cardBackground)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                            .stroke(AppTheme.cardBorder.opacity(0.35), lineWidth: 1)
+                            .stroke(AppTheme.cardBorder, lineWidth: 1)
                     )
                     .accessibilityIdentifier("onboarding.name.field")
             }
@@ -289,6 +292,10 @@ struct OnboardingUnlocksStep: View {
     let checkInDays: Int
     @Binding var reminderTime: Date
 
+    @State private var showsTimeWheel = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var progress: Int { CheckInProgress.displayed(checkInDays) }
 
     var body: some View {
@@ -315,6 +322,7 @@ struct OnboardingUnlocksStep: View {
                         VStack(alignment: .leading, spacing: AppTheme.spacing4) {
                             ProgressView(value: CheckInProgress.fraction(checkInDays))
                                 .tint(AppTheme.accentColor)
+                                .accessibilityHidden(true)
                             Text(L10n.format("%lld of %lld", defaultValue: "%lld of %lld", Int64(progress), Int64(CheckInProgress.firstPatternTarget)))
                                 .appFont(.caption, weight: .semibold)
                                 .foregroundStyle(AppTheme.accentColor)
@@ -336,32 +344,68 @@ struct OnboardingUnlocksStep: View {
             }
 
             OnboardingCard {
-                HStack(alignment: .center, spacing: AppTheme.spacing12) {
-                    IconTile(systemImage: "bell")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L10n.string("Get a gentle nudge?", defaultValue: "Get a gentle nudge?"))
-                            .appFont(.headline)
-                            .foregroundStyle(AppTheme.primaryText)
-                        Text(L10n.string(
-                            "One quiet reminder a day. It never shows your symptoms on the lock screen.",
-                            defaultValue: "One quiet reminder a day. It never shows your symptoms on the lock screen."
-                        ))
-                        .appFont(.footnote)
-                        .foregroundStyle(AppTheme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                    reminderHeader
+                    if showsTimeWheel {
+                        DatePicker(
+                            L10n.string("Reminder time", defaultValue: "Reminder time"),
+                            selection: $reminderTime,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity)
+                        .transition(.opacity)
+                        .accessibilityIdentifier("onboarding.reminder.wheel")
                     }
-                    Spacer(minLength: 0)
-                    DatePicker(
-                        L10n.string("Reminder time", defaultValue: "Reminder time"),
-                        selection: $reminderTime,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .labelsHidden()
-                    .tint(AppTheme.accentColor)
-                    .accessibilityIdentifier("onboarding.reminder.time")
                 }
                 .padding(AppTheme.spacing16)
             }
+        }
+    }
+
+    private var reminderHeader: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppTheme.spacing12))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: AppTheme.spacing12))
+        return layout {
+            HStack(alignment: .center, spacing: AppTheme.spacing12) {
+                IconTile(systemImage: "bell")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.string("Get a gentle nudge?", defaultValue: "Get a gentle nudge?"))
+                        .appFont(.headline)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.string(
+                        "One quiet reminder a day. It never shows your symptoms on the lock screen.",
+                        defaultValue: "One quiet reminder a day. It never shows your symptoms on the lock screen."
+                    ))
+                    .appFont(.footnote)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+            // A 44pt time chip (the compact system picker is only ~34pt tall); tapping it shows a wheel.
+            Button {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                    showsTimeWheel.toggle()
+                }
+            } label: {
+                Text(reminderTime, style: .time)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.accentColor)
+                    .fixedSize()
+                    .padding(.horizontal, AppTheme.spacing16)
+                    .frame(minHeight: 44)
+                    .background(Capsule().fill(AppTheme.accentColor.opacity(AppTheme.opacityLight)))
+                    .overlay(Capsule().stroke(AppTheme.cardBorder, lineWidth: 1))
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.string("Reminder time", defaultValue: "Reminder time"))
+            .accessibilityValue(Text(reminderTime, style: .time))
+            .accessibilityIdentifier("onboarding.reminder.time")
         }
     }
 
@@ -377,9 +421,11 @@ struct OnboardingUnlocksStep: View {
                 Text(title)
                     .appFont(.headline)
                     .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(detail)
                     .appFont(.subheadline)
                     .foregroundStyle(AppTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
                 extra()
                     .padding(.top, AppTheme.spacing4)
             }

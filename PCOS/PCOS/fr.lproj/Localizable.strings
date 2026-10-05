@@ -3184,3 +3184,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Welcome back. Your earlier check-ins still count." = "Bon retour. Vos bilans précédents comptent toujours.";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "Progression";

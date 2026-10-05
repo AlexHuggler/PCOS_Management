@@ -3161,3 +3161,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Welcome back. Your earlier check-ins still count." = "다시 오셨네요. 이전 체크인도 그대로 반영돼요.";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "진행 상황";

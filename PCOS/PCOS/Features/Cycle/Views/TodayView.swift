@@ -661,6 +661,8 @@ struct TodayView: View {
                 Spacer()
                 NavigationLink { HealthKitSettingsView() } label: {
                     Image(systemName: "arrow.up.right")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityLabel(L10n.string("Apple Health settings", defaultValue: "Apple Health settings"))
             }
@@ -813,8 +815,7 @@ struct TodayView: View {
                 Text(lunarGreetingTitle)
                     .appHeadingFont(.title2, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(L10n.string("You're not alone in this.", defaultValue: "You're not alone in this."))
                     .appFont(.subheadline)
@@ -886,8 +887,6 @@ struct TodayView: View {
                     .appHeadingFont(.largeTitle, weight: .regular)
                     .foregroundStyle(AppTheme.accentColor)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("today.hero.current_cycle_label")
 
@@ -936,8 +935,8 @@ struct TodayView: View {
                     .appFont(.caption, weight: .semibold)
                     .textCase(.uppercase)
                     .foregroundStyle(AppTheme.secondaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.86)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("\(dayCount)")
                     .appHeadingFont(.largeTitle, weight: .regular)
@@ -945,7 +944,6 @@ struct TodayView: View {
                     .scaleEffect(1.46)
                     .foregroundStyle(AppTheme.primaryText)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.62)
                     .padding(.vertical, AppTheme.spacing4)
                     .accessibilityIdentifier("today.hero.current_cycle_label")
 
@@ -960,22 +958,21 @@ struct TodayView: View {
                         .appFont(.subheadline, weight: .semibold)
                         .foregroundStyle(AppTheme.premiumEditorAccentColor)
                         .multilineTextAlignment(.center)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 VStack(spacing: AppTheme.spacing4) {
                     Text(L10n.string("Next period", defaultValue: "Next period"))
                         .appFont(.subheadline)
                         .foregroundStyle(AppTheme.primaryText)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(viewModel?.predictionCountdownText() ?? lunarPredictionHeadline)
                         .appHeadingFont(.title2, weight: .regular)
                         .foregroundStyle(AppTheme.premiumEditorAccentGradient)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.76)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if let secondary = lunarPredictionDetailText {
                         HStack(spacing: AppTheme.spacing4) {
@@ -983,8 +980,7 @@ struct TodayView: View {
                                 .appFont(.caption)
                                 .foregroundStyle(AppTheme.secondaryText)
                                 .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.82)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             if viewModel?.hasActionablePrediction == true {
                                 Button {
@@ -993,9 +989,10 @@ struct TodayView: View {
                                     Image(systemName: "info.circle")
                                         .appFont(.caption)
                                         .foregroundStyle(AppTheme.secondaryText)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .contentShape(Rectangle())
                                 .accessibilityLabel(
                                     L10n.string("About this estimate", defaultValue: "About this estimate")
                                 )
@@ -1011,8 +1008,7 @@ struct TodayView: View {
                 } label: {
                     HStack(spacing: AppTheme.spacing4) {
                         Text(L10n.string("Edit period dates", defaultValue: "Edit period dates"))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.78)
+                            .fixedSize(horizontal: false, vertical: true)
                         Image(systemName: "pencil")
                             .imageScale(.small)
                     }
@@ -1396,8 +1392,6 @@ struct TodayView: View {
                         Text(intensity.displayName)
                             .appFont(.caption, weight: .medium)
                             .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -1934,8 +1928,7 @@ struct TodayView: View {
                         Text("\(Int(latest.glucoseValue)) mg/dL")
                             .appFont(.subheadline, weight: .medium)
                             .foregroundStyle(latest.glucoseValue > 140 ? .orange : AppTheme.accentColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .fixedSize()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -2243,14 +2236,14 @@ private struct LunarTodaySnapshotItemView: View {
             Text(item.title)
                 .appFont(.caption, weight: .semibold)
                 .foregroundStyle(AppTheme.primaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(item.value)
                 .appFont(.caption)
                 .foregroundStyle(AppTheme.secondaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
     }
@@ -2490,8 +2483,7 @@ struct QuickActionButton: View {
                 Text(title)
                     .appFont(.caption, weight: .medium)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity)
             .fixedSize(horizontal: false, vertical: true)

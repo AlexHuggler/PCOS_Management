@@ -1043,28 +1043,14 @@ private struct PaywallFeatureComparisonCard: View {
     let language: AppLanguage
     let features: [PaywallFeature]
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .center) {
-                Text(PaywallCopy.featureHeader(for: language))
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(AppTheme.secondaryText)
-
-                Spacer()
-
-                Text(PaywallCopy.freeHeader(for: language))
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(AppTheme.secondaryText)
-                    .frame(width: 44)
-
-                Text(PaywallCopy.premiumHeader(for: language))
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(AppTheme.coralAccent)
-                    .frame(width: 64)
+            // At accessibility sizes each row stacks and names its tiers, so the column header goes.
+            if !dynamicTypeSize.isAccessibilitySize {
+                header
             }
-            .padding(.horizontal, AppTheme.spacing12)
-            .padding(.top, AppTheme.spacing12)
-            .padding(.bottom, AppTheme.spacing8)
 
             ForEach(features) { feature in
                 PaywallFeatureRow(language: language, feature: feature)
@@ -1077,49 +1063,102 @@ private struct PaywallFeatureComparisonCard: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("paywall.feature_table")
     }
+
+    private var header: some View {
+        HStack(alignment: .center) {
+            Text(PaywallCopy.featureHeader(for: language))
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(AppTheme.secondaryText)
+
+            Spacer()
+
+            Text(PaywallCopy.freeHeader(for: language))
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(AppTheme.secondaryText)
+                .frame(width: 44)
+
+            Text(PaywallCopy.premiumHeader(for: language))
+                .appFont(.caption, weight: .semibold)
+                .foregroundStyle(AppTheme.coralAccent)
+                .frame(width: 64)
+        }
+        .padding(.horizontal, AppTheme.spacing12)
+        .padding(.top, AppTheme.spacing12)
+        .padding(.bottom, AppTheme.spacing8)
+    }
 }
 
 private struct PaywallFeatureRow: View {
     let language: AppLanguage
     let feature: PaywallFeature
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(spacing: 0) {
             Divider()
                 .padding(.leading, AppTheme.spacing12)
 
-            HStack {
-                Text(feature.title)
-                    .appFont(.body)
-                    .foregroundStyle(AppTheme.primaryText)
-
-                Spacer()
-
-                PaywallInclusionIcon(
-                    isIncluded: feature.freeIncluded,
-                    accentColor: AppTheme.sage
-                )
-                .frame(width: 44)
-
-                PaywallInclusionIcon(
-                    isIncluded: feature.premiumIncluded,
-                    accentColor: AppTheme.coralAccent
-                )
-                .frame(width: 64)
+            if dynamicTypeSize.isAccessibilitySize {
+                stackedRow
+            } else {
+                columnRow
             }
-            .padding(.horizontal, AppTheme.spacing12)
-            .padding(.vertical, 13)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityIdentifier("paywall.feature.\(feature.id)")
     }
 
-    private var accessibilityLabel: String {
+    private var stackedRow: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+            Text(feature.title)
+                .appFont(.body)
+                .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(tiersText)
+                .appFont(.footnote)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppTheme.spacing12)
+        .padding(.vertical, AppTheme.spacing12)
+    }
+
+    private var columnRow: some View {
+        HStack {
+            Text(feature.title)
+                .appFont(.body)
+                .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer()
+
+            PaywallInclusionIcon(
+                isIncluded: feature.freeIncluded,
+                accentColor: AppTheme.sage
+            )
+            .frame(width: 44)
+
+            PaywallInclusionIcon(
+                isIncluded: feature.premiumIncluded,
+                accentColor: AppTheme.coralAccent
+            )
+            .frame(width: 64)
+        }
+        .padding(.horizontal, AppTheme.spacing12)
+        .padding(.vertical, 13)
+    }
+
+    private var tiersText: String {
         let free = PaywallCopy.freeHeader(for: language)
         let premium = PaywallCopy.premiumHeader(for: language)
-        let tiers = feature.freeIncluded ? "\(free), \(premium)" : premium
-        return "\(feature.title): \(tiers)"
+        return feature.freeIncluded ? "\(free), \(premium)" : premium
+    }
+
+    private var accessibilityLabel: String {
+        "\(feature.title): \(tiersText)"
     }
 }
 
@@ -1172,7 +1211,7 @@ private struct PaywallPlanCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
-                    .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.5), lineWidth: isSelected ? 1.5 : 0.8)
+                    .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: isSelected ? 1.5 : 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous))
         }

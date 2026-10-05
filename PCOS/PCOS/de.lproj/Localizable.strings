@@ -3233,3 +3233,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Welcome back. Your earlier check-ins still count." = "Willkommen zurück. Deine bisherigen Check-ins zählen weiter.";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "Fortschritt";
