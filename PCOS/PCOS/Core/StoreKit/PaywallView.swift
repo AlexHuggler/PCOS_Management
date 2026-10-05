@@ -1,17 +1,37 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Paywall (A10–A12, B1)
+
+/// Contextual Premium paywall. Yearly is listed first and preselected; tapping a plan only selects
+/// it and nothing is bought until "Continue". Renewal terms sit next to the button, and Restore,
+/// Terms of Use and Privacy Policy are always visible. After a purchase the sheet shows
+/// "Welcome to Premium" and then continues the action the user started.
 struct PaywallView: View {
+    private enum Stage {
+        case plans
+        case welcome
+    }
+
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var subscriptionManager = SubscriptionManager.shared
     @State private var billingProducts: [BillingProduct] = []
+    @State private var selectedProductID: String?
     @State private var isLoadingProducts = false
     @State private var activePurchaseProductID: String?
     @State private var isRestoringPurchases = false
     @State private var loadErrorMessage: String?
     @State private var alertErrorMessage: String?
+    @State private var notice: PaywallNotice?
+    @State private var stage: Stage = .plans
+    @State private var showComparison = false
+    @State private var appearedAt = Date()
+    @State private var didTrackView = false
+    @State private var attemptedPurchase = false
+    @State private var completedPurchase = false
 
     private var paywallLanguage: AppLanguage {
         appState.selectedAppLanguage
@@ -37,6 +57,22 @@ struct PaywallView: View {
         billingProducts.first(where: { $0.id == SubscriptionManager.yearlyProductID })
     }
 
+    /// Yearly first, then Monthly, then anything else the offering returns.
+    private var orderedProducts: [BillingProduct] {
+        func rank(_ product: BillingProduct) -> Int {
+            switch product.id {
+            case SubscriptionManager.yearlyProductID: 0
+            case SubscriptionManager.monthlyProductID: 1
+            default: 2
+            }
+        }
+        return billingProducts.sorted { rank($0) < rank($1) }
+    }
+
+    private var selectedProduct: BillingProduct? {
+        billingProducts.first(where: { $0.id == selectedProductID }) ?? orderedProducts.first
+    }
+
     private var isBusy: Bool {
         activePurchaseProductID != nil || isRestoringPurchases
     }
@@ -52,7 +88,8 @@ struct PaywallView: View {
             return nil
         }
 
-        let savingsPercent = Int((((monthlyPrice - yearlyPrice) / monthlyPrice) * 100).rounded())
+        // Rounded down so the saving is never overstated.
+        let savingsPercent = Int((((monthlyPrice - yearlyPrice) / monthlyPrice) * 100).rounded(.down))
         guard savingsPercent > 0 else { return nil }
 
         return L10n.format(
@@ -69,13 +106,20 @@ struct PaywallView: View {
                 AppTheme.groupedBackground
                     .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    PaywallTopBar(language: paywallLanguage, closeAction: closePaywall)
-
+                switch stage {
+                case .plans:
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .accessibilityIdentifier("screen.paywall")
+                case .welcome:
+                    PremiumWelcomeView(
+                        language: paywallLanguage,
+                        reason: appState.premiumPaywallReason,
+                        deferredLogger: appState.deferredLogger,
+                        continueAction: closePaywall
+                    )
+                    .transition(.opacity)
                 }
-                .accessibilityIdentifier("screen.paywall")
             } else {
                 Color.clear
                     .ignoresSafeArea()
@@ -87,87 +131,179 @@ struct PaywallView: View {
                 return
             }
 
+            trackViewIfNeeded()
             await loadPaywallIfNeeded()
         }
+        .onDisappear(perform: trackDismissalIfNeeded)
         .toolbar(.hidden, for: .navigationBar)
-        .accessibilityIdentifier("screen.paywall")
-        .alert(PaywallCopy.errorTitle(for: paywallLanguage), isPresented: Binding(
-            get: { alertErrorMessage != nil },
-            set: { if !$0 { alertErrorMessage = nil } }
-        )) {
+        .alert(alertTitle, isPresented: isAlertPresented) {
             Button(PaywallCopy.okButton(for: paywallLanguage), role: .cancel) {}
         } message: {
-            Text(alertErrorMessage ?? PaywallCopy.unknownError(for: paywallLanguage))
+            Text(alertMessage)
         }
     }
+
+    // MARK: Content
 
     @ViewBuilder
     private var content: some View {
         if billingProducts.isEmpty {
-            if isLoadingProducts {
-                ProgressView(PaywallCopy.loadingPremiumOptions(for: paywallLanguage))
-                    .appFont(.headline)
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    PaywallCloseButton(language: paywallLanguage, action: closePaywall)
+                }
+                .padding(.horizontal, AppTheme.spacing16)
+                .padding(.top, AppTheme.spacing12)
+
+                if isLoadingProducts {
+                    ProgressView(PaywallCopy.loadingPremiumOptions(for: paywallLanguage))
+                        .appFont(.headline)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityIdentifier("paywall.loading")
+                } else {
+                    PaywallUnavailableState(
+                        language: paywallLanguage,
+                        message: loadErrorMessage ?? PaywallCopy.unableToLoadOptions(for: paywallLanguage),
+                        retryAction: retryLoadingProducts
+                    )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityIdentifier("paywall.loading")
-            } else {
-                PaywallUnavailableState(
-                    language: paywallLanguage,
-                    message: loadErrorMessage ?? PaywallCopy.unableToLoadOptions(for: paywallLanguage),
-                    retryAction: retryLoadingProducts
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
         } else {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-                    PaywallSparkleHeader(language: paywallLanguage, reason: appState.premiumPaywallReason)
+                    HStack {
+                        Spacer()
+                        PaywallCloseButton(language: paywallLanguage, action: closePaywall)
+                    }
+
+                    PaywallHeader(language: paywallLanguage, reason: appState.premiumPaywallReason)
 
                     if isLocalStoreKit {
                         PaywallLocalModeBadge(language: paywallLanguage)
                     }
 
-                    PaywallFeatureComparisonCard(language: paywallLanguage, features: paywallFeatures)
+                    VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                        ForEach(PaywallCopy.benefits(for: paywallLanguage)) { benefit in
+                            PaywallBenefitRow(benefit: benefit)
+                        }
+                    }
+
+                    DisclosureGroup(isExpanded: $showComparison) {
+                        PaywallFeatureComparisonCard(language: paywallLanguage, features: paywallFeatures)
+                            .padding(.top, AppTheme.spacing8)
+                    } label: {
+                        Text(PaywallCopy.comparePlans(for: paywallLanguage))
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.accentColor)
+                            .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .tint(AppTheme.accentColor)
+                    .accessibilityIdentifier("paywall.compare_plans")
 
                     VStack(spacing: AppTheme.spacing12) {
-                        ForEach(billingProducts) { product in
+                        ForEach(orderedProducts) { product in
                             PaywallPlanCard(
                                 language: paywallLanguage,
                                 product: product,
-                                savingsText: product.id == SubscriptionManager.yearlyProductID ? yearlySavingsText : nil,
-                                isRecommended: product.id == SubscriptionManager.yearlyProductID,
-                                isProcessing: activePurchaseProductID == product.id,
+                                badgeText: product.id == SubscriptionManager.yearlyProductID
+                                    ? yearlySavingsText.map { PaywallCopy.bestValueBadge(savings: $0, language: paywallLanguage) }
+                                    : nil,
+                                isSelected: product.id == selectedProduct?.id,
                                 isDisabled: isBusy,
-                                purchaseAction: {
-                                    purchase(product)
-                                }
+                                selectAction: { select(product) }
                             )
                         }
                     }
 
-                    PaywallFooterLinks(
-                        language: paywallLanguage,
-                        isRestoring: isRestoringPurchases,
-                        isDisabled: isBusy,
-                        restoreAction: restorePurchases,
-                        privacyPolicyURL: AppLinks.privacyPolicy,
-                        termsOfServiceURL: AppLinks.termsOfService
-                    )
+                    PaywallReassurance(language: paywallLanguage)
+                        .padding(.top, AppTheme.spacing8)
                 }
                 .padding(.horizontal, AppTheme.spacing16)
                 .padding(.top, AppTheme.spacing12)
-                .padding(.bottom, AppTheme.spacing32)
+                .padding(.bottom, AppTheme.spacing16)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                purchaseFooter
             }
         }
     }
 
+    private var purchaseFooter: some View {
+        VStack(spacing: AppTheme.spacing8) {
+            if let product = selectedProduct {
+                PaywallPrimaryButton(
+                    title: PaywallCopy.continueButton(price: product.displayPricePerPeriod(language: paywallLanguage), language: paywallLanguage),
+                    isProcessing: activePurchaseProductID == product.id,
+                    isDisabled: isBusy,
+                    action: purchaseSelectedPlan
+                )
+                .accessibilityIdentifier("paywall.continue")
+
+                PaywallRenewalTerms(
+                    text: PaywallCopy.renewalTerms(price: product.displayPricePerPeriod(language: paywallLanguage), language: paywallLanguage)
+                )
+            }
+
+            PaywallFooterLinks(
+                language: paywallLanguage,
+                isRestoring: isRestoringPurchases,
+                isDisabled: isBusy,
+                restoreAction: restorePurchases,
+                privacyPolicyURL: AppLinks.privacyPolicy,
+                termsOfServiceURL: AppLinks.termsOfService
+            )
+        }
+        .padding(.horizontal, AppTheme.spacing16)
+        .padding(.top, AppTheme.spacing12)
+        .padding(.bottom, AppTheme.spacing8)
+        .background(AppTheme.groupedBackground)
+    }
+
+    // MARK: Alerts
+
+    private var isAlertPresented: Binding<Bool> {
+        Binding(
+            get: { alertErrorMessage != nil || notice != nil },
+            set: { isPresented in
+                if !isPresented {
+                    alertErrorMessage = nil
+                    notice = nil
+                }
+            }
+        )
+    }
+
+    private var alertTitle: String {
+        notice?.title(for: paywallLanguage) ?? PaywallCopy.errorTitle(for: paywallLanguage)
+    }
+
+    private var alertMessage: String {
+        notice?.message(for: paywallLanguage) ?? alertErrorMessage ?? PaywallCopy.unknownError(for: paywallLanguage)
+    }
+
+    // MARK: Actions
+
     private func closePaywall() {
         dismiss()
+    }
+
+    private func select(_ product: BillingProduct) {
+        guard selectedProductID != product.id else { return }
+        selectedProductID = product.id
+        AppAnalytics.shared.track(.planSelected(plan: product.analyticsPlanName))
     }
 
     private func retryLoadingProducts() {
         Task {
             await loadPaywallIfNeeded(forceReload: true)
         }
+    }
+
+    private func purchaseSelectedPlan() {
+        guard let product = selectedProduct else { return }
+        purchase(product)
     }
 
     private func purchase(_ product: BillingProduct) {
@@ -180,6 +316,22 @@ struct PaywallView: View {
         Task {
             await restoreExistingPurchases()
         }
+    }
+
+    private func trackViewIfNeeded() {
+        guard !didTrackView else { return }
+        didTrackView = true
+        appearedAt = Date()
+        AppAnalytics.shared.track(.paywallViewed(source: appState.premiumPaywallSource))
+    }
+
+    private func trackDismissalIfNeeded() {
+        guard didTrackView, !completedPurchase else { return }
+        AppAnalytics.shared.track(.paywallDismissed(
+            source: appState.premiumPaywallSource,
+            secondsVisible: max(0, Int(Date().timeIntervalSince(appearedAt))),
+            attemptedPurchase: attemptedPurchase
+        ))
     }
 
     private func loadPaywallIfNeeded(forceReload: Bool = false) async {
@@ -198,8 +350,18 @@ struct PaywallView: View {
         await subscriptionManager.checkSubscriptionStatus()
         appState.isPremium = subscriptionManager.isPremium
 
+        // Subscribers never see the paywall (B2); closing resumes any started action.
+        if subscriptionManager.isPremium {
+            completedPurchase = true
+            closePaywall()
+            return
+        }
+
         do {
             billingProducts = try await subscriptionManager.loadProducts()
+            if selectedProductID == nil {
+                selectedProductID = yearlyProduct?.id ?? orderedProducts.first?.id
+            }
         } catch {
             loadErrorMessage = Self.userFacingMessage(
                 for: error,
@@ -208,19 +370,27 @@ struct PaywallView: View {
         }
     }
 
-    private func refreshPremiumStateAndDismissIfNeeded() async {
+    @discardableResult
+    private func refreshPremiumStateAndDismissIfNeeded() async -> Bool {
         await subscriptionManager.checkSubscriptionStatus()
         appState.isPremium = subscriptionManager.isPremium
 
         if subscriptionManager.isPremium {
-            closePaywall()
+            completedPurchase = true
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+                stage = .welcome
+            }
+            return true
         } else if let statusMessage = subscriptionManager.statusMessage {
             alertErrorMessage = statusMessage
         }
+        return false
     }
 
     private func purchaseProduct(_ product: BillingProduct) async {
         activePurchaseProductID = product.id
+        attemptedPurchase = true
+        AppAnalytics.shared.track(.purchaseStarted(productID: product.id))
         defer {
             activePurchaseProductID = nil
         }
@@ -229,13 +399,19 @@ struct PaywallView: View {
             let outcome = try await subscriptionManager.purchase(productID: product.id)
             switch outcome {
             case .success:
-                await refreshPremiumStateAndDismissIfNeeded()
+                AppAnalytics.shared.track(.purchaseCompleted(productID: product.id, offer: .none))
+                let isActive = await refreshPremiumStateAndDismissIfNeeded()
+                if !isActive && alertErrorMessage == nil {
+                    notice = .activationDelayed
+                }
             case .pending:
-                alertErrorMessage = PaywallCopy.purchasePending(for: paywallLanguage)
+                AppAnalytics.shared.track(.purchasePending(productID: product.id))
+                notice = .pending
             case .cancelled:
-                break
+                AppAnalytics.shared.track(.purchaseCancelled(productID: product.id))
             }
         } catch {
+            AppAnalytics.shared.track(.purchaseFailed(code: Self.analyticsCode(for: error)))
             alertErrorMessage = Self.userFacingMessage(
                 for: error,
                 fallback: PaywallCopy.purchaseFailed(for: paywallLanguage)
@@ -251,8 +427,16 @@ struct PaywallView: View {
 
         do {
             try await subscriptionManager.restorePurchases()
-            await refreshPremiumStateAndDismissIfNeeded()
+            if await refreshPremiumStateAndDismissIfNeeded() {
+                AppAnalytics.shared.track(.restoreCompleted(result: .restored))
+            } else {
+                AppAnalytics.shared.track(.restoreCompleted(result: .nothingToRestore))
+                if alertErrorMessage == nil {
+                    notice = .nothingToRestore
+                }
+            }
         } catch {
+            AppAnalytics.shared.track(.restoreCompleted(result: .failed))
             alertErrorMessage = Self.userFacingMessage(
                 for: error,
                 fallback: PaywallCopy.restoreFailed(for: paywallLanguage)
@@ -260,7 +444,7 @@ struct PaywallView: View {
         }
     }
 
-    private static func userFacingMessage(for error: Error, fallback: String) -> String {
+    static func userFacingMessage(for error: Error, fallback: String) -> String {
         if let localizedError = error as? LocalizedError {
             if let description = localizedError.errorDescription, let suggestion = localizedError.recoverySuggestion {
                 return "\(description) \(suggestion)"
@@ -273,11 +457,152 @@ struct PaywallView: View {
 
         return fallback
     }
+
+    /// Error domain and code only (no message text) for `purchase_failed`.
+    static func analyticsCode(for error: Error) -> String {
+        let nsError = error as NSError
+        return "\(nsError.domain)#\(nsError.code)"
+    }
+}
+
+// MARK: - Welcome to Premium (A12)
+
+private struct PremiumWelcomeView: View {
+    let language: AppLanguage
+    let reason: PremiumPaywallReason
+    let deferredLogger: LoggerShortcut?
+    let continueAction: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: AppTheme.spacing16) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.accentColor)
+                    Image(systemName: "checkmark")
+                        .appFont(.largeTitle, weight: .semibold)
+                        .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+                }
+                .frame(width: 88, height: 88)
+                .padding(.top, AppTheme.spacing32)
+                .accessibilityHidden(true)
+
+                Text(PaywallCopy.welcomeTitle(for: language))
+                    .appHeadingFont(.title, weight: .bold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+
+                Text(PaywallCopy.welcomeSubtitle(for: language, deferredLogger: deferredLogger))
+                    .appFont(.body)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                    ForEach(PaywallCopy.welcomeHighlights(for: language)) { highlight in
+                        HStack(spacing: AppTheme.spacing12) {
+                            Image(systemName: highlight.systemImage)
+                                .appFont(.subheadline, weight: .semibold)
+                                .foregroundStyle(AppTheme.accentColor)
+                                .frame(width: 32, height: 32)
+                                .background(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
+                                        .fill(AppTheme.accentColor.opacity(AppTheme.opacityLight))
+                                )
+                                .accessibilityHidden(true)
+                            Text(highlight.title)
+                                .appFont(.body)
+                                .foregroundStyle(AppTheme.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(AppTheme.spacing16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                )
+            }
+            .padding(.horizontal, AppTheme.spacing24)
+            .padding(.bottom, AppTheme.spacing24)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: AppTheme.spacing12) {
+                PaywallPrimaryButton(
+                    title: PaywallCopy.welcomeButton(for: language, deferredLogger: deferredLogger),
+                    isProcessing: false,
+                    isDisabled: false,
+                    action: continueAction
+                )
+                .accessibilityIdentifier("paywall.welcome.continue")
+
+                Text(PaywallCopy.manageAnytime(for: language))
+                    .appFont(.footnote)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, AppTheme.spacing24)
+            .padding(.top, AppTheme.spacing12)
+            .padding(.bottom, AppTheme.spacing8)
+            .background(AppTheme.groupedBackground)
+        }
+        .accessibilityIdentifier("screen.premium_welcome")
+    }
+}
+
+// MARK: - Copy
+
+private enum PaywallNotice {
+    case pending
+    case nothingToRestore
+    case activationDelayed
+
+    func title(for language: AppLanguage) -> String {
+        switch self {
+        case .pending:
+            L10n.string("Waiting for approval", defaultValue: "Waiting for approval", language: language)
+        case .nothingToRestore:
+            L10n.string("Nothing to restore", defaultValue: "Nothing to restore", language: language)
+        case .activationDelayed:
+            L10n.string("Almost there", defaultValue: "Almost there", language: language)
+        }
+    }
+
+    func message(for language: AppLanguage) -> String {
+        switch self {
+        case .pending:
+            L10n.string(
+                "You'll get Premium as soon as the purchase is approved.",
+                defaultValue: "You'll get Premium as soon as the purchase is approved.",
+                language: language
+            )
+        case .nothingToRestore:
+            L10n.string(
+                "No active subscription was found for this Apple Account.",
+                defaultValue: "No active subscription was found for this Apple Account.",
+                language: language
+            )
+        case .activationDelayed:
+            L10n.string(
+                "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment.",
+                defaultValue: "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment.",
+                language: language
+            )
+        }
+    }
+}
+
+private struct PaywallBenefit: Identifiable {
+    let id: String
+    let systemImage: String
+    let title: String
 }
 
 private enum PaywallCopy {
     static func errorTitle(for language: AppLanguage) -> String {
-        string("Error", defaultValue: "Error", language: language)
+        string("Purchase not completed", defaultValue: "Purchase not completed", language: language)
     }
 
     static func okButton(for language: AppLanguage) -> String {
@@ -308,14 +633,6 @@ private enum PaywallCopy {
         )
     }
 
-    static func purchasePending(for language: AppLanguage) -> String {
-        string(
-            "Purchase is pending. Approve the transaction in the StoreKit session or App Store account and try refreshing premium status again.",
-            defaultValue: "Purchase is pending. Approve the transaction in the StoreKit session or App Store account and try refreshing premium status again.",
-            language: language
-        )
-    }
-
     static func purchaseFailed(for language: AppLanguage) -> String {
         string(
             "Purchase failed. Please try again.",
@@ -330,10 +647,6 @@ private enum PaywallCopy {
             defaultValue: "Could not restore purchases. Please try again.",
             language: language
         )
-    }
-
-    static func topBarTitle(for language: AppLanguage) -> String {
-        string("Premium", defaultValue: "Premium", language: language)
     }
 
     static func closeButton(for language: AppLanguage) -> String {
@@ -357,15 +670,15 @@ private enum PaywallCopy {
     }
 
     static func restorePurchases(for language: AppLanguage) -> String {
-        string("Restore Purchases", defaultValue: "Restore Purchases", language: language)
+        string("Restore purchases", defaultValue: "Restore purchases", language: language)
     }
 
     static func privacyPolicy(for language: AppLanguage) -> String {
         string("Privacy Policy", defaultValue: "Privacy Policy", language: language)
     }
 
-    static func termsOfService(for language: AppLanguage) -> String {
-        string("Terms of Service", defaultValue: "Terms of Service", language: language)
+    static func termsOfUse(for language: AppLanguage) -> String {
+        string("Terms of Use", defaultValue: "Terms of Use", language: language)
     }
 
     static func subscriptionsUnavailable(for language: AppLanguage) -> String {
@@ -376,12 +689,28 @@ private enum PaywallCopy {
         string("Try Again", defaultValue: "Try Again", language: language)
     }
 
+    static func comparePlans(for language: AppLanguage) -> String {
+        string("Compare plans", defaultValue: "Compare plans", language: language)
+    }
+
     static func heroTitle(for language: AppLanguage, reason: PremiumPaywallReason) -> String {
         switch reason {
         case .mealScan:
             string("Unlock photo meal estimates", defaultValue: "Unlock photo meal estimates", language: language)
-        case .general:
-            string("Unlock Premium", defaultValue: "Unlock Premium", language: language)
+        case .meal:
+            string("See how meals relate to how you feel", defaultValue: "See how meals relate to how you feel", language: language)
+        case .glucose:
+            string("Keep glucose in context", defaultValue: "Keep glucose in context", language: language)
+        case .supplements:
+            string("See how supplements fit your routine", defaultValue: "See how supplements fit your routine", language: language)
+        case .photo:
+            string("Keep a private skin & hair journal", defaultValue: "Keep a private skin & hair journal", language: language)
+        case .insights:
+            string("Go deeper than the basics", defaultValue: "Go deeper than the basics", language: language)
+        case .report:
+            string("Bring every visit a clear summary", defaultValue: "Bring every visit a clear summary", language: language)
+        case .general, .settings:
+            string("Get more from every check-in", defaultValue: "Get more from every check-in", language: language)
         }
     }
 
@@ -393,13 +722,127 @@ private enum PaywallCopy {
                 defaultValue: "Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts.",
                 language: language
             )
-        case .general:
+        default:
             string(
-                "Get the full CycleBalance experience",
-                defaultValue: "Get the full CycleBalance experience",
+                "Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone.",
+                defaultValue: "Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone.",
                 language: language
             )
         }
+    }
+
+    static func benefits(for language: AppLanguage) -> [PaywallBenefit] {
+        [
+            PaywallBenefit(
+                id: "logs",
+                systemImage: "fork.knife",
+                title: string("Meal, glucose & supplement logs, linked to symptoms", defaultValue: "Meal, glucose & supplement logs, linked to symptoms", language: language)
+            ),
+            PaywallBenefit(
+                id: "insights",
+                systemImage: "chart.bar.xaxis",
+                title: string("Deeper insights: sleep, activity, meals", defaultValue: "Deeper insights: sleep, activity, meals", language: language)
+            ),
+            PaywallBenefit(
+                id: "reports",
+                systemImage: "doc.text",
+                title: string("Unlimited appointment-ready PDF reports", defaultValue: "Unlimited appointment-ready PDF reports", language: language)
+            ),
+            PaywallBenefit(
+                id: "photos",
+                systemImage: "photo",
+                title: string("Private photo journal for skin & hair", defaultValue: "Private photo journal for skin & hair", language: language)
+            ),
+        ]
+    }
+
+    static func bestValueBadge(savings: String, language: AppLanguage) -> String {
+        L10n.format("Best value · %@", defaultValue: "Best value · %@", language: language, savings)
+    }
+
+    static func perMonthBilledYearly(price: String, language: AppLanguage) -> String {
+        L10n.format("%@/month, billed yearly", defaultValue: "%@/month, billed yearly", language: language, price)
+    }
+
+    static func continueButton(price: String, language: AppLanguage) -> String {
+        L10n.format("Continue — %@", defaultValue: "Continue — %@", language: language, price)
+    }
+
+    static func renewalTerms(price: String, language: AppLanguage) -> String {
+        L10n.format(
+            "Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal.",
+            defaultValue: "Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal.",
+            language: language,
+            price
+        )
+    }
+
+    static func reassurance(for language: AppLanguage) -> String {
+        string(
+            "No ads. No selling your data. Not a medical device.",
+            defaultValue: "No ads. No selling your data. Not a medical device.",
+            language: language
+        )
+    }
+
+    static func welcomeTitle(for language: AppLanguage) -> String {
+        string("Welcome to Premium", defaultValue: "Welcome to Premium", language: language)
+    }
+
+    static func welcomeSubtitle(for language: AppLanguage, deferredLogger: LoggerShortcut?) -> String {
+        switch deferredLogger {
+        case .meal?, .bloodSugar?, .supplements?:
+            string("Meal, glucose and supplement logs are on.", defaultValue: "Meal, glucose and supplement logs are on.", language: language)
+        default:
+            string("Everything in Premium is ready for you.", defaultValue: "Everything in Premium is ready for you.", language: language)
+        }
+    }
+
+    static func welcomeHighlights(for language: AppLanguage) -> [PaywallBenefit] {
+        [
+            PaywallBenefit(
+                id: "welcome.logs",
+                systemImage: "fork.knife",
+                title: string("Meal & glucose logging", defaultValue: "Meal & glucose logging", language: language)
+            ),
+            PaywallBenefit(
+                id: "welcome.insights",
+                systemImage: "chart.bar.xaxis",
+                title: string("Deeper insights", defaultValue: "Deeper insights", language: language)
+            ),
+            PaywallBenefit(
+                id: "welcome.reports",
+                systemImage: "doc.text",
+                title: string("Unlimited PDF reports", defaultValue: "Unlimited PDF reports", language: language)
+            ),
+        ]
+    }
+
+    static func welcomeButton(for language: AppLanguage, deferredLogger: LoggerShortcut?) -> String {
+        switch deferredLogger {
+        case .meal?:
+            string("Log your first meal", defaultValue: "Log your first meal", language: language)
+        case .bloodSugar?:
+            string("Log your first glucose reading", defaultValue: "Log your first glucose reading", language: language)
+        case .supplements?:
+            string("Log your first supplement", defaultValue: "Log your first supplement", language: language)
+        case .photo?:
+            string("Open your photo journal", defaultValue: "Open your photo journal", language: language)
+        default:
+            string("Continue", defaultValue: "Continue", language: language)
+        }
+    }
+
+    static func manageAnytime(for language: AppLanguage) -> String {
+        string(
+            "Manage your subscription anytime in Settings.",
+            defaultValue: "Manage your subscription anytime in Settings.",
+            language: language
+        )
+    }
+
+    static func selected(for language: AppLanguage) -> String {
+        string("Selected", defaultValue: "Selected", language: language)
     }
 
     static func features(for language: AppLanguage) -> [PaywallFeature] {
@@ -425,6 +868,12 @@ private enum PaywallCopy {
             .init(
                 id: "apple_health_sync",
                 title: string("Apple Health sync", defaultValue: "Apple Health sync", language: language),
+                freeIncluded: true,
+                premiumIncluded: true
+            ),
+            .init(
+                id: "full_cycle_history",
+                title: string("Full cycle history", defaultValue: "Full cycle history", language: language),
                 freeIncluded: true,
                 premiumIncluded: true
             ),
@@ -458,12 +907,6 @@ private enum PaywallCopy {
                 freeIncluded: false,
                 premiumIncluded: true
             ),
-            .init(
-                id: "full_cycle_history",
-                title: string("Full cycle history", defaultValue: "Full cycle history", language: language),
-                freeIncluded: true,
-                premiumIncluded: true
-            ),
         ]
     }
 
@@ -472,35 +915,90 @@ private enum PaywallCopy {
     }
 }
 
-private struct PaywallTopBar: View {
+// MARK: - Components
+
+private struct PaywallHeader: View {
     let language: AppLanguage
-    let closeAction: () -> Void
+    let reason: PremiumPaywallReason
 
     var body: some View {
-        ZStack {
-            Text(PaywallCopy.topBarTitle(for: language))
-                .appFont(.headline, weight: .semibold)
-                .foregroundStyle(.primary)
+        VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+            Text(PaywallCopy.heroTitle(for: language, reason: reason))
+                .appHeadingFont(.title, weight: .bold)
+                .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("paywall.hero.title")
 
-            HStack(spacing: AppTheme.spacing12) {
-                Button(action: closeAction) {
-                    Text(PaywallCopy.closeButton(for: language))
-                        .appFont(.subheadline, weight: .medium)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color(.systemBackground), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("paywall.close")
-
-                Spacer()
-            }
+            Text(PaywallCopy.heroSubtitle(for: language, reason: reason))
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("paywall.hero.subtitle")
         }
-        .padding(.horizontal, AppTheme.spacing16)
-        .padding(.top, AppTheme.spacing12)
-        .padding(.bottom, AppTheme.spacing12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("paywall.hero")
+    }
+}
+
+private struct PaywallCloseButton: View {
+    let language: AppLanguage
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .appFont(.body, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(AppTheme.cardBackground))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(PaywallCopy.closeButton(for: language))
+        .accessibilityIdentifier("paywall.close")
+    }
+}
+
+private struct PaywallBenefitRow: View {
+    let benefit: PaywallBenefit
+
+    var body: some View {
+        HStack(alignment: .top, spacing: AppTheme.spacing12) {
+            Image(systemName: benefit.systemImage)
+                .appFont(.subheadline, weight: .semibold)
+                .foregroundStyle(AppTheme.coralAccent)
+                .frame(width: 32, height: 32)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
+                        .fill(AppTheme.coralAccent.opacity(AppTheme.opacityLight))
+                )
+                .accessibilityHidden(true)
+
+            Text(benefit.title)
+                .appFont(.body)
+                .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("paywall.benefit.\(benefit.id)")
+    }
+}
+
+private struct PaywallBadge: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .appFont(.caption, weight: .semibold)
+            .foregroundStyle(AppTheme.coralAccent)
+            .padding(.horizontal, AppTheme.spacing8)
+            .padding(.vertical, AppTheme.spacing4)
+            .background(
+                Capsule()
+                    .fill(AppTheme.coralAccent.opacity(AppTheme.opacityLight))
+            )
     }
 }
 
@@ -536,13 +1034,13 @@ private struct PaywallFeatureComparisonCard: View {
             HStack(alignment: .center) {
                 Text(PaywallCopy.featureHeader(for: language))
                     .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.secondaryText)
 
                 Spacer()
 
                 Text(PaywallCopy.freeHeader(for: language))
                     .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppTheme.secondaryText)
                     .frame(width: 44)
 
                 Text(PaywallCopy.premiumHeader(for: language))
@@ -555,12 +1053,12 @@ private struct PaywallFeatureComparisonCard: View {
             .padding(.bottom, AppTheme.spacing8)
 
             ForEach(features) { feature in
-                PaywallFeatureRow(feature: feature)
+                PaywallFeatureRow(language: language, feature: feature)
             }
         }
         .background(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .fill(Color(.systemBackground))
+                .fill(AppTheme.cardBackground)
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("paywall.feature_table")
@@ -568,6 +1066,7 @@ private struct PaywallFeatureComparisonCard: View {
 }
 
 private struct PaywallFeatureRow: View {
+    let language: AppLanguage
     let feature: PaywallFeature
 
     var body: some View {
@@ -578,7 +1077,7 @@ private struct PaywallFeatureRow: View {
             HStack {
                 Text(feature.title)
                     .appFont(.body)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppTheme.primaryText)
 
                 Spacer()
 
@@ -597,7 +1096,16 @@ private struct PaywallFeatureRow: View {
             .padding(.horizontal, AppTheme.spacing12)
             .padding(.vertical, 13)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityIdentifier("paywall.feature.\(feature.id)")
+    }
+
+    private var accessibilityLabel: String {
+        let free = PaywallCopy.freeHeader(for: language)
+        let premium = PaywallCopy.premiumHeader(for: language)
+        let tiers = feature.freeIncluded ? "\(free), \(premium)" : premium
+        return "\(feature.title): \(tiers)"
     }
 }
 
@@ -608,71 +1116,156 @@ private struct PaywallInclusionIcon: View {
     var body: some View {
         Image(systemName: isIncluded ? "checkmark.circle.fill" : "minus.circle")
             .appFont(.body, weight: .semibold)
-            .foregroundStyle(isIncluded ? accentColor : .secondary.opacity(0.55))
+            .foregroundStyle(isIncluded ? accentColor : AppTheme.secondaryText.opacity(0.55))
             .accessibilityHidden(true)
     }
 }
 
+/// Radio-style plan card. Tapping selects the plan; it never starts a purchase.
 private struct PaywallPlanCard: View {
     let language: AppLanguage
     let product: BillingProduct
-    let savingsText: String?
-    let isRecommended: Bool
-    let isProcessing: Bool
+    let badgeText: String?
+    let isSelected: Bool
     let isDisabled: Bool
-    let purchaseAction: () -> Void
+    let selectAction: () -> Void
 
     var body: some View {
-        Button(action: purchaseAction) {
-            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
-                HStack(alignment: .center, spacing: AppTheme.spacing8) {
-                    Text(product.paywallDisplayName(language: language))
-                        .appFont(.headline)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
+        Button(action: selectAction) {
+            HStack(alignment: .center, spacing: AppTheme.spacing12) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .appFont(.title3, weight: .semibold)
+                    .foregroundStyle(isSelected ? AppTheme.accentColor : AppTheme.secondaryText)
+                    .accessibilityHidden(true)
 
-                    Spacer(minLength: AppTheme.spacing8)
-
-                    if let savingsText {
-                        Text(savingsText)
-                            .appFont(.caption, weight: .semibold)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, AppTheme.spacing12)
-                            .padding(.vertical, AppTheme.spacing8)
-                            .background(
-                                Capsule()
-                                    .fill(AppTheme.coralAccent)
-                            )
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: AppTheme.spacing8) {
+                        titleColumn
+                        Spacer(minLength: AppTheme.spacing8)
+                        priceColumn(alignment: .trailing)
+                    }
+                    VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                        titleColumn
+                        priceColumn(alignment: .leading)
                     }
                 }
-
-                Text(product.displayPriceWithPeriod(language: language))
-                    .appFont(.subheadline)
-                    .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .padding(AppTheme.spacing16)
             .background(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                    .fill(Color(.systemBackground))
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .fill(AppTheme.cardBackground)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                    .stroke(
-                        isRecommended ? AppTheme.coralAccent : Color.clear,
-                        lineWidth: isRecommended ? 1.5 : 0
-                    )
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.5), lineWidth: isSelected ? 1.5 : 0.8)
             )
-            .overlay(alignment: .trailing) {
-                if isProcessing {
-                    ProgressView()
-                        .padding(.trailing, AppTheme.spacing16)
-                }
-            }
+            .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityIdentifier("paywall.plan.\(product.id)")
+    }
+
+    private var titleColumn: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+            Text(product.planTitle(language: language))
+                .appFont(.headline)
+                .foregroundStyle(AppTheme.primaryText)
+
+            if let badgeText {
+                PaywallBadge(text: badgeText)
+            }
+        }
+    }
+
+    private func priceColumn(alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: AppTheme.spacing4) {
+            Text(product.displayPricePerPeriod(language: language))
+                .appFont(.headline)
+                .foregroundStyle(AppTheme.primaryText)
+
+            if product.subscriptionPeriod?.unit == .year, let monthly = product.localizedPricePerMonth {
+                Text(PaywallCopy.perMonthBilledYearly(price: monthly, language: language))
+                    .appFont(.footnote)
+                    .foregroundStyle(AppTheme.secondaryText)
+            }
+        }
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [
+            product.paywallDisplayName(language: language),
+            product.displayPricePerPeriod(language: language),
+        ]
+        if let badgeText { parts.append(badgeText) }
+        if isSelected { parts.append(PaywallCopy.selected(for: language)) }
+        return parts.joined(separator: ", ")
+    }
+}
+
+private struct PaywallPrimaryButton: View {
+    let title: String
+    let isProcessing: Bool
+    let isDisabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Text(title)
+                    .appFont(.headline)
+                    .multilineTextAlignment(.center)
+                    .opacity(isProcessing ? 0 : 1)
+
+                if isProcessing {
+                    ProgressView()
+                        .tint(AppTheme.premiumEditorCTAForeground)
+                }
+            }
+            .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .padding(.horizontal, AppTheme.spacing16)
+            .background(Capsule().fill(AppTheme.accentColor))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled && !isProcessing ? 0.6 : 1)
+    }
+}
+
+private struct PaywallRenewalTerms: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .appFont(.caption)
+            .foregroundStyle(AppTheme.secondaryText)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("paywall.renewal_terms")
+    }
+}
+
+private struct PaywallReassurance: View {
+    let language: AppLanguage
+
+    var body: some View {
+        Label {
+            Text(PaywallCopy.reassurance(for: language))
+                .appFont(.caption)
+                .foregroundStyle(AppTheme.secondaryText)
+        } icon: {
+            Image(systemName: "lock.fill")
+                .foregroundStyle(AppTheme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -685,45 +1278,61 @@ private struct PaywallFooterLinks: View {
     let termsOfServiceURL: URL?
 
     var body: some View {
-        HStack(spacing: AppTheme.spacing8) {
-            Button(action: restoreAction) {
-                if isRestoring {
-                    ProgressView()
-                } else {
-                    Text(PaywallCopy.restorePurchases(for: language))
-                }
-            }
-            .buttonStyle(.plain)
-            .disabled(isDisabled)
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier("paywall.restore")
-
-            if let url = privacyPolicyURL {
-                Text("\u{00B7}")
-                    .foregroundStyle(.secondary.opacity(0.5))
-
-                Link(destination: url) {
-                    Text(PaywallCopy.privacyPolicy(for: language))
-                }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("paywall.privacy_policy")
-            }
-
-            if let url = termsOfServiceURL {
-                Text("\u{00B7}")
-                    .foregroundStyle(.secondary.opacity(0.5))
-
-                Link(destination: url) {
-                    Text(PaywallCopy.termsOfService(for: language))
-                }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("paywall.terms_of_service")
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: AppTheme.spacing8) { links(separated: true) }
+            VStack(spacing: 0) { links(separated: false) }
         }
         .appFont(.caption, weight: .medium)
-        .foregroundStyle(.secondary)
-        .tint(.secondary)
+        .tint(AppTheme.accentColor)
         .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func links(separated: Bool) -> some View {
+        Button(action: restoreAction) {
+            if isRestoring {
+                ProgressView()
+                    .frame(minHeight: 44)
+            } else {
+                Text(PaywallCopy.restorePurchases(for: language))
+                    .foregroundStyle(AppTheme.accentColor)
+                    .frame(minHeight: 44)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("paywall.restore")
+
+        if let url = termsOfServiceURL {
+            if separated {
+                Text("\u{00B7}")
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .accessibilityHidden(true)
+            }
+
+            Link(destination: url) {
+                Text(PaywallCopy.termsOfUse(for: language))
+                    .frame(minHeight: 44)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("paywall.terms_of_service")
+        }
+
+        if let url = privacyPolicyURL {
+            if separated {
+                Text("\u{00B7}")
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .accessibilityHidden(true)
+            }
+
+            Link(destination: url) {
+                Text(PaywallCopy.privacyPolicy(for: language))
+                    .frame(minHeight: 44)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("paywall.privacy_policy")
+        }
     }
 }
 
@@ -740,6 +1349,7 @@ private struct PaywallUnavailableState: View {
         ) {
             Button(PaywallCopy.tryAgain(for: language), action: retryAction)
                 .appFont(.subheadline, weight: .semibold)
+                .frame(minHeight: 44)
         }
         .accessibilityIdentifier("paywall.unavailable")
     }
@@ -752,76 +1362,7 @@ private struct PaywallFeature: Identifiable {
     let premiumIncluded: Bool
 }
 
-private struct FourPointedStar: Shape {
-    func path(in rect: CGRect) -> Path {
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let outerRadius = min(rect.width, rect.height) / 2
-        let innerRadius = outerRadius * 0.35
-        let pointCount = 4
-
-        var path = Path()
-        for i in 0..<(pointCount * 2) {
-            let angle = (Double(i) * .pi / Double(pointCount)) - .pi / 2
-            let radius = i.isMultiple(of: 2) ? outerRadius : innerRadius
-            let point = CGPoint(
-                x: center.x + CGFloat(cos(angle)) * radius,
-                y: center.y + CGFloat(sin(angle)) * radius
-            )
-            if i == 0 {
-                path.move(to: point)
-            } else {
-                path.addLine(to: point)
-            }
-        }
-        path.closeSubpath()
-        return path
-    }
-}
-
-private struct PaywallSparkleHeader: View {
-    let language: AppLanguage
-    let reason: PremiumPaywallReason
-    @State private var isPulsing = false
-
-    var body: some View {
-        VStack(spacing: AppTheme.spacing8) {
-            ZStack {
-                FourPointedStar()
-                    .frame(width: 28, height: 28)
-
-                FourPointedStar()
-                    .frame(width: 14, height: 14)
-                    .offset(x: 16, y: -18)
-
-                FourPointedStar()
-                    .frame(width: 10, height: 10)
-                    .offset(x: -14, y: -12)
-            }
-            .foregroundStyle(AppTheme.coralAccent)
-            .opacity(isPulsing ? 1.0 : 0.4)
-            .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: isPulsing)
-            .onAppear { isPulsing = true }
-            .accessibilityHidden(true)
-            .frame(width: 50, height: 50)
-            .padding(.top, AppTheme.spacing8)
-
-            Text(PaywallCopy.heroTitle(for: language, reason: reason))
-                .appFont(.title2, weight: .bold)
-                .foregroundStyle(.primary)
-                .accessibilityIdentifier("paywall.hero.title")
-
-            Text(PaywallCopy.heroSubtitle(for: language, reason: reason))
-                .appFont(.subheadline)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("paywall.hero.subtitle")
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppTheme.spacing8)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("paywall.hero")
-    }
-}
-
 #Preview {
     PaywallView()
+        .environment(AppState())
 }

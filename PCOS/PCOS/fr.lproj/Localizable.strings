@@ -2812,3 +2812,138 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "Énergie";
 "Not selected" = "Non sélectionné";
 "Positive actions" = "Actions positives";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "En attente d'approbation";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "Rien à restaurer";
+
+/* Journey v1: paywall */
+"Almost there" = "Presque terminé";
+
+/* Journey v1: paywall */
+"You'll get Premium as soon as the purchase is approved." = "Premium sera activé dès que l'achat sera approuvé.";
+
+/* Journey v1: paywall */
+"No active subscription was found for this Apple Account." = "Aucun abonnement actif n'a été trouvé pour ce compte Apple.";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Votre achat a bien été effectué, mais Premium n'est pas encore activé. Essayez « Restaurer les achats » dans un instant.";
+
+/* Journey v1: paywall */
+"Purchase not completed" = "Achat non effectué";
+
+/* Journey v1: paywall */
+"Restore purchases" = "Restaurer les achats";
+
+/* Journey v1: paywall */
+"Terms of Use" = "Conditions d'utilisation";
+
+/* Journey v1: paywall */
+"Compare plans" = "Comparer les formules";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "Voyez le lien entre vos repas et votre ressenti";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "Gardez votre glycémie en contexte";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "Voyez comment les compléments s'intègrent à votre routine";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "Tenez un journal privé de la peau et des cheveux";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "Allez au-delà de l'essentiel";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "Apportez un résumé clair à chaque rendez-vous";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "Tirez davantage de chaque bilan";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "Transformez vos photos de repas en brouillons modifiables : calories, macros et nutrition liée au cycle.";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "Premium ajoute des outils que de nombreuses personnes atteintes du SOPK utilisent en complément de leur suivi médical. Vos données restent sur votre iPhone.";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "Journaux des repas, de la glycémie et des compléments, reliés aux symptômes";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "Analyses approfondies : sommeil, activité, repas";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "Rapports PDF illimités, prêts pour vos rendez-vous";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "Journal photo privé pour la peau et les cheveux";
+
+/* Journey v1: paywall */
+"Best value · %@" = "Meilleure offre · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "%@/mois, facturé annuellement";
+
+/* Journey v1: paywall */
+"Continue — %@" = "Continuer – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "Renouvellement à %@ jusqu'à résiliation. Résiliez à tout moment dans Réglages › Compte Apple › Abonnements, au moins 24 heures avant le renouvellement.";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "Pas de publicité. Aucune vente de vos données. Pas un dispositif médical.";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "Bienvenue dans Premium";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "Les journaux des repas, de la glycémie et des compléments sont activés.";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "Tout Premium est prêt pour vous.";
+
+/* Journey v1: paywall */
+"Deeper insights" = "Analyses approfondies";
+
+/* Journey v1: paywall */
+"Log your first meal" = "Enregistrer votre premier repas";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "Enregistrer votre première glycémie";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "Enregistrer votre premier complément";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "Ouvrir votre journal photo";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "Gérez votre abonnement à tout moment dans Réglages.";
+
+/* Journey v1: paywall */
+"Selected" = "Sélectionné";
+
+/* Journey v1: paywall */
+"%@ / day" = "%@ / jour";
+
+/* Journey v1: paywall */
+"%@ / week" = "%@ / semaine";
+
+/* Journey v1: paywall */
+"%@ / month" = "%@ / mois";
+
+/* Journey v1: paywall */
+"%@ / year" = "%@ / an";
+
+/* Journey v1: paywall */
+"Yearly" = "Annuel";
+
+/* Journey v1: paywall */
+"Monthly" = "Mensuel";
+
+/* Journey v1: paywall */
+"Weekly" = "Hebdomadaire";

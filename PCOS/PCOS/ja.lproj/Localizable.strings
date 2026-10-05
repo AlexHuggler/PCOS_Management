@@ -2789,3 +2789,138 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "活力";
 "Not selected" = "未選択";
 "Positive actions" = "自分のための行動";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "承認待ち";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "復元できる購入はありません";
+
+/* Journey v1: paywall */
+"Almost there" = "もう少しです";
+
+/* Journey v1: paywall */
+"You'll get Premium as soon as the purchase is approved." = "購入が承認されると、すぐにプレミアムが使えるようになります。";
+
+/* Journey v1: paywall */
+"No active subscription was found for this Apple Account." = "このApple Accountで有効なサブスクリプションは見つかりませんでした。";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "購入は完了しましたが、プレミアムがまだ有効になっていません。少し待ってから「購入を復元」をお試しください。";
+
+/* Journey v1: paywall */
+"Purchase not completed" = "購入は完了していません";
+
+/* Journey v1: paywall */
+"Restore purchases" = "購入を復元";
+
+/* Journey v1: paywall */
+"Terms of Use" = "利用規約";
+
+/* Journey v1: paywall */
+"Compare plans" = "プランを比較";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "食事と体調の関係を見てみましょう";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "血糖値を前後の状況と一緒に記録";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "サプリメントが毎日の習慣にどう合うかを確認";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "肌と髪のプライベート記録をつける";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "基本の一歩先へ";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "毎回の受診にわかりやすいまとめを";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "毎日のチェックインをもっと活かす";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "食事の写真から、カロリー・栄養素・周期を考慮した栄養メモの下書きを作成できます（編集可能）。";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "プレミアムでは、PCOSのある多くの人が日々のケアと並行して使っているツールが加わります。データはお使いのiPhoneに保存されたままです。";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "食事・血糖値・サプリの記録を症状と関連づけて";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "さらに詳しいインサイト：睡眠・活動・食事";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "受診に使えるPDFレポートを無制限に";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "肌と髪のプライベート写真記録";
+
+/* Journey v1: paywall */
+"Best value · %@" = "いちばんお得 · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "月あたり%@（年払い）";
+
+/* Journey v1: paywall */
+"Continue — %@" = "続ける – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "解約するまで%@で自動更新されます。更新の24時間前までに、設定 › Apple Account › サブスクリプションからいつでも解約できます。";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "広告なし。データの販売なし。医療機器ではありません。";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "プレミアムへようこそ";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "食事・血糖値・サプリの記録が使えるようになりました。";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "プレミアムのすべての機能が使えます。";
+
+/* Journey v1: paywall */
+"Deeper insights" = "さらに詳しいインサイト";
+
+/* Journey v1: paywall */
+"Log your first meal" = "最初の食事を記録する";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "最初の血糖値を記録する";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "最初のサプリを記録する";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "写真記録を開く";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "サブスクリプションはいつでも設定から管理できます。";
+
+/* Journey v1: paywall */
+"Selected" = "選択済み";
+
+/* Journey v1: paywall */
+"%@ / day" = "%@ / 日";
+
+/* Journey v1: paywall */
+"%@ / week" = "%@ / 週";
+
+/* Journey v1: paywall */
+"%@ / month" = "%@ / 月";
+
+/* Journey v1: paywall */
+"%@ / year" = "%@ / 年";
+
+/* Journey v1: paywall */
+"Yearly" = "年額";
+
+/* Journey v1: paywall */
+"Monthly" = "月額";
+
+/* Journey v1: paywall */
+"Weekly" = "週額";

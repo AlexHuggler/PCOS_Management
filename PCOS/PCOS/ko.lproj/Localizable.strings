@@ -2789,3 +2789,138 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "활력";
 "Not selected" = "선택 안 함";
 "Positive actions" = "나를 위한 행동";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "승인 대기 중";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "복원할 구매 없음";
+
+/* Journey v1: paywall */
+"Almost there" = "거의 다 됐어요";
+
+/* Journey v1: paywall */
+"You'll get Premium as soon as the purchase is approved." = "구매가 승인되면 바로 프리미엄이 적용됩니다.";
+
+/* Journey v1: paywall */
+"No active subscription was found for this Apple Account." = "이 Apple 계정에서 활성 구독을 찾을 수 없습니다.";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "구매는 완료되었지만 프리미엄이 아직 활성화되지 않았습니다. 잠시 후 ‘구매 복원’을 눌러 주세요.";
+
+/* Journey v1: paywall */
+"Purchase not completed" = "구매가 완료되지 않았습니다";
+
+/* Journey v1: paywall */
+"Restore purchases" = "구매 복원";
+
+/* Journey v1: paywall */
+"Terms of Use" = "이용 약관";
+
+/* Journey v1: paywall */
+"Compare plans" = "플랜 비교";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "식사와 컨디션의 관계를 살펴보세요";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "혈당을 맥락과 함께 기록하세요";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "영양제가 일상에 어떻게 맞는지 확인하세요";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "피부와 모발을 비공개로 기록하세요";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "기본을 넘어 더 깊이 살펴보세요";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "진료 때마다 명확한 요약을 가져가세요";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "매번의 체크인을 더 알차게";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "식사 사진을 칼로리, 영양소, 주기를 고려한 편집 가능한 영양 기록 초안으로 바꿔 보세요.";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "프리미엄은 PCOS가 있는 많은 사람들이 진료와 함께 사용하는 도구를 더해 줍니다. 데이터는 iPhone에만 보관됩니다.";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "식사, 혈당, 영양제 기록을 증상과 연결";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "더 깊은 인사이트: 수면, 활동, 식사";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "진료용 PDF 보고서 무제한";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "피부와 모발을 위한 비공개 사진 일지";
+
+/* Journey v1: paywall */
+"Best value · %@" = "최고 가치 · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "월 %@, 연간 결제";
+
+/* Journey v1: paywall */
+"Continue — %@" = "계속 – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "해지할 때까지 %@에 자동 갱신됩니다. 갱신 24시간 전까지 설정 › Apple 계정 › 구독에서 언제든지 해지할 수 있습니다.";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "광고 없음. 데이터 판매 없음. 의료기기가 아닙니다.";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "프리미엄에 오신 것을 환영합니다";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "식사, 혈당, 영양제 기록이 켜졌습니다.";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "프리미엄의 모든 기능을 사용할 수 있습니다.";
+
+/* Journey v1: paywall */
+"Deeper insights" = "더 깊은 인사이트";
+
+/* Journey v1: paywall */
+"Log your first meal" = "첫 식사 기록하기";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "첫 혈당 기록하기";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "첫 영양제 기록하기";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "사진 일지 열기";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "구독은 언제든지 설정에서 관리할 수 있습니다.";
+
+/* Journey v1: paywall */
+"Selected" = "선택됨";
+
+/* Journey v1: paywall */
+"%@ / day" = "%@ / 일";
+
+/* Journey v1: paywall */
+"%@ / week" = "%@ / 주";
+
+/* Journey v1: paywall */
+"%@ / month" = "%@ / 월";
+
+/* Journey v1: paywall */
+"%@ / year" = "%@ / 년";
+
+/* Journey v1: paywall */
+"Yearly" = "연간";
+
+/* Journey v1: paywall */
+"Monthly" = "월간";
+
+/* Journey v1: paywall */
+"Weekly" = "주간";

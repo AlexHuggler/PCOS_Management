@@ -756,7 +756,7 @@ struct PremiumInsightTeaserCard: View {
                     .accessibilityIdentifier("\(accessibilityIdentifier).title")
                 Spacer()
                 Button(L10n.string("Upgrade", defaultValue: "Upgrade")) {
-                    appState.presentPremiumPaywall()
+                    appState.presentPremiumPaywall(reason: .insights, source: "insights_teaser")
                 }
                 .buttonStyle(.borderless)
                 .appFont(.caption, weight: .semibold)

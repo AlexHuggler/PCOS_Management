@@ -2792,3 +2792,138 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "Energie";
 "Not selected" = "Niet geselecteerd";
 "Positive actions" = "Positieve acties";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "Wachten op goedkeuring";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "Niets om te herstellen";
+
+/* Journey v1: paywall */
+"Almost there" = "Bijna klaar";
+
+/* Journey v1: paywall */
+"You'll get Premium as soon as the purchase is approved." = "Je krijgt Premium zodra de aankoop is goedgekeurd.";
+
+/* Journey v1: paywall */
+"No active subscription was found for this Apple Account." = "Er is geen actief abonnement gevonden voor dit Apple-account.";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Je aankoop is gelukt, maar Premium is nog niet actief. Probeer zo meteen ‘Aankopen herstellen’.";
+
+/* Journey v1: paywall */
+"Purchase not completed" = "Aankoop niet voltooid";
+
+/* Journey v1: paywall */
+"Restore purchases" = "Aankopen herstellen";
+
+/* Journey v1: paywall */
+"Terms of Use" = "Gebruiksvoorwaarden";
+
+/* Journey v1: paywall */
+"Compare plans" = "Abonnementen vergelijken";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "Zie hoe maaltijden samenhangen met hoe je je voelt";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "Bekijk glucose in context";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "Zie hoe supplementen in je routine passen";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "Houd een privédagboek bij voor huid en haar";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "Ga verder dan de basis";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "Neem naar elke afspraak een helder overzicht mee";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "Haal meer uit elke check-in";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "Maak van maaltijdfoto's bewerkbare concepten met calorieën, macro's en cyclusbewuste voeding.";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "Premium voegt hulpmiddelen toe die veel mensen met PCOS naast hun zorg gebruiken. Je gegevens blijven op je iPhone.";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "Logboeken voor maaltijden, glucose en supplementen, gekoppeld aan symptomen";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "Diepere inzichten: slaap, activiteit, maaltijden";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "Onbeperkt PDF-rapporten, klaar voor je afspraak";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "Privéfotodagboek voor huid en haar";
+
+/* Journey v1: paywall */
+"Best value · %@" = "Beste keuze · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "%@/maand, jaarlijks gefactureerd";
+
+/* Journey v1: paywall */
+"Continue — %@" = "Doorgaan – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "Wordt verlengd voor %@ tot je opzegt. Zeg op elk moment op via Instellingen › Apple-account › Abonnementen, minstens 24 uur vóór de verlenging.";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "Geen advertenties. Je gegevens worden niet verkocht. Geen medisch hulpmiddel.";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "Welkom bij Premium";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "Logboeken voor maaltijden, glucose en supplementen staan aan.";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "Alles in Premium staat voor je klaar.";
+
+/* Journey v1: paywall */
+"Deeper insights" = "Diepere inzichten";
+
+/* Journey v1: paywall */
+"Log your first meal" = "Je eerste maaltijd vastleggen";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "Je eerste glucosemeting vastleggen";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "Je eerste supplement vastleggen";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "Je fotodagboek openen";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "Beheer je abonnement op elk moment in Instellingen.";
+
+/* Journey v1: paywall */
+"Selected" = "Geselecteerd";
+
+/* Journey v1: paywall */
+"%@ / day" = "%@ / dag";
+
+/* Journey v1: paywall */
+"%@ / week" = "%@ / week";
+
+/* Journey v1: paywall */
+"%@ / month" = "%@ / maand";
+
+/* Journey v1: paywall */
+"%@ / year" = "%@ / jaar";
+
+/* Journey v1: paywall */
+"Yearly" = "Jaarlijks";
+
+/* Journey v1: paywall */
+"Monthly" = "Maandelijks";
+
+/* Journey v1: paywall */
+"Weekly" = "Wekelijks";
