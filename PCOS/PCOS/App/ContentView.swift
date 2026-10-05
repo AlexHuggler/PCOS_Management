@@ -56,6 +56,8 @@ struct ContentView: View {
         }
         .task {
             premiumStateBridge.start(appState: appState)
+            // Funnel events join to revenue on the anonymous RevenueCat app user ID (no health data).
+            AppAnalytics.shared.distinctID = SubscriptionManager.shared.revenueCatAppUserID
             appState.restorePendingNotificationRoute()
             await refreshDailyReminders()
         }
