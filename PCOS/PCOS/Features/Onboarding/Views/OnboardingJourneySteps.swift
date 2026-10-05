@@ -501,8 +501,8 @@ struct OnboardingHealthStep: View {
             if isHealthAvailable {
                 OnboardingCard {
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(OnboardingHealthChoice.allCases.enumerated()), id: \.element) { index, choice in
-                            if index > 0 { Divider().padding(.leading, 60) }
+                        ForEach(OnboardingHealthChoice.allCases) { choice in
+                            if choice != OnboardingHealthChoice.allCases.first { Divider().padding(.leading, 60) }
                             Toggle(isOn: Binding(
                                 get: { choices.contains(choice) },
                                 set: { isOn in
