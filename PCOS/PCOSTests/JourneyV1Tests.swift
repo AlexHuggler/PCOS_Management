@@ -185,7 +185,7 @@ struct QuickCheckInTests {
         #expect(try service.load(on: today).nothingToReport)
 
         try service.clearNothingToReport(on: today)
-        #expect(try !service.load(on: today).nothingToReport)
+        #expect(try service.load(on: today).nothingToReport == false)
 
         // With a symptom logged, clearing "nothing to report" is a no-op.
         var symptom = QuickCheckInInput()
@@ -330,6 +330,7 @@ struct JourneyPaywallRoutingTests {
 }
 
 @Suite("Journey v1: plan text")
+@MainActor // SubscriptionManager product IDs are main-actor isolated in the app module.
 struct JourneyPlanTextTests {
     @Test("Single-unit periods read '/month' and '/year'; analytics plan names are generic")
     func perPeriodText() {
