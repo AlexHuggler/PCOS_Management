@@ -2,7 +2,8 @@ import Observation
 import SwiftUI
 import UIKit
 
-enum ThemeOption: String, CaseIterable, Identifiable, Codable {
+enum ThemeOption: String, CaseIterable, Identifiable, Codable, Sendable {
+    case calm
     case lunarCalm
     case botanicalJournal
     case sage
@@ -17,6 +18,8 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
+        case .calm:
+            L10n.string("Calm", defaultValue: "Calm")
         case .botanicalJournal:
             L10n.string("Botanical Journal", defaultValue: "Botanical Journal")
         case .lunarCalm:
@@ -52,6 +55,15 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable {
 
     var palette: ThemePalette {
         switch self {
+        case .calm:
+            ThemePalette(
+                accent: .init(hex: 0x236F72), sage: .init(hex: 0x778F83), coral: .init(hex: 0xB36F75),
+                warmNeutralLight: .init(hex: 0xF6F7F5), warmNeutralDark: .init(hex: 0x11191D),
+                flowSpottingLight: .init(hex: 0xF3DADD), flowLightLight: .init(hex: 0xDFB5BA),
+                flowMediumLight: .init(hex: 0xB97781), flowHeavyLight: .init(hex: 0x914A59),
+                flowSpottingDark: .init(hex: 0xD494A0), flowLightDark: .init(hex: 0xC77F8D),
+                flowMediumDark: .init(hex: 0xB76A7A), flowHeavyDark: .init(hex: 0x985064)
+            )
         case .botanicalJournal:
             ThemePalette(
                 accent: .init(hex: 0x173D36),
@@ -331,13 +343,30 @@ extension ThemeRGB {
     }
 }
 
+enum AppearanceColorMode: String, Codable, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .system: L10n.string("System", defaultValue: "System")
+        case .light: L10n.string("Light", defaultValue: "Light")
+        case .dark: L10n.string("Dark", defaultValue: "Dark")
+        }
+    }
+    var colorScheme: ColorScheme? {
+        switch self { case .system: nil; case .light: .light; case .dark: .dark }
+    }
+}
+
 private struct AppearanceSelection: Codable, Equatable {
     var themeOption: ThemeOption
     var fontOption: FontOption
+    var colorMode: AppearanceColorMode?
 
     static let `default` = AppearanceSelection(
-        themeOption: .lunarCalm,
-        fontOption: .systemDefault
+        themeOption: .calm,
+        fontOption: .systemDefault,
+        colorMode: .system
     )
 }
 
@@ -357,6 +386,10 @@ final class AppearancePreferences {
         didSet { persistAndRefresh() }
     }
 
+    var colorMode: AppearanceColorMode {
+        didSet { persistAndRefresh() }
+    }
+
     var renderKey = UUID()
 
     init(defaults: UserDefaults = .standard) {
@@ -366,9 +399,11 @@ final class AppearancePreferences {
            let selection = try? JSONDecoder().decode(AppearanceSelection.self, from: data) {
             themeOption = selection.themeOption
             fontOption = selection.fontOption
+            colorMode = selection.colorMode ?? (selection.themeOption == .lunarCalm ? .dark : .light)
         } else {
             themeOption = AppearanceSelection.default.themeOption
             fontOption = AppearanceSelection.default.fontOption
+            colorMode = .system
         }
     }
 
@@ -376,8 +411,8 @@ final class AppearancePreferences {
         themeOption.palette
     }
 
-    var preferredColorScheme: ColorScheme {
-        themeOption.preferredColorScheme
+    var preferredColorScheme: ColorScheme? {
+        colorMode.colorScheme
     }
 
     var availableThemeOptions: [ThemeOption] {
@@ -447,7 +482,8 @@ private extension AppearancePreferences {
     func persistAndRefresh() {
         let selection = AppearanceSelection(
             themeOption: themeOption,
-            fontOption: fontOption
+            fontOption: fontOption,
+            colorMode: colorMode
         )
 
         if let data = try? JSONEncoder().encode(selection) {

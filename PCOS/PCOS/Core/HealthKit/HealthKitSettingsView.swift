@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import SwiftData
 
 struct HealthKitSettingsView: View {
     private struct HealthKitDataDisclosureItem: Identifiable {
@@ -13,7 +14,9 @@ struct HealthKitSettingsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @State private var healthKitManager = HealthKitManager()
+    @State private var healthKitManager = HealthKitManager.shared
+    @State private var manualOverrides: [HealthKitFieldOwnership] = []
+    @State private var overrideLogs: [DailyLog] = []
     @State private var authorizationTriggered = false
     @State private var contributionSummaries: [HealthKitContributionSummary] = []
 
@@ -46,6 +49,8 @@ struct HealthKitSettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 connectionCard
+                categorySelectionCard
+                manualOverridesCard
                 dataAccessCard
                 contributionCard
                 privacyCard
@@ -131,7 +136,7 @@ struct HealthKitSettingsView: View {
                 HStack(spacing: AppTheme.spacing8) {
                     if healthKitManager.isConfigured {
                     statusPill(
-                        localized("Connected"),
+                        localized("Setup complete"),
                         systemImage: "checkmark.circle.fill",
                         tint: positiveTint
                     )
@@ -150,6 +155,83 @@ struct HealthKitSettingsView: View {
                 )
             }
         }
+        }
+    }
+
+    private var categorySelectionCard: some View {
+        healthKitCard {
+            VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                Text(localized("Choose what to import")).appFont(.headline, weight: .semibold)
+                Text(localized("Cycle and symptom history covers 12 months. Other selected categories cover 90 days. You can skip any category."))
+                    .appFont(.caption).foregroundStyle(AppTheme.secondaryText)
+                ForEach(HealthKitDataTypeDescriptor.Category.allCases, id: \.rawValue) { category in
+                    Toggle(localized(categoryTitle(category)), isOn: Binding(
+                        get: { healthKitManager.enabledCategories.contains(category) },
+                        set: { enabled in
+                            healthKitManager.setCategory(category, enabled: enabled)
+                            Task {
+                                if enabled {
+                                    do { try await healthKitManager.requestAuthorization(categories: [category]) }
+                                    catch { healthKitManager.lastError = error.localizedDescription }
+                                }
+                                healthKitManager.startObserving(modelContainer: modelContext.container)
+                            }
+                        }))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var manualOverridesCard: some View {
+        if !manualOverrides.isEmpty {
+            healthKitCard {
+                VStack(alignment: .leading, spacing: AppTheme.spacing12) {
+                    Text(localized("Your corrections")).appFont(.headline, weight: .semibold)
+                    Text(localized("Your saved values take priority. Choose a field to use its received Apple Health value again."))
+                        .appFont(.caption).foregroundStyle(AppTheme.secondaryText)
+                    ForEach(manualOverrides, id: \.persistentModelID) { owner in
+                        if let log = overrideLogs.first(where: { $0.id == owner.recordID }), let value = owner.healthValue {
+                            VStack(alignment: .leading, spacing: AppTheme.spacing4) {
+                                Text("\(log.date.formatted(date: .abbreviated, time: .omitted)) · \(localized(fieldTitle(owner.field)))")
+                                    .appFont(.caption)
+                                Button {
+                                    do {
+                                        try HealthKitFieldOwnership.useAppleHealth(log: log, field: owner.field, context: modelContext)
+                                        refreshContributionSummaries()
+                                    } catch { healthKitManager.lastError = error.localizedDescription }
+                                } label: {
+                                    Text("\(localized("Use Apple Health value")): \(value.formatted(.number.precision(.fractionLength(0...1))))")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func fieldTitle(_ field: String) -> String {
+        switch field {
+        case "weight": "Weight (kg)"
+        case "sleepHours": "Sleep (hours)"
+        case "activeMinutes": "Movement (minutes)"
+        case "restingHeartRateBPM": "Resting heart rate (BPM)"
+        default: field
+        }
+    }
+
+    private func categoryTitle(_ category: HealthKitDataTypeDescriptor.Category) -> String {
+        switch category {
+        case .body: "Body measurements"
+        case .activity: "Movement"
+        case .heart: "Heart and recovery"
+        case .sleep: "Sleep"
+        case .glucose: "Blood glucose"
+        case .nutrition: "Nutrition"
+        case .cycle: "Cycle and ovulation"
+        case .symptoms: "Symptoms"
+        case .reproductiveContext: "Reproductive context (optional)"
         }
     }
 
@@ -225,6 +307,9 @@ struct HealthKitSettingsView: View {
                                 Text(localized(summary.title))
                                     .appFont(.subheadline, weight: .medium)
                                     .foregroundStyle(AppTheme.primaryText)
+                                if let received = summary.latestSampleDate {
+                                    Text(received, format: .dateTime.month().day().year()).appFont(.caption2)
+                                }
                                 Text(localized(summary.sourceLabel))
                                     .appFont(.caption2)
                                     .foregroundStyle(AppTheme.secondaryText)
@@ -254,7 +339,7 @@ struct HealthKitSettingsView: View {
                     Spacer()
 
                     statusPill(
-                        localized("Connected"),
+                        localized("Setup complete"),
                         systemImage: "checkmark.circle.fill",
                         tint: positiveTint
                     )
@@ -264,7 +349,7 @@ struct HealthKitSettingsView: View {
 
                 if let lastSync = healthKitManager.lastSyncDate {
                     HStack {
-                        Label(localized("Last Synced"), systemImage: "clock")
+                        Label(localized("Last checked"), systemImage: "clock")
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text(lastSync, style: .relative)
@@ -297,7 +382,7 @@ struct HealthKitSettingsView: View {
         if healthKitManager.authorizationState == .unavailable {
             localized("HealthKit Unavailable")
         } else if healthKitManager.isConfigured {
-            localized("Connected to Apple Health")
+            localized("Apple Health setup complete")
         } else {
             localized("Connect to Apple Health")
         }
@@ -307,7 +392,7 @@ struct HealthKitSettingsView: View {
         if healthKitManager.authorizationState == .unavailable {
             localized("Apple Health is not available on this device. HealthKit integration requires a physical iPhone.")
         } else if healthKitManager.isConfigured {
-            localized("Health access is configured. Manage permissions in Settings.")
+            localized("Setup is complete. Apple Health does not reveal read permission status. Received data is shown below.")
         } else {
             localized("Allow CycleBalance to read your health data")
         }
@@ -498,6 +583,8 @@ struct HealthKitSettingsView: View {
     private func refreshContributionSummaries() {
         do {
             contributionSummaries = try HealthKitContributionSummaryService(modelContext: modelContext).summaries()
+            overrideLogs = try modelContext.fetch(FetchDescriptor<DailyLog>())
+            manualOverrides = try modelContext.fetch(FetchDescriptor<HealthKitFieldOwnership>()).filter { $0.isManual && $0.healthValue != nil && !$0.field.hasPrefix("__") }
         } catch {
             contributionSummaries = []
         }

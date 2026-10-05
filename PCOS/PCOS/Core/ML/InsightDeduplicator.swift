@@ -10,34 +10,12 @@ struct InsightDeduplicator {
     /// Removes duplicate insights (same type within 7 days with similar title)
     /// and deletes insights older than 90 days.
     func deduplicateAndClean(newInsights: [Insight], existingInsights: [Insight]) -> [Insight] {
-        let calendar = Calendar.current
-        let now = Date()
-
-        // Delete insights older than expiration threshold.
-        let expirationDate = calendar.date(byAdding: .day, value: -insightExpirationDays, to: now) ?? now
-        for existing in existingInsights where existing.generatedDate < expirationDate {
+        // Each successful run is a complete snapshot. Retract conclusions when their
+        // sources disappear or change, even when the replacement has the same title.
+        for existing in existingInsights {
             modelContext.delete(existing)
         }
-
-        // Filter new insights against recent existing ones (same type within window with similar title).
-        let deduplicationCutoff = calendar.date(
-            byAdding: .day,
-            value: -deduplicationWindowDays,
-            to: now
-        ) ?? now
-
-        let recentExisting = existingInsights.filter { $0.generatedDate >= deduplicationCutoff }
-
-        var deduplicated: [Insight] = []
-        for newInsight in newInsights {
-            let isDuplicate = recentExisting.contains { existing in
-                existing.insightType == newInsight.insightType
-                    && titlesAreSimilar(existing.title, newInsight.title)
-            }
-            if !isDuplicate {
-                deduplicated.append(newInsight)
-            }
-        }
+        let deduplicated = newInsights
 
         // Also deduplicate within the new batch itself.
         var finalInsights: [Insight] = []

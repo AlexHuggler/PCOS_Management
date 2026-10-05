@@ -232,6 +232,7 @@ struct HealthKitContributionSummary: Equatable, Identifiable {
     var title: String
     var sampleCount: Int
     var sourceLabel: String
+    var latestSampleDate: Date? = nil
 
     var displayText: String {
         sampleCount == 1 ? "1 Apple Health contribution" : "\(sampleCount) Apple Health contributions"
@@ -250,8 +251,6 @@ struct HealthKitContributionSummaryService {
 
     func summaries(days: Int = 30, now: Date = Date()) throws -> [HealthKitContributionSummary] {
         let startDate = calendar.date(byAdding: .day, value: -max(days, 1), to: calendar.startOfDay(for: now)) ?? .distantPast
-        let dailyLogs = try modelContext.fetch(FetchDescriptor<DailyLog>())
-            .filter { $0.date >= startDate && $0.date <= now }
         let glucoseReadings = try modelContext.fetch(FetchDescriptor<BloodSugarReading>())
             .filter { $0.timestamp >= startDate && $0.timestamp <= now && $0.fromHealthKit }
         let nutritionImports = try modelContext.fetch(FetchDescriptor<NutritionImportRecord>())
@@ -273,25 +272,25 @@ struct HealthKitContributionSummaryService {
             HealthKitContributionSummary(
                 kind: .bodyMass,
                 title: "Weight",
-                sampleCount: dailyLogs.filter { $0.weight != nil }.count,
+                sampleCount: provenance.filter { $0.healthKitIdentifier == "HKQuantityTypeIdentifierBodyMass" }.count,
                 sourceLabel: sourceSummary(for: provenance, matching: ["HKQuantityTypeIdentifierBodyMass"])
             ),
             HealthKitContributionSummary(
                 kind: .sleepAnalysis,
                 title: "Sleep",
-                sampleCount: dailyLogs.filter { $0.sleepHours != nil }.count,
+                sampleCount: provenance.filter { $0.healthKitIdentifier == "HKCategoryTypeIdentifierSleepAnalysis" }.count,
                 sourceLabel: sourceSummary(for: provenance, matching: ["HKCategoryTypeIdentifierSleepAnalysis"])
             ),
             HealthKitContributionSummary(
                 kind: .activeMinutes,
                 title: "Activity",
-                sampleCount: max(dailyLogs.filter { $0.activeMinutes != nil }.count, activityProvenanceCount),
+                sampleCount: activityProvenanceCount,
                 sourceLabel: sourceSummary(for: provenance, matching: activityIdentifiers)
             ),
             HealthKitContributionSummary(
                 kind: .restingHeartRate,
                 title: "Resting heart rate",
-                sampleCount: dailyLogs.filter { $0.restingHeartRateBPM != nil }.count,
+                sampleCount: provenance.filter { $0.healthKitIdentifier == "HKQuantityTypeIdentifierRestingHeartRate" }.count,
                 sourceLabel: sourceSummary(for: provenance, matching: ["HKQuantityTypeIdentifierRestingHeartRate"])
             ),
             HealthKitContributionSummary(
@@ -330,7 +329,25 @@ struct HealthKitContributionSummaryService {
                 sampleCount: provenance.filter { $0.derivedRecordKind == .sensitiveContext }.count,
                 sourceLabel: sourceSummary(for: provenance, kind: .sensitiveContext)
             ),
-        ]
+        ].map { summary in
+            var result = summary
+            let matching = provenance.filter { record in
+                switch summary.kind {
+                case .bodyMass: record.healthKitIdentifier == "HKQuantityTypeIdentifierBodyMass"
+                case .sleepAnalysis: record.healthKitIdentifier == "HKCategoryTypeIdentifierSleepAnalysis"
+                case .activeMinutes: activityIdentifiers.contains(record.healthKitIdentifier)
+                case .restingHeartRate: record.healthKitIdentifier == "HKQuantityTypeIdentifierRestingHeartRate"
+                case .bloodGlucose: record.healthKitIdentifier == "HKQuantityTypeIdentifierBloodGlucose"
+                case .nutrition: record.derivedRecordKind == .nutritionImport
+                case .cycle: record.derivedRecordKind == .cycleEntry
+                case .ovulation: record.derivedRecordKind == .ovulationObservation
+                case .symptoms: record.derivedRecordKind == .symptomEntry
+                case .reproductiveContext: record.derivedRecordKind == .sensitiveContext
+                }
+            }
+            result.latestSampleDate = matching.map { $0.endDate ?? $0.startDate }.max()
+            return result
+        }
     }
 
     private func sourceSummary(

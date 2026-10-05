@@ -64,7 +64,7 @@ struct RoadmapLocalServicesTests {
         #expect(readiness.message.contains("meal and glucose"))
     }
 
-    @Test("HealthKit contribution summaries count local Apple Health sources")
+    @Test("HealthKit contribution summaries exclude ambiguous manual daily values")
     func healthKitContributionSummariesCountSources() throws {
         let container = try TestHelpers.makeModelContainer()
         let context = container.mainContext
@@ -99,10 +99,10 @@ struct RoadmapLocalServicesTests {
         let summaries = try HealthKitContributionSummaryService(modelContext: context).summaries(days: 7, now: now)
         let counts = Dictionary(uniqueKeysWithValues: summaries.map { ($0.kind, $0.sampleCount) })
 
-        #expect(counts[.bodyMass] == 1)
-        #expect(counts[.sleepAnalysis] == 1)
-        #expect(counts[.activeMinutes] == 1)
-        #expect(counts[.restingHeartRate] == 1)
+        #expect(counts[.bodyMass] == 0)
+        #expect(counts[.sleepAnalysis] == 0)
+        #expect(counts[.activeMinutes] == 0)
+        #expect(counts[.restingHeartRate] == 0)
         #expect(counts[.bloodGlucose] == 1)
         #expect(summaries.first(where: { $0.kind == .bloodGlucose })?.sourceLabel == "Apple Health")
     }

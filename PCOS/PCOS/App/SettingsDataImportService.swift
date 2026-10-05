@@ -146,10 +146,14 @@ struct SettingsDataImportService {
         }
 
         do {
+            try backup.preferences?.validate()
             try validateReferences(in: backup.records)
+            HealthKitManager.shared.suspendSync()
+            defer { HealthKitManager.shared.startObserving(modelContainer: modelContext.container) }
             try clearAllTrackedModels()
             let counts = try importRecords(from: backup.records)
             try modelContext.save()
+            try backup.preferences?.restoreValidated()
 
             Logger.database.info("Imported backup with \(counts.total) records (schema v\(backup.schemaVersion))")
             return ImportSummary(
@@ -252,6 +256,7 @@ private extension SettingsDataImportService {
         var schemaVersion: Int
         var source: SettingsDataBackupSource
         var records: SettingsDataBackupRecords
+        var preferences: SettingsPreferencesBackup?
         var issues: [ImportIssue]
 
         var backup: SettingsDataBackupFile {
@@ -260,7 +265,8 @@ private extension SettingsDataImportService {
                 exportedAt: exportedAt,
                 appVersion: appVersion,
                 source: source,
-                records: records
+                records: records,
+                preferences: preferences
             )
         }
 
@@ -273,7 +279,8 @@ private extension SettingsDataImportService {
             appVersion: String,
             source: SettingsDataBackupSource,
             records: SettingsDataBackupRecords,
-            issues: [ImportIssue]
+            issues: [ImportIssue],
+            preferences: SettingsPreferencesBackup? = nil
         ) {
             self.schemaVersion = schemaVersion
             self.exportedAt = exportedAt
@@ -281,6 +288,7 @@ private extension SettingsDataImportService {
             self.source = source
             self.records = records
             self.issues = issues
+            self.preferences = preferences
         }
     }
 
@@ -319,6 +327,12 @@ private extension SettingsDataImportService {
         let exportedAt = (try? requiredDate(field: "exportedAt", in: root, location: "root")) ?? Date()
         let appVersion = stringValue(root["appVersion"]) ?? "unknown"
         let source = parseBackupSource(from: root["source"])
+        let preferences: SettingsPreferencesBackup?
+        if let raw = root["preferences"], !(raw is NSNull) {
+            let data = try JSONSerialization.data(withJSONObject: raw)
+            preferences = try JSONDecoder().decode(SettingsPreferencesBackup.self, from: data)
+            try preferences?.validate()
+        } else { preferences = nil }
 
         let recordsObject: JSONObject
         if let rawRecords = root["records"] {
@@ -356,6 +370,10 @@ private extension SettingsDataImportService {
         )
         issues.append(contentsOf: filtered.issues)
 
+        let healthOwnership: [HealthKitFieldOwnershipDTO]
+        if let raw = recordsObject["healthKitFieldOwnership"], !(raw is NSNull) {
+            healthOwnership = try JSONDecoder().decode([HealthKitFieldOwnershipDTO].self, from: JSONSerialization.data(withJSONObject: raw))
+        } else { healthOwnership = [] }
         let records = SettingsDataBackupRecords(
             cycles: filtered.cycles.map(\.value),
             cycleEntries: filtered.cycleEntries.map(\.value),
@@ -372,7 +390,8 @@ private extension SettingsDataImportService {
             mealScanFoodItems: mealScanFoodItems.map(\.value),
             mealScanNutritionSummaries: mealScanNutritionSummaries.map(\.value),
             mealScanMetadata: mealScanMetadata.map(\.value),
-            healthKitImportedSamples: healthKitImportedSamples.map(\.value)
+            healthKitImportedSamples: healthKitImportedSamples.map(\.value),
+            healthKitFieldOwnership: healthOwnership
         )
 
         return ParsedJSONBackup(
@@ -381,7 +400,8 @@ private extension SettingsDataImportService {
             appVersion: appVersion,
             source: source,
             records: records,
-            issues: issues
+            issues: issues,
+            preferences: preferences
         )
     }
 
@@ -625,7 +645,12 @@ private extension SettingsDataImportService {
             restingHeartRateBPM: try optionalDouble(field: "restingHeartRateBPM", in: object, location: location),
             stressLevel: stressLevel,
             energyLevel: energyLevel,
-            waterOz: try optionalInt(field: "waterOz", in: object, location: location)
+            waterOz: try optionalInt(field: "waterOz", in: object, location: location),
+            painLevel0To10: try optionalInt(field: "painLevel0To10", in: object, location: location),
+            privateNote: try optionalString(field: "privateNote", in: object, location: location),
+            positiveActionRawValues: try optionalString(field: "positiveActionRawValues", in: object, location: location),
+            moodRawValue: try optionalString(field: "moodRawValue", in: object, location: location),
+            symptomsReviewed: try optionalBool(field: "symptomsReviewed", in: object, location: location)
         )
     }
 
@@ -735,7 +760,8 @@ private extension SettingsDataImportService {
             derivedRecordKind: try optionalEnum(field: "derivedRecordKind", in: object, location: location, as: HealthKitDerivedRecordKind.self) ?? .sourceOnly,
             derivedRecordID: try optionalUUID(field: "derivedRecordID", in: object, location: location),
             importedAt: try optionalDate(field: "importedAt", in: object, location: location) ?? startDate,
-            notes: try optionalString(field: "notes", in: object, location: location)
+            notes: try optionalString(field: "notes", in: object, location: location),
+            lastAppliedFingerprint: try optionalString(field: "lastAppliedFingerprint", in: object, location: location)
         )
     }
 
@@ -1121,6 +1147,8 @@ private extension SettingsDataImportService {
     }
 
     func clearAllTrackedModels() throws {
+        try deleteAll(HealthKitSyncCursor.self)
+        try deleteAll(HealthKitFieldOwnership.self)
         try deleteAll(CycleEntry.self)
         try deleteAll(Cycle.self)
         try deleteAll(OvulationObservation.self)
@@ -1293,7 +1321,12 @@ private extension SettingsDataImportService {
                     restingHeartRateBPM: record.restingHeartRateBPM,
                     stressLevel: record.stressLevel,
                     energyLevel: record.energyLevel,
-                    waterOz: record.waterOz
+                    waterOz: record.waterOz,
+                    painLevel0To10: record.painLevel0To10,
+                    privateNote: record.privateNote,
+                    positiveActionRawValues: record.positiveActionRawValues ?? "",
+                    moodRawValue: record.moodRawValue,
+                    symptomsReviewed: record.symptomsReviewed ?? false
                 )
             )
         }
@@ -1473,9 +1506,19 @@ private extension SettingsDataImportService {
                     derivedRecordKind: record.derivedRecordKind,
                     derivedRecordID: record.derivedRecordID,
                     importedAt: record.importedAt,
-                    notes: record.notes
+                    notes: record.notes,
+                    lastAppliedFingerprint: record.lastAppliedFingerprint
                 )
             )
+        }
+
+        for record in records.healthKitFieldOwnership {
+            let owner = HealthKitFieldOwnership(recordID: record.recordID, field: record.field)
+            owner.lastAppliedValue = record.lastAppliedValue
+            owner.healthValue = record.healthValue
+            owner.isManual = record.isManual
+            owner.lastAppliedFingerprint = record.lastAppliedFingerprint
+            modelContext.insert(owner)
         }
 
         return records.counts

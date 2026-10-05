@@ -186,6 +186,34 @@ struct PermissionsStepView: View {
         ]
     }
 
+    private var privacySummary: String {
+        if MealScanFeatureFlags.current.enableMealScanV2 {
+            return L10n.string(
+                "Your health logs stay on this device by default. Optional photo estimates are sent only after you confirm each upload.",
+                defaultValue: "Your health logs stay on this device by default. Optional photo estimates are sent only after you confirm each upload."
+            )
+        }
+
+        return L10n.string(
+            "Your health logs stay on this device by default.",
+            defaultValue: "Your health logs stay on this device by default."
+        )
+    }
+
+    private var cameraPermissionDescription: String {
+        if MealScanFeatureFlags.current.enableMealScanV2 {
+            return L10n.string(
+                "Take photos for your hair & skin journal and meal estimates.",
+                defaultValue: "Take photos for your hair & skin journal and meal estimates."
+            )
+        }
+
+        return L10n.string(
+            "Take photos for your hair & skin journal.",
+            defaultValue: "Take photos for your hair & skin journal."
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -216,12 +244,7 @@ struct PermissionsStepView: View {
                         Image(systemName: "lock.shield.fill")
                             .appFont(.caption)
                             .foregroundStyle(AppTheme.accentColor)
-                        Text(
-                            L10n.string(
-                                "Your data stays on your device. No accounts, no servers, no exceptions.",
-                                defaultValue: "Your data stays on your device. No accounts, no servers, no exceptions."
-                            )
-                        )
+                        Text(privacySummary)
                         .appFont(.caption)
                         .foregroundStyle(.secondary)
                     }
@@ -232,10 +255,7 @@ struct PermissionsStepView: View {
                         permissionCard(
                             icon: "camera.fill",
                             title: L10n.string("Camera", defaultValue: "Camera"),
-                            description: L10n.string(
-                                "Take photos for your hair & skin journal to track changes over time.",
-                                defaultValue: "Take photos for your hair & skin journal to track changes over time."
-                            ),
+                            description: cameraPermissionDescription,
                             benefit: L10n.string(
                                 "See skin and hair changes side by side over months.",
                                 defaultValue: "See skin and hair changes side by side over months."

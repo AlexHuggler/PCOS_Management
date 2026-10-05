@@ -20,6 +20,42 @@ enum AppTheme {
     private static var appearance: AppearancePreferences { .shared }
     private static var palette: ThemePalette { appearance.palette }
 
+    private static var usesCompanionColors: Bool {
+        [.calm, .lunarCalm, .botanicalJournal].contains(appearance.themeOption)
+    }
+
+    enum CompanionColorRole: Sendable {
+        case background, surface, raisedSurface, primaryText, secondaryText, accent, coral, sage, border, ctaText
+    }
+
+    /// Resolve semantic colors from traits, independently of the selected theme.
+    /// Opaque surfaces keep contrast stable when cards overlap decorative backgrounds.
+    static func companionUIColor(theme: ThemeOption, role: CompanionColorRole, traits: UITraitCollection) -> UIColor {
+        let dark = traits.userInterfaceStyle == .dark
+        let high = traits.accessibilityContrast == .high
+        let botanical = theme == .botanicalJournal
+        let lunar = theme == .lunarCalm
+        let hex: UInt32
+        switch role {
+        case .background: hex = dark ? (lunar ? 0x0B0C15 : botanical ? 0x111C18 : 0x11191D) : (botanical ? 0xFFF8EF : lunar ? 0xF5F4FA : 0xF6F7F5)
+        case .surface: hex = dark ? (lunar ? 0x191B29 : botanical ? 0x1B2A23 : 0x1C282C) : 0xFFFFFF
+        case .raisedSurface: hex = dark ? (lunar ? 0x242738 : botanical ? 0x263A2F : 0x29363B) : (botanical ? 0xFAF1E8 : 0xEDF1F1)
+        case .primaryText: hex = high ? (dark ? 0xFFFFFF : 0x000000) : (dark ? 0xF3F6F5 : botanical ? 0x173D36 : 0x192A30)
+        case .secondaryText: hex = high ? (dark ? 0xF1F5F4 : 0x24322D) : (dark ? 0xCBD5D1 : 0x4B5D58)
+        case .accent: hex = high ? (dark ? 0xADF5E9 : 0x004A45) : (dark ? (botanical ? 0xA8DAC2 : 0x83DDD2) : (botanical ? 0x245C49 : lunar ? 0x2D6071 : 0x236F72))
+        case .coral: hex = dark ? 0xF2B2BE : (high ? 0x792237 : 0x9A4056)
+        case .sage: hex = dark ? 0xC1D6BF : (high ? 0x30472F : 0x486546)
+        case .border: hex = high ? (dark ? 0xBFCBC7 : 0x53665F) : (dark ? 0x687C73 : 0x87978F)
+        case .ctaText: hex = dark ? 0x10231F : 0xFFFFFF
+        }
+        return ThemeRGB(hex: hex).uiColor
+    }
+
+    private static func companionColor(_ role: CompanionColorRole) -> Color {
+        let selected = appearance.themeOption
+        return Color(UIColor { traits in companionUIColor(theme: selected, role: role, traits: traits) })
+    }
+
     // MARK: - Botanical Journal Tokens
 
     static let botanicalForestRGB = ThemeRGB(hex: 0x173D36)
@@ -61,11 +97,11 @@ enum AppTheme {
     }
 
     static var usesCustomTabBar: Bool {
-        true
+        false
     }
 
     static var usesImmersiveHomeShell: Bool {
-        usesCustomTabBar
+        false
     }
 
     static var usesImmersivePresentation: Bool {
@@ -80,7 +116,7 @@ enum AppTheme {
         !appearance.themeOption.isHighContrast
     }
 
-    static var preferredColorScheme: ColorScheme {
+    static var preferredColorScheme: ColorScheme? {
         appearance.preferredColorScheme
     }
 
@@ -236,7 +272,8 @@ enum AppTheme {
     }
 
     static var premiumEditorAccentGradient: LinearGradient {
-        isLunarCalm ? lunarCalmGradient : themeAccentGradient
+        if usesCompanionColors { return LinearGradient(colors: [accentColor, accentColor], startPoint: .leading, endPoint: .trailing) }
+        return isLunarCalm ? lunarCalmGradient : themeAccentGradient
     }
 
     static var premiumEditorBorderGradient: LinearGradient {
@@ -244,7 +281,8 @@ enum AppTheme {
     }
 
     static var premiumEditorBackground: Color {
-        if isLunarCalm {
+        if usesCompanionColors { return companionColor(.background) }
+        return if isLunarCalm {
             lunarCalmBackgroundRGB.color
         } else {
             warmNeutral
@@ -252,7 +290,8 @@ enum AppTheme {
     }
 
     static var premiumEditorSurface: Color {
-        if isLunarCalm {
+        if usesCompanionColors { return companionColor(.surface) }
+        return if isLunarCalm {
             lunarCalmSurfaceRGB.color.opacity(0.82)
         } else {
             cardBackground.opacity(isBotanicalJournal ? 0.84 : 0.94)
@@ -260,7 +299,8 @@ enum AppTheme {
     }
 
     static var premiumEditorRaisedSurface: Color {
-        if isLunarCalm {
+        if usesCompanionColors { return companionColor(.raisedSurface) }
+        return if isLunarCalm {
             lunarCalmRaisedSurfaceRGB.color
         } else if isBotanicalJournal {
             botanicalCreamAltRGB.color.opacity(0.92)
@@ -270,7 +310,8 @@ enum AppTheme {
     }
 
     static var premiumEditorBorder: Color {
-        if isLunarCalm {
+        if usesCompanionColors { return companionColor(.border) }
+        return if isLunarCalm {
             lunarCalmBorderRGB.color
         } else {
             cardBorder
@@ -278,35 +319,40 @@ enum AppTheme {
     }
 
     static var premiumEditorAccentColor: Color {
-        isLunarCalm ? lunarCalmTealRGB.color : accentColor
+        if usesCompanionColors { return companionColor(.accent) }
+        return isLunarCalm ? lunarCalmTealRGB.color : accentColor
     }
 
     static var premiumEditorSecondaryAccentColor: Color {
-        isLunarCalm ? lunarCalmPeachRGB.color : coralAccent
+        if usesCompanionColors { return companionColor(.coral) }
+        return isLunarCalm ? lunarCalmPeachRGB.color : coralAccent
     }
 
     static var premiumEditorWarningAccentColor: Color {
-        isLunarCalm ? lunarCalmCoralRGB.color : roseAccent
+        if usesCompanionColors { return companionColor(.coral) }
+        return isLunarCalm ? lunarCalmCoralRGB.color : roseAccent
     }
 
     static var premiumEditorCTAForeground: Color {
-        isLunarCalm ? lunarCalmBackgroundRGB.color : .white
+        if usesCompanionColors { return companionColor(.ctaText) }
+        return isLunarCalm ? lunarCalmBackgroundRGB.color : .white
     }
 
     // MARK: - Primary Colors
 
     /// User-selected accent color
-    static var accentColor: Color { palette.accent.color }
+    static var accentColor: Color { usesCompanionColors ? companionColor(.accent) : palette.accent.color }
 
     /// Secondary accent used across cards and icons
-    static var sage: Color { palette.sage.color }
+    static var sage: Color { usesCompanionColors ? companionColor(.sage) : palette.sage.color }
 
     /// Soft coral for highlights and CTAs
-    static var coralAccent: Color { palette.coral.color }
+    static var coralAccent: Color { usesCompanionColors ? companionColor(.coral) : palette.coral.color }
 
     /// Warm neutral for backgrounds — adaptive for dark mode
     static var warmNeutral: Color {
-        Color(
+        if usesCompanionColors { return companionColor(.background) }
+        return Color(
         UIColor { traits in
             traits.userInterfaceStyle == .dark
                     ? palette.warmNeutralDark.uiColor
@@ -357,7 +403,8 @@ enum AppTheme {
     // MARK: - Semantic Colors
 
     static var cardBackground: Color {
-        if isBotanicalJournal {
+        if usesCompanionColors { return companionColor(.surface) }
+        return if isBotanicalJournal {
             Color(red: 1, green: 250.0 / 255.0, blue: 242.0 / 255.0).opacity(0.78)
         } else if isLunarCalm {
             lunarCalmSurfaceRGB.color.opacity(0.82)
@@ -373,7 +420,10 @@ enum AppTheme {
     }
 
     static var primaryText: Color {
-        if isBotanicalJournal {
+        if usesCompanionColors { return companionColor(.primaryText) }
+        return if appearance.themeOption == .calm {
+            Color.primary
+        } else if isBotanicalJournal {
             botanicalForestRGB.color
         } else if isLunarCalm {
             lunarCalmPrimaryTextRGB.color
@@ -385,7 +435,10 @@ enum AppTheme {
     }
 
     static var secondaryText: Color {
-        if isBotanicalJournal {
+        if usesCompanionColors { return companionColor(.secondaryText) }
+        return if appearance.themeOption == .calm {
+            Color.secondary
+        } else if isBotanicalJournal {
             botanicalForestAltRGB.color.opacity(0.72)
         } else if isLunarCalm {
             lunarCalmSecondaryTextRGB.color
@@ -411,7 +464,8 @@ enum AppTheme {
     }
 
     static var cardBorder: Color {
-        if isBotanicalJournal {
+        if usesCompanionColors { return companionColor(.border) }
+        return if isBotanicalJournal {
             botanicalRoseSoftRGB.color.opacity(0.34)
         } else if isLunarCalm {
             lunarCalmBorderRGB.color.opacity(0.92)
@@ -423,7 +477,8 @@ enum AppTheme {
     }
 
     static var dividerColor: Color {
-        if isBotanicalJournal {
+        if usesCompanionColors { return companionColor(.border) }
+        return if isBotanicalJournal {
             botanicalSageRGB.color.opacity(0.38)
         } else if isLunarCalm {
             lunarCalmBorderRGB.color.opacity(0.82)
@@ -949,9 +1004,9 @@ struct BotanicalPosterBackground: View {
             if AppTheme.isBotanicalJournal {
                 LinearGradient(
                     colors: [
-                        AppTheme.botanicalCreamRGB.color,
-                        AppTheme.botanicalCreamAltRGB.color.opacity(0.94),
-                        AppTheme.botanicalCreamRGB.color,
+                        AppTheme.warmNeutral,
+                        AppTheme.premiumEditorRaisedSurface,
+                        AppTheme.warmNeutral,
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -1031,9 +1086,9 @@ struct BotanicalPosterBackground: View {
             } else if AppTheme.isLunarCalm {
                 LinearGradient(
                     colors: [
-                        AppTheme.lunarCalmBackgroundRGB.color,
-                        AppTheme.lunarCalmBackgroundAltRGB.color,
-                        AppTheme.lunarCalmBackgroundRGB.color,
+                        AppTheme.warmNeutral,
+                        AppTheme.premiumEditorRaisedSurface,
+                        AppTheme.warmNeutral,
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing

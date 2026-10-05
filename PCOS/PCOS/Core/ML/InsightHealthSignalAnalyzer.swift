@@ -16,11 +16,16 @@ struct HealthSignalInsightAnalyzer {
         let comparableLogs = dailyLogs.filter(Self.hasRecoverySignal)
         guard comparableLogs.count >= minimumComparableLogs else { return [] }
 
-        let recentLogs = Array(comparableLogs.suffix(recentWindowDays))
-        let baselineLogs = Array(comparableLogs.dropLast(recentWindowDays).suffix(recentWindowDays))
-        guard recentLogs.count == recentWindowDays, baselineLogs.count >= recentWindowDays else { return [] }
-
         let calendar = Calendar.current
+        let recentWindow = InsightAnalysisPolicy.window(days: recentWindowDays)
+        let baselineStart = calendar.date(byAdding: .day, value: -recentWindowDays, to: recentWindow.start) ?? recentWindow.start
+        let recentLogs = comparableLogs.filter { $0.date >= recentWindow.start && $0.date < recentWindow.end }
+        let baselineLogs = comparableLogs.filter { $0.date >= baselineStart && $0.date < recentWindow.start }
+        guard Set(recentLogs.map { calendar.startOfDay(for: $0.date) }).count >= 5,
+              Set(baselineLogs.map { calendar.startOfDay(for: $0.date) }).count >= 5,
+              recentLogs.compactMap(\.sleepHours).count >= 5,
+              baselineLogs.compactMap(\.sleepHours).count >= 5 else { return [] }
+
         let earliestDate = baselineLogs.first?.date ?? comparableLogs.first?.date ?? Date()
         let latestDate = recentLogs.last?.date ?? Date()
         let inclusiveEndDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: latestDate)) ?? latestDate
@@ -81,8 +86,9 @@ struct HealthSignalInsightAnalyzer {
         let recentEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: recentLogs.last?.date ?? Date())) ?? Date()
         let baselineSymptoms = symptoms.filter { $0.date >= baselineStart && $0.date < recentStart }
         let recentSymptoms = symptoms.filter { $0.date >= recentStart && $0.date < recentEnd }
-        let recentSymptomSeverity = average(recentSymptoms.map { Double($0.severity) })
-        let baselineSymptomSeverity = average(baselineSymptoms.map { Double($0.severity) })
+        let symptomDays = InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: baselineLogs + recentLogs, days: InsightAnalysisPolicy.lifestyleDays, calendar: calendar)
+        let recentSymptomSeverity = average(symptomDays.filter { $0.date >= recentStart && $0.date < recentEnd }.map(\.value))
+        let baselineSymptomSeverity = average(symptomDays.filter { $0.date >= baselineStart && $0.date < recentStart }.map(\.value))
 
         let sleepDrop = baselineSleep - recentSleep
         let restingHeartRateRise = zipAverages(recentRHR, baselineRHR).map { $0.recent - $0.baseline } ?? 0
@@ -118,8 +124,8 @@ struct HealthSignalInsightAnalyzer {
         )
 
         let content = L10n.format(
-            "Pattern: %@ Likely contributor: your recovery load may be stretched when sleep runs shorter and your body signals are above your usual baseline. Possible next steps: protect a steadier bedtime, choose gentler movement, hydrate, and pair meals with protein or fiber. Best first step: tonight, keep the evening simple and log energy, pain, and symptoms tomorrow so we can see whether the pattern eases.",
-            defaultValue: "Pattern: %@ Likely contributor: your recovery load may be stretched when sleep runs shorter and your body signals are above your usual baseline. Possible next steps: protect a steadier bedtime, choose gentler movement, hydrate, and pair meals with protein or fiber. Best first step: tonight, keep the evening simple and log energy, pain, and symptoms tomorrow so we can see whether the pattern eases.",
+            "Pattern: %@ These measures changed together; your records do not establish a cause. Possible next steps: protect a steadier bedtime, choose gentler movement, hydrate, and pair meals with protein or fiber. Best first step: tonight, keep the evening simple and log energy, pain, and symptoms tomorrow so we can see whether the pattern eases.",
+            defaultValue: "Pattern: %@ These measures changed together; your records do not establish a cause. Possible next steps: protect a steadier bedtime, choose gentler movement, hydrate, and pair meals with protein or fiber. Best first step: tonight, keep the evening simple and log energy, pain, and symptoms tomorrow so we can see whether the pattern eases.",
             pattern
         )
 

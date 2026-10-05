@@ -1416,6 +1416,8 @@ private extension SettingsExternalDataCSVService {
         for row in rows {
             let key = dayKey(for: row.date)
             if let existingLog = logsByDay[key] {
+                let manualFields: [String] = [(row.weight != nil ? "weight" : nil), (row.sleepHours != nil ? "sleepHours" : nil), (row.activeMinutes != nil ? "activeMinutes" : nil)].compactMap { $0 }
+                try HealthKitFieldOwnership.markManual(log: existingLog, fields: manualFields, context: modelContext)
                 let didChange = update(existingLog, with: row)
                 if didChange {
                     counts.dailyLogs += 1

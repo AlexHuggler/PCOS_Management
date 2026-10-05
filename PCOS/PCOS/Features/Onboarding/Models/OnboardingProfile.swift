@@ -20,7 +20,7 @@ enum PrimaryGoal: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .trackCycles:
-            String(localized: "Irregular cycles are unpredictable. Let's change that.", comment: "Primary onboarding goal description.")
+            String(localized: "Keep a record of your periods, even when timing varies.", comment: "Primary onboarding goal description.")
         case .understandSymptoms:
             String(localized: "Find patterns between your symptoms and your cycle.", comment: "Primary onboarding goal description.")
         }
@@ -89,7 +89,7 @@ enum SymptomFocusArea: String, CaseIterable, Identifiable {
         case .skinHair:
             String(localized: "Skin & hair", comment: "Symptom focus area title in onboarding.")
         case .digestionWeight:
-            String(localized: "Digestion & weight", comment: "Symptom focus area title in onboarding.")
+            String(localized: "Digestion & cravings", comment: "Symptom focus area title in onboarding.")
         }
     }
 
@@ -102,7 +102,7 @@ enum SymptomFocusArea: String, CaseIterable, Identifiable {
         case .skinHair:
             String(localized: "Monitor acne, hair changes, and skin patterns.", comment: "Symptom focus area description in onboarding.")
         case .digestionWeight:
-            String(localized: "Spot trends in bloating, cravings, and weight.", comment: "Symptom focus area description in onboarding.")
+            String(localized: "Notice bloating, appetite, and cravings over time.", comment: "Symptom focus area description in onboarding.")
         }
     }
 

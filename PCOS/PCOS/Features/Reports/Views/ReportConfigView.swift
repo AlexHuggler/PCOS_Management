@@ -99,6 +99,9 @@ struct ReportConfigView: View {
         let hasSelectedData = viewModel.hasDataForSelectedSections
 
         List {
+            Section(localized("For your appointment", defaultValue: "For your appointment")) {
+                appointmentFields(viewModel: viewModel)
+            }
             // Date Range
             Section {
                 DatePicker(
@@ -367,6 +370,11 @@ struct ReportConfigView: View {
                 lunarDateRangeCard(viewModel: viewModel)
                 lunarPresetCard(viewModel: viewModel)
                 lunarSectionToggleCard(viewModel: viewModel)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(localized("For your appointment", defaultValue: "For your appointment")).appFont(.headline)
+                    appointmentFields(viewModel: viewModel)
+                }
+                .padding(20).premiumCardDecoration()
 
                 if viewModel.includeHairPhotos {
                     lunarPhotoComparisonCard(viewModel: viewModel)
@@ -386,6 +394,30 @@ struct ReportConfigView: View {
         .tint(AppTheme.premiumEditorAccentColor)
         .sensoryFeedback(.selection, trigger: sectionToggleHaptic)
         .accessibilityIdentifier("screen.report_config")
+    }
+
+    @ViewBuilder
+    private func appointmentFields(viewModel: ReportViewModel) -> some View {
+        TextField(localized("What I would like to discuss", defaultValue: "What I would like to discuss"), text: Bindable(viewModel).consultationConcerns, axis: .vertical)
+            .lineLimit(2...6)
+            .accessibilityIdentifier("report.concerns")
+        DisclosureGroup(localized("Choose dated notes", defaultValue: "Choose dated notes")) {
+            if viewModel.availableDailyNotes.isEmpty {
+                Text(localized("No notes in this date range", defaultValue: "No notes in this date range")).foregroundStyle(.secondary)
+            }
+            ForEach(viewModel.availableDailyNotes) { log in
+                Toggle(isOn: Binding(get: { viewModel.selectedNoteIDs.contains(log.id) }, set: { included in
+                    if included { viewModel.selectedNoteIDs.insert(log.id) } else { viewModel.selectedNoteIDs.remove(log.id) }
+                })) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(log.date, format: .dateTime.month(.abbreviated).day().year())
+                        Text(log.privateNote ?? "").appFont(.caption).foregroundStyle(.secondary).lineLimit(3)
+                    }
+                }
+            }
+        }
+        Text(localized("Only the notes you select are included in your report.", defaultValue: "Only the notes you select are included in your report."))
+            .appFont(.caption).foregroundStyle(.secondary)
     }
 
     private func lunarReportHeader(viewModel: ReportViewModel, hasSelectedData: Bool) -> some View {

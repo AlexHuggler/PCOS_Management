@@ -5,6 +5,74 @@ import Foundation
 @Suite("App State Premium Routing", .serialized)
 @MainActor
 struct AppStatePremiumRoutingTests {
+    @Test("Free daily check-in opens once without a paywall")
+    func freeCheckInRoutesDirectly() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let state = makeAppState(defaults: defaults)
+        state.hasCompletedOnboarding = true
+        state.requestLogger(.symptoms)
+        #expect(state.selectedTab == .track)
+        #expect(!state.showPremiumPaywall)
+        #expect(state.consumePendingLogger() == .symptoms)
+        #expect(state.consumePendingLogger() == nil)
+    }
+
+    @Test("A premium logger continues once after purchase or restore")
+    func purchasedLoggerContinues() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let state = makeAppState(defaults: defaults)
+        state.hasCompletedOnboarding = true
+        state.requestLogger(.meal)
+        #expect(state.showPremiumPaywall)
+        #expect(state.consumePendingLogger() == nil)
+        state.isPremium = true
+        state.finishPremiumPaywall()
+        #expect(state.consumePendingLogger() == .meal)
+        #expect(state.consumePendingLogger() == nil)
+    }
+
+    @Test("Cancelling a premium logger does not reopen it on later entitlement changes")
+    func canceledLoggerClearsDeferredAction() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let state = makeAppState(defaults: defaults)
+        state.hasCompletedOnboarding = true
+        state.requestLogger(.photo)
+        state.finishPremiumPaywall()
+        state.isPremium = true
+        #expect(state.consumePendingLogger() == nil)
+    }
+
+    @Test("Cold-start notifications survive onboarding and legacy meal scan routes to manual meal")
+    func coldStartRouteSurvivesOnboarding() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        AppNotificationRoute.mealScan.persistPending(defaults: defaults)
+        let state = makeAppState(defaults: defaults)
+        state.restorePendingNotificationRoute()
+        #expect(state.consumePendingLogger() == nil)
+        state.hasCompletedOnboarding = true
+        state.isPremium = true
+        state.restorePendingNotificationRoute()
+        #expect(state.consumePendingLogger() == .meal)
+        #expect(AppNotificationRoute.pending(defaults: defaults) == nil)
+    }
+
+    @Test("Each daily notification routes to its corresponding logger")
+    func dailyNotificationRoutes() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let state = makeAppState(defaults: defaults)
+        state.hasCompletedOnboarding = true
+        state.isPremium = true
+        for (route, logger) in [(AppNotificationRoute.period, LoggerShortcut.period), (.symptoms, .symptoms), (.supplements, .supplements)] {
+            state.handleNotificationRoute(route)
+            #expect(state.consumePendingLogger() == logger)
+        }
+    }
+
     @Test("Non-premium Insights selection changes tabs without presenting paywall")
     func nonPremiumInsightsSelectionPresentsPaywall() {
         let (defaults, suiteName) = makeDefaults()

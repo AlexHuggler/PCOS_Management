@@ -230,11 +230,6 @@ struct CycleDetailView: View {
                     }
                     .buttonStyle(.plain)
 
-                    if !appState.allowsPremiumAccess {
-                        Text(L10n.string("Free tier shows cycle history for the last 30 days.", defaultValue: "Free tier shows cycle history for the last 30 days."))
-                            .appFont(.caption)
-                            .foregroundStyle(.secondary)
-                    }
 
                     if let settingsError {
                         Text(settingsError)
@@ -310,7 +305,7 @@ struct CycleDetailView: View {
                     Text(L10n.string("Recent Cycles", defaultValue: "Recent Cycles"))
                         .appFont(.headline)
 
-                    ForEach(completedCycles.suffix(6).reversed()) { cycle in
+                    ForEach(completedCycles.reversed()) { cycle in
                         HStack {
                             Text(formatDate(cycle.startDate))
                                 .appFont(.subheadline)

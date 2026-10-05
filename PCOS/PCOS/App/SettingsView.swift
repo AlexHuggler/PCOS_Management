@@ -164,6 +164,15 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink {
+                        PersonalizationView()
+                    } label: {
+                        Label(L10n.string("Make it yours", defaultValue: "Make it yours"), systemImage: "slider.horizontal.3")
+                    }
+                    .accessibilityIdentifier("settings.personalization")
+                }
+
                 if AppTheme.usesImmersiveHomeShell {
                     Section {
                         lunarSupportOverview
@@ -784,6 +793,7 @@ struct SettingsView: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("screen.settings")
             .navigationTitle(AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Settings", defaultValue: "Settings"))
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(AppTheme.usesImmersiveHomeShell ? .hidden : .visible, for: .navigationBar)
             .scrollContentBackground(.hidden)
@@ -1906,6 +1916,7 @@ private struct ThemeDesignPreviewCard: View {
 private extension ThemeOption {
     var previewSystemImage: String {
         switch self {
+        case .calm: "sun.horizon.fill"
         case .botanicalJournal:
             "leaf.fill"
         case .lunarCalm:
@@ -1929,6 +1940,7 @@ private extension ThemeOption {
 
     var previewSubtitle: String {
         switch self {
+        case .calm: L10n.string("Clear surfaces and quiet colors for everyday care.", defaultValue: "Clear surfaces and quiet colors for everyday care.")
         case .botanicalJournal:
             L10n.string("Warm cream paper, watercolor botanicals, and editorial serif headings.", defaultValue: "Warm cream paper, watercolor botanicals, and editorial serif headings.")
         case .lunarCalm:
@@ -1952,6 +1964,7 @@ private extension ThemeOption {
 
     var previewTraits: [String] {
         switch self {
+        case .calm: [L10n.string("Calm", defaultValue: "Calm"), L10n.string("Simple", defaultValue: "Simple")]
         case .botanicalJournal:
             [L10n.string("Editorial", defaultValue: "Editorial"), L10n.string("Soft", defaultValue: "Soft"), L10n.string("Reflective", defaultValue: "Reflective")]
         case .lunarCalm:
@@ -2113,6 +2126,7 @@ private struct SettingsImportResultView: View {
                 }
             }
             .navigationTitle(result.title)
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -2304,6 +2318,7 @@ private struct SettingsCSVImportGuideView: View {
                 }
             }
             .navigationTitle(L10n.string("CSV Import Guide", defaultValue: "CSV Import Guide"))
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -2658,6 +2673,7 @@ private struct DailyJournalEditorView: View {
             }
             .background(AppTheme.usesImmersivePresentation ? AppTheme.premiumEditorBackground.ignoresSafeArea() : AppTheme.groupedBackground.ignoresSafeArea())
             .navigationTitle(L10n.string("Journal", defaultValue: "Journal"))
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -2717,6 +2733,7 @@ private struct AppLanguageSelectionView: View {
             }
         }
         .navigationTitle(L10n.string("App Language", defaultValue: "App Language"))
+        .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
         .navigationBarTitleDisplayMode(AppTheme.usesImmersivePresentation ? .inline : .automatic)
         .lunarSettingsSecondaryNavigation()
     }

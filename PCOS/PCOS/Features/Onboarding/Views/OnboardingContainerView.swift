@@ -1,269 +1,123 @@
 import SwiftUI
 
-/// Root container that orchestrates the onboarding flow:
-/// language -> background/theme/font -> name -> quiz -> results -> how app helps -> permissions ->
-/// Health context -> optional meal estimate demo -> your plan -> first log -> social proof -> all set.
+/// Four optional steps; progress and selections persist on the device.
 struct OnboardingContainerView: View {
     let onComplete: () -> Void
-
     @Environment(AppState.self) private var appState
-    @Environment(AppearancePreferences.self) private var appearancePreferences
-    @State private var phase: OnboardingPhase
-
-    init(onComplete: @escaping () -> Void) {
-        self.onComplete = onComplete
-        _phase = State(initialValue: Self.initialPhase())
-    }
-
-    private var progress: CGFloat {
-        let currentIndex = OnboardingPhase.allCases.firstIndex(of: phase) ?? 0
-        let phaseCount = max(OnboardingPhase.allCases.count - 1, 1)
-        let rawProgress = CGFloat(currentIndex) / CGFloat(phaseCount)
-        return LayoutDimensionSanitizer.normalizedProgress(from: rawProgress)
-    }
-
-    private var showsBackButton: Bool {
-        phase != .welcomeLanguage
-            && phase != .allSet
-            && previousPhase(before: phase) != nil
-    }
+    @State private var stage = CompanionOnboardingStage.resume()
+    @State private var showingHealth = false
+    @State private var showingCheckIn = false
 
     var body: some View {
-        ZStack(alignment: .top) {
-            phaseContent
-
-            // Back button + continuous progress bar, layered above the
-            // step content so it stays visible over full-screen backgrounds.
-            HStack(spacing: AppTheme.spacing12) {
-                if showsBackButton {
-                    Button {
-                        retreat()
-                    } label: {
-                        Image(systemName: "chevron.backward")
-                            .appFont(.body, weight: .semibold)
-                            .foregroundStyle(AppTheme.secondaryText)
-                            .frame(width: 28, height: 28)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(L10n.string("Back", defaultValue: "Back"))
-                    .accessibilityIdentifier("onboarding.back")
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppTheme.spacing24) {
+                    Text(L10n.format("Step %lld of 4", defaultValue: "Step %lld of 4", stage.rawValue + 1))
+                        .appFont(.caption).foregroundStyle(.secondary)
+                    ProgressView(value: Double(stage.rawValue + 1), total: 4)
+                        .tint(AppTheme.accentColor)
+                    stageContent
                 }
-
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(AppTheme.isBotanicalJournal ? AppTheme.lavenderAccent.opacity(0.18) : AppTheme.accentColor.opacity(AppTheme.opacityLight))
-                        Capsule()
-                            .fill(AppTheme.isBotanicalJournal ? AppTheme.roseAccent : AppTheme.accentColor)
-                            .frame(
-                                width: LayoutDimensionSanitizer.frameDimension(
-                                    from: geometry.size.width * progress
-                                )
-                            )
+                .padding(AppTheme.spacing24)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
+            }
+            .background(BotanicalScreenBackground(style: .quiet))
+            .navigationTitle(L10n.string("Welcome", defaultValue: "Welcome"))
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if stage != .welcome {
+                        Button(L10n.string("Back", defaultValue: "Back")) {
+                            stage = CompanionOnboardingStage(rawValue: stage.rawValue - 1) ?? .welcome
+                        }
+                        .accessibilityIdentifier("onboarding.back")
                     }
                 }
-                .frame(height: 6)
             }
-            .padding(.horizontal, AppTheme.spacing24)
-            .padding(.top, AppTheme.spacing8)
-            .animation(.easeInOut(duration: 0.3), value: phase)
-        }
-    }
-
-    private var phaseContent: some View {
-        Group {
-            switch phase {
-            case .welcomeLanguage:
-                OnboardingLanguageWelcomeView(
-                    selectedLanguage: Binding(
-                        get: { appState.selectedAppLanguage },
-                        set: { appState.selectedAppLanguage = $0 }
-                    ),
-                    onContinue: {
-                        appState.onboardingProfile.hasCompletedWelcome = true
-                        advance()
-                    }
-                )
-
-            case .theme:
-                OnboardingThemeSelectionView(
-                    appearancePreferences: appearancePreferences,
-                    onContinue: { advance() }
-                )
-
-            case .name:
-                OnboardingNameCaptureView(
-                    profile: appState.onboardingProfile,
-                    onContinue: { advance() },
-                    onSkip: { advance() }
-                )
-
-            case .quiz:
-                QuestionnaireView(profile: appState.onboardingProfile, onContinue: { advance() }, onSkip: { advance() })
-
-            case .results:
-                ResultsView(profile: appState.onboardingProfile, onContinue: { advance() }, onSkip: { advance() })
-
-            case .howAppHelps:
-                HowAppHelpsView(profile: appState.onboardingProfile, onContinue: { advance() }, onSkip: { advance() })
-
-            case .permissions:
-                PermissionsStepView(onContinue: { advance() }, onSkip: { advance() })
-
-            case .healthContext:
-                OnboardingHealthContextRevealView(profile: appState.onboardingProfile, onContinue: { advance() }, onSkip: { advance() })
-
-            case .mealScanDemo:
-                OnboardingMealScanDemoView(onContinue: { advance() }, onSkip: { advance() })
-
-            case .yourPlan:
-                YourPlanView(profile: appState.onboardingProfile, onContinue: { advance() }, onSkip: { advance() })
-
-            case .firstLog:
-                GuidedActionView(profile: appState.onboardingProfile, onComplete: { advance() }, onSkip: { advance() })
-
-            case .socialProof:
-                SocialProofView(onContinue: { advance() })
-
-            case .allSet:
-                OnboardingCompletionView(profile: appState.onboardingProfile, onFinish: { completeOnboarding() })
-            }
-        }
-        .simultaneousGesture(boundedOnboardingSwipeGesture)
-        .onChange(of: phase) { _, newPhase in
-            appState.onboardingProfile.currentPhaseRaw = newPhase.rawValue
-        }
-    }
-
-    private var boundedOnboardingSwipeGesture: some Gesture {
-        DragGesture(minimumDistance: 42, coordinateSpace: .local)
-            .onEnded { value in
-                guard phaseAllowsContainerSwipe else { return }
-                let horizontalDistance = value.translation.width
-                let verticalDistance = abs(value.translation.height)
-                guard abs(horizontalDistance) > max(72, verticalDistance * 1.6) else {
-                    return
+            .sheet(isPresented: $showingHealth) {
+                NavigationStack {
+                    HealthKitSettingsView()
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.string("Done", defaultValue: "Done")) { showingHealth = false } } }
                 }
-
-                guard horizontalDistance > 0 else { return }
-                retreat()
             }
-    }
-
-    private var phaseAllowsContainerSwipe: Bool {
-        switch phase {
-        case .quiz, .howAppHelps:
-            false
-        default:
-            true
+            .sheet(isPresented: $showingCheckIn) { SymptomLogView() }
+            .onChange(of: stage) { _, value in appState.onboardingProfile.currentPhaseRaw = "companion_\(value.rawValue)" }
+            .accessibilityIdentifier("onboarding.companion.\(stage.rawValue)")
         }
     }
 
-    private func advance() {
-        guard let next = nextPhase(after: phase) else {
-            completeOnboarding()
-            return
-        }
-
-        withAnimation(.easeInOut(duration: 0.35)) {
-            phase = next
-        }
-    }
-
-    private func retreat() {
-        guard let previous = previousPhase(before: phase) else { return }
-
-        withAnimation(.easeInOut(duration: 0.35)) {
-            phase = previous
-        }
-    }
-
-    private func nextPhase(after currentPhase: OnboardingPhase) -> OnboardingPhase? {
-        guard let currentIndex = OnboardingPhase.allCases.firstIndex(of: currentPhase) else {
-            return nil
-        }
-
-        var nextIndex = currentIndex + 1
-        while nextIndex < OnboardingPhase.allCases.count {
-            let nextCandidate = OnboardingPhase.allCases[nextIndex]
-            if isPhaseAvailable(nextCandidate) {
-                return nextCandidate
+    @ViewBuilder
+    private var stageContent: some View {
+        switch stage {
+        case .welcome:
+            heading("A little support for your everyday", "Make room for what matters to you. Track a little, notice patterns, and build your own routine.", symbol: "leaf")
+            Label(L10n.string("Your health records stay on your device. Apple Health is optional, and you choose what to share.", defaultValue: "Your health records stay on your device. Apple Health is optional, and you choose what to share."), systemImage: "lock.shield")
+                .appFont(.subheadline)
+            Text(L10n.string("Tracking can help you prepare for a conversation with your care team. It does not diagnose PCOS.", defaultValue: "Tracking can help you prepare for a conversation with your care team. It does not diagnose PCOS."))
+                .appFont(.caption).foregroundStyle(.secondary)
+            Picker(L10n.string("Language", defaultValue: "Language"), selection: Binding(get: { appState.selectedAppLanguage }, set: { appState.selectedAppLanguage = $0 })) {
+                ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
             }
-            nextIndex += 1
-        }
-        return nil
-    }
-
-    private func previousPhase(before currentPhase: OnboardingPhase) -> OnboardingPhase? {
-        guard let currentIndex = OnboardingPhase.allCases.firstIndex(of: currentPhase),
-              currentIndex > 0
-        else {
-            return nil
-        }
-
-        var previousIndex = currentIndex - 1
-        while previousIndex >= 0 {
-            let previousCandidate = OnboardingPhase.allCases[previousIndex]
-            if isPhaseAvailable(previousCandidate) {
-                return previousCandidate
-            }
-            previousIndex -= 1
-        }
-        return nil
-    }
-
-    /// Phases that depend on feature flags are skipped when the flag is off.
-    /// A direct `-onboarding.startPhase` launch override bypasses this check.
-    private func isPhaseAvailable(_ candidatePhase: OnboardingPhase) -> Bool {
-        switch candidatePhase {
-        case .mealScanDemo:
-            MealScanFeatureFlags.current.enableMealScanV2
-        default:
-            true
+            primary("Make it yours") { appState.onboardingProfile.hasCompletedWelcome = true; advance() }
+            Button(L10n.string("Explore Today", defaultValue: "Explore Today"), action: finish)
+                .accessibilityIdentifier("onboarding.explore")
+        case .preferences:
+            heading("What would you like support with?", "Choose anything that feels useful. You can change or skip every choice.", symbol: "slider.horizontal.3")
+            CompanionProfileFields(profile: appState.onboardingProfile)
+            primary("Continue") { appState.onboardingProfile.hasCompletedQuestionnaire = true; advance() }
+            Button(L10n.string("Skip for now", defaultValue: "Skip for now"), action: advance)
+        case .health:
+            heading("Let Apple Health help, if you like", "Bring in supported records from Apple Health. You can review data types, connect later, or keep logging manually.", symbol: "heart")
+            primary("Review Apple Health options") { showingHealth = true }
+            Button(L10n.string("Continue", defaultValue: "Continue"), action: advance)
+            Button(L10n.string("Not now", defaultValue: "Not now"), action: advance)
+        case .checkIn:
+            heading("Start with how you feel", "A short check-in is enough. There is no need to complete every field or track every day.", symbol: "checkmark.circle")
+            primary("First check-in") { showingCheckIn = true }
+            Button(L10n.string("Explore Today", defaultValue: "Explore Today"), action: finish)
+                .accessibilityIdentifier("onboarding.finish")
         }
     }
 
-    private func completeOnboarding() {
+    private func heading(_ title: String, _ message: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            Image(systemName: symbol).font(.system(size: 42)).foregroundStyle(AppTheme.accentColor).accessibilityHidden(true)
+            Text(L10n.string(title, defaultValue: title)).appFont(.title, weight: .semibold)
+            Text(L10n.string(message, defaultValue: message)).appFont(.body).foregroundStyle(.secondary)
+        }
+    }
+
+    private func primary(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Text(L10n.string(title, defaultValue: title)).frame(maxWidth: .infinity).padding(.vertical, AppTheme.spacing8) }
+            .buttonStyle(.borderedProminent).tint(AppTheme.accentColor)
+            .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+    }
+
+    private func advance() { stage = CompanionOnboardingStage(rawValue: stage.rawValue + 1) ?? .checkIn }
+    private func finish() {
         appState.onboardingProfile.currentPhaseRaw = nil
-        withAnimation(.easeInOut(duration: 0.35)) {
-            onComplete()
-        }
+        appState.hasCompletedOnboarding = true
+        onComplete()
     }
+}
 
-    private static func initialPhase(
-        arguments: [String] = ProcessInfo.processInfo.arguments,
-        defaults: UserDefaults = .standard
-    ) -> OnboardingPhase {
-        // UI test launch overrides always win and keep their existing behavior.
-        if arguments.contains("UITestMode") {
-            guard let phaseValue = launchArgumentValue(for: "onboarding.startPhase", in: arguments) else {
-                return .welcomeLanguage
-            }
+enum CompanionOnboardingStage: Int, CaseIterable {
+    case welcome, preferences, health, checkIn
 
-            return OnboardingPhase(launchArgumentValue: phaseValue) ?? .welcomeLanguage
+    static func resume(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments) -> Self {
+        var raw = defaults.string(forKey: "onboarding.currentPhaseRaw")
+        if arguments.contains("UITestMode"), let index = arguments.firstIndex(of: "-onboarding.startPhase"), index + 1 < arguments.count {
+            raw = arguments[index + 1]
         }
-
-        // Resume a persisted mid-flow phase only while onboarding is incomplete.
-        if !defaults.bool(forKey: "onboarding.hasCompletedOnboarding"),
-           let persistedRawValue = defaults.string(forKey: "onboarding.currentPhaseRaw"),
-           let persistedPhase = OnboardingPhase(rawValue: persistedRawValue),
-           persistedPhase != .mealScanDemo || MealScanFeatureFlags.current.enableMealScanV2 {
-            return persistedPhase
+        if let raw, raw.hasPrefix("companion_"), let number = Int(raw.dropFirst(10)), let stage = Self(rawValue: number) { return stage }
+        switch raw {
+        case "theme", "name", "personalize", "quiz", "results", "how_app_helps": return .preferences
+        case "permissions", "health_context", "aha": return .health
+        case "meal_scan_demo", "your_plan", "first_log", "guided_action", "social_proof", "all_set", "completion": return .checkIn
+        default: return .welcome
         }
-
-        return .welcomeLanguage
-    }
-
-    private static func launchArgumentValue(for key: String, in arguments: [String]) -> String? {
-        guard let index = arguments.firstIndex(of: "-\(key)") else {
-            return nil
-        }
-        let valueIndex = arguments.index(after: index)
-        guard valueIndex < arguments.endIndex else {
-            return nil
-        }
-        return arguments[valueIndex]
     }
 }
 
@@ -702,6 +556,7 @@ private func onboardingCardStroke(isSelected: Bool) -> some View {
 private extension ThemeOption {
     var onboardingDescription: String {
         switch self {
+        case .calm: L10n.string("Clear surfaces and quiet colors for everyday care.", defaultValue: "Clear surfaces and quiet colors for everyday care.")
         case .botanicalJournal:
             L10n.string("Warm, editorial, and softly botanical.", defaultValue: "Warm, editorial, and softly botanical.")
         case .lunarCalm:

@@ -17,6 +17,7 @@ final class InsightsViewModel {
     var isGenerating = false
     var errorMessage: String?
     var readiness: InsightsDataReadiness = .empty
+    var observationSnapshot: InsightObservationSnapshot = .empty
 
     init(
         modelContext: ModelContext,
@@ -104,6 +105,12 @@ final class InsightsViewModel {
         }
 
         readiness = fetchDataReadiness()
+        do {
+            observationSnapshot = try InsightObservationSnapshot.load(context: modelContext)
+        } catch {
+            observationSnapshot = .empty
+            errorMessage = Self.userFacingMessage(for: error)
+        }
     }
 
     func presentationPlan(
@@ -147,17 +154,16 @@ final class InsightsViewModel {
 
         return InsightsDataReadiness(
             completedCycles: cycles.filter { !$0.isPredicted && ($0.lengthDays != nil || $0.manualCycleLengthOverrideDays != nil) }.count,
-            symptomDays: distinctDayCount(in: symptoms.map(\.date)),
+            symptomDays: InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: dailyLogs).count,
             mealDays: distinctDayCount(in: meals.map(\.timestamp)),
-            supplementDays: distinctDayCount(in: supplements.map(\.date)),
+            supplementDays: InsightAnalysisPolicy.distinctDays(supplements.map(\.date), days: InsightAnalysisPolicy.supplementHistoryDays),
             dailyLogDays: distinctDayCount(in: dailyLogs.map(\.date)),
             bloodSugarDays: distinctDayCount(in: bloodSugarReadings.map(\.timestamp))
         )
     }
 
     private func distinctDayCount(in dates: [Date]) -> Int {
-        let calendar = Calendar.current
-        return Set(dates.map { calendar.startOfDay(for: $0) }).count
+        InsightAnalysisPolicy.distinctDays(dates, days: InsightAnalysisPolicy.lifestyleDays)
     }
 
     func markFirstVisitTipShown() {

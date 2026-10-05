@@ -18,11 +18,11 @@ struct FreeTierPolicyService: FreeTierPolicyEnforcing {
 
     init(
         symptomDailyLimit: Int? = nil,
-        cycleHistoryDays: Int? = 30,
+        cycleHistoryDays: Int? = nil,
         symptomHistoryDays: Int? = nil
     ) {
         self.symptomDailyLimit = symptomDailyLimit
-        self.cycleHistoryDays = cycleHistoryDays
+        self.cycleHistoryDays = nil
         self.symptomHistoryDays = symptomHistoryDays
     }
 
@@ -33,9 +33,7 @@ struct FreeTierPolicyService: FreeTierPolicyEnforcing {
     }
 
     func earliestAccessibleCycleHistoryDate(now: Date, isPremium: Bool) -> Date? {
-        guard !isPremium, let cycleHistoryDays else { return nil }
-        let calendar = Calendar.current
-        return calendar.date(byAdding: .day, value: -cycleHistoryDays, to: calendar.startOfDay(for: now))
+        nil
     }
 
     func earliestAccessibleSymptomHistoryDate(now: Date, isPremium: Bool) -> Date? {

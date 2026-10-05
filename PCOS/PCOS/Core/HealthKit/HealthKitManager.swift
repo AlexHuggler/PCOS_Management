@@ -25,6 +25,15 @@ final class HealthKitManager {
     typealias SyncOperation = @Sendable (_ modelContainer: ModelContainer, _ now: Date) async throws -> HealthKitSyncResult
     typealias HealthStoreProvider = @MainActor @Sendable () -> HKHealthStore
 
+    static let shared = HealthKitManager()
+    private var observerQueries: [String: HKObserverQuery] = [:]
+    private var observerStore: HKHealthStore?
+    private var syncTask: Task<HealthKitSyncResult, Error>?
+    private var syncRequestedAgain = false
+    private var syncEpoch = 0
+
+    var enabledCategories = HealthKitCategorySelection.enabled
+
     // MARK: - Public State
 
     var authorizationState: AuthorizationState
@@ -50,7 +59,9 @@ final class HealthKitManager {
 
     static let defaultReadTypes: Set<HKObjectType> = HealthKitDataTypeDescriptor.defaultReadTypes
 
-    private let readTypes = HealthKitManager.defaultReadTypes
+    private var readTypes: Set<HKObjectType> {
+        Set(HealthKitDataTypeDescriptor.readDescriptors.filter { enabledCategories.contains($0.category) }.compactMap(\.objectType))
+    }
     private static let lastSyncKey = "healthkit.lastSyncDate"
     private static let unavailableError = NSError(
         domain: "CycleBalance.HealthKit",
@@ -134,11 +145,7 @@ final class HealthKitManager {
                     return HealthKitSyncResult(syncedAt: now, didUpdateDailyLog: false, insertedGlucoseCount: 0)
                 }
                 let store = await MainActor.run { healthStoreProvider() }
-                let syncWorker = HealthKitSyncWorker(
-                    healthStore: store,
-                    availabilityProvider: availabilityProvider
-                )
-                return try await syncWorker.performFullSync(using: modelContainer, now: now)
+                return try await HealthKitAnchoredSync(store: store).sync(container: modelContainer, now: now)
             }
         }
 
@@ -161,7 +168,7 @@ final class HealthKitManager {
     }
 
     @discardableResult
-    func requestAuthorization() async throws -> AuthorizationState {
+    func requestAuthorization(categories: Set<HealthKitDataTypeDescriptor.Category>? = nil) async throws -> AuthorizationState {
         guard isAvailable else {
             Logger.database.warning("HealthKit is not available on this device")
             authorizationState = .unavailable
@@ -170,7 +177,7 @@ final class HealthKitManager {
 
         do {
             _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
-                authorizationRequester(nil, readTypes) { success, error in
+                authorizationRequester(nil, categories.map { selected in Set(HealthKitDataTypeDescriptor.readDescriptors.filter { selected.contains($0.category) }.compactMap(\.objectType)) } ?? readTypes) { success, error in
                     if let error {
                         continuation.resume(throwing: error)
                     } else {
@@ -215,27 +222,99 @@ final class HealthKitManager {
 
     // MARK: - Sync
 
-    /// Performs a full sync for today: DailyLog + glucose and nutrition reads for the last 7 days.
+    /// Coalesces app, foreground, settings, and observer requests into one transaction.
     func performFullSync(modelContext: ModelContext) async {
+        if let syncTask {
+            syncRequestedAgain = true
+            _ = try? await syncTask.value
+            return
+        }
+        guard isAvailable, !enabledCategories.isEmpty else { return }
         isSyncing = true
         lastError = nil
-
-        defer {
-            isSyncing = false
+        let epoch = syncEpoch
+        let operation = syncOperation
+        let container = modelContext.container
+        let task = Task { @MainActor in
+            defer {
+                if self.syncEpoch == epoch { self.syncTask = nil; self.isSyncing = false }
+            }
+            var result: HealthKitSyncResult
+            repeat {
+                self.syncRequestedAgain = false
+                try Task.checkCancellation()
+                result = try await operation(container, Date())
+                try Task.checkCancellation()
+                InsightRefreshCoordinator.invalidate()
+                NotificationCenter.default.post(name: .healthKitDidCommit, object: nil)
+                self.lastSyncDate = result.syncedAt
+                UserDefaults.standard.set(result.syncedAt, forKey: Self.lastSyncKey)
+            } while self.syncRequestedAgain
+            return result
         }
-
-        do {
-            let syncResult = try await syncOperation(modelContext.container, Date())
-
-            lastSyncDate = syncResult.syncedAt
-            UserDefaults.standard.set(syncResult.syncedAt, forKey: Self.lastSyncKey)
-
-            Logger.database.info(
-                "HealthKit full sync completed successfully. dailyLogUpdated=\(syncResult.didUpdateDailyLog, privacy: .public), glucoseInserted=\(syncResult.insertedGlucoseCount, privacy: .public), nutritionInserted=\(syncResult.insertedNutritionImportCount, privacy: .public)"
-            )
-        } catch {
+        syncTask = task
+        do { _ = try await task.value }
+        catch {
+            guard syncEpoch == epoch, !(error is CancellationError) else { return }
             lastError = error.localizedDescription
             Logger.database.error("HealthKit sync failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Synchronous cancellation is safe because the importer checks cancellation immediately
+    /// before its non-suspending MainActor transaction. Old tasks cannot commit after this call.
+    func suspendSync(disableCategories: Bool = false) {
+        syncEpoch += 1
+        syncTask?.cancel()
+        syncTask = nil
+        syncRequestedAgain = false
+        isSyncing = false
+        if let store = observerStore {
+            for query in observerQueries.values { store.stop(query) }
+        }
+        observerQueries = [:]
+        if disableCategories {
+            enabledCategories = []
+            HealthKitCategorySelection.enabled = []
+        }
+    }
+
+    func setCategory(_ category: HealthKitDataTypeDescriptor.Category, enabled: Bool) {
+        if enabled { enabledCategories.insert(category) } else { enabledCategories.remove(category) }
+        HealthKitCategorySelection.enabled = enabledCategories
+    }
+
+    func foregroundSync(modelContainer: ModelContainer) async {
+        await refreshAuthorizationState()
+        guard isConfigured else { return }
+        startObserving(modelContainer: modelContainer)
+        await performFullSync(modelContext: ModelContext(modelContainer))
+    }
+
+    func startObserving(modelContainer: ModelContainer) {
+        guard isAvailable else { return }
+        let store = observerStore ?? healthStoreProvider()
+        observerStore = store
+        let types = readTypes.compactMap { $0 as? HKSampleType }
+        let enabledIDs = Set(types.map(\.identifier))
+        for (identifier, query) in observerQueries where !enabledIDs.contains(identifier) {
+            store.stop(query)
+            if let type = HealthKitDataTypeDescriptor.readDescriptors.first(where: { $0.objectType?.identifier == identifier })?.objectType { store.disableBackgroundDelivery(for: type) { _, _ in } }
+            observerQueries.removeValue(forKey: identifier)
+        }
+        for type in types where observerQueries[type.identifier] == nil {
+            let observerEpoch = syncEpoch
+            let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completion, error in
+                let acknowledgement = HealthKitObserverAcknowledgement(completion)
+                Task { @MainActor [weak self] in
+                    defer { acknowledgement.finish() }
+                    guard error == nil, let self, self.syncEpoch == observerEpoch else { return }
+                    await self.performFullSync(modelContext: ModelContext(modelContainer))
+                }
+            }
+            observerQueries[type.identifier] = query
+            store.execute(query)
+            store.enableBackgroundDelivery(for: type, frequency: .hourly) { _, _ in }
         }
     }
 
@@ -263,5 +342,20 @@ final class HealthKitManager {
         @unknown default:
             return .needsAuthorization
         }
+    }
+}
+
+/// HealthKit's callback is not annotated Sendable. Ownership transfers into this locked,
+/// one-shot holder before crossing actors; the callback is invoked at most once.
+private final class HealthKitObserverAcknowledgement: @unchecked Sendable {
+    private let lock = NSLock()
+    private var completion: (() -> Void)?
+    init(_ completion: @escaping () -> Void) { self.completion = completion }
+    func finish() {
+        lock.lock()
+        let callback = completion
+        completion = nil
+        lock.unlock()
+        callback?()
     }
 }

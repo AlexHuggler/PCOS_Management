@@ -1,11 +1,33 @@
 @preconcurrency import UserNotifications
 import os
+import SwiftData
 
 enum AppNotificationRoute: String, Sendable {
+    // Keep the old raw value for already scheduled meal notifications.
     case mealScan
+    case period
+    case symptoms
+    case supplements
+
+    var loggerShortcut: LoggerShortcut {
+        switch self {
+        case .mealScan: .meal
+        case .period: .period
+        case .symptoms: .symptoms
+        case .supplements: .supplements
+        }
+    }
+
+    private static let pendingKey = "notifications.pendingRoute"
+    func persistPending(defaults: UserDefaults = .standard) { defaults.set(rawValue, forKey: Self.pendingKey) }
+    static func pending(defaults: UserDefaults = .standard) -> Self? {
+        defaults.string(forKey: pendingKey).flatMap(Self.init(rawValue:))
+    }
+    static func clearPending(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: pendingKey) }
 }
 
 extension Notification.Name {
+    static let checkInReminderRefreshRequested = Notification.Name("app.notification.checkInRefresh")
     static let appNotificationRouteReceived = Notification.Name("app.notification.routeReceived")
 }
 
@@ -16,6 +38,8 @@ final class NotificationManager {
     private let logger = Logger.database
 
     var isAuthorized = false
+    private var refreshingDailyReminders = false
+    private var dailyRefreshRequested = false
 
     // MARK: - User Preferences
 
@@ -26,7 +50,10 @@ final class NotificationManager {
 
     var symptomRemindersEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "notifications.symptomReminders") }
-        set { UserDefaults.standard.set(newValue, forKey: "notifications.symptomReminders") }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "notifications.symptomReminders")
+            scheduleSymptomLoggingReminder()
+        }
     }
 
     var supplementRemindersEnabled: Bool {
@@ -52,6 +79,7 @@ final class NotificationManager {
         }
         set {
             UserDefaults.standard.set(newValue.timeIntervalSinceReferenceDate, forKey: "notifications.symptomReminderTime")
+            scheduleSymptomLoggingReminder()
         }
     }
 
@@ -122,6 +150,7 @@ final class NotificationManager {
             )
         }
         content.sound = .default
+        content.userInfo = ["route": AppNotificationRoute.period.rawValue]
 
         let triggerComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: reminderDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerComponents, repeats: false)
@@ -143,43 +172,70 @@ final class NotificationManager {
 
     // MARK: - Daily Symptom Logging Reminder
 
-    /// Schedules a repeating daily notification at the configured symptom reminder time.
+    /// Existing settings callers request a refresh; the app supplies its local ModelContext.
     func scheduleSymptomLoggingReminder() {
-        guard symptomRemindersEnabled else {
-            logger.debug("Symptom reminders disabled, skipping schedule")
-            return
+        NotificationCenter.default.post(name: .checkInReminderRefreshRequested, object: nil)
+    }
+
+    static func isCompletedCheckIn(_ log: DailyLog) -> Bool {
+        log.symptomsReviewed || log.moodRawValue != nil || log.energyLevel != nil
+            || log.painLevel0To10 != nil || log.stressLevel != nil || log.waterOz != nil
+            || !(log.privateNote?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    static func dailyCheckInReminderDates(
+        now: Date,
+        reminderTime: Date,
+        completedDays: Set<Date>,
+        calendar: Calendar = .current
+    ) -> [Date] {
+        let time = calendar.dateComponents([.hour, .minute], from: reminderTime)
+        let today = calendar.startOfDay(for: now)
+        return (0..<14).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: today),
+                  !completedDays.contains(day),
+                  let date = calendar.date(bySettingHour: time.hour ?? 20, minute: time.minute ?? 0, second: 0, of: day),
+                  date > now else { return nil }
+            return date
         }
+    }
 
-        cancelReminders(withPrefix: "symptom.")
-
-        let content = UNMutableNotificationContent()
-        content.title = String(
-            localized: "Log Your Symptoms",
-            comment: "Daily symptom reminder notification title."
-        )
-        content.body = String(
-            localized: "Take a moment to record how you're feeling today.",
-            comment: "Daily symptom reminder notification body."
-        )
-        content.sound = .default
-
-        let calendar = Calendar.current
-        let timeComponents = calendar.dateComponents([.hour, .minute], from: symptomReminderTime)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: timeComponents, repeats: true)
-
-        let request = UNNotificationRequest(
-            identifier: "symptom.daily",
-            content: content,
-            trigger: trigger
-        )
-
-        center.add(request) { [logger] error in
-            if let error {
-                logger.error("Failed to schedule symptom reminder: \(error.localizedDescription)")
-            } else {
-                logger.info("Symptom logging reminder scheduled at \(timeComponents.hour ?? 0):\(timeComponents.minute ?? 0)")
+    /// Rolling individual requests allow a completed day to be removed without affecting tomorrow.
+    /// Refreshes serialize because notification-center operations suspend and may receive another save.
+    func refreshDailyCheckInReminders(modelContext: ModelContext, now: Date = Date()) async {
+        dailyRefreshRequested = true
+        guard !refreshingDailyReminders else { return }
+        refreshingDailyReminders = true
+        defer { refreshingDailyReminders = false }
+        repeat {
+            dailyRefreshRequested = false
+            do {
+                let calendar = Calendar.current
+                let start = calendar.startOfDay(for: now)
+                let logs = try modelContext.fetch(FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date >= start }))
+                let completed = Set(logs.filter(Self.isCompletedCheckIn).map { calendar.startOfDay(for: $0.date) })
+                let dates = symptomRemindersEnabled
+                    ? Self.dailyCheckInReminderDates(now: now, reminderTime: symptomReminderTime, completedDays: completed)
+                    : []
+                let pending = await center.pendingNotificationRequests()
+                center.removePendingNotificationRequests(withIdentifiers: pending.map(\.identifier).filter { $0.hasPrefix("symptom.") })
+                for date in dates {
+                    try await center.add(Self.dailyCheckInRequest(on: date, calendar: calendar))
+                }
+            } catch {
+                logger.error("Daily check-in reminder refresh failed: \(error.localizedDescription)")
             }
-        }
+        } while dailyRefreshRequested
+    }
+
+    static func dailyCheckInRequest(on date: Date, calendar: Calendar = .current) -> UNNotificationRequest {
+        let content = UNMutableNotificationContent()
+        content.title = L10n.string("A moment for your check-in", defaultValue: "A moment for your check-in")
+        content.body = L10n.string("Record what feels useful today.", defaultValue: "Record what feels useful today.")
+        content.sound = .default
+        content.userInfo = ["route": AppNotificationRoute.symptoms.rawValue]
+        let trigger = UNCalendarNotificationTrigger(dateMatching: calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date), repeats: false)
+        return UNNotificationRequest(identifier: "symptom.day.\(Int(calendar.startOfDay(for: date).timeIntervalSince1970))", content: content, trigger: trigger)
     }
 
     // MARK: - Supplement Reminders
@@ -209,6 +265,7 @@ final class NotificationManager {
             comment: "Supplement reminder notification body with the supplement name."
         )
         content.sound = .default
+        content.userInfo = ["route": AppNotificationRoute.supplements.rawValue]
 
         let calendar = Calendar.current
         let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
@@ -288,6 +345,10 @@ final class NotificationManager {
     /// Cancels all pending notifications whose identifier starts with the given prefix.
     /// Use prefixes like "period.", "symptom.", or "supplement." to cancel a category.
     func cancelReminders(withPrefix prefix: String) {
+        if prefix == "symptom." {
+            scheduleSymptomLoggingReminder()
+            return
+        }
         Task { @MainActor in
             let requests = await center.pendingNotificationRequests()
             let matchingIdentifiers = requests

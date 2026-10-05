@@ -257,7 +257,7 @@ private struct PredictiveForecastInsightAnalyzer {
 
             let topDriversScientific = forecast.featureImportance
                 .prefix(3)
-                .map { "\($0.name) \(Int(($0.weight * 100).rounded()))%" }
+                .map(\.name)
                 .joined(separator: ", ")
 
             let topDriversFriendly = forecast.featureImportance
@@ -275,19 +275,19 @@ private struct PredictiveForecastInsightAnalyzer {
                         defaultValue: "7-day symptom severity forecast"
                     ),
                     content: L10n.format(
-                        "Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help.",
-                        defaultValue: "Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@ — small shifts in those areas could help.",
+                        "Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@. These model estimates do not establish causes.",
+                        defaultValue: "Over the next week, your symptoms may feel %@ overall. The factors that seem to matter most right now are %@. These model estimates do not establish causes.",
                         severityWord,
                         topDriversFriendly
                     ),
                     scientificContent: L10n.format(
-                        "Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Top weighted drivers: %@. Forecast confidence: %lld%%.",
-                        defaultValue: "Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Top weighted drivers: %@. Forecast confidence: %lld%%.",
+                        "Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Model inputs: %@. Based on %lld recorded symptom days.",
+                        defaultValue: "Predicted symptom severity for the next 7 days averages %@/5 (range %@-%@/5). Model inputs: %@. Based on %lld recorded symptom days.",
                         L10n.decimal(predictedAverage),
                         L10n.decimal(predictedMin),
                         L10n.decimal(predictedMax),
                         topDriversScientific,
-                        Int((confidence * 100).rounded())
+                        Set(symptoms.map { calendar.startOfDay(for: $0.date) }).count
                     ),
                     confidence: confidence,
                     dataPointsUsed: symptoms.count + dailyLogs.count + meals.count + supplements.count + bloodSugar.count,
@@ -325,12 +325,12 @@ private struct PredictiveForecastInsightAnalyzer {
                         cycleForecast.predictedLengthDays
                     ),
                     scientificContent: L10n.format(
-                        "Predicted next cycle length is %lld days (range %lld-%lld days, %lld%% confidence).",
-                        defaultValue: "Predicted next cycle length is %lld days (range %lld-%lld days, %lld%% confidence).",
+                        "Predicted next cycle length is %lld days (estimated range %lld-%lld days, %lld completed cycles).",
+                        defaultValue: "Predicted next cycle length is %lld days (estimated range %lld-%lld days, %lld completed cycles).",
                         cycleForecast.predictedLengthDays,
                         cycleForecast.earliestLengthDays,
                         cycleForecast.latestLengthDays,
-                        Int((cycleForecast.confidence * 100).rounded())
+                        completedCycles.count
                     ),
                     confidence: cycleForecast.confidence,
                     dataPointsUsed: completedCycles.count + dailyLogs.count + supplements.count + symptoms.count,

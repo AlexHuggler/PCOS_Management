@@ -6,6 +6,24 @@ import SwiftData
 @Suite("Symptom ViewModel", .serialized)
 @MainActor
 struct SymptomViewModelTests {
+    @Test("Backdated symptom save replaces selected day and preserves today")
+    func backdatedSavePreservesToday() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: today))
+        context.insert(SymptomEntry(date: today, type: .fatigue, severity: 4))
+        context.insert(SymptomEntry(date: yesterday, type: .cramps, severity: 2))
+        try context.save()
+        let vm = SymptomViewModel(modelContext: context)
+        vm.logDate = yesterday
+        vm.setSeverity(3, for: .bloating)
+        try vm.saveSymptoms()
+        let entries = try context.fetch(FetchDescriptor<SymptomEntry>())
+        #expect(entries.filter { Calendar.current.isDate($0.date, inSameDayAs: today) }.map(\.symptomType) == [.fatigue])
+        #expect(entries.filter { Calendar.current.isDate($0.date, inSameDayAs: yesterday) }.map(\.symptomType) == [.bloating])
+    }
+
     @Test("Setting severity to 0 removes the symptom")
     func zeroSeverityRemoves() throws {
         let container = try TestHelpers.makeModelContainer()

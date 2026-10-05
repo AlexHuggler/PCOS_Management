@@ -47,7 +47,8 @@ struct SettingsDataBackupService {
             exportedAt: Date(),
             appVersion: appVersion,
             source: source,
-            records: records
+            records: records,
+            preferences: source.kind == .userExport ? try SettingsPreferencesBackup.capture() : nil
         )
     }
 }
@@ -184,7 +185,12 @@ private extension SettingsDataBackupService {
                     restingHeartRateBPM: $0.restingHeartRateBPM,
                     stressLevel: $0.stressLevel,
                     energyLevel: $0.energyLevel,
-                    waterOz: $0.waterOz
+                    waterOz: $0.waterOz,
+                    painLevel0To10: $0.painLevel0To10,
+                    privateNote: $0.privateNote,
+                    positiveActionRawValues: $0.positiveActionRawValues,
+                    moodRawValue: $0.moodRawValue,
+                    symptomsReviewed: $0.symptomsReviewed
                 )
             },
             insights: insights.map {
@@ -336,8 +342,14 @@ private extension SettingsDataBackupService {
                     derivedRecordKind: $0.derivedRecordKind,
                     derivedRecordID: $0.derivedRecordID,
                     importedAt: $0.importedAt,
-                    notes: $0.notes
+                    notes: $0.notes,
+                    lastAppliedFingerprint: $0.lastAppliedFingerprint
                 )
+            },
+            healthKitFieldOwnership: try modelContext.fetch(FetchDescriptor<HealthKitFieldOwnership>()).map {
+                HealthKitFieldOwnershipDTO(recordID: $0.recordID, field: $0.field,
+                    lastAppliedValue: $0.lastAppliedValue, healthValue: $0.healthValue,
+                    isManual: $0.isManual, lastAppliedFingerprint: $0.lastAppliedFingerprint)
             }
         )
     }

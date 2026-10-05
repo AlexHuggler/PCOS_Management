@@ -35,7 +35,7 @@ struct MealScanPersistenceTests {
         #expect(metadata.count == 1)
         #expect(imports.count == 1)
         #expect(meal.mealDescription == "Chicken rice bowl")
-        #expect(meal.sourceLabel == "AI meal estimate")
+        #expect(meal.sourceLabel == "Photo meal estimate")
         #expect(meal.mealSource == "ai_meal_scan")
         #expect(meal.userConfirmed == true)
         #expect(meal.confidenceScore == result.confidence.score)
@@ -87,7 +87,7 @@ struct MealScanPersistenceTests {
         }
     }
 
-    @Test("schema v5 backup round trips AI meal scan metadata")
+    @Test("schema v6 backup retains existing AI meal scan metadata")
     func backupRoundTripsMealScanFields() async throws {
         let source = try TestHelpers.makeModelContainer()
         let destination = try TestHelpers.makeModelContainer()
@@ -98,7 +98,7 @@ struct MealScanPersistenceTests {
 
         let backup = try SettingsDataBackupService(modelContext: source.mainContext)
             .makeBackupFile(source: .userExport)
-        #expect(backup.schemaVersion == 5)
+        #expect(backup.schemaVersion == 6)
         #expect(backup.records.mealScanFoodItems.count == result.detectedItems.count)
         #expect(backup.records.mealScanNutritionSummaries.count == 1)
         #expect(backup.records.mealScanMetadata.count == 1)

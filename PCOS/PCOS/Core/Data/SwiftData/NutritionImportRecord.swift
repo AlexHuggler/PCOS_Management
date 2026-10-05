@@ -19,7 +19,7 @@ enum NutritionImportSourceKind: String, Codable, CaseIterable, Sendable {
         case .manualReview:
             "Manual review"
         case .aiMealScan:
-            "AI meal estimate"
+            "Photo meal estimate"
         }
     }
 }

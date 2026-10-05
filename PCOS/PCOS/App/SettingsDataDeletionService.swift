@@ -19,6 +19,7 @@ struct SettingsDataDeletionService {
     }
 
     func deleteAllData() throws {
+        HealthKitManager.shared.suspendSync(disableCategories: true)
         try deleteAll(CycleEntry.self)
         try deleteAll(Cycle.self)
         try deleteAll(OvulationObservation.self)
@@ -34,6 +35,8 @@ struct SettingsDataDeletionService {
         try deleteAll(MealScanResultCacheRecord.self)
         try deleteAll(NutritionImportRecord.self)
         try deleteAll(HealthKitImportedSampleRecord.self)
+        try deleteAll(HealthKitSyncCursor.self)
+        try deleteAll(HealthKitFieldOwnership.self)
         try deleteAll(HairPhotoEntry.self)
         try deleteAll(DailyLog.self)
         try deleteAll(PregnancyRecord.self)

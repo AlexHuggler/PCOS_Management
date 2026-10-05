@@ -1,171 +1,59 @@
 import XCTest
 
+@MainActor
 final class LocaleMatrixOnboardingUITests: XCTestCase {
     private struct LocaleSpec {
-        let languageIdentifier: String
-        let localeIdentifier: String
-        let questionnaireTitle: String
-        let resultsHeadline: String
-        let featureTitle: String
-        let socialProofTitle: String
-        let permissionsTitle: String
-        let completionMessage: String
-
-        static let shardOne: [LocaleSpec] = [
-            LocaleSpec(
-                languageIdentifier: "fr",
-                localeIdentifier: "fr_FR",
-                questionnaireTitle: "Qu'est-ce qui vous amène à CycleBalance ?",
-                resultsHeadline: "CycleBalance est prête à vous aider",
-                featureTitle: "Votre espace santé personnel",
-                socialProofTitle: "Conçue autour de vos données, pas du battage",
-                permissionsTitle: "Aidez CycleBalance à mieux vous servir",
-                completionMessage: "Vous faites partie d'une communauté grandissante de femmes qui reprennent la main sur leur PCOS. Nous sommes ravis de vous accueillir."
-            ),
-            LocaleSpec(
-                languageIdentifier: "de",
-                localeIdentifier: "de_DE",
-                questionnaireTitle: "Was bringt Sie zu CycleBalance?",
-                resultsHeadline: "CycleBalance ist bereit, dir zu helfen",
-                featureTitle: "Dein persönlicher Gesundheits-Hub",
-                socialProofTitle: "Um deine Daten gebaut, nicht um Hype",
-                permissionsTitle: "Hilf CycleBalance, noch besser zu werden",
-                completionMessage: "Du bist Teil einer wachsenden Community von Frauen, die ihr PCOS selbst in die Hand nehmen. Schön, dass du da bist."
-            ),
-            LocaleSpec(
-                languageIdentifier: "nl",
-                localeIdentifier: "nl_NL",
-                questionnaireTitle: "Wat brengt jou bij CycleBalance?",
-                resultsHeadline: "CycleBalance staat klaar om je te helpen",
-                featureTitle: "Jouw persoonlijke gezondheidshub",
-                socialProofTitle: "Gebouwd rond jouw gegevens, niet rond hype",
-                permissionsTitle: "Help CycleBalance beter te werken",
-                completionMessage: "Je maakt deel uit van een groeiende community van vrouwen die grip krijgen op hun PCOS. Fijn dat je er bent."
-            ),
-        ]
-
-        static let shardTwo: [LocaleSpec] = [
-            LocaleSpec(
-                languageIdentifier: "ja",
-                localeIdentifier: "ja_JP",
-                questionnaireTitle: "CycleBalance に興味を持ったのは何ですか?",
-                resultsHeadline: "CycleBalanceはあなたをサポートする準備ができています",
-                featureTitle: "あなたのパーソナル健康ハブ",
-                socialProofTitle: "誇張ではなく、あなたのデータを中心に",
-                permissionsTitle: "CycleBalanceをもっと役立てるために",
-                completionMessage: "あなたはPCOSと向き合う女性たちの広がるコミュニティの一員です。ここに来てくれてうれしいです。"
-            ),
-            LocaleSpec(
-                languageIdentifier: "it",
-                localeIdentifier: "it_IT",
-                questionnaireTitle: "Cosa ti porta a CycleBalance?",
-                resultsHeadline: "CycleBalance è pronta ad aiutarti",
-                featureTitle: "Il tuo hub personale per la salute",
-                socialProofTitle: "Costruita sui tuoi dati, non sull'hype",
-                permissionsTitle: "Aiuta CycleBalance a funzionare meglio",
-                completionMessage: "Fai parte di una comunità in crescita di donne che stanno prendendo in mano il proprio PCOS. Siamo felici che tu sia qui."
-            ),
-            LocaleSpec(
-                languageIdentifier: "ko",
-                localeIdentifier: "ko_KR",
-                questionnaireTitle: "CycleBalance을(를) 방문하게 된 계기는 무엇인가요?",
-                resultsHeadline: "CycleBalance가 도와드릴 준비를 마쳤어요",
-                featureTitle: "나만의 건강 허브",
-                socialProofTitle: "과장이 아니라 내 데이터를 중심으로",
-                permissionsTitle: "CycleBalance가 더 잘 작동하도록 도와주세요",
-                completionMessage: "이제 PCOS를 스스로 관리해 나가는 여성들의 커뮤니티에 함께하고 있어요. 함께해 주셔서 반가워요."
-            ),
-        ]
+        let language: String
+        let locale: String
+        let welcomeTitle: String
+        let choiceTitle: String
+        let personalize: String
+        let explore: String
     }
 
-    private struct PhaseExpectation {
-        let launchPhase: String
-        let localizedText: String
-        let englishFallback: String
+    // Literal expectations intentionally verify translations rather than reading the app bundle.
+    private static let locales: [LocaleSpec] = [
+        LocaleSpec(language: "en", locale: "en_US", welcomeTitle: "A little support for your everyday", choiceTitle: "What would you like support with?", personalize: "Make it yours", explore: "Explore Today"),
+        LocaleSpec(language: "fr", locale: "fr_FR", welcomeTitle: "Un peu de soutien au quotidien", choiceTitle: "Dans quel domaine aimeriez-vous du soutien ?", personalize: "À votre image", explore: "Découvrir Aujourd’hui"),
+        LocaleSpec(language: "de", locale: "de_DE", welcomeTitle: "Ein bisschen Unterstützung für deinen Alltag", choiceTitle: "Wobei möchtest du Unterstützung?", personalize: "Mach es zu deinem", explore: "„Heute“ entdecken"),
+        LocaleSpec(language: "nl", locale: "nl_NL", welcomeTitle: "Een beetje steun voor elke dag", choiceTitle: "Waar wil je ondersteuning bij?", personalize: "Maak het persoonlijk", explore: "Vandaag verkennen"),
+        LocaleSpec(language: "ja", locale: "ja_JP", welcomeTitle: "毎日に、ささやかなサポートを", choiceTitle: "どんなサポートがあるとよいですか？", personalize: "自分に合わせる", explore: "「今日」を見てみる"),
+        LocaleSpec(language: "it", locale: "it_IT", welcomeTitle: "Un piccolo sostegno per ogni giorno", choiceTitle: "In cosa vorresti un sostegno?", personalize: "A modo tuo", explore: "Esplora Oggi"),
+        LocaleSpec(language: "ko", locale: "ko_KR", welcomeTitle: "일상에 더하는 작은 도움", choiceTitle: "어떤 도움을 받고 싶으세요?", personalize: "나에게 맞추기", explore: "오늘 둘러보기"),
+    ]
+
+    override func setUpWithError() throws { continueAfterFailure = false }
+
+    func testOnboardingLocaleMatrixShardOne() {
+        runLocaleMatrix(specs: Array(Self.locales.prefix(4)))
     }
 
-    private let englishQuestionnaireTitle = "What brings you to CycleBalance?"
-    private let englishResultsHeadline = "CycleBalance is ready to help"
-    private let englishFeatureTitle = "Your Personal Health Hub"
-    private let englishSocialProofTitle = "Built around your data, not hype"
-    private let englishPermissionsTitle = "Help CycleBalance work better"
-    private let englishCompletionMessage = "You're part of a growing community of women taking control of their PCOS. We're glad you're here."
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
+    func testOnboardingLocaleMatrixShardTwo() {
+        runLocaleMatrix(specs: Array(Self.locales.suffix(3)))
     }
 
-    @MainActor
-    func testOnboardingLocaleMatrixShardOne() throws {
-        try runLocaleMatrix(specs: LocaleSpec.shardOne)
-    }
-
-    @MainActor
-    func testOnboardingLocaleMatrixShardTwo() throws {
-        try runLocaleMatrix(specs: LocaleSpec.shardTwo)
-    }
-
-    @MainActor
-    private func runLocaleMatrix(specs: [LocaleSpec]) throws {
+    private func runLocaleMatrix(specs: [LocaleSpec]) {
         for spec in specs {
-            for expectation in phaseExpectations(for: spec) {
-                XCTContext.runActivity(
-                    named: "\(spec.languageIdentifier) \(expectation.launchPhase)"
-                ) { _ in
-                    let app = makeApp(
-                        language: spec.languageIdentifier,
-                        locale: spec.localeIdentifier,
-                        startPhase: expectation.launchPhase
-                    )
-                    app.launch()
-                    assertLocalizedText(
-                        localized: expectation.localizedText,
-                        englishFallback: expectation.englishFallback,
-                        in: app
-                    )
-                    app.terminate()
-                }
+            XCTContext.runActivity(named: "\(spec.language): localized welcome, optional choices, Back and Explore") { _ in
+                let app = makeApp(language: spec.language, locale: spec.locale)
+                app.launch()
+                defer { app.terminate() }
+                assertStage(0, in: app)
+                assertLocalized(spec.welcomeTitle, fallback: "A little support for your everyday", language: spec.language, in: app)
+                XCTAssertEqual(app.buttons["onboarding.explore"].label, spec.explore)
+                tap(app.buttons[spec.personalize], in: app)
+                assertStage(1, in: app)
+                assertLocalized(spec.choiceTitle, fallback: "What would you like support with?", language: spec.language, in: app)
+                tap(app.buttons["onboarding.back"], in: app)
+                assertStage(0, in: app)
+                tap(app.buttons["onboarding.explore"], in: app)
+                XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10), spec.language)
+                XCTAssertEqual(app.tabBars.buttons.count, 5, spec.language)
             }
         }
     }
 
-    private func phaseExpectations(for spec: LocaleSpec) -> [PhaseExpectation] {
-        [
-            PhaseExpectation(
-                launchPhase: "quiz",
-                localizedText: spec.questionnaireTitle,
-                englishFallback: englishQuestionnaireTitle
-            ),
-            PhaseExpectation(
-                launchPhase: "results",
-                localizedText: spec.resultsHeadline,
-                englishFallback: englishResultsHeadline
-            ),
-            PhaseExpectation(
-                launchPhase: "how_app_helps",
-                localizedText: spec.featureTitle,
-                englishFallback: englishFeatureTitle
-            ),
-            PhaseExpectation(
-                launchPhase: "social_proof",
-                localizedText: spec.socialProofTitle,
-                englishFallback: englishSocialProofTitle
-            ),
-            PhaseExpectation(
-                launchPhase: "permissions",
-                localizedText: spec.permissionsTitle,
-                englishFallback: englishPermissionsTitle
-            ),
-            PhaseExpectation(
-                launchPhase: "completion",
-                localizedText: spec.completionMessage,
-                englishFallback: englishCompletionMessage
-            ),
-        ]
-    }
-
-    @MainActor
-    private func makeApp(language: String, locale: String, startPhase: String) -> XCUIApplication {
+    private func makeApp(language: String, locale: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "UITestMode",
@@ -174,34 +62,29 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
             "-onboarding.hasCompletedQuestionnaire", "NO",
             "-onboarding.hasCompletedGuidedAction", "NO",
             "-onboarding.hasPromptedForReview", "NO",
-            "-onboarding.primaryGoal", "__unset__",
-            "-onboarding.pcosExperience", "__unset__",
-            "-onboarding.symptomFocusAreas", "__unset__",
-            "-onboarding.preferredName", "__unset__",
             "-AppleLanguages", "(\(language))",
             "-AppleLocale", locale,
             "-app.language", "system",
-            "-onboarding.startPhase", startPhase,
+            "-appearance.themeOption", "calm",
+            "-appearance.colorMode", "light",
+            "-onboarding.startPhase", "companion_0",
         ]
         return app
     }
 
-    @MainActor
-    private func assertLocalizedText(
-        localized: String,
-        englishFallback: String,
-        in app: XCUIApplication,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        let localizedText = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", localized))
-            .firstMatch
-        let englishText = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", englishFallback))
-            .firstMatch
+    private func assertStage(_ number: Int, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "onboarding.companion.\(number)").firstMatch.waitForExistence(timeout: 10), file: file, line: line)
+    }
 
-        XCTAssertTrue(localizedText.waitForExistence(timeout: 5), file: file, line: line)
-        XCTAssertFalse(englishText.exists, file: file, line: line)
+    private func assertLocalized(_ text: String, fallback: String, language: String, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(app.staticTexts[text].firstMatch.waitForExistence(timeout: 5), file: file, line: line)
+        if language != "en" { XCTAssertFalse(app.staticTexts[fallback].exists, file: file, line: line) }
+    }
+
+    private func tap(_ element: XCUIElement, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(element.waitForExistence(timeout: 5), file: file, line: line)
+        for _ in 0..<6 where !element.isHittable { app.swipeUp() }
+        XCTAssertTrue(element.isHittable, file: file, line: line)
+        element.tap()
     }
 }

@@ -60,6 +60,8 @@ final class AppState {
     var showPremiumPaywall = false
     var premiumPaywallReason: PremiumPaywallReason = .general
     var pendingNotificationRoute: AppNotificationRoute?
+    private(set) var pendingLoggerShortcut: LoggerShortcut?
+    private var deferredLoggerShortcut: LoggerShortcut?
     let launchAppLanguage: AppLanguage
     var selectedAppLanguage: AppLanguage {
         didSet {
@@ -138,17 +140,66 @@ final class AppState {
         showPremiumPaywall = true
     }
 
-    func handleNotificationRoute(_ route: AppNotificationRoute) {
-        switch route {
-        case .mealScan:
-            selectedTab = .track
-            pendingNotificationRoute = route
+    /// The only entry point for presenting a logger from Today, Track, or notifications.
+    func requestLogger(_ shortcut: LoggerShortcut) {
+        selectedTab = .track
+        pendingLoggerShortcut = shortcut
+        guard hasCompletedOnboarding else { return }
+        if Self.requiresPremium(shortcut), !allowsPremiumAccess {
+            deferredLoggerShortcut = shortcut
+            pendingLoggerShortcut = nil
+            presentPremiumPaywall()
         }
+    }
+
+    static func requiresPremium(_ shortcut: LoggerShortcut) -> Bool {
+        switch shortcut {
+        case .period, .ovulation, .symptoms: false
+        case .bloodSugar, .supplements, .meal, .photo: true
+        }
+    }
+
+    func consumePendingLogger() -> LoggerShortcut? {
+        guard hasCompletedOnboarding, selectedTab == .track, !showPremiumPaywall,
+              let shortcut = pendingLoggerShortcut else { return nil }
+        if Self.requiresPremium(shortcut), !allowsPremiumAccess {
+            requestLogger(shortcut)
+            return nil
+        }
+        pendingLoggerShortcut = nil
+        if let route = pendingNotificationRoute { consumeNotificationRoute(route) }
+        return shortcut
+    }
+
+    /// Called after the paywall sheet has actually dismissed, so presentations never overlap.
+    func finishPremiumPaywall() {
+        showPremiumPaywall = false
+        guard let shortcut = deferredLoggerShortcut else { return }
+        deferredLoggerShortcut = nil
+        if allowsPremiumAccess {
+            pendingLoggerShortcut = shortcut
+            selectedTab = .track
+        } else {
+            pendingLoggerShortcut = nil
+            if let route = pendingNotificationRoute { consumeNotificationRoute(route) }
+        }
+    }
+
+    func handleNotificationRoute(_ route: AppNotificationRoute) {
+        route.persistPending(defaults: defaults)
+        pendingNotificationRoute = route
+        requestLogger(route.loggerShortcut)
+    }
+
+    func restorePendingNotificationRoute() {
+        guard let route = AppNotificationRoute.pending(defaults: defaults) else { return }
+        handleNotificationRoute(route)
     }
 
     func consumeNotificationRoute(_ route: AppNotificationRoute) {
         guard pendingNotificationRoute == route else { return }
         pendingNotificationRoute = nil
+        AppNotificationRoute.clearPending(defaults: defaults)
     }
 
     private static func isTestFlightOverrideActive(

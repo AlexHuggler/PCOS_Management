@@ -10,6 +10,20 @@ struct ResultsView: View {
     @State private var appeared = false
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
 
+    private var privacySummary: String {
+        if MealScanFeatureFlags.current.enableMealScanV2 {
+            return L10n.string(
+                "Your health logs stay on this device by default. Optional photo estimates are sent only after you confirm each upload.",
+                defaultValue: "Your health logs stay on this device by default. Optional photo estimates are sent only after you confirm each upload."
+            )
+        }
+
+        return L10n.string(
+            "Your health logs stay on this device by default.",
+            defaultValue: "Your health logs stay on this device by default."
+        )
+    }
+
     var body: some View {
         VStack(spacing: AppTheme.spacing24) {
             Spacer()
@@ -71,12 +85,7 @@ struct ResultsView: View {
                 Image(systemName: "lock.shield")
                     .accessibilityHidden(true)
 
-                Text(
-                    String(
-                        localized: "Your health data stays on your device. No accounts, no servers, no exceptions.",
-                        comment: "Privacy reassurance message shown on the results screen."
-                    )
-                )
+                Text(privacySummary)
             }
             .appFont(.caption)
             .foregroundStyle(.secondary)

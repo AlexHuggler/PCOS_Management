@@ -104,6 +104,14 @@ struct ReportData {
     let pregnancyRecords: [PregnancyRecord]
     let startDate: Date
     let endDate: Date
+    var consultationConcerns: String = ""
+    var selectedNotes: [ReportDailyNote] = []
+    var sourceNames: [String] = []
+}
+
+struct ReportDailyNote: Equatable {
+    let date: Date
+    let text: String
 }
 
 struct PDFSections {
@@ -157,6 +165,21 @@ struct PDFReportGenerator {
 
                 // Cover page
                 drawCoverPage(data: data, cursor: &cursor)
+                if !data.consultationConcerns.isEmpty || !data.selectedNotes.isEmpty {
+                    cursor.beginPage()
+                    drawSectionHeader(localized("For your appointment", defaultValue: "For your appointment"), cursor: &cursor)
+                    if !data.consultationConcerns.isEmpty {
+                        drawSubheader(localized("What I would like to discuss", defaultValue: "What I would like to discuss"), cursor: &cursor)
+                        drawUserNote(data.consultationConcerns, cursor: &cursor)
+                    }
+                    for note in data.selectedNotes {
+                        drawSubheader(displayDate(note.date), cursor: &cursor)
+                        drawUserNote(note.text, cursor: &cursor)
+                    }
+                }
+                if !data.sourceNames.isEmpty {
+                    drawBodyText(localized("Included Health sources", defaultValue: "Included Health sources") + ": " + data.sourceNames.joined(separator: ", "), cursor: &cursor)
+                }
 
                 // Cycle Summary
                 if sections.cycles {
@@ -980,6 +1003,17 @@ struct PDFReportGenerator {
         let rect = CGRect(x: cursor.margin, y: cursor.y, width: contentWidth, height: size.height + 4)
         (text as NSString).draw(in: rect, withAttributes: attrs)
         cursor.y += rect.height + 4
+    }
+
+    private func drawUserNote(_ text: String, cursor: inout DrawCursor) {
+        for paragraph in text.components(separatedBy: .newlines) {
+            var remainder = paragraph[...]
+            while !remainder.isEmpty {
+                let chunk = remainder.prefix(600)
+                drawBodyText(String(chunk), cursor: &cursor)
+                remainder = remainder.dropFirst(chunk.count)
+            }
+        }
     }
 
     private func drawBodyText(_ text: String, bold: Bool = false, cursor: inout DrawCursor) {

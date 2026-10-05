@@ -21,9 +21,9 @@ enum AppChromeTypography {
         tabBar.tintColor = chromeTintColor
         tabBar.unselectedItemTintColor = chromeUnselectedTintColor
 
-        applyVisibleTabBarAppearance(tabAppearance)
+        applyVisibleChromeAppearance(tabAppearance, navigation: standardNavigationAppearance, scrollEdge: scrollEdgeNavigationAppearance)
         DispatchQueue.main.async {
-            applyVisibleTabBarAppearance(tabAppearance)
+            applyVisibleChromeAppearance(tabAppearance, navigation: standardNavigationAppearance, scrollEdge: scrollEdgeNavigationAppearance)
         }
     }
 
@@ -76,70 +76,35 @@ enum AppChromeTypography {
 }
 
 private extension AppChromeTypography {
+    static func adaptiveColor(_ role: AppTheme.CompanionColorRole, fallback: UIColor) -> UIColor {
+        let theme = AppearancePreferences.shared.themeOption
+        guard [.calm, .lunarCalm, .botanicalJournal].contains(theme) else { return fallback }
+        return UIColor { traits in AppTheme.companionUIColor(theme: theme, role: role, traits: traits) }
+    }
+
     static var chromeTintColor: UIColor? {
-        if AppTheme.isBotanicalJournal {
-            AppTheme.botanicalForestRGB.uiColor
-        } else if AppTheme.isLunarCalm {
-            AppTheme.lunarCalmTealRGB.uiColor
-        } else {
-            UIColor(AppTheme.accentColor)
-        }
+        adaptiveColor(.accent, fallback: UIColor(AppTheme.accentColor))
     }
 
     static var chromeUnselectedTintColor: UIColor? {
-        if AppTheme.isBotanicalJournal {
-            AppTheme.botanicalForestAltRGB.uiColor.withAlphaComponent(0.62)
-        } else if AppTheme.isLunarCalm {
-            AppTheme.lunarCalmSecondaryTextRGB.uiColor.withAlphaComponent(0.68)
-        } else {
-            UIColor(AppTheme.secondaryText).withAlphaComponent(0.68)
-        }
+        adaptiveColor(.secondaryText, fallback: UIColor(AppTheme.secondaryText))
     }
 
     static func chromeTextAttributes(font: UIFont) -> [NSAttributedString.Key: Any] {
-        var attributes: [NSAttributedString.Key: Any] = [.font: font]
-        if AppTheme.isBotanicalJournal {
-            attributes[.foregroundColor] = AppTheme.botanicalForestRGB.uiColor
-        } else if AppTheme.isLunarCalm {
-            attributes[.foregroundColor] = AppTheme.lunarCalmPrimaryTextRGB.uiColor
-        } else {
-            attributes[.foregroundColor] = UIColor(AppTheme.primaryText)
-        }
-        return attributes
+        [.font: font, .foregroundColor: adaptiveColor(.primaryText, fallback: UIColor(AppTheme.primaryText))]
     }
 
     static func applyBackground(to appearance: UINavigationBarAppearance) {
-        if AppTheme.isLunarCalm {
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = AppTheme.lunarCalmBackgroundRGB.uiColor.withAlphaComponent(0.96)
-            appearance.shadowColor = AppTheme.lunarCalmBorderRGB.uiColor.withAlphaComponent(0.62)
-        } else if AppTheme.usesCustomTabBar {
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(AppTheme.warmNeutral).withAlphaComponent(0.96)
-            appearance.shadowColor = UIColor(AppTheme.dividerColor).withAlphaComponent(0.42)
-        }
+        appearance.backgroundColor = adaptiveColor(.background, fallback: UIColor(AppTheme.warmNeutral))
     }
 
     static func applyScrollEdgeBackground(to appearance: UINavigationBarAppearance) {
-        if AppTheme.isLunarCalm {
-            appearance.backgroundColor = AppTheme.lunarCalmBackgroundRGB.uiColor.withAlphaComponent(0.72)
-            appearance.shadowColor = .clear
-        } else if AppTheme.usesCustomTabBar {
-            appearance.backgroundColor = UIColor(AppTheme.warmNeutral).withAlphaComponent(0.7)
-            appearance.shadowColor = .clear
-        }
+        appearance.backgroundColor = adaptiveColor(.background, fallback: UIColor(AppTheme.warmNeutral)).withAlphaComponent(0.72)
+        appearance.shadowColor = .clear
     }
 
     static func applyBackground(to appearance: UITabBarAppearance) {
-        if AppTheme.isLunarCalm {
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = AppTheme.lunarCalmBackgroundRGB.uiColor.withAlphaComponent(0.96)
-            appearance.shadowColor = AppTheme.lunarCalmBorderRGB.uiColor.withAlphaComponent(0.7)
-        } else if AppTheme.usesCustomTabBar {
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(AppTheme.warmNeutral).withAlphaComponent(0.96)
-            appearance.shadowColor = UIColor(AppTheme.dividerColor).withAlphaComponent(0.5)
-        }
+        appearance.backgroundColor = adaptiveColor(.background, fallback: UIColor(AppTheme.warmNeutral))
     }
 
     static func applyNavigationTypography(
@@ -159,37 +124,32 @@ private extension AppChromeTypography {
         appearance.disabled.titleTextAttributes = titleAttributes
         appearance.focused.titleTextAttributes = titleAttributes
 
-        if AppTheme.isBotanicalJournal {
-            appearance.normal.iconColor = AppTheme.botanicalForestAltRGB.uiColor.withAlphaComponent(0.62)
-            appearance.normal.titleTextAttributes[.foregroundColor] = AppTheme.botanicalForestAltRGB.uiColor.withAlphaComponent(0.72)
-            appearance.selected.iconColor = AppTheme.botanicalForestRGB.uiColor
-            appearance.selected.titleTextAttributes[.foregroundColor] = AppTheme.botanicalForestRGB.uiColor
-        } else if AppTheme.isLunarCalm {
-            appearance.normal.iconColor = AppTheme.lunarCalmSecondaryTextRGB.uiColor.withAlphaComponent(0.66)
-            appearance.normal.titleTextAttributes[.foregroundColor] = AppTheme.lunarCalmSecondaryTextRGB.uiColor.withAlphaComponent(0.72)
-            appearance.selected.iconColor = AppTheme.lunarCalmTealRGB.uiColor
-            appearance.selected.titleTextAttributes[.foregroundColor] = AppTheme.lunarCalmTealRGB.uiColor
-        } else {
-            appearance.normal.iconColor = UIColor(AppTheme.secondaryText).withAlphaComponent(0.68)
-            appearance.normal.titleTextAttributes[.foregroundColor] = UIColor(AppTheme.secondaryText).withAlphaComponent(0.72)
-            appearance.selected.iconColor = UIColor(AppTheme.accentColor)
-            appearance.selected.titleTextAttributes[.foregroundColor] = UIColor(AppTheme.accentColor)
-        }
+        appearance.normal.iconColor = chromeUnselectedTintColor
+        appearance.normal.titleTextAttributes[.foregroundColor] = chromeUnselectedTintColor
+        appearance.selected.iconColor = chromeTintColor
+        appearance.selected.titleTextAttributes[.foregroundColor] = chromeTintColor
     }
 
-    static func applyVisibleTabBarAppearance(_ appearance: UITabBarAppearance) {
+    static func applyVisibleChromeAppearance(_ appearance: UITabBarAppearance, navigation: UINavigationBarAppearance, scrollEdge: UINavigationBarAppearance) {
         for scene in UIApplication.shared.connectedScenes {
             guard let windowScene = scene as? UIWindowScene else {
                 continue
             }
 
             for window in windowScene.windows {
-                applyTabBarAppearance(appearance, in: window)
+                applyChromeAppearance(appearance, navigation: navigation, scrollEdge: scrollEdge, in: window)
             }
         }
     }
 
-    static func applyTabBarAppearance(_ appearance: UITabBarAppearance, in view: UIView) {
+    static func applyChromeAppearance(_ appearance: UITabBarAppearance, navigation: UINavigationBarAppearance, scrollEdge: UINavigationBarAppearance, in view: UIView) {
+        if let navigationBar = view as? UINavigationBar {
+            navigationBar.standardAppearance = navigation
+            navigationBar.compactAppearance = navigation
+            navigationBar.scrollEdgeAppearance = scrollEdge
+            navigationBar.compactScrollEdgeAppearance = navigation
+            navigationBar.tintColor = chromeTintColor
+        }
         if let tabBar = view as? UITabBar {
             tabBar.standardAppearance = appearance
             tabBar.scrollEdgeAppearance = appearance
@@ -198,7 +158,7 @@ private extension AppChromeTypography {
         }
 
         for subview in view.subviews {
-            applyTabBarAppearance(appearance, in: subview)
+            applyChromeAppearance(appearance, navigation: navigation, scrollEdge: scrollEdge, in: subview)
         }
     }
 }

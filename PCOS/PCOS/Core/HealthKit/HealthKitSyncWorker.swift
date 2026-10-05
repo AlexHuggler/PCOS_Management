@@ -203,6 +203,13 @@ actor HealthKitSyncWorker: HealthKitSyncPerforming {
             return HealthKitSyncResult(syncedAt: now, didUpdateDailyLog: false, insertedGlucoseCount: 0)
         }
 
+        if weightFetcherOverride == nil, sleepHoursFetcherOverride == nil,
+           activeMinutesFetcherOverride == nil, restingHeartRateFetcherOverride == nil,
+           glucoseReadingsFetcherOverride == nil, nutritionSamplesFetcherOverride == nil,
+           categorySamplesFetcherOverride == nil, extendedQuantitySamplesFetcherOverride == nil {
+            return try await HealthKitAnchoredSync(store: healthStore).sync(container: modelContainer, now: now)
+        }
+
         let workerContext = ModelContext(modelContainer)
         let calendar = Calendar.current
         let didUpdateDailyLog = try await syncDailyLog(date: now, modelContext: workerContext)

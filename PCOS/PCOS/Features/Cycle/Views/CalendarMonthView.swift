@@ -6,6 +6,12 @@ struct CalendarMonthView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
     @State private var displayedMonth = Date()
+    @State private var listView = false
+    @State private var trackingPreferences = TrackingPreferences.shared
+    @State private var monthDailyLogs: [DailyLog] = []
+    @State private var monthSymptoms: [SymptomEntry] = []
+    @State private var showingCheckIn = false
+    @State private var calendarDataError: String?
     @State private var entries: [Int: CycleEntry] = [:]
     @State private var predictedDays: Set<Int> = []
     @State private var fertileWindowDays: Set<Int> = []
@@ -51,30 +57,31 @@ struct CalendarMonthView: View {
                             lunarCycleTimelineCard
                             lunarCalendarInsightCard
                         } else {
-                            BotanicalPosterHeader(
-                                title: monthYearString,
-                                subtitle: L10n.string(
-                                    "Notice your cycle rhythm across moons, symptoms, and flow patterns.",
-                                    defaultValue: "Notice your cycle rhythm across moons, symptoms, and flow patterns."
-                                ),
-                                emblemAssetName: "botanical-calendar-illustration",
-                                dividerStyle: .moon
-                            )
-                            .padding(.top, AppTheme.spacing8)
-
-                            // Month navigation header
                             monthHeader
-
-                            // Days of week header
-                            daysOfWeekHeader
-
-                            // Calendar grid
-                            calendarGrid
+                            Picker(L10n.string("Calendar view", defaultValue: "Calendar view"), selection: $listView) {
+                                Text(L10n.string("Month", defaultValue: "Month")).tag(false)
+                                Text(L10n.string("List", defaultValue: "List")).tag(true)
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("calendar.view_mode")
+                            if listView {
+                                chronologicalHistory
+                            } else {
+                                daysOfWeekHeader
+                                calendarGrid
+                            }
 
                             // Cycle info section
                             cycleInfoSection
                         }
 
+                        if let calendarDataError {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(calendarDataError).foregroundStyle(.secondary)
+                                Button(L10n.string("Try again", defaultValue: "Try again")) { loadMonthEntries() }
+                            }
+                            .padding(16).premiumCardDecoration()
+                        }
                         periodEndCTA
                     }
                     .padding()
@@ -96,6 +103,7 @@ struct CalendarMonthView: View {
                     language: appState.selectedAppLanguage
                 )
             )
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(AppTheme.usesImmersiveHomeShell ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -107,6 +115,17 @@ struct CalendarMonthView: View {
                         }
                     }
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: InsightRefreshCoordinator.notificationName)) { _ in
+                viewModel?.loadData()
+                loadMonthEntries()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .healthKitDidCommit)) { _ in
+                viewModel?.loadData()
+                loadMonthEntries()
+            }
+            .sheet(isPresented: $showingCheckIn, onDismiss: loadMonthEntries) {
+                SymptomLogView(initialDate: selectedDayDate)
             }
             .sheet(isPresented: $showingLogSheet, onDismiss: {
                 viewModel?.loadData()
@@ -307,8 +326,8 @@ struct CalendarMonthView: View {
                                 isToday: isToday(day: day),
                                 entry: entries[day],
                                 isPredicted: predictedDays.contains(day),
-                                isFertileWindow: fertileWindowDays.contains(day),
-                                isOvulationDay: ovulationDay == day,
+                                isFertileWindow: trackingPreferences.showFertility && fertileWindowDays.contains(day),
+                                isOvulationDay: trackingPreferences.showFertility && ovulationDay == day,
                                 monthDate: displayedMonth,
                                 locale: appState.renderLocale
                             )
@@ -329,6 +348,58 @@ struct CalendarMonthView: View {
             }
         }
         .accessibilityIdentifier("calendar.grid")
+    }
+
+    private var historyDates: [Date] {
+        let dates = entries.values.map(\.date) + monthDailyLogs.map(\.date) + monthSymptoms.map(\.date)
+        return Set(dates.map { calendar.startOfDay(for: $0) }).sorted(by: >)
+    }
+
+    private var chronologicalHistory: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if historyDates.isEmpty && calendarDataError == nil {
+                ContentUnavailableView(L10n.string("No records this month", defaultValue: "No records this month"), systemImage: "calendar", description: Text(L10n.string("Your recorded days will appear here.", defaultValue: "Your recorded days will appear here.")))
+            }
+            ForEach(historyDates, id: \.self) { date in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                        .appFont(.headline)
+                    if let entry = entries[calendar.component(.day, from: date)] {
+                        Button {
+                            selectedDayDate = date
+                            showingDayLogSheet = true
+                        } label: {
+                            Label(entry.flowIntensity?.displayName ?? L10n.string("Period record", defaultValue: "Period record"), systemImage: "drop.fill")
+                        }
+                    }
+                    let symptomCount = monthSymptoms.filter { calendar.isDate($0.date, inSameDayAs: date) }.count
+                    let daily = monthDailyLogs.first { calendar.isDate($0.date, inSameDayAs: date) }
+                    if let sleep = daily?.sleepHours {
+                        Text(L10n.format("Sleep: %.1f hr", defaultValue: "Sleep: %.1f hr", sleep)).appFont(.caption).foregroundStyle(.secondary)
+                    }
+                    if let activity = daily?.activeMinutes {
+                        Text(L10n.format("Activity: %lld min", defaultValue: "Activity: %lld min", Int64(activity))).appFont(.caption).foregroundStyle(.secondary)
+                    }
+                    if daily != nil || symptomCount > 0 {
+                        Button {
+                            selectedDayDate = date
+                            showingCheckIn = true
+                        } label: {
+                            HStack {
+                                Label(L10n.string("Daily details", defaultValue: "Daily details"), systemImage: "list.bullet.clipboard")
+                                Spacer()
+                                if symptomCount > 0 { Text(L10n.format("%lld symptoms", defaultValue: "%lld symptoms", Int64(symptomCount))) }
+                                Image(systemName: "chevron.right")
+                            }
+                        }
+                    }
+                }
+                .padding(16)
+                .premiumCardDecoration()
+                .accessibilityElement(children: .contain)
+            }
+        }
+        .accessibilityIdentifier("calendar.history_list")
     }
 
     private var calendarGrid: some View {
@@ -847,6 +918,17 @@ struct CalendarMonthView: View {
         entries = viewModel?.entriesForMonth(year: year, month: month, earliestDate: earliestDate) ?? [:]
         loadPredictedDays()
         loadOvulationMarkers()
+        if let start = calendar.startOfMonth(for: displayedMonth), let end = calendar.date(byAdding: .month, value: 1, to: start) {
+            do {
+                monthDailyLogs = try modelContext.fetch(FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date >= start && $0.date < end }))
+                monthSymptoms = try modelContext.fetch(FetchDescriptor<SymptomEntry>(predicate: #Predicate { $0.date >= start && $0.date < end }))
+                calendarDataError = nil
+            } catch {
+                monthDailyLogs = []
+                monthSymptoms = []
+                calendarDataError = L10n.string("Your records could not be loaded. Please try again.", defaultValue: "Your records could not be loaded. Please try again.")
+            }
+        }
     }
 
     private func loadPredictedDays() {
@@ -1161,6 +1243,7 @@ struct MonthYearPicker: View {
             }
             .padding(.vertical)
             .navigationTitle(L10n.string("Jump to Month", defaultValue: "Jump to Month"))
+            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

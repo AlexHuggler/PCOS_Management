@@ -51,13 +51,14 @@ struct SettingsDataRecordCounts: Codable, Equatable, Sendable {
 }
 
 struct SettingsDataBackupFile: Codable, Sendable {
-    static let currentSchemaVersion = 5
+    static let currentSchemaVersion = 6
 
     var schemaVersion: Int = currentSchemaVersion
     var exportedAt: Date
     var appVersion: String
     var source: SettingsDataBackupSource
     var records: SettingsDataBackupRecords
+    var preferences: SettingsPreferencesBackup? = nil
 }
 
 struct SettingsDataBackupRecords: Codable, Sendable {
@@ -77,6 +78,7 @@ struct SettingsDataBackupRecords: Codable, Sendable {
     var mealScanNutritionSummaries: [MealScanNutritionSummaryRecord] = []
     var mealScanMetadata: [MealScanMetadataRecord] = []
     var healthKitImportedSamples: [HealthKitImportedSampleRecordDTO] = []
+    var healthKitFieldOwnership: [HealthKitFieldOwnershipDTO] = []
 
     var counts: SettingsDataRecordCounts {
         SettingsDataRecordCounts(
@@ -107,6 +109,7 @@ extension SettingsDataBackupFile {
         case appVersion
         case source
         case records
+        case preferences
     }
 
     init(from decoder: Decoder) throws {
@@ -116,6 +119,7 @@ extension SettingsDataBackupFile {
         self.appVersion = try container.decodeIfPresent(String.self, forKey: .appVersion) ?? "unknown"
         self.source = try container.decodeIfPresent(SettingsDataBackupSource.self, forKey: .source) ?? .userExport
         self.records = try container.decodeIfPresent(SettingsDataBackupRecords.self, forKey: .records) ?? SettingsDataBackupRecords()
+        self.preferences = try container.decodeIfPresent(SettingsPreferencesBackup.self, forKey: .preferences)
     }
 }
 
@@ -137,6 +141,7 @@ extension SettingsDataBackupRecords {
         case mealScanNutritionSummaries
         case mealScanMetadata
         case healthKitImportedSamples
+        case healthKitFieldOwnership
     }
 
     init(from decoder: Decoder) throws {
@@ -157,6 +162,7 @@ extension SettingsDataBackupRecords {
         self.mealScanNutritionSummaries = try container.decodeIfPresent([MealScanNutritionSummaryRecord].self, forKey: .mealScanNutritionSummaries) ?? []
         self.mealScanMetadata = try container.decodeIfPresent([MealScanMetadataRecord].self, forKey: .mealScanMetadata) ?? []
         self.healthKitImportedSamples = try container.decodeIfPresent([HealthKitImportedSampleRecordDTO].self, forKey: .healthKitImportedSamples) ?? []
+        self.healthKitFieldOwnership = try container.decodeIfPresent([HealthKitFieldOwnershipDTO].self, forKey: .healthKitFieldOwnership) ?? []
     }
 }
 
@@ -388,6 +394,11 @@ struct DailyLogRecord: Codable, Sendable {
     var stressLevel: Int?
     var energyLevel: Int?
     var waterOz: Int?
+    var painLevel0To10: Int? = nil
+    var privateNote: String? = nil
+    var positiveActionRawValues: String? = nil
+    var moodRawValue: String? = nil
+    var symptomsReviewed: Bool? = nil
 }
 
 struct InsightRecord: Codable, Sendable {
@@ -508,6 +519,7 @@ struct HealthKitImportedSampleRecordDTO: Codable, Sendable {
     var derivedRecordID: UUID?
     var importedAt: Date
     var notes: String?
+    var lastAppliedFingerprint: String? = nil
 }
 
 enum SettingsDataBackupCoding {
@@ -569,4 +581,67 @@ extension JSONDecoder {
     static var cycleBalanceBackup: JSONDecoder {
         SettingsDataBackupCoding.makeDecoder()
     }
+}
+
+/// Optional in schema 6 so older backups keep the user's current settings.
+struct SettingsPreferencesBackup: Codable, Sendable {
+    var tracking: Data?
+    var theme: String?
+    var font: String?
+    var profile: SettingsProfileBackup?
+    var colorModeRawValue: String? = nil
+
+    @MainActor
+    static func capture() throws -> SettingsPreferencesBackup {
+        let profile = OnboardingProfile()
+        return SettingsPreferencesBackup(tracking: try TrackingPreferences.shared.backupData(),
+            theme: AppearancePreferences.shared.themeOption.rawValue,
+            font: AppearancePreferences.shared.fontOption.rawValue,
+            profile: SettingsProfileBackup(preferredName: profile.preferredName,
+                primaryGoal: profile.primaryGoal?.rawValue, pcosExperience: profile.pcosExperience?.rawValue,
+                symptomFocusAreas: profile.symptomFocusAreas.map(\.rawValue)),
+            colorModeRawValue: AppearancePreferences.shared.colorMode.rawValue)
+    }
+
+    @MainActor
+    func validate() throws {
+        if let tracking { _ = try JSONDecoder().decode(TrackingSelection.self, from: tracking) }
+        if let value = colorModeRawValue, AppearanceColorMode(rawValue: value) == nil { throw SettingsDataImportService.ImportError.malformedBackup("preferences.colorMode") }
+        if let theme, ThemeOption(rawValue: theme) == nil { throw SettingsDataImportService.ImportError.malformedBackup("preferences.theme") }
+        if let font, FontOption(rawValue: font) == nil { throw SettingsDataImportService.ImportError.malformedBackup("preferences.font") }
+        if let value = profile?.primaryGoal, PrimaryGoal(rawValue: value) == nil { throw SettingsDataImportService.ImportError.malformedBackup("preferences.primaryGoal") }
+        if let value = profile?.pcosExperience, PCOSExperience(rawValue: value) == nil { throw SettingsDataImportService.ImportError.malformedBackup("preferences.pcosExperience") }
+        if let values = profile?.symptomFocusAreas, values.contains(where: { SymptomFocusArea(rawValue: $0) == nil }) { throw SettingsDataImportService.ImportError.malformedBackup("preferences.symptomFocusAreas") }
+    }
+
+    @MainActor
+    func restoreValidated() throws {
+        if let tracking { try TrackingPreferences.shared.restore(from: tracking) }
+        if let mode = colorModeRawValue.flatMap(AppearanceColorMode.init(rawValue:)) { AppearancePreferences.shared.colorMode = mode }
+        if let theme = theme.flatMap(ThemeOption.init(rawValue:)) { AppearancePreferences.shared.themeOption = theme }
+        if let font = font.flatMap(FontOption.init(rawValue:)) { AppearancePreferences.shared.fontOption = font }
+        if let profile {
+            let target = OnboardingProfile()
+            target.preferredName = profile.preferredName
+            target.primaryGoal = profile.primaryGoal.flatMap(PrimaryGoal.init(rawValue:))
+            target.pcosExperience = profile.pcosExperience.flatMap(PCOSExperience.init(rawValue:))
+            target.symptomFocusAreas = profile.symptomFocusAreas.compactMap(SymptomFocusArea.init(rawValue:))
+        }
+    }
+}
+
+struct SettingsProfileBackup: Codable, Sendable {
+    var preferredName: String
+    var primaryGoal: String?
+    var pcosExperience: String?
+    var symptomFocusAreas: [String]
+}
+
+struct HealthKitFieldOwnershipDTO: Codable, Sendable {
+    var recordID: UUID
+    var field: String
+    var lastAppliedValue: Double?
+    var healthValue: Double?
+    var isManual: Bool
+    var lastAppliedFingerprint: String?
 }

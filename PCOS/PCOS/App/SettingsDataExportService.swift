@@ -21,8 +21,15 @@ struct SettingsDataExportService {
         self.fileWriter = fileWriter
     }
 
+    static func csvRow(_ fields: [String]) -> String {
+        fields.map { value in
+            guard value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r") else { return value }
+            return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }.joined(separator: ",") + "\r\n"
+    }
+
     func generateCSVExport() throws -> URL {
-        var csv = "Type,Date,Detail,Value,Notes\n"
+        var csv = Self.csvRow(["Type", "Date", "Detail", "Value", "Notes"])
 
         do {
             let cycleDescriptor = FetchDescriptor<Cycle>(sortBy: [SortDescriptor(\.startDate)])
@@ -31,7 +38,7 @@ struct SettingsDataExportService {
                 let dateStr = Self.isoFormatter.string(from: cycle.startDate)
                 let length = (cycle.manualCycleLengthOverrideDays ?? cycle.lengthDays).map(String.init)
                     ?? String(localized: "Ongoing", comment: "CSV export value for a cycle that has not ended yet.")
-                csv += "\(localizedRowType(.cycle)),\(dateStr),\(String(localized: "Length", comment: "CSV export detail value for cycle length.")),\(length),\n"
+                csv += Self.csvRow([localizedRowType(.cycle), dateStr, String(localized: "Length", comment: "CSV export detail value for cycle length."), length, ""])
             }
         } catch {
             Logger.database.error("Failed to export cycles: \(error.localizedDescription)")
@@ -44,11 +51,11 @@ struct SettingsDataExportService {
                 let dateStr = Self.isoFormatter.string(from: entry.date)
                 let flow = entry.flowIntensity?.displayName
                     ?? String(localized: "None", comment: "CSV export value meaning no period flow was logged.")
-                let notes = entry.notes?.replacingOccurrences(of: ",", with: ";") ?? ""
+                let notes = entry.notes ?? ""
                 let periodValue = entry.isPeriodDay
                     ? String(localized: "Yes", comment: "CSV export boolean value.")
                     : String(localized: "No", comment: "CSV export boolean value.")
-                csv += "\(localizedRowType(.period)),\(dateStr),\(flow),\(periodValue),\(notes)\n"
+                csv += Self.csvRow([localizedRowType(.period), dateStr, flow, periodValue, notes])
             }
         } catch {
             Logger.database.error("Failed to export cycle entries: \(error.localizedDescription)")
@@ -59,8 +66,8 @@ struct SettingsDataExportService {
             let symptoms = try modelContext.fetch(symptomDescriptor)
             for symptom in symptoms {
                 let dateStr = Self.isoFormatter.string(from: symptom.date)
-                let notes = symptom.notes?.replacingOccurrences(of: ",", with: ";") ?? ""
-                csv += "\(localizedRowType(.symptom)),\(dateStr),\(symptom.symptomType.displayName),\(symptom.severity),\(notes)\n"
+                let notes = symptom.notes ?? ""
+                csv += Self.csvRow([localizedRowType(.symptom), dateStr, symptom.symptomType.displayName, String(symptom.severity), notes])
             }
         } catch {
             Logger.database.error("Failed to export symptoms: \(error.localizedDescription)")
@@ -71,8 +78,8 @@ struct SettingsDataExportService {
             let readings = try modelContext.fetch(bsDescriptor)
             for reading in readings {
                 let dateStr = Self.isoFormatter.string(from: reading.timestamp)
-                let notes = reading.notes?.replacingOccurrences(of: ",", with: ";") ?? ""
-                csv += "\(localizedRowType(.bloodSugar)),\(dateStr),\(reading.readingType.displayName),\(reading.glucoseValue),\(notes)\n"
+                let notes = reading.notes ?? ""
+                csv += Self.csvRow([localizedRowType(.bloodSugar), dateStr, reading.readingType.displayName, String(reading.glucoseValue), notes])
             }
         } catch {
             Logger.database.error("Failed to export blood sugar readings: \(error.localizedDescription)")
@@ -89,7 +96,7 @@ struct SettingsDataExportService {
                 let status = log.taken
                     ? String(localized: "Taken", comment: "CSV export supplement status value.")
                     : String(localized: "Missed", comment: "CSV export supplement status value.")
-                csv += "\(localizedRowType(.supplement)),\(dateStr),\(log.supplementName),\(status),\(dosage)\n"
+                csv += Self.csvRow([localizedRowType(.supplement), dateStr, log.supplementName, status, dosage])
             }
         } catch {
             Logger.database.error("Failed to export supplement logs: \(error.localizedDescription)")
@@ -100,8 +107,8 @@ struct SettingsDataExportService {
             let meals = try modelContext.fetch(mealDescriptor)
             for meal in meals {
                 let dateStr = Self.isoFormatter.string(from: meal.timestamp)
-                let desc = meal.mealDescription.replacingOccurrences(of: ",", with: ";")
-                csv += "\(localizedRowType(.meal)),\(dateStr),\(meal.mealType.displayName),\(meal.glycemicImpact.displayName),\(desc)\n"
+                let desc = meal.mealDescription
+                csv += Self.csvRow([localizedRowType(.meal), dateStr, meal.mealType.displayName, meal.glycemicImpact.displayName, desc])
             }
         } catch {
             Logger.database.error("Failed to export meals: \(error.localizedDescription)")
@@ -112,10 +119,10 @@ struct SettingsDataExportService {
             let imports = try modelContext.fetch(nutritionDescriptor)
             for nutritionImport in imports {
                 let dateStr = Self.isoFormatter.string(from: nutritionImport.startDate)
-                let product = nutritionImport.displayProductName.replacingOccurrences(of: ",", with: ";")
+                let product = nutritionImport.displayProductName
                 let value = nutritionImport.calories.map { "\($0.formatted()) kcal" } ?? nutritionImport.sourceKind.displayName
-                let notes = nutritionImport.notes?.replacingOccurrences(of: ",", with: ";") ?? nutritionImport.sourceLabel
-                csv += "\(localizedRowType(.nutritionImport)),\(dateStr),\(product),\(value),\(notes)\n"
+                let notes = nutritionImport.notes ?? nutritionImport.sourceLabel
+                csv += Self.csvRow([localizedRowType(.nutritionImport), dateStr, product, value, notes])
             }
         } catch {
             Logger.database.error("Failed to export nutrition imports: \(error.localizedDescription)")
@@ -129,8 +136,8 @@ struct SettingsDataExportService {
                 let endStr = pregnancy.endDate.map { Self.isoFormatter.string(from: $0) } ?? ""
                 let reason = pregnancy.endReason?.rawValue ?? ""
                 let dueDate = pregnancy.estimatedDueDate.map { Self.isoFormatter.string(from: $0) } ?? ""
-                let notes = pregnancy.notes?.replacingOccurrences(of: ",", with: ";") ?? ""
-                csv += "\(localizedRowType(.pregnancy)),\(startStr),\(reason),\(dueDate),\(endStr),\(notes)\n"
+                let notes = pregnancy.notes ?? ""
+                csv += Self.csvRow([localizedRowType(.pregnancy), startStr, reason, dueDate, [endStr.isEmpty ? "" : "End date: \(endStr)", notes].filter { !$0.isEmpty }.joined(separator: "\n")])
             }
         } catch {
             Logger.database.error("Failed to export pregnancy records: \(error.localizedDescription)")

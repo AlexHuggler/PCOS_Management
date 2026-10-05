@@ -111,9 +111,13 @@ private func withIsolatedLastSyncDefaults(
     _ operation: () async throws -> Void
 ) async rethrows {
     let previous = UserDefaults.standard.object(forKey: healthKitLastSyncKey)
+    let previousCategories = UserDefaults.standard.object(forKey: HealthKitCategorySelection.key)
     UserDefaults.standard.removeObject(forKey: healthKitLastSyncKey)
+    UserDefaults.standard.removeObject(forKey: HealthKitCategorySelection.key)
 
     defer {
+        if let previousCategories { UserDefaults.standard.set(previousCategories, forKey: HealthKitCategorySelection.key) }
+        else { UserDefaults.standard.removeObject(forKey: HealthKitCategorySelection.key) }
         if let previous {
             UserDefaults.standard.set(previous, forKey: healthKitLastSyncKey)
         } else {
@@ -289,18 +293,13 @@ struct HealthKitManagerTests {
         #expect(source.contains("HealthKitDataTypeDescriptor.defaultReadTypes"))
 
         let expectedIdentifiers = [
-            ".heartRate",
-            ".heartRateVariabilitySDNN",
             ".appleExerciseTime",
             ".stepCount",
             ".distanceWalkingRunning",
-            ".height",
-            ".bodyTemperature",
             ".basalBodyTemperature",
             ".menstrualFlow",
             ".cervicalMucusQuality",
             ".ovulationTestResult",
-            ".progesteroneTestResult",
             ".pregnancyTestResult",
             ".lactation",
             ".sexualActivity",
@@ -313,7 +312,6 @@ struct HealthKitManagerTests {
             ".moodChanges",
             ".appetiteChanges",
             ".sleepChanges",
-            "HKObjectType.workoutType()",
         ]
 
         for identifier in expectedIdentifiers {
@@ -367,7 +365,7 @@ struct HealthKitManagerTests {
             "These data types are read only after you connect Apple Health. Source summaries show which apps contributed data.",
             "CycleBalance reads data only after you grant permission.",
             "No writes to Apple Health",
-            "Health access is configured. Manage permissions in Settings.",
+            "Setup is complete. Apple Health does not reveal read permission status. Received data is shown below.",
         ]
 
         for expectedCopy in expectedDisclosureCopy {

@@ -27,7 +27,7 @@ struct PolicyAndAnalyticsServiceTests {
         #expect(policy.isSymptomSaveAllowed(selectedCount: 12, isPremium: true))
     }
 
-    @Test("Free tier keeps cycle history limited while symptom history stays open")
+    @Test("Cycle and symptom history remain accessible for free users")
     func freeTierHistoryWindow() throws {
         let policy = FreeTierPolicyService(
             symptomDailyLimit: nil,
@@ -35,14 +35,10 @@ struct PolicyAndAnalyticsServiceTests {
             symptomHistoryDays: nil
         )
         let now = Date(timeIntervalSince1970: 1_700_000_000)
-        let earliest = try #require(policy.earliestAccessibleCycleHistoryDate(now: now, isPremium: false))
-        let expected = Calendar.current.date(byAdding: .day, value: -30, to: Calendar.current.startOfDay(for: now))
-        #expect(earliest == expected)
+        #expect(policy.earliestAccessibleCycleHistoryDate(now: now, isPremium: false) == nil)
         #expect(policy.earliestAccessibleCycleHistoryDate(now: now, isPremium: true) == nil)
         #expect(policy.earliestAccessibleSymptomHistoryDate(now: now, isPremium: false) == nil)
-        #expect(policy.earliestAccessibleSymptomHistoryDate(now: now, isPremium: true) == nil)
-        #expect(policy.isCycleDateAccessible(expected ?? now, now: now, isPremium: false))
-        #expect(!policy.isCycleDateAccessible((expected ?? now).addingTimeInterval(-86_400), now: now, isPremium: false))
+        #expect(policy.isCycleDateAccessible(.distantPast, now: now, isPremium: false))
     }
 
     @Test("Insulin resistance service pairs before and after meal spikes")

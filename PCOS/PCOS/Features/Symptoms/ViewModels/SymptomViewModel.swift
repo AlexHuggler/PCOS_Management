@@ -80,25 +80,11 @@ final class SymptomViewModel {
         }
 #endif
 
-        // Delete today's existing entries to prevent duplicates
-        let existingEntries = fetchTodaysSymptoms()
-        for entry in existingEntries {
-            modelContext.delete(entry)
-        }
-
-        // Insert fresh entries for all selected symptoms
-        for (symptomType, severity) in symptomSeverities {
-            let entry = SymptomEntry(
-                date: logDate,
-                type: symptomType,
-                severity: severity,
-                notes: symptomNotes[symptomType]
-            )
-            modelContext.insert(entry)
-        }
-
-        try modelContext.save()
-        InsightRefreshCoordinator.invalidate()
+        var draft = DailyCheckInDraft(date: logDate)
+        draft.symptoms = .set(symptomSeverities)
+        draft.symptomNotes = symptomNotes
+        draft.symptomsReviewed = true
+        try DailyCheckInService(modelContext: modelContext).save(draft)
         reloadSupportingData()
         reset()
     }

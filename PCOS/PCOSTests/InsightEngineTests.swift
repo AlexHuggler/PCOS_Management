@@ -22,6 +22,7 @@ struct InsightEngineTests {
             MealEntry.self,
             DailyLog.self,
             HealthKitImportedSampleRecord.self,
+            HealthKitFieldOwnership.self,
             BloodSugarReading.self,
         ])
         let config = ModelConfiguration(
@@ -109,6 +110,237 @@ struct InsightEngineTests {
         )
         context.insert(record)
         return record
+    }
+
+    @Test("Removing source data retracts derived insights")
+    func removedSourcesRetractInsights() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        context.insert(Insight(insightType: .cyclePattern, title: "Old conclusion", content: "Stale", confidence: 0.8, dataPointsUsed: 3, actionable: false))
+        try context.save()
+        #expect(try InsightEngine(modelContext: context).generateInsights().isEmpty)
+        try context.save()
+        #expect(try context.fetch(FetchDescriptor<Insight>()).isEmpty)
+    }
+
+    @Test("Energy observations do not require sleep records")
+    func energyWithoutSleep() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        for offset in 0..<8 {
+            let date = Calendar.current.date(byAdding: .day, value: offset - 8, to: Date())!
+            context.insert(DailyLog(date: date, energyLevel: offset < 4 ? 1 : 4))
+        }
+        try context.save()
+        let results = try SleepActivityInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        #expect(results.contains { $0.title.contains("energy") })
+    }
+
+    @Test("Sleep is compared with symptoms on the waking day")
+    func sleepUsesWakingDay() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        for offset in 0..<8 {
+            let date = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: offset - 8, to: Date())!)
+            context.insert(DailyLog(date: date, sleepHours: offset.isMultiple(of: 2) ? 5 : 8))
+            Self.insertSymptom(context: context, date: date, type: .breakouts, severity: offset.isMultiple(of: 2) ? 5 : 1)
+        }
+        try context.save()
+        let results = try SleepActivityInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        #expect(results.contains { $0.title == L10n.string("Less sleep, more symptoms", defaultValue: "Less sleep, more symptoms") })
+    }
+
+    @Test("Coverage preserves missing days and actual record counts")
+    func coveragePreservesGaps() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        Self.insertSymptom(context: context, date: today, type: .breakouts, severity: 2)
+        Self.insertSymptom(context: context, date: today, type: .breakouts, severity: 4)
+        let old = Calendar.current.date(byAdding: .day, value: -20, to: today)!
+        Self.insertSymptom(context: context, date: old, type: .breakouts, severity: 5)
+        try context.save()
+        let snapshot = try InsightObservationSnapshot.load(context: context)
+        #expect(snapshot.symptoms.count == 1)
+        #expect(snapshot.symptoms.first?.recordCount == 2)
+        #expect(snapshot.symptoms.first?.value == 3)
+        #expect(snapshot.sleep.isEmpty)
+    }
+
+    @Test("Calendar windows include full first day across daylight saving")
+    func calendarWindowBoundaries() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Chicago")!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 3, day: 10, hour: 15))!
+        let first = calendar.date(from: DateComponents(year: 2026, month: 2, day: 25))!
+        #expect(InsightAnalysisPolicy.includes(first, days: 14, now: now, calendar: calendar))
+        #expect(!InsightAnalysisPolicy.includes(first.addingTimeInterval(-1), days: 14, now: now, calendar: calendar))
+        let tomorrow = calendar.date(from: DateComponents(year: 2026, month: 3, day: 11))!
+        #expect(!InsightAnalysisPolicy.includes(tomorrow, days: 14, now: now, calendar: calendar))
+    }
+
+    @Test("Supplement history spans a year while daily lifestyle remains recent")
+    func supplementWindowRetainsLongCycles() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let withinYear = calendar.date(byAdding: .day, value: -180, to: Date())!
+        let older = calendar.date(byAdding: .day, value: -400, to: Date())!
+        Self.insertSupplement(context: context, date: withinYear, name: "Inositol", taken: true)
+        Self.insertSupplement(context: context, date: older, name: "Inositol", taken: true)
+        context.insert(DailyLog(date: withinYear, sleepHours: 8))
+        try context.save()
+        let fetcher = InsightDataFetcher(modelContext: context)
+        let supplements: [SupplementLog] = try fetcher.fetch(FetchDescriptor<SupplementLog>(), stage: .supplementEfficacy)
+        let dailyLogs: [DailyLog] = try fetcher.fetch(FetchDescriptor<DailyLog>(), stage: .sleepActivity)
+        #expect(supplements.count == 1)
+        #expect(dailyLogs.isEmpty)
+        let vm = InsightsViewModel(modelContext: context)
+        vm.fetchExistingInsights()
+        #expect(vm.readiness.supplementDays == 1)
+    }
+
+    @Test("Fourteen reviewed symptom-free days are real zero observations")
+    func reviewedSymptomFreeDaysCountAsCoverage() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        for offset in 0..<14 {
+            let log = DailyLog(date: calendar.date(byAdding: .day, value: -offset, to: today)!)
+            log.symptomsReviewed = true
+            context.insert(log)
+        }
+        try context.save()
+        let snapshot = try InsightObservationSnapshot.load(context: context)
+        #expect(snapshot.symptoms.count == 14)
+        #expect(snapshot.symptoms.allSatisfy { $0.value == 0 && $0.recordCount == 1 })
+        #expect(Set(snapshot.symptoms.map(\.date)).count == 14)
+        let vm = InsightsViewModel(modelContext: context)
+        vm.fetchExistingInsights()
+        #expect(vm.readiness.symptomDays == 14)
+        #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).isEmpty)
+    }
+
+    @Test("Unreviewed empty days stay missing and symptom rows take precedence")
+    func untouchedDaysStayMissing() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        let reviewed = DailyLog(date: today)
+        reviewed.symptomsReviewed = true
+        context.insert(reviewed)
+        Self.insertSymptom(context: context, date: today, type: .breakouts, severity: 3)
+        context.insert(DailyLog(date: Calendar.current.date(byAdding: .day, value: -1, to: today)!, energyLevel: 3))
+        try context.save()
+        let snapshot = try InsightObservationSnapshot.load(context: context)
+        #expect(snapshot.symptoms.count == 1)
+        #expect(snapshot.symptoms.first?.value == 3)
+        let vm = InsightsViewModel(modelContext: context)
+        vm.fetchExistingInsights()
+        #expect(vm.readiness.symptomDays == 1)
+    }
+
+    @Test("Sleep comparison includes reviewed symptom-free waking days")
+    func sleepIncludesReviewedZeroBurden() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        for offset in 0..<8 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: today)!
+            let shortSleep = offset.isMultiple(of: 2)
+            let log = DailyLog(date: date, sleepHours: shortSleep ? 5 : 8)
+            log.symptomsReviewed = true
+            context.insert(log)
+            if shortSleep { Self.insertSymptom(context: context, date: date, type: .breakouts, severity: 4) }
+        }
+        try context.save()
+        let results = try SleepActivityInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        let observation = try #require(results.first { $0.title == L10n.string("Less sleep, more symptoms", defaultValue: "Less sleep, more symptoms") })
+        #expect(observation.dataPointsUsed == 8)
+        #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 4)
+    }
+
+    @Test("Symptom trend includes reviewed zero days without inventing symptoms")
+    func symptomTrendIncludesReviewedZeroDays() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        for offset in 0..<14 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: today)!
+            let log = DailyLog(date: date)
+            log.symptomsReviewed = true
+            context.insert(log)
+            if offset >= 7 { Self.insertSymptom(context: context, date: date, type: .breakouts, severity: 3) }
+        }
+        try context.save()
+        let results = try SymptomCorrelationInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        let trend = try #require(results.first { $0.title == L10n.string("Symptom severity is decreasing", defaultValue: "Symptom severity is decreasing") })
+        #expect(trend.dataPointsUsed == 14)
+        #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 7)
+    }
+
+    @Test("Chart sources exclude unrelated imports and manual sleep overrides")
+    func observationSourcesOnlyIncludeContributors() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        let log = DailyLog(date: today, sleepHours: 8)
+        context.insert(log)
+        let owner = HealthKitFieldOwnership(recordID: log.id, field: "sleepHours")
+        owner.lastAppliedValue = 8
+        context.insert(owner)
+        context.insert(HealthKitImportedSampleRecord(sampleUUID: "sleep", healthKitIdentifier: "HKCategoryTypeIdentifierSleepAnalysis", sourceName: "Sleep Source", startDate: today.addingTimeInterval(-3600), endDate: today.addingTimeInterval(7 * 3600), categoryValue: 1, derivedRecordKind: .dailyLog, derivedRecordID: log.id))
+        context.insert(HealthKitImportedSampleRecord(sampleUUID: "weight", healthKitIdentifier: "HKQuantityTypeIdentifierBodyMass", sourceName: "Unrelated Scale", startDate: today, valueDouble: 65, derivedRecordKind: .dailyLog, derivedRecordID: log.id))
+        context.insert(HealthKitImportedSampleRecord(sampleUUID: "glucose", healthKitIdentifier: "HKQuantityTypeIdentifierBloodGlucose", sourceName: "Unrelated Glucose", startDate: today, valueDouble: 90, derivedRecordKind: .sourceOnly))
+        try context.save()
+        #expect(try InsightObservationSnapshot.load(context: context).sourceNames == ["Sleep Source"])
+        owner.isManual = true
+        try context.save()
+        let manualSnapshot = try InsightObservationSnapshot.load(context: context)
+        #expect(manualSnapshot.sourceNames.isEmpty)
+        #expect(manualSnapshot.sleep.first?.value == 8)
+    }
+
+    @Test("Meal comparison includes explicitly symptom-free next days")
+    func dietIncludesReviewedZeroBurden() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        for offset in 1...8 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: today)!
+            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: date)!
+            let high = offset.isMultiple(of: 2)
+            context.insert(MealEntry(timestamp: date, mealType: .lunch, mealDescription: "Meal", glycemicImpact: high ? .high : .low))
+            let log = DailyLog(date: nextDay)
+            log.symptomsReviewed = true
+            context.insert(log)
+            if high { Self.insertSymptom(context: context, date: nextDay, type: .breakouts, severity: 4) }
+        }
+        try context.save()
+        let results = try DietImpactInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        #expect(results.contains { $0.title == L10n.string("High-GI meals align with higher next-day symptom severity", defaultValue: "High-GI meals align with higher next-day symptom severity") })
+        #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 4)
+    }
+
+    @Test("Supplement comparison includes explicitly symptom-free taken days")
+    func supplementIncludesReviewedZeroBurden() throws {
+        let container = try Self.makeContainer()
+        let context = container.mainContext
+        let today = Calendar.current.startOfDay(for: Date())
+        for offset in 0..<14 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: today)!
+            let taken = offset.isMultiple(of: 2)
+            Self.insertSupplement(context: context, date: date, name: "Inositol", taken: taken)
+            let log = DailyLog(date: date)
+            log.symptomsReviewed = true
+            context.insert(log)
+            if !taken { Self.insertSymptom(context: context, date: date, type: .breakouts, severity: 4) }
+        }
+        try context.save()
+        let results = try SupplementEfficacyInsightAnalyzer(fetcher: InsightDataFetcher(modelContext: context)).analyze()
+        #expect(!results.isEmpty)
+        #expect(try context.fetch(FetchDescriptor<SymptomEntry>()).count == 7)
     }
 
     // MARK: - Empty Data
@@ -425,7 +657,7 @@ struct InsightEngineTests {
         let container = try Self.makeContainer()
         let context = container.mainContext
         let calendar = Calendar.current
-        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+        let now = Date()
 
         for dayOffset in stride(from: 20, through: 0, by: -1) {
             let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
@@ -481,7 +713,7 @@ struct InsightEngineTests {
         )
 
         #expect(recoveryInsight.content.contains("Pattern:"))
-        #expect(recoveryInsight.content.contains("Likely contributor:"))
+        #expect(recoveryInsight.content.contains("your records do not establish a cause"))
         #expect(recoveryInsight.content.contains("Possible next steps:"))
         #expect(recoveryInsight.content.contains("Best first step:"))
         #expect(recoveryInsight.scientificContent?.contains("Apple Watch") == true)
@@ -494,7 +726,7 @@ struct InsightEngineTests {
         let container = try Self.makeContainer()
         let context = container.mainContext
         let calendar = Calendar.current
-        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+        let now = Date()
 
         for dayOffset in stride(from: 20, through: 0, by: -1) {
             let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
@@ -540,7 +772,7 @@ struct InsightEngineTests {
         let container = try Self.makeContainer()
         let context = container.mainContext
         let calendar = Calendar.current
-        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 25, hour: 12)))
+        let now = Date()
 
         for dayOffset in stride(from: 9, through: 0, by: -1) {
             let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
@@ -625,9 +857,7 @@ struct InsightEngineTests {
             let container = try Self.makeContainer()
             let context = container.mainContext
             let calendar = Calendar.current
-            let now = try #require(
-                calendar.date(from: DateComponents(year: 2026, month: 5, day: 31, hour: 12))
-            )
+            let now = Date()
 
             let monthAnchors = (1...4).compactMap { calendar.date(byAdding: .month, value: -$0, to: now) }
                 .sorted()
@@ -750,7 +980,8 @@ struct InsightEngineTests {
             existingInsights: [existingInsight]
         )
 
-        #expect(result.isEmpty, "Duplicate insight within 7 days should be filtered out")
+        #expect(result.count == 1, "Updated evidence must replace the prior conclusion")
+        #expect(result.first?.content == "Updated content")
     }
 
     @Test("Insights older than 7 days are not considered duplicates")

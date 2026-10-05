@@ -6,13 +6,26 @@ import UIKit
 @Suite("Meal Scan ViewModel", .serialized)
 @MainActor
 struct MealScanViewModelTests {
+    @Test("Disabled scanner rejects direct image preparation before analysis")
+    func disabledScannerRejectsDirectCalls() async throws {
+        let container = try TestHelpers.makeModelContainer()
+        var flags = MealScanFeatureFlags.passOneDefaults
+        flags.enableMealScanV2 = false
+        let model = MealScanViewModel(mealType: .lunch, modelContext: container.mainContext, pipeline: .mock(), featureFlags: flags)
+        await #expect(throws: (any Error).self) { try await model.prepareSelectedImage(UIImage()) }
+        await #expect(throws: (any Error).self) { try await model.scanPendingImageAsNew() }
+        #expect(model.lastScanResult == nil)
+        #expect(model.draftItems.isEmpty)
+    }
+
     @Test("scanning mock image updates review totals and manual fallback stays available")
     func scanUpdatesReviewTotals() async throws {
         let container = try TestHelpers.makeModelContainer()
         let viewModel = MealScanViewModel(
             mealType: .lunch,
             modelContext: container.mainContext,
-            pipeline: .mock()
+            pipeline: .mock(),
+            featureFlags: .passOneDefaults
         )
 
         #expect(viewModel.canAddManualFood)
@@ -30,7 +43,8 @@ struct MealScanViewModelTests {
         let viewModel = MealScanViewModel(
             mealType: .lunch,
             modelContext: container.mainContext,
-            pipeline: .mock()
+            pipeline: .mock(),
+            featureFlags: .passOneDefaults
         )
         try await viewModel.scan(image: UIImage())
         let firstID = try #require(viewModel.draftItems.first?.id)
@@ -51,7 +65,8 @@ struct MealScanViewModelTests {
         let viewModel = MealScanViewModel(
             mealType: .lunch,
             modelContext: container.mainContext,
-            pipeline: .mock()
+            pipeline: .mock(),
+            featureFlags: .passOneDefaults
         )
         try await viewModel.scan(image: UIImage())
         let originalFat = viewModel.totalNutrition.fatGrams
@@ -74,7 +89,8 @@ struct MealScanViewModelTests {
                 segmentationService: MockFoodSegmentationService(),
                 portionEstimationService: MockPortionEstimationService(),
                 nutritionLookupService: LocalFoodNutritionRepository(records: SampleNutritionFixtures.records)
-            )
+            ),
+            featureFlags: .passOneDefaults
         )
 
         await viewModel.scanWithFallback(image: UIImage())
@@ -91,6 +107,7 @@ struct MealScanViewModelTests {
             mealType: .dinner,
             modelContext: container.mainContext,
             pipeline: .mock(),
+            featureFlags: .passOneDefaults,
             imageNormalizer: ThrowingMealScanImageNormalizer()
         )
 
@@ -120,7 +137,8 @@ struct MealScanViewModelTests {
             mealType: .lunch,
             modelContext: container.mainContext,
             pipeline: .mock(),
-            remoteMealScanService: service
+            remoteMealScanService: service,
+            featureFlags: .passOneDefaults
         )
 
         try await viewModel.prepareSelectedImage(UIImage())
@@ -152,7 +170,8 @@ struct MealScanViewModelTests {
             mealType: .lunch,
             modelContext: container.mainContext,
             pipeline: .mock(),
-            remoteMealScanService: service
+            remoteMealScanService: service,
+            featureFlags: .passOneDefaults
         )
 
         await viewModel.scanWithFallback(image: UIImage())
@@ -364,7 +383,8 @@ struct MealScanViewModelTests {
         let viewModel = MealScanViewModel(
             mealType: .dinner,
             modelContext: container.mainContext,
-            pipeline: .mock()
+            pipeline: .mock(),
+            featureFlags: .passOneDefaults
         )
 
         viewModel.continueWithManualEntry()

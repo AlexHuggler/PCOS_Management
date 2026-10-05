@@ -101,10 +101,12 @@ struct CycleLogUndoSnapshot {
 @MainActor
 struct CycleLogService {
     private let modelContext: ModelContext
+    private let saveChanges: Bool
     private let calendar = Calendar.current
 
-    init(modelContext: ModelContext) {
+    init(modelContext: ModelContext, saveChanges: Bool = true) {
         self.modelContext = modelContext
+        self.saveChanges = saveChanges
     }
 
     func evaluatePeriodTransition(
@@ -228,7 +230,7 @@ struct CycleLogService {
             entry.cycle = targetCycle
         }
 
-        try modelContext.save()
+        if saveChanges { try modelContext.save() }
         InsightRefreshCoordinator.invalidate()
 
         return CycleRangeSaveResult(
@@ -364,7 +366,7 @@ struct CycleLogService {
             savedDates.append(noPeriodDate)
         }
 
-        try modelContext.save()
+        if saveChanges { try modelContext.save() }
         InsightRefreshCoordinator.invalidate()
 
         return CycleRangeSaveResult(
@@ -503,7 +505,7 @@ struct CycleLogService {
             savedEntryIDs.append(entry.id)
         }
 
-        try modelContext.save()
+        if saveChanges { try modelContext.save() }
         InsightRefreshCoordinator.invalidate()
 
         return CycleRangeSaveResult(
@@ -576,7 +578,7 @@ struct CycleLogService {
             entry.cycle = entrySnapshot.cycleID.flatMap { restoredCyclesByID[$0] }
         }
 
-        try modelContext.save()
+        if saveChanges { try modelContext.save() }
         InsightRefreshCoordinator.invalidate()
     }
 
@@ -593,7 +595,7 @@ struct CycleLogService {
 
         let newCycle = Cycle(startDate: Date(), isPredicted: false)
         modelContext.insert(newCycle)
-        try modelContext.save()
+        if saveChanges { try modelContext.save() }
         InsightRefreshCoordinator.invalidate()
     }
 }

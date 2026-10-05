@@ -42,7 +42,7 @@ final class MealScanViewModel {
 
     var phase: Phase = .entry
     var mealType: MealType
-    var mealName: String = "AI meal estimate"
+    var mealName: String = "Photo meal estimate"
     var draftItems: [MealFoodItemDraft] = []
     var totalNutrition = NutritionSnapshot()
     var metabolicProfile: MealMetabolicProfile?
@@ -128,6 +128,7 @@ final class MealScanViewModel {
     }
 
     func startScan() {
+        guard featureFlags.enableMealScanV2 else { phase = .manualFallback; return }
         phase = .camera
     }
 
@@ -145,6 +146,7 @@ final class MealScanViewModel {
     }
 
     func prepareSelectedImage(_ image: UIImage) async throws {
+        guard featureFlags.enableMealScanV2 else { throw MealScanAvailabilityError.unavailable }
         selectedImage = image
         errorMessage = nil
         repeatMealSuggestion = nil
@@ -225,6 +227,7 @@ final class MealScanViewModel {
     }
 
     func scanPendingImageAsNew() async throws {
+        guard featureFlags.enableMealScanV2 else { throw MealScanAvailabilityError.unavailable }
         repeatMealSuggestion = nil
         repeatSourceRecordID = nil
 
@@ -306,6 +309,7 @@ final class MealScanViewModel {
     }
 
     private func performPendingImageScan(startedFromUnknownRecheck: Bool = false) async throws {
+        guard featureFlags.enableMealScanV2 else { throw MealScanAvailabilityError.unavailable }
         guard let normalizedImage = pendingNormalizedImage else {
             throw MealScanViewModelError.missingPendingImage
         }
@@ -683,3 +687,5 @@ private enum MealScanViewModelError: Error {
     case ambiguousOutcomeRequired
     case newAttemptConfirmationRequired
 }
+
+private enum MealScanAvailabilityError: Error { case unavailable }

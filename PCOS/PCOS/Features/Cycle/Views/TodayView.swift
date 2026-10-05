@@ -55,6 +55,7 @@ struct TodayView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.requestReview) private var requestReview
     @Environment(AppState.self) private var appState
     @State private var viewModel: CycleViewModel?
@@ -86,213 +87,92 @@ struct TodayView: View {
     @State private var hasResolvedInitialHeroState = false
     @State private var showingPeriodEndSheet = false
     @State private var showingPredictionInfo = false
+    @State private var showingPersonalization = false
+    @State private var trackingPreferences = TrackingPreferences.shared
+    @State private var recentHealthLogs: [DailyLog] = []
+    @State private var healthOwnership: [HealthKitFieldOwnership] = []
+    @State private var healthSources: [HealthKitImportedSampleRecord] = []
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                BotanicalScreenBackground(style: .dense)
-
-                ScrollView {
-                    VStack(spacing: AppTheme.spacing16) {
-                        if AppTheme.usesImmersiveHomeShell {
-                            lunarTodayHeader
-                        }
-
-                        // Cycle status card
-                        cycleStatusCard
-
-                        // Logging streak
-                        streakBadge
-
-                        if !AppTheme.usesImmersiveHomeShell, let topAhaMoment {
-                            AhaMomentCard(moment: topAhaMoment)
-                        }
-
-                        if AppTheme.usesImmersiveHomeShell {
-                            lunarTodaySnapshotCard
-
-                            if let topAhaMoment {
-                                ImmersiveInsightCard(moment: topAhaMoment)
-                            }
-                        }
-
-                        // Quick period log inline
-                        if appState.lifecycleMode != .pregnant {
-                            quickPeriodLogRow
-                        }
-
-                        positiveActionsSection
-
-                        healthContextSection
-
-                        // Quick actions
-                        quickActionsSection
-
-                        // Today's logged symptoms
-                        todaysSymptomsSection
-
-                        // Blood sugar summary
-                        bloodSugarSummarySection
-
-                        // Supplement summary
-                        supplementSummarySection
-
-                        // Meal summary
-                        mealSummarySection
-
-                        // Prediction card
-                        predictionSection
-                    }
-                    .padding()
-                    // Keep the last summary cards fully tappable above the custom tab bar.
-                    .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+            companionSurface
+                .sheet(isPresented: $showingPersonalization) {
+                    NavigationStack { PersonalizationView() }
                 }
-                .refreshable {
-                    await Task.yield()
-                    viewModel?.loadData()
-                    refreshTodaysSymptoms()
-                    refreshStreak()
-                    refreshSummaryData()
+                .sheet(isPresented: $showingLogSymptoms, onDismiss: { refreshToday() }) {
+                    SymptomLogView()
                 }
-
-                // Post-onboarding contextual hint
-                if let hint = activeHint {
-                    VStack {
-                        Spacer()
-                        TooltipOverlay(message: hint) {
-                            dismissActiveHint()
-                        }
-                        .padding(.horizontal, AppTheme.spacing24)
-                        .padding(.bottom, AppTheme.botanicalScrollableBottomPadding)
+                .sheet(isPresented: $showingPeriodEndSheet, onDismiss: { refreshToday() }) {
+                    if let viewModel, let state = viewModel.currentPeriodState {
+                        PeriodEndSheet(periodState: state, onSave: { date, reference in
+                            try viewModel.markPeriodEnded(on: date, referenceDate: reference)
+                        }, onSaved: { refreshToday() })
                     }
                 }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("screen.today")
-            .navigationTitle(
-                AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Today", defaultValue: "Today")
-            )
-            .navigationBarTitleDisplayMode(AppTheme.usesImmersiveHomeShell ? .inline : .automatic)
-            .sensoryFeedback(.selection, trigger: quickLogFlow)
-            .sensoryFeedback(.selection, trigger: showingLogPeriod)
-            .sensoryFeedback(.selection, trigger: showingLogSymptoms)
-            .alert(item: $quickLogAlert) { alert in
-                switch alert {
-                case .error(let message):
-                    return Alert(
-                        title: Text(L10n.string("Couldn't Save", defaultValue: "Couldn't Save")),
-                        message: Text(message),
-                        dismissButton: .cancel(Text(L10n.string("OK", defaultValue: "OK")))
-                    )
-                case .confirmNewCycle(let intensity, let gapDays):
-                    return Alert(
-                        title: Text(L10n.string("Start a new cycle?", defaultValue: "Start a new cycle?")),
-                        message: Text(
-                            L10n.format(
-                                "This quick log starts %lld days after your last tracked period day. Confirm to reset your current cycle count and start a new cycle today.",
-                                defaultValue: "This quick log starts %lld days after your last tracked period day. Confirm to reset your current cycle count and start a new cycle today.",
-                                Int64(gapDays)
-                            )
-                        ),
-                        primaryButton: .default(Text(L10n.string("Confirm New Cycle", defaultValue: "Confirm New Cycle"))) {
-                            performQuickLog(intensity: intensity, startingNewCycle: true)
-                        },
-                        secondaryButton: .cancel(Text(L10n.string("Keep Current Cycle", defaultValue: "Keep Current Cycle")))
-                    )
+                .alert(item: $quickLogAlert) { alert in
+                    switch alert {
+                    case .error(let message):
+                        Alert(title: Text(L10n.string("Couldn't Save", defaultValue: "Couldn't Save")), message: Text(message), dismissButton: .cancel(Text(L10n.string("OK", defaultValue: "OK"))))
+                    case .confirmNewCycle:
+                        Alert(title: Text(L10n.string("Log Period", defaultValue: "Log Period")), dismissButton: .cancel())
+                    }
                 }
-            }
-            .todayLunarPresentation(isPresented: $showingLogPeriod, onDismiss: {
-                viewModel?.loadData()
-                refreshStreak()
-                refreshSummaryData()
-            }) {
-                CycleLogView()
-            }
-            .todayLunarPresentation(isPresented: $showingPeriodEndSheet, onDismiss: {
-                viewModel?.loadData()
-                refreshStreak()
-                refreshSummaryData()
-            }) {
-                if let viewModel, let currentPeriodState = viewModel.currentPeriodState {
-                    PeriodEndSheet(
-                        periodState: currentPeriodState,
-                        onSave: { endDate, referenceDate in
-                            try viewModel.markPeriodEnded(on: endDate, referenceDate: referenceDate)
-                        },
-                        onSaved: {
-                            viewModel.loadData()
-                            refreshStreak()
-                            refreshSummaryData()
-                        }
-                    )
-                }
-            }
-            .todayLunarPresentation(isPresented: $showingLogSymptoms, onDismiss: {
-                viewModel?.loadData()
-                refreshTodaysSymptoms()
-                refreshStreak()
-                refreshSummaryData()
-            }) {
-                SymptomLogView()
-            }
-            .todayLunarPresentation(isPresented: $showingLogBloodSugar, onDismiss: {
-                refreshSummaryData()
-            }) {
-                BloodSugarLogView()
-            }
-            .todayLunarPresentation(isPresented: $showingLogSupplements, onDismiss: {
-                refreshSummaryData()
-            }) {
-                SupplementLogView()
-            }
-            .todayLunarPresentation(isPresented: $showingLogMeal, onDismiss: {
-                refreshSummaryData()
-            }) {
-                MealLogView(entryPoint: .today)
-            }
-            .sheet(isPresented: $showingPredictionInfo) {
-                PredictionEstimateInfoSheet(detailText: viewModel?.predictionSecondaryText)
-                    .presentationDetents([.medium])
-            }
-            .onChange(of: showingLogMeal) { _, isPresented in
-                Logger.meals.info("TodayView meal log sheet state changed: \(isPresented, privacy: .public)")
-            }
-            .onChange(of: viewModel?.currentCycleDayCount) { _, _ in
-                syncHeroState(reason: hasResolvedInitialHeroState ? "cycle_day_count_change" : "initial_resolution")
-            }
-            .onChange(of: appState.lifecycleMode) { _, _ in
-                syncHeroState(reason: "lifecycle_mode_change")
-            }
-            .onAppear {
-                let isInitialLoad = viewModel == nil
-                if viewModel == nil {
-                    Logger.ui.debug(
-                        "TodayView initial load started. lifecycleMode=\(appState.lifecycleMode.rawValue, privacy: .public)"
-                    )
-                    let vm = CycleViewModel(modelContext: modelContext)
-                    vm.loadData()
-                    syncHeroState(reason: "initial_load", currentCycleDayCount: vm.currentCycleDayCount)
-                    viewModel = vm
-                } else {
-                    syncHeroState(reason: "reappear")
-                }
-                if pregnancyViewModel == nil {
-                    let pvm = PregnancyViewModel(modelContext: modelContext)
-                    pvm.loadData()
-                    pregnancyViewModel = pvm
-                }
-                refreshTodaysSymptoms()
-                refreshStreak()
-                refreshSummaryData()
-                showNextHintIfNeeded()
+                .onAppear { loadTodayIfNeeded() }
+                .onChange(of: scenePhase) { _, phase in if phase == .active { refreshToday() } }
+                .onChange(of: appState.lifecycleMode) { _, _ in refreshToday() }
+                .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshToday() }
+                .onReceive(NotificationCenter.default.publisher(for: InsightRefreshCoordinator.notificationName)) { _ in refreshToday() }
+                .onReceive(NotificationCenter.default.publisher(for: .healthKitDidCommit)) { _ in refreshToday() }
+        }
+    }
 
-                if !isInitialLoad {
-                    Logger.ui.debug(
-                        "TodayView reappeared with lifecycleMode=\(appState.lifecycleMode.rawValue, privacy: .public) heroState=\(heroState.logValue, privacy: .public)"
-                    )
+    private var companionSurface: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+                companionGreeting
+                if trackingPreferences.visibleCards.first == .cycle { companionCycleContext }
+                companionCheckIn
+                companionFavorites
+                ForEach(orderedCompanionCards) { card in companionCard(card) }
+                NavigationLink { CycleDetailView() } label: {
+                    Label(L10n.string("Your cycle history", defaultValue: "Your cycle history"), systemImage: "clock.arrow.circlepath")
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12)
                 }
+            }
+            .padding()
+            .padding(.bottom, 16)
+        }
+        .background(BotanicalScreenBackground(style: .dense))
+        .refreshable { refreshToday() }
+        .navigationTitle(L10n.string("Today", defaultValue: "Today"))
+        .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showingPersonalization = true } label: { Image(systemName: "slider.horizontal.3") }
+                    .accessibilityLabel(L10n.string("Make it yours", defaultValue: "Make it yours"))
+                    .accessibilityIdentifier("today.personalization")
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("screen.today")
+    }
+
+    private var orderedCompanionCards: [TodayCard] {
+        trackingPreferences.visibleCards.filter { $0 != .cycle || trackingPreferences.visibleCards.first != .cycle }
+    }
+
+    private func loadTodayIfNeeded() {
+        if viewModel == nil { viewModel = CycleViewModel(modelContext: modelContext) }
+        if pregnancyViewModel == nil { pregnancyViewModel = PregnancyViewModel(modelContext: modelContext) }
+        refreshToday()
+    }
+
+    private func refreshToday() {
+        viewModel?.loadData()
+        pregnancyViewModel?.loadData()
+        refreshTodaysSymptoms()
+        refreshStreak()
+        refreshSummaryData()
     }
 
     private func refreshTodaysSymptoms() {
@@ -322,12 +202,246 @@ struct TodayView: View {
             todaysDailyLog = nil
         }
         do {
+            let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+            let descriptor = FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date >= cutoff }, sortBy: [SortDescriptor(\.date, order: .reverse)])
+            recentHealthLogs = try modelContext.fetch(descriptor)
+            healthOwnership = try modelContext.fetch(FetchDescriptor<HealthKitFieldOwnership>())
+            healthSources = try modelContext.fetch(FetchDescriptor<HealthKitImportedSampleRecord>(predicate: #Predicate { $0.startDate >= cutoff }))
+        } catch {
+            recentHealthLogs = []
+            healthOwnership = []
+            healthSources = []
+        }
+        do {
             topAhaMoment = try AhaMomentService(modelContext: modelContext)
                 .topMoment(isPremium: appState.allowsPremiumAccess)
         } catch {
             Logger.database.error("Failed to refresh aha moment: \(error.localizedDescription)")
             topAhaMoment = nil
         }
+    }
+
+    private var companionGreeting: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
+                .appFont(.subheadline)
+                .foregroundStyle(.secondary)
+            Text(L10n.string("A little space for you.", defaultValue: "A little space for you."))
+                .appHeadingFont(.title2, weight: .semibold)
+                .foregroundStyle(AppTheme.primaryText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var companionCycleContext: some View {
+        if appState.lifecycleMode != .cycling {
+            cycleStatusCard
+        } else {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "calendar")
+                    .foregroundStyle(AppTheme.accentColor)
+                    .font(.title3)
+                VStack(alignment: .leading, spacing: 4) {
+                    if let day = viewModel?.currentCycleDayCount {
+                        Text(L10n.format("Cycle day %lld", defaultValue: "Cycle day %lld", Int64(day)))
+                            .appFont(.headline)
+                        Text(L10n.string("Counted from your last recorded period start.", defaultValue: "Counted from your last recorded period start."))
+                            .appFont(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Text(L10n.string("Your timeline starts with you", defaultValue: "Your timeline starts with you"))
+                            .appFont(.headline)
+                        Text(L10n.string("You can check in without recording a period.", defaultValue: "You can check in without recording a period."))
+                            .appFont(.caption).foregroundStyle(.secondary)
+                    }
+                    if trackingPreferences.informationDetail == .detailed, let ended = currentPeriodEndedText {
+                        Text(ended).appFont(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                if canShowPeriodEndAction {
+                    Button { showingPeriodEndSheet = true } label: {
+                        Text(L10n.string("End period", defaultValue: "End period"))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+            .padding(16)
+            .premiumCardDecoration()
+        }
+    }
+
+    private var hasCheckIn: Bool {
+        guard let log = todaysDailyLog else { return !todaysSymptoms.isEmpty }
+        return log.moodRawValue != nil || log.symptomsReviewed || log.energyLevel != nil || log.stressLevel != nil || log.painLevel0To10 != nil || log.waterOz != nil || !(log.privateNote ?? "").isEmpty || !todaysSymptoms.isEmpty
+    }
+
+    private var companionCheckIn: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(hasCheckIn ? L10n.string("Your check-in", defaultValue: "Your check-in") : L10n.string("How are you feeling?", defaultValue: "How are you feeling?"))
+                        .appHeadingFont(.title2, weight: .semibold)
+                    Text(hasCheckIn ? L10n.string("Saved for today. You can change any detail.", defaultValue: "Saved for today. You can change any detail.") : L10n.string("Choose what feels useful. Every question is optional.", defaultValue: "Choose what feels useful. Every question is optional."))
+                        .appFont(.subheadline).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: hasCheckIn ? "checkmark.circle.fill" : "sun.max")
+                    .font(.title2).foregroundStyle(AppTheme.accentColor)
+                    .accessibilityHidden(true)
+            }
+            if hasCheckIn {
+                FlowLayout(spacing: 8) {
+                    if let raw = todaysDailyLog?.moodRawValue, let mood = DailyMood(rawValue: raw) {
+                        Text(mood.title).appFont(.subheadline)
+                    }
+                    if let energy = todaysDailyLog?.energyLevel {
+                        Text(L10n.format("Energy %lld/5", defaultValue: "Energy %lld/5", Int64(energy))).appFont(.subheadline)
+                    }
+                    if todaysDailyLog?.symptomsReviewed == true && todaysSymptoms.isEmpty {
+                        Text(L10n.string("No symptoms today", defaultValue: "No symptoms today")).appFont(.subheadline)
+                    }
+                }
+            }
+            Button { showingLogSymptoms = true } label: {
+                Text(hasCheckIn ? L10n.string("Edit check-in", defaultValue: "Edit check-in") : L10n.string("Start check-in", defaultValue: "Start check-in"))
+                    .appFont(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+            }
+            .buttonStyle(.borderedProminent)
+            .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+            .tint(AppTheme.accentColor)
+            .accessibilityIdentifier("today.checkin")
+        }
+        .padding(20)
+        .premiumCardDecoration()
+    }
+
+    private var companionFavorites: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.string("Your shortcuts", defaultValue: "Your shortcuts"))
+                .appFont(.headline)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { favoriteButtons }
+                VStack(spacing: 8) { favoriteButtons }
+            }
+        }
+    }
+
+    private var favoriteButtons: some View {
+        ForEach(trackingPreferences.favoriteActions.filter { $0.isVisible(in: appState.lifecycleMode, showFertility: trackingPreferences.showFertility) }) { shortcut in
+            Button { appState.requestLogger(shortcut) } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: shortcut.systemImage).font(.title3)
+                    Text(shortcut.title).appFont(.subheadline, weight: .medium)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if shortcut.requiresPremium && !appState.allowsPremiumAccess {
+                        Text(L10n.string("Premium", defaultValue: "Premium"))
+                            .appFont(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 64)
+                .padding(12)
+                .background(AppTheme.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(AppTheme.primaryText)
+            .accessibilityIdentifier("today.favorite.\(shortcut.rawValue)")
+        }
+    }
+
+    @ViewBuilder
+    private func companionCard(_ card: TodayCard) -> some View {
+        switch card {
+        case .cycle: companionCycleContext
+        case .health: companionHealth
+        case .observation:
+            if let topAhaMoment { AhaMomentCard(moment: topAhaMoment) }
+        case .symptoms: todaysSymptomsSection
+        case .meals: mealSummarySection
+        case .supplements: supplementSummarySection
+        case .glucose: bloodSugarSummarySection
+        case .actions: positiveActionsSection
+        }
+    }
+
+    private var companionHealth: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label(L10n.string("Your health context", defaultValue: "Your health context"), systemImage: "heart.text.square")
+                    .appFont(.headline)
+                Spacer()
+                NavigationLink { HealthKitSettingsView() } label: {
+                    Image(systemName: "arrow.up.right")
+                }
+                .accessibilityLabel(L10n.string("Apple Health settings", defaultValue: "Apple Health settings"))
+            }
+            let fields = ["sleepHours", "activeMinutes", "restingHeartRateBPM"] + (trackingPreferences.showWeight ? ["weight"] : [])
+            let hasValues = fields.contains { field in recentHealthLogs.contains { HealthKitFieldOwnership.value(field: field, log: $0) != nil } }
+            if hasValues {
+                ForEach(fields, id: \.self) { field in
+                    if let log = recentHealthLogs.first(where: { HealthKitFieldOwnership.value(field: field, log: $0) != nil }),
+                       let value = HealthKitFieldOwnership.value(field: field, log: log) {
+                        companionHealthRow(field: field, value: value, log: log)
+                    }
+                }
+            } else {
+                Text(L10n.string("Bring in sleep and activity from Apple Health, when you choose.", defaultValue: "Bring in sleep and activity from Apple Health, when you choose."))
+                    .appFont(.subheadline).foregroundStyle(.secondary)
+                NavigationLink(L10n.string("Choose Health data", defaultValue: "Choose Health data")) { HealthKitSettingsView() }
+            }
+        }
+        .padding(20)
+        .premiumCardDecoration()
+        .accessibilityIdentifier("today.health_context")
+    }
+
+    private func companionHealthRow(field: String, value: Double, log: DailyLog) -> some View {
+        let owner = healthOwnership.first { $0.recordID == log.id && $0.field == field }
+        let imported = owner != nil && owner?.isManual == false
+        let identifierSuffix = ["weight": "BodyMass", "sleepHours": "SleepAnalysis", "activeMinutes": "AppleExerciseTime", "restingHeartRateBPM": "RestingHeartRate"][field] ?? ""
+        let sources = healthSources.filter { $0.derivedRecordID == log.id && $0.healthKitIdentifier.hasSuffix(identifierSuffix) }
+        let sourceNames = Set(sources.map(\.sourceLabel)).sorted().joined(separator: ", ")
+        let title: String
+        let formatted: String
+        switch field {
+        case "sleepHours":
+            title = L10n.string("Sleep", defaultValue: "Sleep")
+            formatted = L10n.format("%.1f hr", defaultValue: "%.1f hr", value)
+        case "activeMinutes":
+            title = L10n.string("Activity", defaultValue: "Activity")
+            formatted = L10n.format("%lld min", defaultValue: "%lld min", Int64(value))
+        case "weight":
+            title = L10n.string("Weight", defaultValue: "Weight")
+            formatted = trackingPreferences.bodyMeasurementStyle == .metric
+                ? L10n.format("%.1f kg", defaultValue: "%.1f kg", trackingPreferences.bodyMeasurementStyle.weight(fromPounds: value))
+                : L10n.format("%.1f lb", defaultValue: "%.1f lb", value)
+        default:
+            title = L10n.string("Resting heart rate", defaultValue: "Resting heart rate")
+            formatted = L10n.format("%lld bpm", defaultValue: "%lld bpm", Int64(value))
+        }
+        return VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(title).appFont(.subheadline)
+                Spacer()
+                Text(formatted).appFont(.subheadline, weight: .semibold).monospacedDigit()
+            }
+            HStack(spacing: 4) {
+                Text(imported ? L10n.string("Apple Health", defaultValue: "Apple Health") : L10n.string("Recorded", defaultValue: "Recorded"))
+                Text("·")
+                Text(log.date, format: .dateTime.month(.abbreviated).day())
+            }
+            .appFont(.caption).foregroundStyle(.secondary)
+            if imported && trackingPreferences.informationDetail == .detailed {
+                if !sourceNames.isEmpty { Text(sourceNames).appFont(.caption).foregroundStyle(.secondary) }
+                if let updated = sources.map(\.importedAt).max() {
+                    Text(L10n.format("Imported %@", defaultValue: "Imported %@", updated.formatted(date: .abbreviated, time: .shortened)))
+                        .appFont(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Subviews
@@ -1693,38 +1807,7 @@ struct TodayView: View {
     }
 
     private func openLogger(_ shortcut: LoggerShortcut) {
-        UserEntryDefaultsStore.shared.lastLoggerShortcut = shortcut
-        switch shortcut {
-        case .period:
-            showingLogPeriod = true
-        case .ovulation:
-            break
-        case .symptoms:
-            showingLogSymptoms = true
-        case .bloodSugar:
-            guard appState.allowsPremiumAccess else {
-                appState.presentPremiumPaywall()
-                return
-            }
-            showingLogBloodSugar = true
-        case .supplements:
-            guard appState.allowsPremiumAccess else {
-                appState.presentPremiumPaywall()
-                return
-            }
-            showingLogSupplements = true
-        case .meal:
-            Logger.meals.info("TodayView requested meal log.")
-            guard appState.allowsPremiumAccess else {
-                Logger.meals.notice("TodayView blocked meal log behind premium access.")
-                appState.presentPremiumPaywall()
-                return
-            }
-            showingLogMeal = true
-            Logger.meals.info("TodayView presenting meal log sheet.")
-        case .photo:
-            break
-        }
+        appState.requestLogger(shortcut)
     }
 
     private func syncHeroState(reason: String, currentCycleDayCount: Int? = nil) {
@@ -1779,19 +1862,7 @@ private extension View {
         onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        if AppTheme.usesImmersivePresentation {
-            fullScreenCover(
-                isPresented: isPresented,
-                onDismiss: onDismiss,
-                content: content
-            )
-        } else {
-            sheet(
-                isPresented: isPresented,
-                onDismiss: onDismiss,
-                content: content
-            )
-        }
+        sheet(isPresented: isPresented, onDismiss: onDismiss, content: content)
     }
 }
 

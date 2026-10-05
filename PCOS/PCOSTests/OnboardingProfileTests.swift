@@ -280,53 +280,33 @@ struct OnboardingProfileTests {
         profile.resetOnboarding()
     }
 
-    @Test("onboarding flow surfaces HealthKit reveal and meal scan preview before plan")
+    @Test("Four optional onboarding stages resume saved progress and migrate old phases")
     @MainActor
-    func onboardingFlowSurfacesImmediateValueBeforePlan() throws {
+    func onboardingStagesResumeAndMigrate() throws {
+        let name = "CompanionOnboardingResume.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        #expect(CompanionOnboardingStage.allCases == [.welcome, .preferences, .health, .checkIn])
+        for stage in CompanionOnboardingStage.allCases {
+            defaults.set("companion_\(stage.rawValue)", forKey: "onboarding.currentPhaseRaw")
+            #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == stage)
+        }
+        for (legacy, expected) in [("quiz", CompanionOnboardingStage.preferences), ("permissions", .health), ("meal_scan_demo", .checkIn)] {
+            defaults.set(legacy, forKey: "onboarding.currentPhaseRaw")
+            #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == expected)
+        }
+        defaults.set("unknown-future-stage", forKey: "onboarding.currentPhaseRaw")
+        #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == .welcome)
+
         let root = try TestHelpers.projectRoot(from: #filePath)
         let source = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"))
-        let completionSource = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/OnboardingCompletionView.swift"))
-
-        #expect(source.contains("OnboardingHealthContextRevealView"))
-        #expect(source.contains("OnboardingMealScanDemoView"))
-        #expect(source.contains("nextPhase(after:"))
-        #expect(!source.contains("candidate == .mealScanDemo && !MealScanFeatureFlags.current.enableMealScanV2"))
-        #expect(source.contains("OnboardingLanguageWelcomeView"))
-        #expect(source.contains("OnboardingThemeSelectionView"))
-        #expect(source.contains("OnboardingNameCaptureView"))
-        #expect(source.contains("Welcome to CycleBalance. We're glad you're here."))
-        #expect(source.contains("Which language would you like to use?"))
-        #expect(source.contains("Background, theme, and font"))
-        #expect(source.contains("ForEach(FontOption.allCases)"))
-        #expect(source.contains(#""onboarding.font.option.\(font.rawValue)""#))
-        #expect(completionSource.contains("NotificationManager"))
-        #expect(completionSource.contains("scheduleSymptomLoggingReminder()"))
-        #expect(completionSource.contains("onboarding.completion.reminder"))
-        #expect(!source.contains("case .aha"))
-        #expect(!source.contains("case .rating"))
-        #expect(!source.contains("RatingPromptView("))
-        #expect(!FileManager.default.fileExists(
-            atPath: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/RatingPromptView.swift").path
-        ))
-
-        let languageIndex = try #require(source.range(of: "case .welcomeLanguage")?.lowerBound)
-        let themeIndex = try #require(source.range(of: "case .theme")?.lowerBound)
-        let nameIndex = try #require(source.range(of: "case .name")?.lowerBound)
-        let quizIndex = try #require(source.range(of: "case .quiz")?.lowerBound)
-        let permissionsIndex = try #require(source.range(of: "case .permissions")?.lowerBound)
-        let healthRevealIndex = try #require(source.range(of: "case .healthContext")?.lowerBound)
-        let mealDemoIndex = try #require(source.range(of: "case .mealScanDemo")?.lowerBound)
-        let planIndex = try #require(source.range(of: "case .yourPlan")?.lowerBound)
-
-        #expect(languageIndex < themeIndex)
-        #expect(themeIndex < nameIndex)
-        #expect(nameIndex < quizIndex)
-        #expect(permissionsIndex < healthRevealIndex)
-        #expect(healthRevealIndex < mealDemoIndex)
-        #expect(mealDemoIndex < planIndex)
+        let activeFlow = source.components(separatedBy: "// MARK: - Onboarding Phase").first ?? source
+        #expect(activeFlow.contains("onboarding.explore"))
+        #expect(activeFlow.contains("Not now"))
+        #expect(activeFlow.contains("SymptomLogView()"))
+        #expect(!activeFlow.contains("OnboardingMealScanDemoView("))
+        #expect(!activeFlow.contains("requestReview"))
     }
-
-    // MARK: - Guided Action Completion
 
     @Test("dismissed log sheet without a new record stays incomplete")
     func cancelledGuidedActionDismissalDoesNotComplete() {
@@ -431,5 +411,32 @@ struct OnboardingProfileTests {
         #expect(profile.symptomFocusAreas.isEmpty)
         #expect(profile.preferredDisplayName == nil)
         #expect(profile.shouldShowHint(OnboardingProfile.hintCalendarTab))
+    }
+}
+
+@Suite("Companion onboarding resume")
+struct CompanionOnboardingResumeTests {
+    @Test("Each companion stage resumes without repeating setup")
+    func persistedStagesResume() {
+        let suite = "companion-onboarding-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        for stage in CompanionOnboardingStage.allCases {
+            defaults.set("companion_\(stage.rawValue)", forKey: "onboarding.currentPhaseRaw")
+            #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == stage)
+        }
+    }
+
+    @Test("Legacy scanner and social proof progress migrate to optional check-in")
+    func legacyInterruptionsAreSkipped() {
+        let suite = "companion-onboarding-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        for legacy in ["meal_scan_demo", "social_proof", "all_set"] {
+            defaults.set(legacy, forKey: "onboarding.currentPhaseRaw")
+            #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == .checkIn)
+        }
+        defaults.set("unknown", forKey: "onboarding.currentPhaseRaw")
+        #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == .welcome)
     }
 }

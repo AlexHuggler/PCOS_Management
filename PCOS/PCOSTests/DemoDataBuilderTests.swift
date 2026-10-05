@@ -45,7 +45,10 @@ struct DemoDataBuilderTests {
         )
         let fixtureURL = try TestHelpers.importFixtureURL(named: TestHelpers.demoBackupFixtureName, from: #filePath)
         let fixtureData = try Data(contentsOf: fixtureURL)
-        let fixtureBackup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: fixtureData)
+        var fixtureBackup = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: fixtureData)
+        // Keep the checked-in older fixture as a compatibility test; compare its migrated content.
+        #expect((1...SettingsDataBackupFile.currentSchemaVersion).contains(fixtureBackup.schemaVersion))
+        fixtureBackup.schemaVersion = generatedBackup.schemaVersion
         let generatedData = try SettingsDataBackupCoding.makeEncoder().encode(generatedBackup)
         let normalizedFixtureData = try SettingsDataBackupCoding.makeEncoder().encode(fixtureBackup)
 

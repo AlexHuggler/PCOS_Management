@@ -45,6 +45,7 @@ final class AppNotificationDelegate: NSObject, UIApplicationDelegate, UNUserNoti
         }
 
         await MainActor.run {
+            route.persistPending()
             NotificationCenter.default.post(name: .appNotificationRouteReceived, object: route)
         }
     }
@@ -83,7 +84,7 @@ struct CycleBalanceApp: App {
         Self.applyUITestLaunchOverrides()
         Self.applyAppearanceLaunchOverridesIfNeeded()
         Self.applyStoredAppLanguageOverrideIfNeeded()
-        Self.configureFirebase()
+        if MealScanFeatureFlags.current.enableMealScanV2 { Self.configureFirebase() }
         AppChromeTypography.apply()
         AppleAdsAttributionService.shared.captureLatestTokenIfAvailable()
         Self.configureRevenueCatIfPossible()
@@ -93,6 +94,11 @@ struct CycleBalanceApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(appearancePreferences.preferredColorScheme)
+                .task {
+                    guard !Self.isRunningTests else { return }
+                    HealthKitManager.shared.startObserving(modelContainer: sharedModelContainer)
+                    await HealthKitManager.shared.foregroundSync(modelContainer: sharedModelContainer)
+                }
         }
         .modelContainer(sharedModelContainer)
     }
@@ -119,6 +125,8 @@ extension CycleBalanceApp {
         MealScanResultCacheRecord.self,
         NutritionImportRecord.self,
         HealthKitImportedSampleRecord.self,
+        HealthKitSyncCursor.self,
+        HealthKitFieldOwnership.self,
         HairPhotoEntry.self,
         DailyLog.self,
         PregnancyRecord.self,
@@ -581,7 +589,7 @@ extension CycleBalanceApp {
             carbsGrams: 52,
             proteinGrams: 27,
             fatGrams: 14,
-            sourceLabel: "AI meal estimate",
+            sourceLabel: "Photo meal estimate",
             calories: 430,
             fiberGrams: 9,
             mealSource: NutritionImportSourceKind.aiMealScan.rawValue,
@@ -737,6 +745,11 @@ extension CycleBalanceApp {
                 appearancePreferences.setExperimentalThemesEnabled(true)
             }
             appearancePreferences.setThemeOption(themeOption)
+        }
+
+        if let rawColorMode = launchArgumentValue(for: "appearance.colorMode", in: arguments),
+           let colorMode = AppearanceColorMode(rawValue: rawColorMode) {
+            appearancePreferences.colorMode = colorMode
         }
 
         if let rawFontOption = launchArgumentValue(for: uiTestFontOptionKey, in: arguments),

@@ -33,6 +33,7 @@ final class HealthKitImportedSampleRecord {
     var derivedRecordID: UUID?
     var importedAt: Date = Date()
     var notes: String?
+    var lastAppliedFingerprint: String?
 
     init(
         id: UUID = UUID(),
@@ -48,7 +49,8 @@ final class HealthKitImportedSampleRecord {
         derivedRecordKind: HealthKitDerivedRecordKind = .sourceOnly,
         derivedRecordID: UUID? = nil,
         importedAt: Date = Date(),
-        notes: String? = nil
+        notes: String? = nil,
+        lastAppliedFingerprint: String? = nil
     ) {
         self.id = id
         self.sampleUUID = sampleUUID
@@ -64,6 +66,7 @@ final class HealthKitImportedSampleRecord {
         self.derivedRecordID = derivedRecordID
         self.importedAt = importedAt
         self.notes = notes
+        self.lastAppliedFingerprint = lastAppliedFingerprint
     }
 
     var sourceLabel: String {

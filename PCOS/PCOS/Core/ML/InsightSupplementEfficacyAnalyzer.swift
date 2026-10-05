@@ -17,7 +17,7 @@ struct SupplementEfficacyInsightAnalyzer {
         guard supplements.count >= 14 else { return [] }
 
         let calendar = Calendar.current
-        let earliestSupplement = supplements.first?.date ?? Date()
+        let earliestSupplement = supplements.first.map { calendar.startOfDay(for: $0.date) } ?? Date()
         let symptomDescriptor = FetchDescriptor<SymptomEntry>(
             predicate: #Predicate<SymptomEntry> { $0.date >= earliestSupplement },
             sortBy: [SortDescriptor(\.date, order: .forward)]
@@ -60,21 +60,17 @@ struct SupplementEfficacyInsightAnalyzer {
         }
 
         let byName = Dictionary(grouping: supplements, by: \.supplementName)
-        let symptomsByDay = Dictionary(grouping: symptoms) { calendar.startOfDay(for: $0.date) }
+        let dailyLogs: [DailyLog] = try fetcher.fetch(FetchDescriptor<DailyLog>(), stage: .supplementEfficacySymptoms)
+        let observedDays = InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: dailyLogs, days: InsightAnalysisPolicy.supplementHistoryDays)
+        let burdenByDay = Dictionary(uniqueKeysWithValues: observedDays.map { ($0.date, $0.value) })
 
         for (name, logs) in byName {
             let takenDays = Set(logs.filter(\.taken).map { calendar.startOfDay(for: $0.date) })
             let missedDays = Set(logs.filter { !$0.taken }.map { calendar.startOfDay(for: $0.date) })
 
-            if !symptoms.isEmpty, takenDays.count >= 6, missedDays.count >= 4 {
-                let takenSeverities = takenDays.compactMap { day -> Double? in
-                    guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
-                    return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
-                }
-                let missedSeverities = missedDays.compactMap { day -> Double? in
-                    guard let daySymptoms = symptomsByDay[day], !daySymptoms.isEmpty else { return nil }
-                    return Double(daySymptoms.map(\.severity).reduce(0, +)) / Double(daySymptoms.count)
-                }
+            if !observedDays.isEmpty, takenDays.count >= 6, missedDays.count >= 4 {
+                let takenSeverities = takenDays.compactMap { burdenByDay[$0] }
+                let missedSeverities = missedDays.compactMap { burdenByDay[$0] }
 
                 if takenSeverities.count >= 4, missedSeverities.count >= 4 {
                     let takenAvg = takenSeverities.reduce(0, +) / Double(takenSeverities.count)

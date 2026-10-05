@@ -19,6 +19,8 @@ final class DailyLog {
     var waterOz: Int?
     var painLevel0To10: Int?
     var privateNote: String?
+    var moodRawValue: String?
+    var symptomsReviewed: Bool = false
     var positiveActionRawValues: String = ""
 
     init(
@@ -33,7 +35,9 @@ final class DailyLog {
         waterOz: Int? = nil,
         painLevel0To10: Int? = nil,
         privateNote: String? = nil,
-        positiveActionRawValues: String = ""
+        positiveActionRawValues: String = "",
+        moodRawValue: String? = nil,
+        symptomsReviewed: Bool = false
     ) {
         self.id = id
         self.date = date
@@ -46,6 +50,8 @@ final class DailyLog {
         self.waterOz = waterOz
         self.painLevel0To10 = painLevel0To10
         self.privateNote = privateNote
+        self.moodRawValue = moodRawValue
+        self.symptomsReviewed = symptomsReviewed
         self.positiveActionRawValues = positiveActionRawValues
     }
 }
@@ -174,20 +180,16 @@ struct DailyLogService {
             throw ValidationError.invalidWaterOz
         }
 
-        let log = try upsertLog(on: date)
-        log.painLevel0To10 = painLevel0To10
-        if let stressLevel {
-            log.stressLevel = stressLevel
+        var draft = DailyCheckInDraft(date: date)
+        draft.pain = painLevel0To10.map(CheckInChange.set) ?? .clear
+        draft.note = privateNote.map(CheckInChange.set) ?? .clear
+        if let stressLevel { draft.stress = .set(stressLevel) }
+        if let waterOz { draft.water = .set(waterOz) }
+        try DailyCheckInService(modelContext: modelContext).save(draft)
+        // The shared save always creates the day's log.
+        guard let log = try fetchLog(on: date) else {
+            throw CocoaError(.fileReadUnknown)
         }
-        if let waterOz {
-            log.waterOz = waterOz
-        }
-
-        let trimmedNote = privateNote?.trimmingCharacters(in: .whitespacesAndNewlines)
-        log.privateNote = trimmedNote?.isEmpty == true ? nil : trimmedNote
-
-        try modelContext.save()
-        InsightRefreshCoordinator.invalidate()
         return log
     }
 }

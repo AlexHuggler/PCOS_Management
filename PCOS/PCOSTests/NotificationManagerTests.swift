@@ -1,10 +1,45 @@
 import Testing
 import Foundation
+import UserNotifications
 @testable import PCOS
 
 @Suite("Notification Manager", .serialized)
 @MainActor
 struct NotificationManagerTests {
+
+    @Test("A daily check-in request is nonrepeating and opens symptoms")
+    func checkInRequestUsesConcreteDayAndRoute() throws {
+        let date = Date(timeIntervalSince1970: 1_788_638_400)
+        let request = NotificationManager.dailyCheckInRequest(on: date)
+        let trigger = try #require(request.trigger as? UNCalendarNotificationTrigger)
+        #expect(!trigger.repeats)
+        #expect(trigger.dateComponents.year != nil)
+        #expect(trigger.dateComponents.day != nil)
+        #expect(request.content.userInfo["route"] as? String == AppNotificationRoute.symptoms.rawValue)
+    }
+
+    @Test("Rolling check-in dates skip completed today and never repeat")
+    func completedDayIsExcluded() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 5, hour: 10)))
+        let reminder = try #require(calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now))
+        let dates = NotificationManager.dailyCheckInReminderDates(now: now, reminderTime: reminder, completedDays: [calendar.startOfDay(for: now)], calendar: calendar)
+        #expect(dates.count == 13)
+        #expect(dates.allSatisfy { !calendar.isDate($0, inSameDayAs: now) && $0 > now })
+        #expect(Set(dates).count == dates.count)
+    }
+
+    @Test("Imported health context alone never counts as a completed check-in")
+    func healthDataIsNotCheckIn() {
+        let log = DailyLog(date: Date(), sleepHours: 8, activeMinutes: 30)
+        #expect(!NotificationManager.isCompletedCheckIn(log))
+        log.moodRawValue = "good"
+        #expect(NotificationManager.isCompletedCheckIn(log))
+        log.moodRawValue = nil
+        log.symptomsReviewed = true
+        #expect(NotificationManager.isCompletedCheckIn(log))
+    }
 
     /// Clean up notification-related UserDefaults keys before each test
     /// to avoid state leaking between runs.

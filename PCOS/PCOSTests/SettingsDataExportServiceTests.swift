@@ -48,14 +48,41 @@ struct SettingsDataExportServiceTests {
         let exportURL = try service.generateCSVExport()
         let csv = try String(contentsOf: exportURL, encoding: .utf8)
 
-        #expect(csv.hasPrefix("Type,Date,Detail,Value,Notes\n"))
+        #expect(csv.hasPrefix("Type,Date,Detail,Value,Notes\r\n"))
         #expect(csv.contains("\(String(localized: "Cycle", comment: "CSV export row type value.")),"))
         #expect(csv.contains("\(String(localized: "Period", comment: "CSV export row type value.")),"))
         #expect(csv.contains("\(String(localized: "Symptom", comment: "CSV export row type value.")),"))
         #expect(csv.contains("\(String(localized: "Meal", comment: "CSV export row type value.")),"))
-        #expect(csv.contains("period;note"))
-        #expect(csv.contains("symptom;note"))
-        #expect(csv.contains("salad;berries"))
+        #expect(csv.contains("\"period,note\""))
+        #expect(csv.contains("\"symptom,note\""))
+        #expect(csv.contains("\"salad,berries\""))
+    }
+
+    @Test("CSV preserves commas quotes and line breaks as one escaped field")
+    func csvFieldEscaping() {
+        let row = SettingsDataExportService.csvRow(["plain", "a,b", "say \"hi\"", "line1\nline2", ""])
+        #expect(row == "plain,\"a,b\",\"say \"\"hi\"\"\",\"line1\nline2\",\r\n")
+    }
+
+    @Test("Pregnancy exports exactly five fields and retains its end date and notes")
+    func pregnancyCSVHasFiveColumns() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        context.insert(PregnancyRecord(startDate: Date(timeIntervalSince1970: 1_700_000_000),
+            endDate: Date(timeIntervalSince1970: 1_710_000_000), notes: "First, note"))
+        try context.save()
+        let url = try SettingsDataExportService(modelContext: context).generateCSVExport()
+        let csv = try String(contentsOf: url, encoding: .utf8)
+        let row = String(csv[csv.range(of: "\r\n")!.upperBound...])
+        var quoted = false
+        var separators = 0
+        for character in row {
+            if character == "\"" { quoted.toggle() }
+            if character == "," && !quoted { separators += 1 }
+        }
+        #expect(separators == 4)
+        #expect(csv.contains("End date:"))
+        #expect(csv.contains("First, note"))
     }
 
     @Test("generateCSVExport throws when writing file fails")

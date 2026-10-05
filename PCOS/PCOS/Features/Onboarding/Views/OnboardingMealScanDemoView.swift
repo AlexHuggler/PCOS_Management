@@ -54,14 +54,14 @@ struct OnboardingMealScanDemoView: View {
                 .foregroundStyle(AppTheme.accentColor)
                 .accessibilityHidden(true)
 
-            Text(L10n.string("Photo meal estimates are coming soon", defaultValue: "Photo meal estimates are coming soon"))
+            Text(L10n.string("Photo estimates, with you in control", defaultValue: "Photo estimates, with you in control"))
                 .appHeadingFont(.title2, weight: .regular)
                 .foregroundStyle(AppTheme.primaryText)
                 .multilineTextAlignment(.center)
 
             Text(L10n.string(
-                "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now.",
-                defaultValue: "This sample shows the future photo flow. For this release, barcode scanning and manual meal logging are available now."
+                "Take or choose a meal photo, review an editable nutrition draft, then save only what looks right.",
+                defaultValue: "Take or choose a meal photo, review an editable nutrition draft, then save only what looks right."
             ))
             .appFont(.body)
             .foregroundStyle(.secondary)
@@ -83,7 +83,7 @@ struct OnboardingMealScanDemoView: View {
                 Text(L10n.string("Chicken rice bowl", defaultValue: "Chicken rice bowl"))
                     .appFont(.headline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
-                Text(L10n.string("Estimated from a sample preview. You would review and edit before saving.", defaultValue: "Estimated from a sample preview. You would review and edit before saving."))
+                Text(L10n.string("Estimated from a sample preview. You review and edit before saving.", defaultValue: "Estimated from a sample preview. You review and edit before saving."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -133,11 +133,11 @@ struct OnboardingMealScanDemoView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: AppTheme.spacing8) {
-                Text(L10n.string("Approximate, not automatic", defaultValue: "Approximate, not automatic"))
+                Text(L10n.string("You choose before upload", defaultValue: "You choose before upload"))
                     .appFont(.subheadline, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
 
-                Text(L10n.string("Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving.", defaultValue: "Nutrition values can vary by preparation, portion size, hidden oil, sauce, or dressing. Barcode scanning is available now from meal logging. Photo-based estimates are still being prepared, and every meal stays editable before saving."))
+                Text(L10n.string("Exact previous meals can be reused on this device. For a new photo estimate, CycleBalance asks before sending a compressed copy to Google Gemini. Barcode and manual entry stay available without a photo upload.", defaultValue: "Exact previous meals can be reused on this device. For a new photo estimate, CycleBalance asks before sending a compressed copy to Google Gemini. Barcode and manual entry stay available without a photo upload."))
                     .appFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -54,3 +54,9 @@ fastlane/test_output
 build/
 build-release/
 Artifacts/Archives/
+
+# Added for the GitHub backup (Oct 2026): build output, archives and other large generated files
+Artifacts/Exports/
+*.xcarchive
+*.ipa
+*.p8

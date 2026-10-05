@@ -28,13 +28,17 @@ struct DietImpactInsightAnalyzer {
         let highGIRatio = Double(highGICount) / Double(totalMeals)
         let lowGIRatio = Double(lowGICount) / Double(totalMeals)
 
-        let earliestMeal = meals.first?.timestamp ?? Date()
+        let earliestMeal = meals.first.map { calendar.startOfDay(for: $0.timestamp) } ?? Date()
         let symptomDescriptor = FetchDescriptor<SymptomEntry>(
             predicate: #Predicate<SymptomEntry> { $0.date >= earliestMeal },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
         let symptoms: [SymptomEntry] = try fetcher.fetch(symptomDescriptor, stage: .dietImpactSymptoms)
         let symptomsByDay = Dictionary(grouping: symptoms) { calendar.startOfDay(for: $0.date) }
+        let dailyLogs: [DailyLog] = try fetcher.fetch(FetchDescriptor<DailyLog>(), stage: .dietImpactSymptoms)
+        let observedDays = InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: dailyLogs, days: InsightAnalysisPolicy.lifestyleDays)
+        let burdenByDay = Dictionary(uniqueKeysWithValues: observedDays.map { ($0.date, $0.value) })
+        let symptomFreeDays = Set(observedDays.filter(\.isExplicitlySymptomFree).map(\.date))
         let mealsByDay = Dictionary(grouping: meals) { calendar.startOfDay(for: $0.timestamp) }
 
         var nextDayHighGICohort: [Double] = []
@@ -59,9 +63,7 @@ struct DietImpactInsightAnalyzer {
             }
 
             if let nextDay = calendar.date(byAdding: .day, value: 1, to: day),
-               let nextDaySymptoms = symptomsByDay[nextDay],
-               !nextDaySymptoms.isEmpty {
-                let nextDaySeverity = average(nextDaySymptoms.map { Double($0.severity) })
+               let nextDaySeverity = burdenByDay[nextDay] {
                 if cohort == .high {
                     nextDayHighGICohort.append(nextDaySeverity)
                 } else {
@@ -70,13 +72,10 @@ struct DietImpactInsightAnalyzer {
             }
 
             for lag in [2, 3] {
-                guard let lagDay = calendar.date(byAdding: .day, value: lag, to: day),
-                      let daySymptoms = symptomsByDay[lagDay] else { continue }
-
-                let lagBreakoutSymptoms = daySymptoms.filter { $0.symptomType == .acne || $0.symptomType == .breakouts }
-                guard !lagBreakoutSymptoms.isEmpty else { continue }
-
-                let lagSeverity = average(lagBreakoutSymptoms.map { Double($0.severity) })
+                guard let lagDay = calendar.date(byAdding: .day, value: lag, to: day) else { continue }
+                let lagBreakoutSymptoms = (symptomsByDay[lagDay] ?? []).filter { $0.symptomType == .acne || $0.symptomType == .breakouts }
+                guard !lagBreakoutSymptoms.isEmpty || symptomFreeDays.contains(lagDay) else { continue }
+                let lagSeverity = lagBreakoutSymptoms.isEmpty ? 0 : average(lagBreakoutSymptoms.map { Double($0.severity) })
 
                 if cohort == .high {
                     if lag == 2 {

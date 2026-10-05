@@ -11,24 +11,26 @@ struct SleepActivityInsightAnalyzer {
         let logDescriptor = FetchDescriptor<DailyLog>(
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
-        let dailyLogs: [DailyLog] = try fetcher.fetch(logDescriptor, stage: .sleepActivity)
+        let fetchedLogs: [DailyLog] = try fetcher.fetch(logDescriptor, stage: .sleepActivity)
+        let dailyLogs = fetchedLogs.filter { InsightAnalysisPolicy.includes($0.date, days: InsightAnalysisPolicy.lifestyleDays) }
 
         let logsWithSleep = dailyLogs.filter { $0.sleepHours != nil }
-        guard logsWithSleep.count >= 7 else { return [] }
+
 
         let calendar = Calendar.current
         var insights: [Insight] = []
 
         // Fetch symptoms for the same period
-        let earliestLog = logsWithSleep.first?.date ?? Date()
+        let earliestLog = dailyLogs.first.map { Calendar.current.startOfDay(for: $0.date) } ?? Date()
         let symptomDescriptor = FetchDescriptor<SymptomEntry>(
             predicate: #Predicate<SymptomEntry> { $0.date >= earliestLog },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
         let symptoms: [SymptomEntry] = try fetcher.fetch(symptomDescriptor, stage: .sleepActivitySymptoms)
-        let symptomsByDay = Dictionary(grouping: symptoms) { calendar.startOfDay(for: $0.date) }
+        let observedDays = InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: dailyLogs, days: InsightAnalysisPolicy.lifestyleDays)
+        let burdenByDay = Dictionary(uniqueKeysWithValues: observedDays.map { ($0.date, $0.value) })
 
-        // Correlate sleep hours with next-day symptom severity
+        // Correlate sleep hours with waking-day symptom severity (the DailyLog date is the waking day)
         var lowSleepSeverities: [Double] = []
         var goodSleepSeverities: [Double] = []
         let sleepThreshold = 7.0
@@ -36,12 +38,7 @@ struct SleepActivityInsightAnalyzer {
         for log in logsWithSleep {
             guard let sleepHours = log.sleepHours else { continue }
             let logDay = calendar.startOfDay(for: log.date)
-            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: logDay),
-                  let nextDaySymptoms = symptomsByDay[nextDay],
-                  !nextDaySymptoms.isEmpty else { continue }
-
-            let avgSeverity = Double(nextDaySymptoms.map(\.severity).reduce(0, +))
-                / Double(nextDaySymptoms.count)
+            guard let avgSeverity = burdenByDay[logDay] else { continue }
 
             if sleepHours < sleepThreshold {
                 lowSleepSeverities.append(avgSeverity)
@@ -50,7 +47,8 @@ struct SleepActivityInsightAnalyzer {
             }
         }
 
-        if lowSleepSeverities.count >= 3, goodSleepSeverities.count >= 3 {
+        if InsightAnalysisPolicy.distinctDays(logsWithSleep.map(\.date), days: InsightAnalysisPolicy.lifestyleDays) >= InsightAnalysisPolicy.minimumLifestyleDays,
+           lowSleepSeverities.count >= 3, goodSleepSeverities.count >= 3 {
             let lowSleepAvg = lowSleepSeverities.reduce(0, +) / Double(lowSleepSeverities.count)
             let goodSleepAvg = goodSleepSeverities.reduce(0, +) / Double(goodSleepSeverities.count)
             let diff = lowSleepAvg - goodSleepAvg
@@ -66,8 +64,8 @@ struct SleepActivityInsightAnalyzer {
                         defaultValue: "Less sleep, more symptoms"
                     ),
                     content: L10n.format(
-                        "Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Sleep looks like one of the stronger levers in your recent data.",
-                        defaultValue: "Your body seems to respond to sleep — after shorter nights, your symptoms tend to feel %@ worse. Sleep looks like one of the stronger levers in your recent data.",
+                        "On recorded days after shorter sleep, your symptoms were %@ worse. This association does not show that sleep caused the difference.",
+                        defaultValue: "On recorded days after shorter sleep, your symptoms were %@ worse. This association does not show that sleep caused the difference.",
                         diffWord
                     ),
                     scientificContent: L10n.format(
@@ -87,7 +85,7 @@ struct SleepActivityInsightAnalyzer {
 
         // Energy level patterns
         let logsWithEnergy = dailyLogs.filter { $0.energyLevel != nil }
-        if logsWithEnergy.count >= 7 {
+        if InsightAnalysisPolicy.distinctDays(logsWithEnergy.map(\.date), days: InsightAnalysisPolicy.lifestyleDays) >= InsightAnalysisPolicy.minimumLifestyleDays {
             let energyLevels = logsWithEnergy.compactMap(\.energyLevel)
             let avgEnergy = Double(energyLevels.reduce(0, +)) / Double(energyLevels.count)
 
@@ -105,8 +103,8 @@ struct SleepActivityInsightAnalyzer {
                     let confidence = min(0.3 + Double(logsWithEnergy.count) * 0.02, 0.65)
                     let friendlyContent = diff > 0
                         ? L10n.string(
-                            "Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!",
-                            defaultValue: "Your energy has been trending upward recently — whatever you've been doing seems to be working. Keep it up!"
+                            "Your recorded energy has been higher recently. Your logs cannot tell us what caused this change.",
+                            defaultValue: "Your recorded energy has been higher recently. Your logs cannot tell us what caused this change."
                         )
                         : L10n.string(
                             "Your energy has been dipping recently. It might be worth looking at changes to your sleep, activity, or routine to see what's shifted.",

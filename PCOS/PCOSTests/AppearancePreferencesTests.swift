@@ -32,16 +32,94 @@ struct AppearancePreferencesTests {
         }
     }
 
-    @Test("Fresh installs default to Lunar Calm with SF Pro body text")
+    @Test("Fresh installs default to Calm with system color mode")
     func freshInstallDefaultsToLunarCalm() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let preferences = AppearancePreferences(defaults: defaults)
 
-        #expect(preferences.themeOption == .lunarCalm)
+        #expect(preferences.themeOption == .calm)
+        #expect(preferences.colorMode == .system)
+        #expect(preferences.preferredColorScheme == nil)
         #expect(preferences.fontOption == .systemDefault)
-        #expect(preferences.availableThemeOptions.first == .lunarCalm)
+        #expect(preferences.availableThemeOptions.first == .calm)
+    }
+
+    @Test("Legacy saved themes keep their original color mode")
+    func legacyColorModeMigration() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        for theme in [ThemeOption.lunarCalm, .botanicalJournal, .sage] {
+            let payload = "{\"themeOption\":\"\(theme.rawValue)\",\"fontOption\":\"rounded\"}"
+            defaults.set(payload.data(using: .utf8), forKey: "appearance.preferences")
+            let preferences = AppearancePreferences(defaults: defaults)
+            #expect(preferences.themeOption == theme)
+            #expect(preferences.colorMode == (theme == .lunarCalm ? .dark : .light))
+            preferences.colorMode = .system
+            #expect(AppearancePreferences(defaults: defaults).colorMode == .system)
+        }
+    }
+
+    @Test("Color mode persists independently of theme changes")
+    func independentColorMode() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let preferences = AppearancePreferences(defaults: defaults)
+        for mode in AppearanceColorMode.allCases {
+            preferences.colorMode = mode
+            let key = preferences.renderKey
+            preferences.themeOption = .botanicalJournal
+            preferences.themeOption = .lunarCalm
+            #expect(preferences.renderKey != key)
+            #expect(preferences.colorMode == mode)
+            #expect(AppearancePreferences(defaults: defaults).colorMode == mode)
+        }
+    }
+
+    @Test("Companion semantic text and accent meet normal text contrast in each mode")
+    func companionContrast() {
+        func luminance(_ color: UIColor) -> Double {
+            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+            color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+            func linear(_ value: CGFloat) -> Double { let v = Double(value); return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
+            return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+        }
+        for theme in [ThemeOption.calm, .lunarCalm, .botanicalJournal] {
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                for contrast in [UIAccessibilityContrast.normal, .high] {
+                    let traits = UITraitCollection(traitsFrom: [UITraitCollection(userInterfaceStyle: style), UITraitCollection(accessibilityContrast: contrast)])
+                    for surface in [AppTheme.CompanionColorRole.background, .surface, .raisedSurface] {
+                        let background = luminance(AppTheme.companionUIColor(theme: theme, role: surface, traits: traits))
+                        for role in [AppTheme.CompanionColorRole.primaryText, .secondaryText, .accent] {
+                            let foreground = luminance(AppTheme.companionUIColor(theme: theme, role: role, traits: traits))
+                            #expect((max(foreground, background) + 0.05) / (min(foreground, background) + 0.05) >= 4.5)
+                        }
+                    }
+                    let button = luminance(AppTheme.companionUIColor(theme: theme, role: .accent, traits: traits))
+                    let label = luminance(AppTheme.companionUIColor(theme: theme, role: .ctaText, traits: traits))
+                    #expect((max(button, label) + 0.05) / (min(button, label) + 0.05) >= 4.5)
+                }
+            }
+        }
+    }
+
+    @Test("Navigation title and background adapt when light and dark traits change")
+    func navigationColorsFollowTraits() throws {
+        let preferences = AppearancePreferences.shared
+        let original = preferences.themeOption
+        defer { preferences.setThemeOption(original) }
+        for theme in [ThemeOption.calm, .lunarCalm, .botanicalJournal] {
+            preferences.setThemeOption(theme)
+            let appearance = AppChromeTypography.navigationBarAppearance()
+            let title = try #require(appearance.largeTitleTextAttributes[.foregroundColor] as? UIColor)
+            let background = try #require(appearance.backgroundColor)
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                let traits = UITraitCollection(userInterfaceStyle: style)
+                #expect(title.resolvedColor(with: traits) == AppTheme.companionUIColor(theme: theme, role: .primaryText, traits: traits))
+                #expect(background.resolvedColor(with: traits) == AppTheme.companionUIColor(theme: theme, role: .background, traits: traits))
+            }
+        }
     }
 
     @Test("Changing appearance options refreshes the render key")
@@ -61,8 +139,8 @@ struct AppearancePreferencesTests {
 
     @Test("Launch themes include Lunar Calm first and an accessible high-contrast option")
     func highContrastThemeExists() {
-        #expect(ThemeOption.allCases.count == 9)
-        #expect(ThemeOption.allCases.first == .lunarCalm)
+        #expect(ThemeOption.allCases.count == 10)
+        #expect(ThemeOption.allCases.first == .calm)
         #expect(ThemeOption.allCases.contains(.botanicalJournal))
         #expect(ThemeOption.allCases.contains(.lunarCalm))
         #expect(ThemeOption.allCases.contains(.highContrast))
@@ -80,7 +158,7 @@ struct AppearancePreferencesTests {
 
         let preferences = AppearancePreferences(defaults: defaults)
 
-        #expect(preferences.availableThemeOptions.first == .lunarCalm)
+        #expect(preferences.availableThemeOptions.first == .calm)
         #expect(preferences.availableThemeOptions.contains(.lunarCalm))
         #expect(!preferences.experimentalThemeControlVisible)
         #expect(preferences.availableThemeOptions.contains(.botanicalJournal))
@@ -210,29 +288,15 @@ struct AppearancePreferencesTests {
         #expect(!todaySource.contains(#"Image(systemName: "sparkle")"#))
     }
 
-    @Test("Stable themes share premium home shell while presentations stay modal-only")
-    func stableThemesSharePremiumHomeShellWhilePresentationsStayModalOnly() throws {
-        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
-        let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
-        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
-        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
-
-        #expect(appThemeSource.contains("static var usesImmersiveHomeShell: Bool {\n        usesCustomTabBar\n    }"))
-        #expect(appThemeSource.contains("static var usesImmersivePresentation: Bool {\n        isLunarCalm\n    }"))
-        for source in [contentSource, todaySource, calendarSource, insightsSource, settingsSource] {
-            #expect(source.contains("AppTheme.usesImmersiveHomeShell"))
-        }
-        #expect(!appThemeSource.contains("static var usesImmersivePresentation: Bool {\n        usesImmersiveHomeShell\n    }"))
-        #expect(todaySource.contains("LunarCycleHeroRing("))
-        #expect(todaySource.contains("progress: cycleHeroRingProgress"))
-        #expect(todaySource.contains("frame(maxWidth: 218)"))
-        #expect(todaySource.contains("minimumScaleFactor"))
-        #expect(contentSource.contains("AppTheme.botanicalCreamRGB.color.opacity(0.86)"))
-        #expect(contentSource.contains("AppTheme.botanicalCreamRGB.color.opacity(0.99)"))
-        #expect(contentSource.contains("AppTheme.botanicalCreamAltRGB.color.opacity(0.98)"))
-        #expect(todaySource.contains("AppTheme.botanicalScrollableBottomPadding"))
+    @Test("Appearance changes keep the native navigation root mounted")
+    func appearanceChangesKeepNavigationMounted() throws {
+        let source = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        #expect(!AppTheme.usesCustomTabBar)
+        // This source boundary guards identity: state behavior itself is exercised by routing tests.
+        #expect(source.contains("TabView(selection:"))
+        #expect(!source.contains(".id(contentRenderIdentity)"))
+        #expect(!source.contains(".id(appearancePreferences.renderKey)"))
+        #expect(!source.contains("BotanicalTabBar("))
     }
 
     @Test("Botanical Journal keeps body text SF Pro while headings resolve to serif")
@@ -387,92 +451,49 @@ struct AppearancePreferencesTests {
         }
     }
 
-    @Test("Botanical custom tab bar covers every main tab")
-    func botanicalCustomTabBarCoversMainTabs() throws {
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-
-        #expect(contentSource.contains("BotanicalTabBar"))
-        for tab in ["today", "calendar", "track", "insights", "settings"] {
-            #expect(contentSource.contains("tab.\(tab)"))
+    @Test("Native navigation exposes all five named tabs")
+    func nativeNavigationCoversMainTabs() throws {
+        let source = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        #expect(AppTab.allCases.map(\.rawValue) == ["today", "calendar", "track", "insights", "settings"])
+        for tab in AppTab.allCases {
+            #expect(!tab.title(for: .en).isEmpty)
+            #expect(!tab.systemImage.isEmpty)
+            #expect(source.contains(".tag(AppTab.\(tab.rawValue))"))
         }
     }
 
-    @Test("Custom themed tab bars leave scrollable bottom content unobscured")
-    func customThemedTabBarsLeaveScrollableBottomContentUnobscured() throws {
-        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
-        let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
-        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
-        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
-
-        #expect(appThemeSource.contains("static var usesCustomTabBar: Bool"))
-        #expect(appThemeSource.contains("static var botanicalScrollableBottomPadding: CGFloat"))
-        #expect(appThemeSource.contains("static let botanicalCustomTabBarBottomClearance"))
-        #expect(appThemeSource.contains("usesCustomTabBar ? botanicalCustomTabBarBottomClearance : 0"))
-        #expect(calendarSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
-        #expect(calendarSource.contains(#".accessibilityIdentifier("calendar.cycle_details.card")"#))
-        #expect(contentSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
-        #expect(contentSource.contains(#"accessibilityIdentifier: "tracking.card.photo""#))
-        #expect(todaySource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
-        #expect(insightsSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
-        #expect(settingsSource.contains(".padding(.bottom, AppTheme.botanicalScrollableBottomPadding)"))
+    @Test("Native tab safe areas do not add custom-bar clearance")
+    func nativeTabSafeAreasAvoidExtraClearance() {
+        #expect(!AppTheme.usesCustomTabBar)
+        #expect(AppTheme.botanicalScrollableBottomPadding == 0)
     }
 
-    @Test("Botanical sizing uses named tokens instead of raw tab bar dimensions")
-    func botanicalSizingUsesNamedTokens() throws {
-        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
-
-        #expect(appThemeSource.contains("static let botanicalTabIconFrame"))
-        #expect(appThemeSource.contains("static let botanicalTabMinHeight"))
-        #expect(appThemeSource.contains("static let botanicalBadgeDefaultSize"))
-        #expect(contentSource.contains("AppTheme.botanicalTabIconFrame"))
-        #expect(contentSource.contains("AppTheme.botanicalTabMinHeight"))
-        #expect(todaySource.contains("AppTheme.botanicalScrollableBottomPadding"))
-        #expect(!todaySource.contains("AppTheme.isBotanicalJournal ? 126"))
-        #expect(!contentSource.contains(".frame(width: 28, height: 22)"))
+    @Test("Track uses native list rows with one logger sheet")
+    func trackingUsesNativeRowsAndSinglePresentation() throws {
+        let source = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
+        #expect(source.contains("List {"))
+        #expect(source.contains(".sheet(item: $activeLogger"))
+        #expect(!source.contains("showingLogMeal = false"))
+        #expect(!source.contains("BotanicalTabButton"))
     }
 
-    @Test("Stable themes share premium palette chrome instead of native defaults")
-    func stableThemesSharePremiumPaletteChrome() throws {
-        let appThemeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppTheme.swift"), encoding: .utf8)
-        let chromeSource = try String(contentsOf: try appSourceURL("SharedUI/Styles/AppChromeTypography.swift"), encoding: .utf8)
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-
-        #expect(appThemeSource.contains("static var usesCustomTabBar: Bool {\n        true"))
-        #expect(appThemeSource.contains("static var usesImmersiveHomeShell: Bool"))
-        #expect(appThemeSource.contains("static var usesImmersivePresentation: Bool"))
-        #expect(appThemeSource.contains("static var usesPremiumEditorStyling: Bool"))
-        #expect(appThemeSource.contains("static var themeAccentGradient"))
-        #expect(appThemeSource.contains("static var themeBorderGradient"))
-        #expect(appThemeSource.contains("else if AppTheme.isEditorialTheme"))
-        #expect(chromeSource.contains("UIColor(AppTheme.accentColor)"))
-        #expect(chromeSource.contains("UIColor(AppTheme.warmNeutral)"))
-        #expect(contentSource.contains(#""themed.tab_bar""#))
+    @Test("Native tab chrome keeps theme typography")
+    func nativeTabChromeKeepsThemeTypography() {
+        let appearance = AppChromeTypography.tabBarAppearance(option: .systemDefault)
+        let selected = appearance.stackedLayoutAppearance.selected
+        #expect(selected.titleTextAttributes[.font] is UIFont)
+        #expect(selected.iconColor != nil)
     }
 
-    @Test("Premium home chrome and modal presentations use separate shell tokens")
-    func premiumHomeChromeAndModalPresentationsUseSeparateShellTokens() throws {
-        let contentSource = try String(contentsOf: try appSourceURL("App/ContentView.swift"), encoding: .utf8)
-        let settingsSource = try String(contentsOf: try appSourceURL("App/SettingsView.swift"), encoding: .utf8)
-        let insightsSource = try String(contentsOf: try appSourceURL("Features/Insights/Views/InsightsView.swift"), encoding: .utf8)
-        let todaySource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/TodayView.swift"), encoding: .utf8)
-        let calendarSource = try String(contentsOf: try appSourceURL("Features/Cycle/Views/CalendarMonthView.swift"), encoding: .utf8)
-        let mealHistorySource = try String(contentsOf: try appSourceURL("Features/Meals/Views/MealHistoryView.swift"), encoding: .utf8)
-        let photoGallerySource = try String(contentsOf: try appSourceURL("Features/PhotoJournal/Views/PhotoGalleryView.swift"), encoding: .utf8)
-
-        for source in [contentSource, settingsSource, insightsSource, todaySource, calendarSource] {
-            #expect(source.contains("AppTheme.usesImmersiveHomeShell"))
-        }
-        for source in [contentSource, settingsSource, insightsSource, todaySource, mealHistorySource, photoGallerySource] {
-            #expect(source.contains("AppTheme.usesImmersivePresentation"))
-        }
-        #expect(!settingsSource.contains("AppTheme.isLunarCalm"))
-        #expect(!insightsSource.contains("AppTheme.isLunarCalm"))
-        #expect(!todaySource.contains("AppTheme.isLunarCalm"))
-        #expect(!calendarSource.contains("AppTheme.isLunarCalm"))
+    @Test("Check-in has one form workflow across appearance choices")
+    func checkInHasOneFormWorkflow() throws {
+        let source = try String(contentsOf: try appSourceURL("Features/Symptoms/Views/SymptomLogView.swift"), encoding: .utf8)
+        // CategoryChip is shared with PhotoJournal and may retain appearance-specific decoration.
+        let checkInSource = source.components(separatedBy: "struct CategoryChip").first ?? source
+        #expect(checkInSource.contains("Form {"))
+        #expect(checkInSource.contains("DailyCheckInService(modelContext:"))
+        #expect(!checkInSource.contains("usesPremiumEditorStyling"))
+        #expect(!checkInSource.contains("lunarMoodSelection"))
     }
 
     @Test("Premium editor styling is shared by core data-entry logs")
@@ -506,7 +527,7 @@ struct AppearancePreferencesTests {
         #expect(cycleLogSource.contains("AppTheme.usesPremiumEditorStyling"))
         #expect(cycleLogSource.contains("AppTheme.premiumEditorAccentGradient"))
         #expect(symptomLogSource.contains("AppTheme.usesPremiumEditorStyling"))
-        #expect(symptomLogSource.contains("AppTheme.premiumEditorAccentGradient"))
+        #expect(symptomLogSource.contains(".tint(AppTheme.accentColor)"))
         #expect(ovulationLogSource.contains("AppTheme.usesPremiumEditorStyling"))
         #expect(ovulationLogSource.contains("AppTheme.premiumEditorAccentGradient"))
         #expect(bloodSugarLogSource.contains("AppTheme.usesPremiumEditorStyling"))
@@ -679,7 +700,7 @@ struct AppearancePreferencesTests {
             let source = try String(contentsOf: viewURL, encoding: .utf8)
             for line in source.components(separatedBy: .newlines) {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard trimmedLine.contains(".font(") else {
+                guard trimmedLine.contains(".font("), !trimmedLine.contains("Image(systemName: symbol)") else {
                     continue
                 }
                 directFontLines.append("\(viewURL.lastPathComponent):\(trimmedLine)")

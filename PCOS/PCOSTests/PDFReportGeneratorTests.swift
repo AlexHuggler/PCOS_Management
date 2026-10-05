@@ -9,6 +9,17 @@ import UIKit
 @Suite("PDF Report Generator", .serialized)
 @MainActor
 struct PDFReportGeneratorTests {
+    @Test("Long selected appointment notes paginate without losing the end")
+    func longAppointmentNotePagination() throws {
+        var data = makeEmptyReportData()
+        data.selectedNotes = [ReportDailyNote(date: Date(), text: String(repeating: "Recorded experience for discussion. ", count: 300) + "FINAL NOTE MARKER")]
+        let url = try #require(PDFReportGenerator(appLanguage: .en).generate(from: data, sections: makeAllSections(enabled: false)))
+        defer { try? FileManager.default.removeItem(at: url) }
+        let document = try #require(PDFDocument(url: url))
+        #expect(document.pageCount > 2)
+        #expect(document.string?.contains("FINAL NOTE MARKER") == true)
+    }
+
 
     private func makeContainer() throws -> ModelContainer {
         let schema = Schema([

@@ -7,6 +7,83 @@ import SwiftData
 @Suite("Settings Data Backup + Import", .serialized)
 @MainActor
 struct SettingsDataBackupImportServiceTests {
+
+    @Test("Health ownership and fingerprints survive portable backup without anchors")
+    func healthOwnershipRoundTrip() throws {
+        let store = try TestHelpers.makeModelContainer(); let context = store.mainContext
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let weight = HealthKitSampleChange(uuid: "weight", identifier: HKQuantityTypeIdentifier.bodyMass.rawValue,
+            start: now, end: now, value: 60, categoryValue: nil, source: "Test", sourceBundle: "test")
+        let glucose = HealthKitSampleChange(uuid: "glucose", identifier: HKQuantityTypeIdentifier.bloodGlucose.rawValue,
+            start: now, end: now, value: 100, categoryValue: nil, source: "Test", sourceBundle: "test")
+        try HealthKitReconciler(context: context).commit([
+            .init(identifier: weight.identifier, samples: [weight], deletedUUIDs: [], anchor: Data([1])),
+            .init(identifier: glucose.identifier, samples: [glucose], deletedUUIDs: [], anchor: Data([1]))], now: now)
+        let data = try SettingsDataBackupService(modelContext: context).generateJSONBackupData()
+        _ = try SettingsDataImportService(modelContext: context).importBackupData(data)
+        #expect(try context.fetch(FetchDescriptor<HealthKitSyncCursor>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<HealthKitFieldOwnership>()).first?.lastAppliedValue == 60)
+        #expect(try context.fetch(FetchDescriptor<HealthKitImportedSampleRecord>()).first { $0.sampleUUID == "glucose" }?.lastAppliedFingerprint != nil)
+        try HealthKitReconciler(context: context).commit([
+            .init(identifier: weight.identifier, samples: [], deletedUUIDs: [weight.uuid], anchor: Data([2])),
+            .init(identifier: glucose.identifier, samples: [], deletedUUIDs: [glucose.uuid], anchor: Data([2]))], now: now)
+        #expect(try context.fetch(FetchDescriptor<DailyLog>()).first?.weight == nil)
+        #expect(try context.fetch(FetchDescriptor<BloodSugarReading>()).isEmpty)
+    }
+
+    @Test("Personalization and appearance round trip while legacy backups leave settings intact")
+    func preferencesRoundTripAndLegacyCompatibility() throws {
+        let original = try SettingsPreferencesBackup.capture()
+        defer { try? original.restoreValidated() }
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        TrackingPreferences.shared.showWeight = true
+        AppearancePreferences.shared.themeOption = .ocean
+        let data = try SettingsDataBackupService(modelContext: context).generateJSONBackupData()
+        TrackingPreferences.shared.showWeight = false
+        AppearancePreferences.shared.themeOption = .calm
+        _ = try SettingsDataImportService(modelContext: context).importBackupData(data)
+        #expect(TrackingPreferences.shared.showWeight)
+        #expect(AppearancePreferences.shared.themeOption == .ocean)
+        var legacy = try SettingsDataBackupCoding.makeDecoder().decode(SettingsDataBackupFile.self, from: data)
+        legacy.preferences = nil
+        TrackingPreferences.shared.showWeight = false
+        _ = try SettingsDataImportService(modelContext: context).replaceAll(with: legacy)
+        #expect(!TrackingPreferences.shared.showWeight)
+    }
+
+    @Test("Malformed preferences reject before data or current settings change")
+    func invalidPreferencesPreserveDatabase() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let log = DailyLog(date: Date(), weight: 72)
+        context.insert(log); try context.save()
+        let original = TrackingPreferences.shared.showWeight
+        var backup = try SettingsDataBackupService(modelContext: context).makeBackup()
+        backup.records.dailyLogs = []
+        backup.preferences = SettingsPreferencesBackup(tracking: Data("invalid".utf8), theme: nil, font: nil, profile: nil)
+        #expect(throws: (any Error).self) { try SettingsDataImportService(modelContext: context).replaceAll(with: backup) }
+        #expect(try context.fetch(FetchDescriptor<DailyLog>()).first?.id == log.id)
+        #expect(TrackingPreferences.shared.showWeight == original)
+    }
+
+    @Test("Daily check-in private fields survive backup and import")
+    func checkInPrivateFieldsRoundTrip() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let log = DailyLog(date: Date(), painLevel0To10: 7, privateNote: "Personal note", positiveActionRawValues: "goodSleep", moodRawValue: "good", symptomsReviewed: true)
+        context.insert(log)
+        try context.save()
+        let data = try SettingsDataBackupService(modelContext: context).generateJSONBackupData()
+        _ = try SettingsDataImportService(modelContext: context).importBackupData(data)
+        let restored = try #require(context.fetch(FetchDescriptor<DailyLog>()).first)
+        #expect(restored.painLevel0To10 == 7)
+        #expect(restored.privateNote == "Personal note")
+        #expect(restored.positiveActionRawValues == "goodSleep")
+        #expect(restored.moodRawValue == "good")
+        #expect(restored.symptomsReviewed)
+    }
+
     @Test("generateJSONBackupData returns a decodable schema-v1 backup")
     func generateJSONBackupDataReturnsDecodableSchemaV1Backup() throws {
         let container = try TestHelpers.makeModelContainer()

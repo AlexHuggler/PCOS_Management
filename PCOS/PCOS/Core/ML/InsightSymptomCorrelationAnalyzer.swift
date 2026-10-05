@@ -9,19 +9,18 @@ struct SymptomCorrelationInsightAnalyzer {
     /// Analyzes symptom patterns across cycle phases, severity trends, and co-occurrences.
     /// Requires at least 14 days of symptom data.
     func analyze() throws -> [Insight] {
-        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        let fourteenDaysAgo = InsightAnalysisPolicy.window(days: InsightAnalysisPolicy.symptomDays).start
         let symptomDescriptor = FetchDescriptor<SymptomEntry>(
             predicate: #Predicate<SymptomEntry> { $0.date >= fourteenDaysAgo },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
         let symptoms: [SymptomEntry] = try fetcher.fetch(symptomDescriptor, stage: .symptomCorrelations)
 
-        guard symptoms.count >= 5 else { return [] }
-
-        // Check that symptoms span at least 14 distinct days
+        let dailyLogs: [DailyLog] = try fetcher.fetch(FetchDescriptor<DailyLog>(), stage: .symptomCorrelations)
         let calendar = Calendar.current
-        let distinctDays = Set(symptoms.map { calendar.startOfDay(for: $0.date) })
-        guard distinctDays.count >= 14 else { return [] }
+        let observedDays = InsightAnalysisPolicy.symptomObservations(symptoms: symptoms, dailyLogs: dailyLogs, calendar: calendar)
+        let distinctDays = Set(observedDays.map(\.date))
+        guard distinctDays.count >= InsightAnalysisPolicy.symptomDays else { return [] }
 
         var insights: [Insight] = []
 
@@ -49,11 +48,18 @@ struct SymptomCorrelationInsightAnalyzer {
                 }
             }
 
-            // Find the phase with the highest average severity
+            // Compare observed days equally; explicitly symptom-free days contribute
+            // zero burden without inventing clinical symptom rows.
+            var phaseDays: [CyclePhase: [InsightSymptomDay]] = [:]
+            for day in observedDays {
+                if let phase = phaseInferencePolicy.approximatePhase(for: day.date, cycles: completedCycles, calendar: calendar) {
+                    phaseDays[phase, default: []].append(day)
+                }
+            }
             var phaseAverages: [(CyclePhase, Double, Int)] = []
-            for (phase, entries) in phaseSymptoms where !entries.isEmpty {
-                let avgSeverity = Double(entries.map(\.severity).reduce(0, +)) / Double(entries.count)
-                phaseAverages.append((phase, avgSeverity, entries.count))
+            for (phase, days) in phaseDays where !days.isEmpty {
+                let avgSeverity = days.map(\.value).reduce(0, +) / Double(days.count)
+                phaseAverages.append((phase, avgSeverity, days.count))
             }
 
             if let worst = phaseAverages.max(by: { $0.1 < $1.1 }), worst.1 >= 2.5, worst.2 >= 3 {
@@ -87,7 +93,7 @@ struct SymptomCorrelationInsightAnalyzer {
                         topTypes.joined(separator: ", ")
                     ),
                     confidence: confidence,
-                    dataPointsUsed: symptoms.count,
+                    dataPointsUsed: observedDays.count,
                     actionable: true,
                     relatedSymptoms: topTypes
                 )
@@ -109,7 +115,7 @@ struct SymptomCorrelationInsightAnalyzer {
             }
         }
 
-        let totalDays = byDay.count
+        let totalDays = observedDays.count
         if let topPair = pairCounts.max(by: { $0.value < $1.value }),
            topPair.value >= 3,
            totalDays > 0 {
@@ -134,7 +140,7 @@ struct SymptomCorrelationInsightAnalyzer {
                         percentage
                     ),
                     confidence: confidence,
-                    dataPointsUsed: symptoms.count,
+                    dataPointsUsed: observedDays.count,
                     actionable: true,
                     relatedSymptoms: topPair.key.components(separatedBy: " & ")
                 )
@@ -149,12 +155,12 @@ struct SymptomCorrelationInsightAnalyzer {
             let firstHalfDays = Set(sortedDays.prefix(midpoint))
             let secondHalfDays = Set(sortedDays.suffix(from: midpoint))
 
-            let firstHalf = symptoms.filter { firstHalfDays.contains(calendar.startOfDay(for: $0.date)) }
-            let secondHalf = symptoms.filter { secondHalfDays.contains(calendar.startOfDay(for: $0.date)) }
+            let firstHalf = observedDays.filter { firstHalfDays.contains($0.date) }
+            let secondHalf = observedDays.filter { secondHalfDays.contains($0.date) }
 
             if !firstHalf.isEmpty && !secondHalf.isEmpty {
-                let firstAvg = Double(firstHalf.map(\.severity).reduce(0, +)) / Double(firstHalf.count)
-                let secondAvg = Double(secondHalf.map(\.severity).reduce(0, +)) / Double(secondHalf.count)
+                let firstAvg = firstHalf.map(\.value).reduce(0, +) / Double(firstHalf.count)
+                let secondAvg = secondHalf.map(\.value).reduce(0, +) / Double(secondHalf.count)
                 let diff = secondAvg - firstAvg
 
                 if abs(diff) >= 0.5 {
@@ -192,7 +198,7 @@ struct SymptomCorrelationInsightAnalyzer {
                             L10n.decimal(secondAvg)
                         ),
                         confidence: confidence,
-                        dataPointsUsed: symptoms.count,
+                        dataPointsUsed: observedDays.count,
                         actionable: diff > 0
                     )
                     insights.append(trendInsight)

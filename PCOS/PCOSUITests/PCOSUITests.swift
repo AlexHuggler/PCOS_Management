@@ -74,21 +74,6 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
-    private func advanceWelcomeFlow(in app: XCUIApplication) {
-        let questionnaireSkip = app.buttons["onboarding.questionnaire.skip"]
-        let welcomePrimary = app.buttons["onboarding.welcome.primary"]
-
-        XCTAssertTrue(welcomePrimary.waitForExistence(timeout: 5))
-
-        for _ in 0..<4 where !questionnaireSkip.exists {
-            welcomePrimary.tap()
-            if questionnaireSkip.waitForExistence(timeout: 2) {
-                break
-            }
-        }
-    }
-
-    @MainActor
     private func openSettingsTab(in app: XCUIApplication) {
         tapMainTab(.settings, in: app)
     }
@@ -143,9 +128,12 @@ final class PCOSUITests: XCTestCase {
 
     @MainActor
     private func openMealScanFromMealLog(in app: XCUIApplication) {
-        let premiumButton = app.buttons["meal_log.lunar.ai_meal_scan_primary"]
-        let standardButton = app.buttons["meal_log.ai_meal_estimate_button"]
-        let mealEstimateButton = premiumButton.waitForExistence(timeout: 2) ? premiumButton : standardButton
+        let currentButton = app.buttons["meal_log.photo_estimate_button"]
+        let legacyPremiumButton = app.buttons["meal_log.lunar.ai_meal_scan_primary"]
+        let legacyStandardButton = app.buttons["meal_log.ai_meal_estimate_button"]
+        let mealEstimateButton = currentButton.waitForExistence(timeout: 2)
+            ? currentButton
+            : (legacyPremiumButton.waitForExistence(timeout: 1) ? legacyPremiumButton : legacyStandardButton)
 
         scrollToElement(mealEstimateButton, in: app)
         mealEstimateButton.tap()
@@ -984,51 +972,23 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testBotanicalJournalAccessibilityTextSizeKeepsNavigationAndCTAsReachable() throws {
-        let accessibilityTextSize = "UICTContentSizeCategoryAccessibilityXXXL"
+    func testOnboardingLargeTextKeepsExploreReachable() throws {
         let app = makeApp(
-            language: "en",
-            locale: "en_US",
-            onboardingCompleted: true,
-            appLanguage: "system",
-            themeOption: "botanicalJournal",
-            demoScenario: "symptomManagement",
-            contentSizeCategory: accessibilityTextSize
+            language: "en", locale: "en_US", onboardingCompleted: false,
+            appLanguage: "system", themeOption: "botanicalJournal",
+            onboardingStartPhase: "companion_3",
+            contentSizeCategory: "UICTContentSizeCategoryAccessibilityXXXL"
         )
         app.launch()
-
-        XCTAssertTrue(app.otherElements["botanical.tab_bar"].waitForExistence(timeout: 10))
-        assertMainTabShellPresent(in: app)
-
-        openCalendarTab(in: app)
-        XCTAssertTrue(app.otherElements["calendar.grid"].waitForExistence(timeout: 10))
-        let cycleDetailsCard = app.descendants(matching: .any)["calendar.cycle_details.card"]
-        scrollToElement(cycleDetailsCard, in: app)
-        XCTAssertTrue(cycleDetailsCard.isHittable)
-
-        openSettingsTab(in: app)
-        let settingsScreen = screenElement(in: app, identifier: "screen.settings")
-        XCTAssertTrue(settingsScreen.waitForExistence(timeout: 10))
-        let deleteAllDataButton = app.buttons["settings.delete_all_data"]
-        scrollToElement(deleteAllDataButton, in: settingsScreen)
-        XCTAssertTrue(deleteAllDataButton.isHittable)
-        app.terminate()
-
-        let onboardingApp = makeApp(
-            language: "en",
-            locale: "en_US",
-            onboardingCompleted: false,
-            appLanguage: "system",
-            themeOption: "botanicalJournal",
-            onboardingStartPhase: "all_set",
-            contentSizeCategory: accessibilityTextSize
-        )
-        onboardingApp.launch()
-
-        XCTAssertTrue(screenElement(in: onboardingApp, identifier: "screen.onboarding.completion").waitForExistence(timeout: 10))
-        let finishButton = onboardingApp.buttons["onboarding.completion.finish"]
-        XCTAssertTrue(finishButton.waitForExistence(timeout: 10))
-        XCTAssertTrue(finishButton.isHittable)
+        defer { app.terminate() }
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 10))
+        let finish = app.buttons["onboarding.finish"]
+        // Onboarding has no tab bar, so the shared 80-point tab exclusion does not apply.
+        scrollToElement(finish, in: app, requireSafeTapZone: false)
+        XCTAssertTrue(finish.isHittable)
+        finish.tap()
+        XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.tabBars.buttons.count, 5)
     }
 
     @MainActor
@@ -1585,6 +1545,37 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testLunarCalmAddNutritionShowsEveryEntryPath() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+
+        let addNutritionCard = screenElement(in: app, identifier: "meal_log.lunar.quick_actions")
+        scrollToElement(addNutritionCard, in: app, maxSwipes: 10)
+
+        let photoButton = app.buttons["meal_log.photo_estimate_button"]
+        let barcodeButton = app.buttons["meal_log.scan_barcode_button"]
+        let manualButton = app.buttons["meal_log.manual_nutrition_button"]
+        XCTAssertTrue(photoButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(barcodeButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(manualButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(photoButton.isHittable)
+        XCTAssertTrue(barcodeButton.isHittable)
+        XCTAssertTrue(manualButton.isHittable)
+        try saveScreenshotArtifact(named: "lunar-calm-add-nutrition.png")
+    }
+
+    @MainActor
     func testLunarCalmMealHistoryOpensFromLog() throws {
         let app = makeApp(
             language: "en",
@@ -1668,6 +1659,86 @@ final class PCOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["meal_scan.scan_button"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["meal_scan.manual_button"].waitForExistence(timeout: 5))
         try saveScreenshotArtifact(named: "lunar-calm-meal-scan-entry.png")
+    }
+
+    @MainActor
+    func testMealScanRemoteConsentNamesGoogleAndKeepsFallbacksVisible() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData", "-enableGeminiMealScan"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+
+        let scanButton = app.buttons["meal_scan.scan_button"]
+        XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+        scanButton.tap()
+
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+        sampleButton.tap()
+
+        XCTAssertTrue(screenElement(in: app, identifier: "meal_scan.remote_consent").waitForExistence(timeout: 8))
+        let sendButton = app.buttons["meal_scan.remote_consent.continue"]
+        let manualButton = app.buttons["meal_scan.remote_consent.manual"]
+        let retakeButton = app.buttons["meal_scan.remote_consent.retake"]
+        let retentionDisclosure = app.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS[c] %@", "up to 55 days"))
+            .firstMatch
+        XCTAssertTrue(sendButton.waitForExistence(timeout: 5))
+        XCTAssertEqual(sendButton.label, "Send to Google Gemini")
+        XCTAssertTrue(retentionDisclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(manualButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(retakeButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(sendButton.isHittable)
+        XCTAssertTrue(manualButton.isHittable)
+        try saveScreenshotArtifact(named: "lunar-calm-meal-scan-consent.png")
+    }
+
+    @MainActor
+    func testMealScanReviewKeepsFoodEditsAndSaveVisible() throws {
+        let app = makeApp(
+            language: "en",
+            locale: "en_US",
+            onboardingCompleted: true,
+            appLanguage: "system",
+            themeOption: "lunarCalm",
+            demoScenario: "symptomManagement"
+        )
+        app.launchArguments += ["-enableMealScanV2", "-enableMockMealScanData"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["lunar.tab_bar"].waitForExistence(timeout: 10))
+        openMealLogFromTrackHub(in: app)
+        openMealScanFromMealLog(in: app)
+
+        let scanButton = app.buttons["meal_scan.scan_button"]
+        XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
+        scanButton.tap()
+
+        let sampleButton = app.buttons["meal_scan.mock_photo_button"]
+        XCTAssertTrue(sampleButton.waitForExistence(timeout: 5))
+        sampleButton.tap()
+
+        XCTAssertTrue(app.textFields["meal_scan.meal_name"].waitForExistence(timeout: 8))
+        let editableFood = app.buttons
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Edit food item"))
+            .firstMatch
+        XCTAssertTrue(editableFood.waitForExistence(timeout: 5))
+
+        let saveButton = app.buttons["meal_scan.save_button"]
+        scrollToElement(saveButton, in: app.collectionViews.firstMatch, maxSwipes: 12)
+        XCTAssertTrue(saveButton.isHittable)
+        XCTAssertTrue(app.buttons["Edit Portions"].waitForExistence(timeout: 5))
+        try saveScreenshotArtifact(named: "lunar-calm-meal-estimate-review.png")
     }
 
     @MainActor
@@ -1939,22 +2010,23 @@ final class PCOSUITests: XCTestCase {
     @MainActor
     func testJapaneseOnboardingAndCalendarSmoke() throws {
         let app = makeApp(
-            language: "ja",
-            locale: "ja_JP",
-            onboardingCompleted: false,
-            appLanguage: "system",
-            onboardingStartPhase: "completion"
+            language: "ja", locale: "ja_JP", onboardingCompleted: false,
+            appLanguage: "system", onboardingStartPhase: "companion_3"
         )
         app.launch()
-
-        XCTAssertTrue(app.otherElements["screen.onboarding.completion"].waitForExistence(timeout: 5))
-        let completionFinish = app.buttons["onboarding.completion.finish"]
-        XCTAssertTrue(completionFinish.waitForExistence(timeout: 5))
-        completionFinish.tap()
-
-        assertMainTabShellPresent(in: app)
-        assertMainTabLabel(.calendar, equals: "カレンダー", in: app)
-        assertMainTabLabel(.settings, equals: "設定", in: app)
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["今の気持ちから始めましょう"].waitForExistence(timeout: 10))
+        let finish = app.buttons["onboarding.finish"]
+        XCTAssertTrue(finish.waitForExistence(timeout: 5))
+        XCTAssertEqual(finish.label, "「今日」を見てみる")
+        scrollToElement(finish, in: app)
+        finish.tap()
+        XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
+        let calendar = app.tabBars.buttons["カレンダー"]
+        XCTAssertTrue(calendar.waitForExistence(timeout: 5))
+        calendar.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "calendar.view_mode").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.buttons["設定"].exists)
         assertNoPlaceholderTokensVisible(in: app)
     }
 
@@ -2142,86 +2214,86 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testRoundedFontAndFruitGroveThemeCoverOnboardingPhases() throws {
-        let phases: [(launchValue: String, screenIdentifier: String)] = [
-            ("welcome_language", "screen.onboarding.welcome_language"),
-            ("theme", "screen.onboarding.theme"),
-            ("name", "screen.onboarding.name"),
-            ("quiz", "screen.onboarding.questionnaire"),
-            ("results", "screen.onboarding.results"),
-            ("how_app_helps", "screen.onboarding.how_app_helps"),
-            ("permissions", "screen.onboarding.permissions"),
-            ("health_context", "screen.onboarding.health_context"),
-            ("meal_scan_demo", "screen.onboarding.meal_scan_demo"),
-            ("your_plan", "screen.onboarding.your_plan"),
-            ("first_log", "screen.onboarding.guided_action"),
-            ("social_proof", "screen.onboarding.social_proof"),
-            ("all_set", "screen.onboarding.completion"),
+    func testOnboardingFourStagesRenderWithRoundedFont() throws {
+        let titles = [
+            "A little support for your everyday", "What would you like support with?",
+            "Let Apple Health help, if you like", "Start with how you feel",
         ]
-
-        for phase in phases {
+        for (index, title) in titles.enumerated() {
             let app = makeApp(
-                language: "en",
-                locale: "en_US",
-                onboardingCompleted: false,
-                appLanguage: "system",
-                fontOption: "rounded",
-                themeOption: "fruitGrove",
-                onboardingStartPhase: phase.launchValue
+                language: "en", locale: "en_US", onboardingCompleted: false,
+                appLanguage: "system", fontOption: "rounded", themeOption: "calm",
+                onboardingStartPhase: "companion_\(index)"
             )
             app.launch()
-
-            XCTAssertTrue(
-                screenElement(in: app, identifier: phase.screenIdentifier).waitForExistence(timeout: 10),
-                "Expected onboarding phase \(phase.launchValue) to render with SF Pro Rounded and Fruit Grove."
-            )
+            XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.\(index)").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.staticTexts[title].exists)
+            XCTAssertEqual(app.buttons["onboarding.back"].exists, index > 0)
             assertNoPlaceholderTokensVisible(in: app)
             app.terminate()
         }
     }
 
     @MainActor
-    func testOnboardingThemeStepOffersOwnershipPersonalization() throws {
+    func testOnboardingChoicesSurviveBackAndOptionalStepsReachToday() throws {
         let app = makeApp(
-            language: "en",
-            locale: "en_US",
-            onboardingCompleted: false,
-            appLanguage: "system",
-            onboardingStartPhase: "theme"
+            language: "en", locale: "en_US", onboardingCompleted: false,
+            appLanguage: "system", onboardingStartPhase: "companion_0"
         )
+        // Do not pin a focus value through launch arguments while testing editing.
+        if let index = app.launchArguments.firstIndex(of: "-onboarding.symptomFocusAreas") {
+            app.launchArguments.removeSubrange(index...(index + 1))
+        }
         app.launch()
-
-        let screen = screenElement(in: app, identifier: "screen.onboarding.theme")
-        XCTAssertTrue(screen.waitForExistence(timeout: 10))
-        XCTAssertTrue(app.buttons["onboarding.theme.option.lunarCalm"].waitForExistence(timeout: 5))
-
-        let roundedFont = app.buttons["onboarding.font.option.rounded"]
-        scrollToElement(roundedFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
-        XCTAssertTrue(roundedFont.exists)
-
-        let expressiveFont = app.buttons["onboarding.font.option.cormorantGaramond"]
-        scrollToElement(expressiveFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
-        XCTAssertTrue(expressiveFont.exists)
-
-        let monoFont = app.buttons["onboarding.font.option.sfMono"]
-        scrollToElement(monoFont, in: app, maxSwipes: 8, requireHittable: false, requireSafeTapZone: false)
-        XCTAssertTrue(monoFont.exists)
-
-        app.terminate()
+        defer { app.terminate() }
+        func tap(_ element: XCUIElement) {
+            XCTAssertTrue(element.waitForExistence(timeout: 5))
+            scrollToElement(element, in: app)
+            XCTAssertTrue(element.isHittable)
+            element.tap()
+        }
+        tap(app.buttons["Make it yours"])
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.1").waitForExistence(timeout: 5))
+        let focus = app.switches.firstMatch
+        XCTAssertTrue(focus.waitForExistence(timeout: 5))
+        let previousValue = try XCTUnwrap(focus.value as? String)
+        XCTAssertTrue(["0", "1"].contains(previousValue))
+        let selectedValue = previousValue == "1" ? "0" : "1"
+        tap(focus)
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", selectedValue), object: focus)
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 3), .completed)
+        tap(app.buttons["onboarding.back"])
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.0").waitForExistence(timeout: 5))
+        tap(app.buttons["Make it yours"])
+        XCTAssertTrue(focus.waitForExistence(timeout: 5))
+        XCTAssertEqual(focus.value as? String, selectedValue)
+        tap(app.buttons["Continue"])
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.2").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Review Apple Health options"].exists)
+        tap(app.buttons["Not now"])
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["First check-in"].exists)
+        tap(app.buttons["onboarding.finish"])
+        XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.tabBars.buttons.count, 5)
     }
 
     @MainActor
-    func testOnboardingAhaMomentExplainsHealthKitBarcodeAndTracking() throws {
+    func testLegacyHealthOnboardingResumeKeepsConnectionOptional() throws {
         let app = makeApp(
-            language: "en",
-            locale: "en_US",
-            onboardingCompleted: false,
-            appLanguage: "system",
-            onboardingStartPhase: "aha"
+            language: "en", locale: "en_US", onboardingCompleted: false,
+            appLanguage: "system", onboardingStartPhase: "aha"
         )
         app.launch()
-
-        XCTAssertTrue(screenElement(in: app, identifier: "screen.onboarding.aha").waitForExistence(timeout: 10))
+        defer { app.terminate() }
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.2").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Review Apple Health options"].exists)
+        let skip = app.buttons["Not now"]
+        scrollToElement(skip, in: app)
+        XCTAssertTrue(skip.isHittable)
+        skip.tap()
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["onboarding.finish"].exists)
     }
 
     @MainActor

@@ -87,7 +87,7 @@ struct InsightPresentationPlanner {
         readiness: InsightsDataReadiness,
         preferences: InsightAudiencePreferences
     ) -> InsightEmptyStateContent {
-        if readiness.completedCycles < 3 && readiness.symptomDays < 14 {
+        if readiness.completedCycles < InsightAnalysisPolicy.minimumCompletedCycles && readiness.symptomDays < InsightAnalysisPolicy.symptomDays {
             if preferences.primaryGoal == .understandSymptoms {
                 return InsightEmptyStateContent(
                     title: L10n.string("Build your first symptom insights", defaultValue: "Build your first symptom insights"),
@@ -107,17 +107,17 @@ struct InsightPresentationPlanner {
             )
         }
 
-        if readiness.completedCycles < 3 {
+        if readiness.completedCycles < InsightAnalysisPolicy.minimumCompletedCycles {
             return InsightEmptyStateContent(
                 title: L10n.string("More cycle data will sharpen your insights", defaultValue: "More cycle data will sharpen your insights"),
                 message: L10n.string(
-                    "Cycle pattern summaries become reliable after 3 complete cycles. Keep logging each period start so your pattern can stabilize.",
-                    defaultValue: "Cycle pattern summaries become reliable after 3 complete cycles. Keep logging each period start so your pattern can stabilize."
+                    "Cycle pattern summaries start after 3 complete cycles. Keep logging each period start so your pattern can stabilize.",
+                    defaultValue: "Cycle pattern summaries start after 3 complete cycles. Keep logging each period start so your pattern can stabilize."
                 )
             )
         }
 
-        if readiness.symptomDays < 14 {
+        if readiness.symptomDays < InsightAnalysisPolicy.symptomDays {
             return InsightEmptyStateContent(
                 title: L10n.string("More symptom days will unlock correlations", defaultValue: "More symptom days will unlock correlations"),
                 message: L10n.string(
