@@ -1106,7 +1106,7 @@ private struct PaywallFeatureRow: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(combinedAccessibilityLabel)
         .accessibilityIdentifier("paywall.feature.\(feature.id)")
     }
 
@@ -1157,7 +1157,7 @@ private struct PaywallFeatureRow: View {
         return feature.freeIncluded ? "\(free), \(premium)" : premium
     }
 
-    private var accessibilityLabel: String {
+    private var combinedAccessibilityLabel: String {
         "\(feature.title): \(tiersText)"
     }
 }
@@ -1218,7 +1218,7 @@ private struct PaywallPlanCard: View {
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(combinedAccessibilityLabel)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityIdentifier("paywall.plan.\(product.id)")
     }
@@ -1249,7 +1249,7 @@ private struct PaywallPlanCard: View {
         }
     }
 
-    private var accessibilityLabel: String {
+    private var combinedAccessibilityLabel: String {
         var parts = [
             product.paywallDisplayName(language: language),
             product.displayPricePerPeriod(language: language),
