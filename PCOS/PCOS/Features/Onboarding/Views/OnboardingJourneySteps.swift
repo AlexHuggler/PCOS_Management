@@ -263,29 +263,21 @@ struct OnboardingFirstCheckInStep: View {
         VStack(alignment: .leading, spacing: AppTheme.spacing16) {
             OnboardingTitle(title: L10n.string("How are you feeling today?", defaultValue: "How are you feeling today?"))
 
-            MoodTileRow(selected: input.mood) { mood in
-                input.mood = input.mood == mood ? nil : mood
-            }
-
-            Text(L10n.string("YOUR SYMPTOMS", defaultValue: "YOUR SYMPTOMS"))
-                .appFont(.caption, weight: .semibold)
-                .foregroundStyle(AppTheme.secondaryText)
-                .accessibilityAddTraits(.isHeader)
-
-            OnboardingCard {
-                VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-                    ForEach(symptoms, id: \.self) { symptom in
-                        SymptomSeverityRow(symptom: symptom, selected: input.severities[symptom]) { severity in
-                            input.toggle(severity, for: symptom)
-                        }
-                    }
+            // The same check-in component as Today (A8), editing a draft until "Save".
+            QuickCheckInPanel(
+                input: input,
+                symptoms: symptoms,
+                symptomsInCard: true,
+                onMood: { mood in
+                    input.mood = input.mood == mood ? nil : mood
+                },
+                onSeverity: { symptom, severity in
+                    input.toggle(severity, for: symptom)
+                },
+                onNothingToReport: {
+                    input.toggleNothingToReport()
                 }
-                .padding(AppTheme.spacing16)
-            }
-
-            NothingToReportChip(isOn: input.nothingToReport) {
-                input.toggleNothingToReport()
-            }
+            )
         }
     }
 }

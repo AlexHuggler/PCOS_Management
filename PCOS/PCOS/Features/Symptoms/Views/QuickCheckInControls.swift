@@ -1,23 +1,86 @@
 import SwiftUI
 
 // Shared tap-first check-in controls for the onboarding first check-in (A5) and Today (A8).
-// Calm by design: mood colours are small decorative dots, labels stay in the primary text colour,
-// and nothing uses red alarm styling.
+// Calm by design: mood dots are tints of one calm hue (no red "grade"), labels stay in the primary
+// text colour, every control is at least 44pt, and nothing uses alarm styling.
 
 extension DailyMood {
-    /// Decorative dot colour for the mood tile (not used to convey meaning on its own).
-    var dotColor: Color {
+    /// Tint strength of the decorative mood dot. One hue in five tints; the label carries meaning.
+    var dotOpacity: Double {
         switch self {
-        case .great: Color(red: 0.18, green: 0.53, blue: 0.34)
-        case .good: Color(red: 0.42, green: 0.70, blue: 0.42)
-        case .okay: Color(red: 0.83, green: 0.65, blue: 0.16)
-        case .low: Color(red: 0.82, green: 0.49, blue: 0.27)
-        case .awful: Color(red: 0.63, green: 0.26, blue: 0.35)
+        case .great: 1.0
+        case .good: 0.78
+        case .okay: 0.58
+        case .low: 0.4
+        case .awful: 0.26
+        }
+    }
+
+    /// Decorative dot colour for the mood tile (never the only way the mood is shown).
+    var dotColor: Color { AppTheme.accentColor.opacity(dotOpacity) }
+}
+
+/// The one check-in component (design review 5 Oct): mood tiles, symptom rows with 44pt
+/// Mild / Moderate / Strong chips, and "Nothing to report today". Onboarding (A5) edits a draft;
+/// Today (A8) saves each tap. The component only reports taps; callers decide what they mean.
+struct QuickCheckInPanel: View {
+    let input: QuickCheckInInput
+    let symptoms: [SymptomType]
+    var moodMinHeight: CGFloat = 56
+    /// Onboarding sits on the grouped background, so the symptom rows get their own card there.
+    var symptomsInCard = false
+    var showsNothingToReport = true
+    let onMood: (DailyMood) -> Void
+    let onSeverity: (SymptomType, QuickSeverity) -> Void
+    let onNothingToReport: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            MoodTileRow(selected: input.mood, minHeight: moodMinHeight, onSelect: onMood)
+
+            if !symptoms.isEmpty {
+                VStack(alignment: .leading, spacing: AppTheme.spacing8) {
+                    Text(L10n.string("YOUR SYMPTOMS", defaultValue: "YOUR SYMPTOMS"))
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+
+                    symptomRows
+                }
+            }
+
+            if showsNothingToReport {
+                NothingToReportChip(isOn: input.nothingToReport, action: onNothingToReport)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var symptomRows: some View {
+        let rows = VStack(alignment: .leading, spacing: AppTheme.spacing16) {
+            ForEach(symptoms, id: \.self) { symptom in
+                SymptomSeverityRow(symptom: symptom, selected: input.severities[symptom]) { severity in
+                    onSeverity(symptom, severity)
+                }
+            }
+        }
+        if symptomsInCard {
+            rows
+                .padding(AppTheme.spacing16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                )
+        } else {
+            rows
         }
     }
 }
 
-/// Five mood tiles. Tapping a tile selects it; there is no "wrong" answer.
+/// Five mood tiles, exposed to VoiceOver as one group with the selected tile marked.
+/// At accessibility text sizes the row wraps to two rows instead of shrinking the labels.
 struct MoodTileRow: View {
     let selected: DailyMood?
     var minHeight: CGFloat = 56
@@ -37,17 +100,16 @@ struct MoodTileRow: View {
                 Button { onSelect(mood) } label: {
                     VStack(spacing: AppTheme.spacing4) {
                         Circle()
-                            .fill(mood.dotColor)
+                            .fill(isSelected ? AppTheme.premiumEditorCTAForeground : mood.dotColor)
                             .frame(width: 16, height: 16)
-                            .overlay(Circle().stroke(Color.white.opacity(isSelected ? 0.8 : 0), lineWidth: 1.5))
+                            .accessibilityHidden(true)
                         Text(mood.tileTitle)
-                            .appFont(.caption, weight: .semibold)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
+                            .appFont(.subheadline, weight: .semibold)
                             .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .foregroundStyle(isSelected ? AppTheme.premiumEditorCTAForeground : AppTheme.primaryText)
-                    .frame(maxWidth: .infinity, minHeight: minHeight)
+                    .frame(maxWidth: .infinity, minHeight: max(minHeight, 44))
                     .padding(.vertical, AppTheme.spacing4)
                     .background(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
@@ -55,7 +117,7 @@ struct MoodTileRow: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                            .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.35), lineWidth: 1)
+                            .stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: 1)
                     )
                     .contentShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
                 }
@@ -66,35 +128,46 @@ struct MoodTileRow: View {
             }
         }
         .sensoryFeedback(.selection, trigger: selected)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.string("Mood", defaultValue: "Mood"))
     }
 }
 
-/// One symptom with a Mild / Moderate / Strong segmented choice (A5).
+/// One symptom with 44pt Mild / Moderate / Strong chips (A5, A8). VoiceOver reads
+/// "Fatigue, Moderate, selected". The chips stack at accessibility text sizes.
 struct SymptomSeverityRow: View {
     let symptom: SymptomType
     let selected: QuickSeverity?
     let onSelect: (QuickSeverity) -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var chipLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppTheme.spacing8))
+            : AnyLayout(HStackLayout(spacing: AppTheme.spacing8))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacing8) {
             Text(symptom.displayName)
                 .appFont(.headline)
                 .foregroundStyle(AppTheme.primaryText)
-            HStack(spacing: 2) {
+                .fixedSize(horizontal: false, vertical: true)
+            chipLayout {
                 ForEach(QuickSeverity.allCases) { severity in
                     let isSelected = severity == selected
                     Button { onSelect(severity) } label: {
                         Text(severity.title)
                             .appFont(.subheadline, weight: isSelected ? .semibold : .regular)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(isSelected ? AppTheme.premiumEditorCTAForeground : AppTheme.primaryText)
+                            .padding(.horizontal, AppTheme.spacing8)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(
-                                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
-                                    .fill(isSelected ? AppTheme.accentColor : Color.clear)
-                            )
-                            .contentShape(Rectangle())
+                            .background(Capsule().fill(isSelected ? AppTheme.accentColor : AppTheme.cardBackground))
+                            .overlay(Capsule().stroke(isSelected ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: 1))
+                            .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(L10n.format("%@, %@", defaultValue: "%@, %@", symptom.displayName, severity.title))
@@ -102,48 +175,7 @@ struct SymptomSeverityRow: View {
                     .accessibilityIdentifier("checkin.severity.\(symptom.rawValue).\(severity.rawValue)")
                 }
             }
-            .padding(2)
-            .background(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                    .fill(Color(.tertiarySystemFill))
-            )
         }
-    }
-}
-
-/// Compact symptom chip for Today: one tap opens Mild / Moderate / Strong (A8).
-struct SymptomQuickChip: View {
-    let symptom: SymptomType
-    let selected: QuickSeverity?
-    let onSelect: (QuickSeverity) -> Void
-    let onClear: () -> Void
-
-    var body: some View {
-        Menu {
-            ForEach(QuickSeverity.allCases) { severity in
-                Button { onSelect(severity) } label: {
-                    if severity == selected {
-                        Label(severity.title, systemImage: "checkmark")
-                    } else {
-                        Text(severity.title)
-                    }
-                }
-            }
-            if selected != nil {
-                Button(L10n.string("Clear choice", defaultValue: "Clear choice"), action: onClear)
-            }
-        } label: {
-            Text(selected.map { L10n.format("%@ · %@", defaultValue: "%@ · %@", symptom.displayName, $0.title) } ?? symptom.displayName)
-                .appFont(.subheadline, weight: selected == nil ? .regular : .semibold)
-                .foregroundStyle(selected == nil ? AppTheme.primaryText : AppTheme.premiumEditorCTAForeground)
-                .padding(.horizontal, AppTheme.spacing12)
-                .frame(minHeight: 44)
-                .background(Capsule().fill(selected == nil ? AppTheme.cardBackground : AppTheme.accentColor))
-                .overlay(Capsule().stroke(selected == nil ? AppTheme.cardBorder.opacity(0.45) : AppTheme.accentColor, lineWidth: 1))
-                .contentShape(Capsule())
-        }
-        .accessibilityLabel(selected.map { L10n.format("%@, %@", defaultValue: "%@, %@", symptom.displayName, $0.title) } ?? symptom.displayName)
-        .accessibilityIdentifier("checkin.chip.\(symptom.rawValue)")
     }
 }
 
@@ -157,14 +189,16 @@ struct NothingToReportChip: View {
             Label {
                 Text(L10n.string("Nothing to report today", defaultValue: "Nothing to report today"))
                     .appFont(.subheadline, weight: isOn ? .semibold : .regular)
+                    .fixedSize(horizontal: false, vertical: true)
             } icon: {
-                if isOn { Image(systemName: "checkmark") }
+                if isOn { Image(systemName: "checkmark").accessibilityHidden(true) }
             }
             .foregroundStyle(isOn ? AppTheme.premiumEditorCTAForeground : AppTheme.primaryText)
             .padding(.horizontal, AppTheme.spacing16)
+            .padding(.vertical, AppTheme.spacing8)
             .frame(minHeight: 44)
             .background(Capsule().fill(isOn ? AppTheme.accentColor : AppTheme.cardBackground))
-            .overlay(Capsule().stroke(isOn ? AppTheme.accentColor : AppTheme.cardBorder.opacity(0.45), lineWidth: 1))
+            .overlay(Capsule().stroke(isOn ? AppTheme.accentColor : AppTheme.cardBorder, lineWidth: 1))
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -173,12 +207,14 @@ struct NothingToReportChip: View {
     }
 }
 
-/// Ring showing check-ins toward the first pattern ("3/7").
+/// Ring showing check-ins toward the first pattern ("3/7"). It grows with the text size instead of
+/// shrinking the count, and VoiceOver reads "3 of 7 check-ins toward your first pattern".
 struct PatternProgressRing: View {
     let completed: Int
     let target: Int
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .subheadline) private var diameter: CGFloat = 56
 
     private var fraction: Double { target > 0 ? min(1, Double(completed) / Double(target)) : 0 }
 
@@ -194,11 +230,19 @@ struct PatternProgressRing: View {
             Text(L10n.format("%lld/%lld", defaultValue: "%lld/%lld", Int64(completed), Int64(target)))
                 .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(AppTheme.primaryText)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
+                .fixedSize()
         }
-        .frame(width: 56, height: 56)
-        .accessibilityHidden(true)
+        .frame(width: diameter, height: diameter)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.string("First pattern", defaultValue: "First pattern"))
+        .accessibilityValue(
+            L10n.format(
+                "%lld of %lld check-ins toward your first pattern",
+                defaultValue: "%lld of %lld check-ins toward your first pattern",
+                Int64(completed),
+                Int64(target)
+            )
+        )
     }
 }
 

@@ -3105,9 +3105,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: onboarding and check-in */
 "Nothing to report today" = "오늘은 특별한 증상 없음";
 
-/* Journey v1: onboarding and check-in */
-"Clear choice" = "선택 해제";
-
 /* Journey v1: Today */
 "Good morning, %@" = "좋은 아침이에요, %@ 님";
 
@@ -3141,8 +3138,8 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: Today */
 "Try meal logging" = "식사 기록 사용해 보기";
 
-/* Journey v1: Today */
-"Dismiss" = "닫기";
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "팁 닫기";
 
 /* Design review 5 Oct: needs_review */
 "You can try again now or later — your logs are safe." = "지금이나 나중에 다시 시도할 수 있어요. 기록은 안전하게 보관되어 있어요.";
@@ -3152,3 +3149,15 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Check your connection and try again — your logs are safe." = "연결을 확인하고 다시 시도해 주세요. 기록은 안전하게 보관되어 있어요.";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "첫 번째 패턴";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "첫 번째 패턴까지 체크인 %lld/%lld회";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "다시 오셨네요, %@ 님. 이전 체크인도 그대로 반영돼요.";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "다시 오셨네요. 이전 체크인도 그대로 반영돼요.";

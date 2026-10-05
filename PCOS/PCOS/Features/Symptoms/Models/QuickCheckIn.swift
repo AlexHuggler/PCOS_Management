@@ -105,6 +105,17 @@ struct QuickCheckInService {
         try service.save(edited.changes(since: original))
     }
 
+    /// Un-marks "Nothing to report today" on Today. Only applies while the day has no symptoms,
+    /// so it never removes anything she logged.
+    func clearNothingToReport(on date: Date = Date()) throws {
+        let service = DailyCheckInService(modelContext: modelContext)
+        let original = try service.load(on: date)
+        guard original.symptomsReviewed, (original.symptoms.value ?? [:]).isEmpty else { return }
+        var edited = original
+        edited.symptomsReviewed = false
+        try service.save(edited.changes(since: original))
+    }
+
     /// Removes one symptom from the day without touching anything else.
     func clearSymptom(_ symptom: SymptomType, on date: Date = Date()) throws {
         let service = DailyCheckInService(modelContext: modelContext)
@@ -146,14 +157,60 @@ enum CheckInProgress {
     /// and the UI only needs to know whether the count has reached the target.
     @MainActor
     static func checkInDayCount(modelContext: ModelContext, calendar: Calendar = .current, recentLimit: Int = 500) -> Int {
+        distinctDays(recentCheckInDates(modelContext: modelContext, recentLimit: recentLimit), calendar: calendar)
+    }
+
+    /// Check-in days plus the latest check-in day before today, for Today's progress and the
+    /// "Welcome back" line.
+    @MainActor
+    static func summary(
+        modelContext: ModelContext,
+        now: Date = Date(),
+        calendar: Calendar = .current,
+        recentLimit: Int = 500
+    ) -> (days: Int, lastBeforeToday: Date?) {
+        let dates = recentCheckInDates(modelContext: modelContext, recentLimit: recentLimit)
+        return (distinctDays(dates, calendar: calendar), latestDay(before: now, in: dates, calendar: calendar))
+    }
+
+    @MainActor
+    private static func recentCheckInDates(modelContext: ModelContext, recentLimit: Int) -> [Date] {
         var logDescriptor = FetchDescriptor<DailyLog>(sortBy: [SortDescriptor(\.date, order: .reverse)])
         logDescriptor.fetchLimit = recentLimit
         var symptomDescriptor = FetchDescriptor<SymptomEntry>(sortBy: [SortDescriptor(\.date, order: .reverse)])
         symptomDescriptor.fetchLimit = recentLimit
         let logs = (try? modelContext.fetch(logDescriptor)) ?? []
         let symptoms = (try? modelContext.fetch(symptomDescriptor)) ?? []
-        let dates = logs.filter(isManualCheckIn).map(\.date) + symptoms.map(\.date)
-        return distinctDays(dates, calendar: calendar)
+        return logs.filter(isManualCheckIn).map(\.date) + symptoms.map(\.date)
+    }
+
+    /// Latest calendar day strictly before `now`'s day, or nil.
+    static func latestDay(before now: Date, in dates: [Date], calendar: Calendar = .current) -> Date? {
+        let today = calendar.startOfDay(for: now)
+        return dates.map { calendar.startOfDay(for: $0) }.filter { $0 < today }.max()
+    }
+
+    // MARK: Coming back after a gap (A8)
+
+    /// Days since the last check-in that count as "coming back". Gaps often follow bad days, so the
+    /// copy welcomes her back and says nothing was reset.
+    static let returnGapDays = 3
+
+    /// True when she has checked in before, not yet today, and the last check-in is at least
+    /// `returnGapDays` calendar days ago.
+    static func isReturningAfterGap(
+        lastCheckInBeforeToday: Date?,
+        hasCheckedInToday: Bool,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard !hasCheckedInToday, let last = lastCheckInBeforeToday else { return false }
+        let gap = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: last),
+            to: calendar.startOfDay(for: now)
+        ).day ?? 0
+        return gap >= returnGapDays
     }
 }
 

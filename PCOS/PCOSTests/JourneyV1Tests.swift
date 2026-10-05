@@ -170,6 +170,30 @@ struct QuickCheckInTests {
         #expect(try service.load(on: today).severities == [.fatigue: .moderate])
         #expect(try service.load(on: today).mood == .low)
     }
+
+    @Test("Nothing to report can be undone on Today without touching logged symptoms")
+    @MainActor
+    func nothingToReportUndo() throws {
+        let container = try TestHelpers.makeModelContainer()
+        let context = container.mainContext
+        let service = QuickCheckInService(modelContext: context)
+        let today = Date()
+
+        var nothing = QuickCheckInInput()
+        nothing.nothingToReport = true
+        try service.save(nothing, on: today)
+        #expect(try service.load(on: today).nothingToReport)
+
+        try service.clearNothingToReport(on: today)
+        #expect(try !service.load(on: today).nothingToReport)
+
+        // With a symptom logged, clearing "nothing to report" is a no-op.
+        var symptom = QuickCheckInInput()
+        symptom.severities = [.fatigue: .strong]
+        try service.save(symptom, on: today)
+        try service.clearNothingToReport(on: today)
+        #expect(try service.load(on: today).severities == [.fatigue: .strong])
+    }
 }
 
 @Suite("Journey v1: first-pattern progress and the Premium card")
@@ -184,6 +208,38 @@ struct CheckInProgressTests {
         #expect(CheckInProgress.displayed(12) == CheckInProgress.firstPatternTarget)
         #expect(CheckInProgress.displayed(-1) == 0)
         #expect(CheckInProgress.fraction(7) == 1)
+    }
+
+    @Test("Welcome back appears after a gap of 3+ days, only before today's check-in")
+    func returnAfterGap() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        let day: TimeInterval = 86_400
+        #expect(!CheckInProgress.isReturningAfterGap(lastCheckInBeforeToday: nil, hasCheckedInToday: false, now: now, calendar: calendar))
+        #expect(!CheckInProgress.isReturningAfterGap(lastCheckInBeforeToday: now - day, hasCheckedInToday: false, now: now, calendar: calendar))
+        #expect(!CheckInProgress.isReturningAfterGap(lastCheckInBeforeToday: now - 2 * day, hasCheckedInToday: false, now: now, calendar: calendar))
+        #expect(CheckInProgress.isReturningAfterGap(lastCheckInBeforeToday: now - 3 * day, hasCheckedInToday: false, now: now, calendar: calendar))
+        #expect(!CheckInProgress.isReturningAfterGap(lastCheckInBeforeToday: now - 10 * day, hasCheckedInToday: true, now: now, calendar: calendar))
+    }
+
+    @Test("The latest check-in before today ignores today's records")
+    func latestDayBeforeToday() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        let day: TimeInterval = 86_400
+        let dates = [now, now - 5 * day, now - 4 * day]
+        #expect(CheckInProgress.latestDay(before: now, in: dates, calendar: calendar) == calendar.startOfDay(for: now - 4 * day))
+        #expect(CheckInProgress.latestDay(before: now, in: [now], calendar: calendar) == nil)
+    }
+
+    @Test("Mood dots use one hue in five distinct tints, strongest for Great")
+    func moodTints() {
+        let opacities = DailyMood.allCases.map(\.dotOpacity)
+        #expect(Set(opacities).count == DailyMood.allCases.count)
+        #expect(opacities == opacities.sorted(by: >))
+        #expect(opacities.allSatisfy { $0 > 0 && $0 <= 1 })
     }
 
     @Test("Premium card only from day 3, never for subscribers, and stays dismissed")

@@ -94,6 +94,7 @@ struct TodayView: View {
     @State private var healthSources: [HealthKitImportedSampleRecord] = []
     @State private var quickCheckIn = QuickCheckInInput()
     @State private var checkInDays = 0
+    @State private var lastCheckInBeforeToday: Date?
     @State private var showCheckInSaved = false
     @State private var activeLogger: LoggerShortcut?
     @AppStorage(PremiumNudgePolicy.dismissedKey) private var premiumCardDismissed = false
@@ -197,7 +198,9 @@ struct TodayView: View {
     }
 
     private func refreshQuickCheckIn() {
-        checkInDays = CheckInProgress.checkInDayCount(modelContext: modelContext)
+        let summary = CheckInProgress.summary(modelContext: modelContext)
+        checkInDays = summary.days
+        lastCheckInBeforeToday = summary.lastBeforeToday
         do {
             quickCheckIn = try QuickCheckInService(modelContext: modelContext).load()
         } catch {
@@ -263,8 +266,39 @@ struct TodayView: View {
             Text(greetingSubtitle)
                 .appFont(.subheadline)
                 .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            if isReturningAfterGap {
+                Text(welcomeBackText)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("today.welcome_back")
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Back after a few days away: welcome her back and say nothing was reset (no streak guilt).
+    private var isReturningAfterGap: Bool {
+        CheckInProgress.isReturningAfterGap(
+            lastCheckInBeforeToday: lastCheckInBeforeToday,
+            hasCheckedInToday: hasCheckIn || showCheckInSaved
+        )
+    }
+
+    private var welcomeBackText: String {
+        if let name = appState.onboardingProfile.preferredDisplayName {
+            return L10n.format(
+                "Welcome back, %@. Your earlier check-ins still count.",
+                defaultValue: "Welcome back, %@. Your earlier check-ins still count.",
+                name
+            )
+        }
+        return L10n.string(
+            "Welcome back. Your earlier check-ins still count.",
+            defaultValue: "Welcome back. Your earlier check-ins still count."
+        )
     }
 
     private var greetingTitle: String {
@@ -337,14 +371,16 @@ struct TodayView: View {
         return Array(source.prefix(3))
     }
 
-    /// A8 inline check-in: one tap on a mood saves it; symptom chips offer Mild / Moderate / Strong;
-    /// "More details" opens the full check-in.
+    /// A8 inline check-in: the same component as onboarding (A5). Each tap saves straight away;
+    /// tapping a selected severity again clears it; "More details" opens the full check-in.
     private var companionCheckIn: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text(L10n.string("How are you feeling?", defaultValue: "How are you feeling?"))
                     .appHeadingFont(.title3, weight: .semibold)
                     .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 4)
                 if showCheckInSaved || hasCheckIn {
                     Label(L10n.string("Saved", defaultValue: "Saved"), systemImage: "checkmark.circle.fill")
@@ -353,34 +389,38 @@ struct TodayView: View {
                         .accessibilityIdentifier("today.checkin.saved")
                 }
             }
-            MoodTileRow(selected: quickCheckIn.mood, minHeight: 52) { mood in
-                var input = QuickCheckInInput()
-                input.mood = mood
-                saveQuickCheckIn(input)
+            QuickCheckInPanel(
+                input: quickCheckIn,
+                symptoms: quickSymptoms,
+                moodMinHeight: 52,
+                // "Nothing to report" would clear the day's symptoms, so it is only offered while
+                // none are logged; it never deletes something she entered elsewhere.
+                showsNothingToReport: quickCheckIn.nothingToReport || todaysSymptoms.isEmpty,
+                onMood: { mood in
+                    var input = QuickCheckInInput()
+                    input.mood = mood
+                    saveQuickCheckIn(input)
+                },
+                onSeverity: { symptom, severity in
+                    if quickCheckIn.severities[symptom] == severity {
+                        clearQuickSymptom(symptom)
+                    } else {
+                        var input = QuickCheckInInput()
+                        input.severities[symptom] = severity
+                        saveQuickCheckIn(input)
+                    }
+                },
+                onNothingToReport: toggleNothingToReport
+            )
+            Button { showingLogSymptoms = true } label: {
+                Text(L10n.string("More details", defaultValue: "More details"))
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.accentColor)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
-            FlowLayout(spacing: 8) {
-                ForEach(quickSymptoms, id: \.self) { symptom in
-                    SymptomQuickChip(
-                        symptom: symptom,
-                        selected: quickCheckIn.severities[symptom],
-                        onSelect: { severity in
-                            var input = QuickCheckInInput()
-                            input.severities[symptom] = severity
-                            saveQuickCheckIn(input)
-                        },
-                        onClear: { clearQuickSymptom(symptom) }
-                    )
-                }
-                Button { showingLogSymptoms = true } label: {
-                    Text(L10n.string("More details", defaultValue: "More details"))
-                        .appFont(.subheadline, weight: .semibold)
-                        .foregroundStyle(AppTheme.accentColor)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("today.checkin")
-            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("today.checkin")
         }
         .padding(16)
         .premiumCardDecoration()
@@ -399,6 +439,7 @@ struct TodayView: View {
                     Text(L10n.string("Your first pattern is ready", defaultValue: "Your first pattern is ready"))
                         .appFont(.headline)
                         .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                     Button { appState.selectTab(.insights) } label: {
                         Text(L10n.string("See what's connected", defaultValue: "See what's connected"))
                             .appFont(.subheadline, weight: .semibold)
@@ -408,9 +449,12 @@ struct TodayView: View {
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("today.progress.insights")
                 } else {
+                    // The ring already reads "3 of 7 check-ins toward your first pattern" to VoiceOver.
                     Text(L10n.format("%lld of %lld toward your first pattern", defaultValue: "%lld of %lld toward your first pattern", Int64(completed), Int64(target)))
                         .appFont(.headline)
                         .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityHidden(true)
                     Text(L10n.string("Each check-in adds to your first pattern. Missed days are fine.", defaultValue: "Each check-in adds to your first pattern. Missed days are fine."))
                         .appFont(.subheadline)
                         .foregroundStyle(AppTheme.secondaryText)
@@ -421,7 +465,7 @@ struct TodayView: View {
         }
         .padding(16)
         .premiumCardDecoration()
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("today.pattern_progress")
     }
 
@@ -508,7 +552,7 @@ struct TodayView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(L10n.string("Dismiss", defaultValue: "Dismiss"))
+            .accessibilityLabel(L10n.string("Dismiss tip", defaultValue: "Dismiss tip"))
             .accessibilityIdentifier("today.premium_card.dismiss")
         }
         .padding(16)
@@ -534,6 +578,25 @@ struct TodayView: View {
             refreshToday()
         } catch {
             Logger.database.error("Failed to save inline check-in: \(error.localizedDescription)")
+            quickLogAlert = .error(L10n.string(
+                "Your check-in was not saved. Please check your entries and try again.",
+                defaultValue: "Your check-in was not saved. Please check your entries and try again."
+            ))
+        }
+    }
+
+    private func toggleNothingToReport() {
+        guard quickCheckIn.nothingToReport else {
+            var input = QuickCheckInInput()
+            input.nothingToReport = true
+            saveQuickCheckIn(input)
+            return
+        }
+        do {
+            try QuickCheckInService(modelContext: modelContext).clearNothingToReport()
+            refreshToday()
+        } catch {
+            Logger.database.error("Failed to clear Nothing to report: \(error.localizedDescription)")
             quickLogAlert = .error(L10n.string(
                 "Your check-in was not saved. Please check your entries and try again.",
                 defaultValue: "Your check-in was not saved. Please check your entries and try again."

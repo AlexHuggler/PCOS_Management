@@ -3140,9 +3140,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: onboarding and check-in */
 "Nothing to report today" = "Niente da segnalare oggi";
 
-/* Journey v1: onboarding and check-in */
-"Clear choice" = "Annulla scelta";
-
 /* Journey v1: Today */
 "Good morning, %@" = "Buongiorno, %@";
 
@@ -3176,8 +3173,8 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: Today */
 "Try meal logging" = "Prova il registro dei pasti";
 
-/* Journey v1: Today */
-"Dismiss" = "Nascondi";
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "Nascondi suggerimento";
 
 /* Design review 5 Oct: needs_review */
 "You can try again now or later — your logs are safe." = "Puoi riprovare ora o più tardi: le tue registrazioni sono al sicuro.";
@@ -3187,3 +3184,15 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Check your connection and try again — your logs are safe." = "Controlla la connessione e riprova: le tue registrazioni sono al sicuro.";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "Primo schema";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "%lld di %lld check-in verso il tuo primo schema";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "Bentornata, %@. I tuoi check-in precedenti contano ancora.";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "Bentornata. I tuoi check-in precedenti contano ancora.";

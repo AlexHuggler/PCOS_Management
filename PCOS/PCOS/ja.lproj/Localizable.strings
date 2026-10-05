@@ -3105,9 +3105,6 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: onboarding and check-in */
 "Nothing to report today" = "今日は特になし";
 
-/* Journey v1: onboarding and check-in */
-"Clear choice" = "選択を解除";
-
 /* Journey v1: Today */
 "Good morning, %@" = "おはようございます、%@さん";
 
@@ -3141,8 +3138,8 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: Today */
 "Try meal logging" = "食事記録を試す";
 
-/* Journey v1: Today */
-"Dismiss" = "閉じる";
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "ヒントを閉じる";
 
 /* Design review 5 Oct: needs_review */
 "You can try again now or later — your logs are safe." = "今すぐでも後でも、もう一度お試しいただけます。記録はそのまま残っています。";
@@ -3152,3 +3149,15 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Design review 5 Oct: needs_review */
 "Check your connection and try again — your logs are safe." = "接続を確認して、もう一度お試しください。記録はそのまま残っています。";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "はじめてのパターン";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "はじめてのパターンまで、チェックイン %lld/%lld 回";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "おかえりなさい、%@さん。これまでのチェックインもそのまま数えられています。";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "おかえりなさい。これまでのチェックインもそのまま数えられています。";
