@@ -142,10 +142,16 @@ enum CheckInProgress {
             || !(log.privateNote?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
 
+    /// Distinct check-in days among the most recent records. Bounded, because Today refreshes often
+    /// and the UI only needs to know whether the count has reached the target.
     @MainActor
-    static func checkInDayCount(modelContext: ModelContext, calendar: Calendar = .current) -> Int {
-        let logs = (try? modelContext.fetch(FetchDescriptor<DailyLog>())) ?? []
-        let symptoms = (try? modelContext.fetch(FetchDescriptor<SymptomEntry>())) ?? []
+    static func checkInDayCount(modelContext: ModelContext, calendar: Calendar = .current, recentLimit: Int = 500) -> Int {
+        var logDescriptor = FetchDescriptor<DailyLog>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+        logDescriptor.fetchLimit = recentLimit
+        var symptomDescriptor = FetchDescriptor<SymptomEntry>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+        symptomDescriptor.fetchLimit = recentLimit
+        let logs = (try? modelContext.fetch(logDescriptor)) ?? []
+        let symptoms = (try? modelContext.fetch(symptomDescriptor)) ?? []
         let dates = logs.filter(isManualCheckIn).map(\.date) + symptoms.map(\.date)
         return distinctDays(dates, calendar: calendar)
     }
