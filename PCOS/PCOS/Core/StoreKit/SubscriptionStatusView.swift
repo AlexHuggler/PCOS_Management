@@ -243,20 +243,26 @@ struct SubscriptionStatusView: View {
 
 /// Premium-only features, for subscribers who want to see what their plan includes.
 private struct PremiumIncludedView: View {
+    private struct Item: Identifiable {
+        let id: String
+        let systemImage: String
+        let title: String
+    }
+
     let language: AppLanguage
 
-    private var items: [(id: String, systemImage: String, title: String)] {
+    private var items: [Item] {
         [
-            ("logs", "fork.knife", L10n.string("Meal, glucose & supplement logs, linked to symptoms", defaultValue: "Meal, glucose & supplement logs, linked to symptoms", language: language)),
-            ("insights", "chart.bar.xaxis", L10n.string("Deeper insights: sleep, activity, meals", defaultValue: "Deeper insights: sleep, activity, meals", language: language)),
-            ("reports", "doc.text", L10n.string("Unlimited appointment-ready PDF reports", defaultValue: "Unlimited appointment-ready PDF reports", language: language)),
-            ("photos", "photo", L10n.string("Private photo journal for skin & hair", defaultValue: "Private photo journal for skin & hair", language: language)),
+            Item(id: "logs", systemImage: "fork.knife", title: L10n.string("Meal, glucose & supplement logs, linked to symptoms", defaultValue: "Meal, glucose & supplement logs, linked to symptoms", language: language)),
+            Item(id: "insights", systemImage: "chart.bar.xaxis", title: L10n.string("Deeper insights: sleep, activity, meals", defaultValue: "Deeper insights: sleep, activity, meals", language: language)),
+            Item(id: "reports", systemImage: "doc.text", title: L10n.string("Unlimited appointment-ready PDF reports", defaultValue: "Unlimited appointment-ready PDF reports", language: language)),
+            Item(id: "photos", systemImage: "photo", title: L10n.string("Private photo journal for skin & hair", defaultValue: "Private photo journal for skin & hair", language: language)),
         ]
     }
 
     var body: some View {
         List {
-            ForEach(items, id: \.id) { item in
+            ForEach(items) { item in
                 Label {
                     Text(item.title).appFont(.body)
                 } icon: {
