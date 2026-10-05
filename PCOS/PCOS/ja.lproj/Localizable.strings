@@ -993,7 +993,7 @@ Full severity label for level 1 symptoms. */
 "Missed" = "未服用";
 
 /* Full severity label for level 3 symptoms. */
-"Moderate" = "適度";
+"Moderate" = "中程度";
 
 /* Symptom focus area description in onboarding. */
 "Monitor acne, hair changes, and skin patterns." = "ニキビ、毛髪の変化、皮膚のパターンを監視します。";

@@ -204,7 +204,7 @@ struct SettingsView: View {
                         .onTapGesture(perform: openSubscription)
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isButton)
-                        .accessibilityAction(openSubscription)
+                        .accessibilityAction { openSubscription() }
                         .accessibilityIdentifier("settings.subscription.row")
                     }
                 }

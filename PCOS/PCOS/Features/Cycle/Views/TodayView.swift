@@ -163,6 +163,8 @@ struct TodayView: View {
         .background(BotanicalScreenBackground(style: .dense))
         .refreshable { refreshToday() }
         .navigationTitle(L10n.string("Today", defaultValue: "Today"))
+        // The greeting is the page heading (A8), so the bar title stays small.
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

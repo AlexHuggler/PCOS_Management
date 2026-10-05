@@ -993,7 +993,7 @@ Full severity label for level 1 symptoms. */
 "Missed" = "미복용";
 
 /* Full severity label for level 3 symptoms. */
-"Moderate" = "보통의";
+"Moderate" = "보통";
 
 /* Symptom focus area description in onboarding. */
 "Monitor acne, hair changes, and skin patterns." = "여드름, 모발 변화 및 피부 패턴을 모니터링하십시오.";

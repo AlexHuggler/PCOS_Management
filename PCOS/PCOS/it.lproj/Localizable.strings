@@ -987,13 +987,13 @@ Full severity label for level 2 symptoms. */
 
 /* Compact severity label for level 1 symptoms.
 Full severity label for level 1 symptoms. */
-"Mild" = "Blando";
+"Mild" = "Lieve";
 
 /* CSV export supplement status value. */
 "Missed" = "Saltato";
 
 /* Full severity label for level 3 symptoms. */
-"Moderate" = "Moderare";
+"Moderate" = "Moderato";
 
 /* Symptom focus area description in onboarding. */
 "Monitor acne, hair changes, and skin patterns." = "Monitorare l'acne, i cambiamenti dei capelli e i modelli della pelle.";

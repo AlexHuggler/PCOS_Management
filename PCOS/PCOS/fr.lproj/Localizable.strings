@@ -987,7 +987,7 @@ Full severity label for level 2 symptoms. */
 
 /* Compact severity label for level 1 symptoms.
 Full severity label for level 1 symptoms. */
-"Mild" = "Bénin";
+"Mild" = "Léger";
 
 /* CSV export supplement status value. */
 "Missed" = "Oublié";
