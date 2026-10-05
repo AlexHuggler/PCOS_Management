@@ -337,7 +337,7 @@ struct CalendarMonthView: View {
                     .onTapGesture {
                         if let date = dateForDay(day), date <= Date() {
                             guard freeTierPolicy.isCycleDateAccessible(date, now: Date(), isPremium: appState.allowsPremiumAccess) else {
-                                appState.presentPremiumPaywall()
+                                appState.presentPremiumPaywall(source: "calendar_day_history")
                                 return
                             }
                             selectedDayDate = date
@@ -890,7 +890,7 @@ struct CalendarMonthView: View {
                value < 0,
                let earliestDate = freeTierPolicy.earliestAccessibleCycleHistoryDate(now: Date(), isPremium: appState.allowsPremiumAccess),
                newDate < calendar.startOfMonth(for: earliestDate) ?? earliestDate {
-                appState.presentPremiumPaywall()
+                appState.presentPremiumPaywall(source: "calendar_month_history")
                 return
             }
             displayedMonth = newDate
