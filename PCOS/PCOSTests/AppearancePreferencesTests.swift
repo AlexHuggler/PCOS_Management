@@ -46,6 +46,21 @@ struct AppearancePreferencesTests {
         #expect(preferences.availableThemeOptions.first == .calm)
     }
 
+    @Test("Existing users without a saved appearance keep following the system; fresh installs stay light")
+    func existingUsersKeepSystemColorMode() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(true, forKey: "onboarding.hasCompletedOnboarding")
+        #expect(AppearancePreferences(defaults: defaults).colorMode == .system)
+
+        let (freshDefaults, freshSuiteName) = makeDefaults()
+        defer { freshDefaults.removePersistentDomain(forName: freshSuiteName) }
+        #expect(AppearancePreferences(defaults: freshDefaults).colorMode == .light)
+        // Completing onboarding later does not flip a fresh install back to the system setting.
+        freshDefaults.set(true, forKey: "onboarding.hasCompletedOnboarding")
+        #expect(AppearancePreferences(defaults: freshDefaults).colorMode == .light)
+    }
+
     @Test("Legacy saved themes keep their original color mode")
     func legacyColorModeMigration() {
         let (defaults, suiteName) = makeDefaults()

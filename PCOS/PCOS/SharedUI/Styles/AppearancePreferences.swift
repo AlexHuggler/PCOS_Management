@@ -377,6 +377,8 @@ final class AppearancePreferences {
     nonisolated(unsafe) static let shared = AppearancePreferences()
     private static let settingsKey = "appearance.preferences"
     private static let experimentalThemesKey = "appearance.enableExperimentalThemes"
+    /// Same key AppState uses for onboarding completion.
+    private static let onboardingCompletedKey = "onboarding.hasCompletedOnboarding"
 
     private let defaults: UserDefaults
 
@@ -405,7 +407,13 @@ final class AppearancePreferences {
         } else {
             themeOption = AppearanceSelection.default.themeOption
             fontOption = AppearanceSelection.default.fontOption
-            colorMode = AppearanceSelection.default.colorMode ?? .light
+            // Fresh installs start in light mode (approved v1 decision; matches the screenshots).
+            // Someone who finished onboarding on an earlier version and never picked a mode keeps
+            // following the phone's setting, so an update does not switch her app to light.
+            let isExistingUser = defaults.bool(forKey: Self.onboardingCompletedKey)
+            colorMode = isExistingUser ? .system : (AppearanceSelection.default.colorMode ?? .light)
+            // Store the first-launch choice so it does not change once onboarding completes.
+            persistSelection()
         }
     }
 
@@ -482,6 +490,11 @@ final class AppearancePreferences {
 
 private extension AppearancePreferences {
     func persistAndRefresh() {
+        persistSelection()
+        renderKey = UUID()
+    }
+
+    func persistSelection() {
         let selection = AppearanceSelection(
             themeOption: themeOption,
             fontOption: fontOption,
@@ -491,7 +504,5 @@ private extension AppearancePreferences {
         if let data = try? JSONEncoder().encode(selection) {
             defaults.set(data, forKey: Self.settingsKey)
         }
-
-        renderKey = UUID()
     }
 }
