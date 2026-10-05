@@ -2924,3 +2924,30 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: paywall */
 "Weekly" = "週額";
+
+/* Journey v1: subscription status */
+"Manage subscription" = "サブスクリプションを管理";
+
+/* Journey v1: subscription status */
+"Opens your Apple Account subscriptions" = "Apple Accountのサブスクリプションを開きます";
+
+/* Journey v1: subscription status */
+"What's included" = "含まれる機能";
+
+/* Journey v1: subscription status */
+"Cancel or change plans in Settings › Apple Account › Subscriptions. Your data stays on your iPhone either way." = "解約やプランの変更は、設定 › Apple Account › サブスクリプションから行えます。どちらの場合も、データはお使いのiPhoneに残ります。";
+
+/* Journey v1: subscription status */
+"CycleBalance Premium" = "CycleBalance プレミアム";
+
+/* Journey v1: subscription status */
+"%@ · %@" = "%@ · %@";
+
+/* Journey v1: subscription status */
+"Ends %@" = "%@に終了";
+
+/* Journey v1: subscription status */
+"Renews %@" = "%@に更新";
+
+/* Journey v1: subscription status */
+"Your purchases are up to date." = "購入情報は最新です。";

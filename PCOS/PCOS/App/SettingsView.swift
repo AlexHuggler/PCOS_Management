@@ -140,6 +140,7 @@ struct SettingsView: View {
     @State private var exportSuccessToggle = false
     @State private var importSuccessToggle = false
     @State private var showingPregnancyActivation = false
+    @State private var showingSubscriptionStatus = false
     @State private var showingPregnancyEnd = false
     @State private var showingPrivateJournal = false
     @State private var pregnancyViewModel: PregnancyViewModel?
@@ -188,7 +189,7 @@ struct SettingsView: View {
                             Label(L10n.string("Subscription", defaultValue: "Subscription"), systemImage: "star.circle")
                             Spacer()
                             Text(
-                                appState.isPremium
+                                appState.allowsPremiumAccess
                                     ? L10n.string("Premium", defaultValue: "Premium")
                                     : L10n.string("Free", defaultValue: "Free")
                             )
@@ -198,15 +199,12 @@ struct SettingsView: View {
                                 .foregroundStyle(.tertiary)
                                 .accessibilityHidden(true)
                         }
+                        .frame(minHeight: 44)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            appState.showPremiumPaywall = true
-                        }
+                        .onTapGesture(perform: openSubscription)
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isButton)
-                        .accessibilityAction {
-                            appState.showPremiumPaywall = true
-                        }
+                        .accessibilityAction(openSubscription)
                         .accessibilityIdentifier("settings.subscription.row")
                     }
                 }
@@ -792,6 +790,9 @@ struct SettingsView: View {
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("screen.settings")
+            .navigationDestination(isPresented: $showingSubscriptionStatus) {
+                SubscriptionStatusView()
+            }
             .navigationTitle(AppTheme.usesImmersiveHomeShell ? "" : L10n.string("Settings", defaultValue: "Settings"))
             .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
@@ -908,6 +909,15 @@ struct SettingsView: View {
                 debugTools.primePremiumStatus(appState: appState)
             }
 #endif
+        }
+    }
+
+    /// B2: subscribers manage their plan; nobody with Premium is ever shown the paywall.
+    private func openSubscription() {
+        if appState.allowsPremiumAccess {
+            showingSubscriptionStatus = true
+        } else {
+            appState.presentPremiumPaywall(reason: .settings, source: "settings")
         }
     }
 

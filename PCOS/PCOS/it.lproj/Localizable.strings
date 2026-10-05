@@ -2959,3 +2959,30 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: paywall */
 "Weekly" = "Settimanale";
+
+/* Journey v1: subscription status */
+"Manage subscription" = "Gestisci abbonamento";
+
+/* Journey v1: subscription status */
+"Opens your Apple Account subscriptions" = "Apre gli abbonamenti del tuo Apple Account";
+
+/* Journey v1: subscription status */
+"What's included" = "Cosa è incluso";
+
+/* Journey v1: subscription status */
+"Cancel or change plans in Settings › Apple Account › Subscriptions. Your data stays on your iPhone either way." = "Annulla o cambia piano in Impostazioni › Apple Account › Abbonamenti. I tuoi dati restano comunque sul tuo iPhone.";
+
+/* Journey v1: subscription status */
+"CycleBalance Premium" = "CycleBalance Premium";
+
+/* Journey v1: subscription status */
+"%@ · %@" = "%@ · %@";
+
+/* Journey v1: subscription status */
+"Ends %@" = "Termina il %@";
+
+/* Journey v1: subscription status */
+"Renews %@" = "Si rinnova il %@";
+
+/* Journey v1: subscription status */
+"Your purchases are up to date." = "I tuoi acquisti sono aggiornati.";
