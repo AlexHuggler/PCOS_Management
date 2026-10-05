@@ -169,6 +169,7 @@ struct SymptomLogView: View {
             let changes = original.map { draft.changes(since: $0) } ?? draft
             try DailyCheckInService(modelContext: modelContext).save(changes)
             original = draft
+            CheckInAnalytics.recordSave(source: .sheet)
             feedback.showSuccessAndDismiss { dismiss() }
         } catch {
             feedback.showErrorFeedback()

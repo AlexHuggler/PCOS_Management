@@ -3107,3 +3107,39 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: onboarding and check-in */
 "Clear choice" = "선택 해제";
+
+/* Journey v1: Today */
+"Good morning, %@" = "좋은 아침이에요, %@ 님";
+
+/* Journey v1: Today */
+"Good afternoon, %@" = "좋은 오후예요, %@ 님";
+
+/* Journey v1: Today */
+"Good evening, %@" = "좋은 저녁이에요, %@ 님";
+
+/* Journey v1: Today */
+"%@ · Cycle day %lld" = "%@ · 주기 %lld일째";
+
+/* Journey v1: Today */
+"More details" = "자세히 기록";
+
+/* Journey v1: Today */
+"Your first pattern is ready" = "첫 번째 패턴을 볼 수 있어요";
+
+/* Journey v1: Today */
+"See what's connected" = "연결된 내용 보기";
+
+/* Journey v1: Today */
+"%lld of %lld toward your first pattern" = "첫 번째 패턴까지 %lld/%lld";
+
+/* Journey v1: Today */
+"Each check-in adds to your first pattern. Missed days are fine." = "체크인할 때마다 첫 번째 패턴에 가까워져요. 빠진 날이 있어도 괜찮아요.";
+
+/* Journey v1: Today */
+"Curious how meals affect your energy?" = "식사가 에너지에 어떤 영향을 주는지 궁금하세요?";
+
+/* Journey v1: Today */
+"Try meal logging" = "식사 기록 사용해 보기";
+
+/* Journey v1: Today */
+"Dismiss" = "닫기";

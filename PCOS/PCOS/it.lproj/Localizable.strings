@@ -3142,3 +3142,39 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: onboarding and check-in */
 "Clear choice" = "Annulla scelta";
+
+/* Journey v1: Today */
+"Good morning, %@" = "Buongiorno, %@";
+
+/* Journey v1: Today */
+"Good afternoon, %@" = "Buon pomeriggio, %@";
+
+/* Journey v1: Today */
+"Good evening, %@" = "Buonasera, %@";
+
+/* Journey v1: Today */
+"%@ · Cycle day %lld" = "%@ · Giorno %lld del ciclo";
+
+/* Journey v1: Today */
+"More details" = "Altri dettagli";
+
+/* Journey v1: Today */
+"Your first pattern is ready" = "Il tuo primo schema è pronto";
+
+/* Journey v1: Today */
+"See what's connected" = "Scopri cosa è collegato";
+
+/* Journey v1: Today */
+"%lld of %lld toward your first pattern" = "%lld di %lld verso il tuo primo schema";
+
+/* Journey v1: Today */
+"Each check-in adds to your first pattern. Missed days are fine." = "Ogni check-in contribuisce al tuo primo schema. Saltare qualche giorno va benissimo.";
+
+/* Journey v1: Today */
+"Curious how meals affect your energy?" = "Curiosa di sapere come i pasti influenzano la tua energia?";
+
+/* Journey v1: Today */
+"Try meal logging" = "Prova il registro dei pasti";
+
+/* Journey v1: Today */
+"Dismiss" = "Nascondi";

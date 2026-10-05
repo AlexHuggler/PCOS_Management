@@ -104,6 +104,18 @@ struct QuickCheckInService {
         let edited = input.applying(to: original)
         try service.save(edited.changes(since: original))
     }
+
+    /// Removes one symptom from the day without touching anything else.
+    func clearSymptom(_ symptom: SymptomType, on date: Date = Date()) throws {
+        let service = DailyCheckInService(modelContext: modelContext)
+        let original = try service.load(on: date)
+        var values = original.symptoms.value ?? [:]
+        guard values.removeValue(forKey: symptom) != nil else { return }
+        var edited = original
+        edited.symptoms = .set(values)
+        edited.symptomNotes.removeValue(forKey: symptom)
+        try service.save(edited.changes(since: original))
+    }
 }
 
 // MARK: - "3 of 7 toward your first pattern" (A6, A8)
