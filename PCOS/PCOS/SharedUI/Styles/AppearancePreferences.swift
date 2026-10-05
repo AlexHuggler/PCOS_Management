@@ -57,7 +57,8 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable, Sendable {
         switch self {
         case .calm:
             ThemePalette(
-                accent: .init(hex: 0x236F72), sage: .init(hex: 0x778F83), coral: .init(hex: 0xB36F75),
+                // Same values as the companion Calm tokens (design-system review 5 Oct): one sage, one coral.
+                accent: .init(hex: 0x236F72), sage: .init(hex: 0x486546), coral: .init(hex: 0x9A4056),
                 warmNeutralLight: .init(hex: 0xF6F7F5), warmNeutralDark: .init(hex: 0x11191D),
                 flowSpottingLight: .init(hex: 0xF3DADD), flowLightLight: .init(hex: 0xDFB5BA),
                 flowMediumLight: .init(hex: 0xB97781), flowHeavyLight: .init(hex: 0x914A59),
