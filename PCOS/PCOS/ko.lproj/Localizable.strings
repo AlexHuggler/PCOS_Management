@@ -2799,17 +2799,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "거의 다 됐어요";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "구매가 승인되면 바로 프리미엄이 적용됩니다.";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "승인되면 프리미엄이 자동으로 켜져요.";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "이 Apple 계정에서 활성 구독을 찾을 수 없습니다.";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "이 Apple 계정에서 프리미엄 구독을 찾을 수 없어요.";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "구매는 완료되었지만 프리미엄이 아직 활성화되지 않았습니다. 잠시 후 ‘구매 복원’을 눌러 주세요.";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "구매가 완료되지 않았습니다";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "구매가 완료되지 않았어요";
 
 /* Journey v1: paywall */
 "Restore purchases" = "구매 복원";
@@ -2905,16 +2905,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "선택됨";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / 일";
+"%@/day" = "%@/일";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / 주";
+"%@/week" = "%@/주";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / 월";
+"%@/month" = "%@/월";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / 년";
+"%@/year" = "%@/년";
 
 /* Journey v1: paywall */
 "Yearly" = "연간";
@@ -3143,3 +3143,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "닫기";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "지금이나 나중에 다시 시도할 수 있어요. 기록은 안전하게 보관되어 있어요.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "복원이 완료되지 않았어요";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "연결을 확인하고 다시 시도해 주세요. 기록은 안전하게 보관되어 있어요.";

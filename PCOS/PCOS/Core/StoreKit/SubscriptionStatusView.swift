@@ -231,11 +231,11 @@ struct SubscriptionStatusView: View {
                 AppAnalytics.shared.track(.restoreCompleted(result: subscriptionManager.isPremium ? .restored : .nothingToRestore))
                 restoreMessage = subscriptionManager.isPremium
                     ? L10n.string("Your purchases are up to date.", defaultValue: "Your purchases are up to date.", language: language)
-                    : L10n.string("No active subscription was found for this Apple Account.", defaultValue: "No active subscription was found for this Apple Account.", language: language)
+                    : L10n.string("No Premium subscription found for this Apple Account.", defaultValue: "No Premium subscription found for this Apple Account.", language: language)
                 await load()
             } catch {
                 AppAnalytics.shared.track(.restoreCompleted(result: .failed))
-                restoreMessage = L10n.string("Could not restore purchases. Please try again.", defaultValue: "Could not restore purchases. Please try again.", language: language)
+                restoreMessage = L10n.string("Check your connection and try again — your logs are safe.", defaultValue: "Check your connection and try again — your logs are safe.", language: language)
             }
         }
     }

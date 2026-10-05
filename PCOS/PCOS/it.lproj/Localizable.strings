@@ -2834,17 +2834,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "Ci siamo quasi";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "Avrai Premium non appena l'acquisto sarà approvato.";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "Premium si attiva da solo non appena l'acquisto viene approvato.";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "Nessun abbonamento attivo trovato per questo Apple Account.";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "Nessun abbonamento Premium trovato per questo Apple Account.";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "L'acquisto è andato a buon fine, ma Premium non è ancora attivo. Tra poco prova «Ripristina acquisti».";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "Acquisto non completato";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "L'acquisto non è andato a buon fine";
 
 /* Journey v1: paywall */
 "Restore purchases" = "Ripristina acquisti";
@@ -2940,16 +2940,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "Selezionato";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / giorno";
+"%@/day" = "%@/giorno";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / settimana";
+"%@/week" = "%@/settimana";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / mese";
+"%@/month" = "%@/mese";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / anno";
+"%@/year" = "%@/anno";
 
 /* Journey v1: paywall */
 "Yearly" = "Annuale";
@@ -3178,3 +3178,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "Nascondi";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "Puoi riprovare ora o più tardi: le tue registrazioni sono al sicuro.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "Il ripristino non è andato a buon fine";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "Controlla la connessione e riprova: le tue registrazioni sono al sicuro.";

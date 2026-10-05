@@ -2802,17 +2802,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "Bijna klaar";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "Je krijgt Premium zodra de aankoop is goedgekeurd.";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "Premium wordt vanzelf ingeschakeld zodra de aankoop is goedgekeurd.";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "Er is geen actief abonnement gevonden voor dit Apple-account.";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "Geen Premium-abonnement gevonden voor dit Apple-account.";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Je aankoop is gelukt, maar Premium is nog niet actief. Probeer zo meteen ‘Aankopen herstellen’.";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "Aankoop niet voltooid";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "Aankoop is niet gelukt";
 
 /* Journey v1: paywall */
 "Restore purchases" = "Aankopen herstellen";
@@ -2908,16 +2908,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "Geselecteerd";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / dag";
+"%@/day" = "%@/dag";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / week";
+"%@/week" = "%@/week";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / maand";
+"%@/month" = "%@/maand";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / jaar";
+"%@/year" = "%@/jaar";
 
 /* Journey v1: paywall */
 "Yearly" = "Jaarlijks";
@@ -3146,3 +3146,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "Verbergen";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "Je kunt het nu of later opnieuw proberen – je gegevens zijn veilig.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "Herstellen is niet gelukt";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "Controleer je verbinding en probeer het opnieuw – je gegevens zijn veilig.";

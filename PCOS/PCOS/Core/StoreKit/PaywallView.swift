@@ -1,4 +1,5 @@
 import Foundation
+import os
 import SwiftUI
 
 // MARK: - Paywall (A10–A12, B1)
@@ -24,8 +25,10 @@ struct PaywallView: View {
     @State private var activePurchaseProductID: String?
     @State private var isRestoringPurchases = false
     @State private var loadErrorMessage: String?
-    @State private var alertErrorMessage: String?
     @State private var notice: PaywallNotice?
+    /// Set when a purchase is waiting for approval (Ask to Buy), so an approval that arrives while
+    /// the paywall is open still lands on "Welcome to Premium" and the started action.
+    @State private var pendingProductID: String?
     @State private var stage: Stage = .plans
     @State private var showComparison = false
     @State private var appearedAt = Date()
@@ -135,6 +138,9 @@ struct PaywallView: View {
             await loadPaywallIfNeeded()
         }
         .onDisappear(perform: trackDismissalIfNeeded)
+        .onChange(of: subscriptionManager.isPremium) { _, isPremium in
+            handleEntitlementChange(isPremium: isPremium)
+        }
         .toolbar(.hidden, for: .navigationBar)
         .alert(alertTitle, isPresented: isAlertPresented) {
             Button(PaywallCopy.okButton(for: paywallLanguage), role: .cancel) {}
@@ -263,12 +269,13 @@ struct PaywallView: View {
 
     // MARK: Alerts
 
+    // Every purchase alert is plain language: what happened, that her logs are safe, and what to
+    // do next. Technical details go to the log, never into an alert, and no alert is titled Error.
     private var isAlertPresented: Binding<Bool> {
         Binding(
-            get: { alertErrorMessage != nil || notice != nil },
+            get: { notice != nil },
             set: { isPresented in
                 if !isPresented {
-                    alertErrorMessage = nil
                     notice = nil
                 }
             }
@@ -276,11 +283,11 @@ struct PaywallView: View {
     }
 
     private var alertTitle: String {
-        notice?.title(for: paywallLanguage) ?? PaywallCopy.errorTitle(for: paywallLanguage)
+        notice?.title(for: paywallLanguage) ?? ""
     }
 
     private var alertMessage: String {
-        notice?.message(for: paywallLanguage) ?? alertErrorMessage ?? PaywallCopy.unknownError(for: paywallLanguage)
+        notice?.message(for: paywallLanguage) ?? ""
     }
 
     // MARK: Actions
@@ -363,10 +370,31 @@ struct PaywallView: View {
                 selectedProductID = yearlyProduct?.id ?? orderedProducts.first?.id
             }
         } catch {
+            Logger.storeKit.error("Paywall products failed to load: \(error.localizedDescription, privacy: .public)")
+            #if DEBUG
+            // Debug builds keep the configuration detail for QA; customers see the plain message.
             loadErrorMessage = Self.userFacingMessage(
                 for: error,
                 fallback: PaywallCopy.unableToLoadOptions(for: paywallLanguage)
             )
+            #else
+            loadErrorMessage = PaywallCopy.unableToLoadOptions(for: paywallLanguage)
+            #endif
+        }
+    }
+
+    /// Ask to Buy approval (or a purchase on another device) while the paywall is open.
+    private func handleEntitlementChange(isPremium: Bool) {
+        guard isPremium, stage == .plans, appState.showsSubscriptionUI else { return }
+        appState.isPremium = true
+        completedPurchase = true
+        if let productID = pendingProductID {
+            AppAnalytics.shared.track(.purchaseCompleted(productID: productID, offer: .none))
+            pendingProductID = nil
+        }
+        notice = nil
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+            stage = .welcome
         }
     }
 
@@ -381,8 +409,9 @@ struct PaywallView: View {
                 stage = .welcome
             }
             return true
-        } else if let statusMessage = subscriptionManager.statusMessage {
-            alertErrorMessage = statusMessage
+        }
+        if let statusMessage = subscriptionManager.statusMessage {
+            Logger.storeKit.error("Premium is not active after refresh: \(statusMessage, privacy: .public)")
         }
         return false
     }
@@ -401,21 +430,20 @@ struct PaywallView: View {
             case .success:
                 AppAnalytics.shared.track(.purchaseCompleted(productID: product.id, offer: .none))
                 let isActive = await refreshPremiumStateAndDismissIfNeeded()
-                if !isActive && alertErrorMessage == nil {
+                if !isActive {
                     notice = .activationDelayed
                 }
             case .pending:
                 AppAnalytics.shared.track(.purchasePending(productID: product.id))
+                pendingProductID = product.id
                 notice = .pending
             case .cancelled:
                 AppAnalytics.shared.track(.purchaseCancelled(productID: product.id))
             }
         } catch {
             AppAnalytics.shared.track(.purchaseFailed(code: Self.analyticsCode(for: error)))
-            alertErrorMessage = Self.userFacingMessage(
-                for: error,
-                fallback: PaywallCopy.purchaseFailed(for: paywallLanguage)
-            )
+            Logger.storeKit.error("Purchase failed: \(error.localizedDescription, privacy: .public)")
+            notice = .purchaseFailed
         }
     }
 
@@ -431,16 +459,12 @@ struct PaywallView: View {
                 AppAnalytics.shared.track(.restoreCompleted(result: .restored))
             } else {
                 AppAnalytics.shared.track(.restoreCompleted(result: .nothingToRestore))
-                if alertErrorMessage == nil {
-                    notice = .nothingToRestore
-                }
+                notice = .nothingToRestore
             }
         } catch {
             AppAnalytics.shared.track(.restoreCompleted(result: .failed))
-            alertErrorMessage = Self.userFacingMessage(
-                for: error,
-                fallback: PaywallCopy.restoreFailed(for: paywallLanguage)
-            )
+            Logger.storeKit.error("Restore failed: \(error.localizedDescription, privacy: .public)")
+            notice = .restoreFailed
         }
     }
 
@@ -554,10 +578,12 @@ private struct PremiumWelcomeView: View {
 
 // MARK: - Copy
 
-private enum PaywallNotice {
+private enum PaywallNotice: Equatable {
     case pending
     case nothingToRestore
     case activationDelayed
+    case purchaseFailed
+    case restoreFailed
 
     func title(for language: AppLanguage) -> String {
         switch self {
@@ -567,6 +593,10 @@ private enum PaywallNotice {
             L10n.string("Nothing to restore", defaultValue: "Nothing to restore", language: language)
         case .activationDelayed:
             L10n.string("Almost there", defaultValue: "Almost there", language: language)
+        case .purchaseFailed:
+            L10n.string("Purchase didn't go through", defaultValue: "Purchase didn't go through", language: language)
+        case .restoreFailed:
+            L10n.string("Restore didn't go through", defaultValue: "Restore didn't go through", language: language)
         }
     }
 
@@ -574,14 +604,26 @@ private enum PaywallNotice {
         switch self {
         case .pending:
             L10n.string(
-                "You'll get Premium as soon as the purchase is approved.",
-                defaultValue: "You'll get Premium as soon as the purchase is approved.",
+                "Premium turns on by itself once it's approved.",
+                defaultValue: "Premium turns on by itself once it's approved.",
                 language: language
             )
         case .nothingToRestore:
             L10n.string(
-                "No active subscription was found for this Apple Account.",
-                defaultValue: "No active subscription was found for this Apple Account.",
+                "No Premium subscription found for this Apple Account.",
+                defaultValue: "No Premium subscription found for this Apple Account.",
+                language: language
+            )
+        case .purchaseFailed:
+            L10n.string(
+                "You can try again now or later — your logs are safe.",
+                defaultValue: "You can try again now or later — your logs are safe.",
+                language: language
+            )
+        case .restoreFailed:
+            L10n.string(
+                "Check your connection and try again — your logs are safe.",
+                defaultValue: "Check your connection and try again — your logs are safe.",
                 language: language
             )
         case .activationDelayed:
@@ -601,20 +643,8 @@ private struct PaywallBenefit: Identifiable {
 }
 
 private enum PaywallCopy {
-    static func errorTitle(for language: AppLanguage) -> String {
-        string("Purchase not completed", defaultValue: "Purchase not completed", language: language)
-    }
-
     static func okButton(for language: AppLanguage) -> String {
         string("OK", defaultValue: "OK", language: language)
-    }
-
-    static func unknownError(for language: AppLanguage) -> String {
-        string(
-            "An unknown error occurred.",
-            defaultValue: "An unknown error occurred.",
-            language: language
-        )
     }
 
     static func loadingPremiumOptions(for language: AppLanguage) -> String {
@@ -629,22 +659,6 @@ private enum PaywallCopy {
         string(
             "Unable to load subscription options. Please check your connection and try again.",
             defaultValue: "Unable to load subscription options. Please check your connection and try again.",
-            language: language
-        )
-    }
-
-    static func purchaseFailed(for language: AppLanguage) -> String {
-        string(
-            "Purchase failed. Please try again.",
-            defaultValue: "Purchase failed. Please try again.",
-            language: language
-        )
-    }
-
-    static func restoreFailed(for language: AppLanguage) -> String {
-        string(
-            "Could not restore purchases. Please try again.",
-            defaultValue: "Could not restore purchases. Please try again.",
             language: language
         )
     }

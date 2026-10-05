@@ -2822,17 +2822,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "Presque terminé";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "Premium sera activé dès que l'achat sera approuvé.";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "Premium s’activera automatiquement dès que l’achat sera approuvé.";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "Aucun abonnement actif n'a été trouvé pour ce compte Apple.";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "Aucun abonnement Premium trouvé pour ce compte Apple.";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Votre achat a bien été effectué, mais Premium n'est pas encore activé. Essayez « Restaurer les achats » dans un instant.";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "Achat non effectué";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "L’achat n’a pas abouti";
 
 /* Journey v1: paywall */
 "Restore purchases" = "Restaurer les achats";
@@ -2928,16 +2928,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "Sélectionné";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / jour";
+"%@/day" = "%@/jour";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / semaine";
+"%@/week" = "%@/semaine";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / mois";
+"%@/month" = "%@/mois";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / an";
+"%@/year" = "%@/an";
 
 /* Journey v1: paywall */
 "Yearly" = "Annuel";
@@ -3166,3 +3166,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "Masquer";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "Vous pouvez réessayer maintenant ou plus tard. Vos enregistrements sont en sécurité.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "La restauration n’a pas abouti";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "Vérifiez votre connexion et réessayez. Vos enregistrements sont en sécurité.";

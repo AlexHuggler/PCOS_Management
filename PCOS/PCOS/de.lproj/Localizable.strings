@@ -2874,17 +2874,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "Fast geschafft";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "Du erhältst Premium, sobald der Kauf genehmigt ist.";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "Premium wird automatisch aktiviert, sobald der Kauf genehmigt ist.";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "Für diesen Apple Account wurde kein aktives Abo gefunden.";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "Für diesen Apple Account wurde kein Premium-Abo gefunden.";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Dein Kauf war erfolgreich, aber Premium ist noch nicht aktiv. Tippe gleich auf „Käufe wiederherstellen“.";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "Kauf nicht abgeschlossen";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "Der Kauf hat nicht geklappt";
 
 /* Journey v1: paywall */
 "Restore purchases" = "Käufe wiederherstellen";
@@ -2980,16 +2980,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "Ausgewählt";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / Tag";
+"%@/day" = "%@/Tag";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / Woche";
+"%@/week" = "%@/Woche";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / Monat";
+"%@/month" = "%@/Monat";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / Jahr";
+"%@/year" = "%@/Jahr";
 
 /* Journey v1: paywall */
 "Yearly" = "Jährlich";
@@ -3215,3 +3215,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "Ausblenden";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "Du kannst es jetzt oder später noch einmal versuchen – deine Einträge sind sicher.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "Die Wiederherstellung hat nicht geklappt";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "Prüfe deine Verbindung und versuche es erneut – deine Einträge sind sicher.";

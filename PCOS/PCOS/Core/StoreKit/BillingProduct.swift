@@ -143,7 +143,8 @@ struct BillingProduct: Identifiable, Equatable, Sendable {
         )
     }
 
-    /// "$9.99 / month" style text for single-unit periods; multi-unit periods keep "$X / 3 months".
+    /// "$9.99/month" style text for single-unit periods (paywall CTA and renewal line);
+    /// multi-unit periods keep "$X / 3 months".
     func displayPricePerPeriod(
         language: AppLanguage? = nil,
         base: Bundle = .main,
@@ -155,10 +156,10 @@ struct BillingProduct: Identifiable, Equatable, Sendable {
         }
         let key: String
         switch subscriptionPeriod.unit {
-        case .day: key = "%@ / day"
-        case .week: key = "%@ / week"
-        case .month: key = "%@ / month"
-        case .year: key = "%@ / year"
+        case .day: key = "%@/day"
+        case .week: key = "%@/week"
+        case .month: key = "%@/month"
+        case .year: key = "%@/year"
         }
         return L10n.format(
             key,

@@ -2799,17 +2799,17 @@ Fallback debug label when the premium entitlement status is unavailable. */
 /* Journey v1: paywall */
 "Almost there" = "もう少しです";
 
-/* Journey v1: paywall */
-"You'll get Premium as soon as the purchase is approved." = "購入が承認されると、すぐにプレミアムが使えるようになります。";
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "承認されると、プレミアムは自動的に有効になります。";
 
-/* Journey v1: paywall */
-"No active subscription was found for this Apple Account." = "このApple Accountで有効なサブスクリプションは見つかりませんでした。";
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "このApple Accountでプレミアムのサブスクリプションは見つかりませんでした。";
 
 /* Journey v1: paywall */
 "Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "購入は完了しましたが、プレミアムがまだ有効になっていません。少し待ってから「購入を復元」をお試しください。";
 
-/* Journey v1: paywall */
-"Purchase not completed" = "購入は完了していません";
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "購入を完了できませんでした";
 
 /* Journey v1: paywall */
 "Restore purchases" = "購入を復元";
@@ -2905,16 +2905,16 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Selected" = "選択済み";
 
 /* Journey v1: paywall */
-"%@ / day" = "%@ / 日";
+"%@/day" = "%@/日";
 
 /* Journey v1: paywall */
-"%@ / week" = "%@ / 週";
+"%@/week" = "%@/週";
 
 /* Journey v1: paywall */
-"%@ / month" = "%@ / 月";
+"%@/month" = "%@/月";
 
 /* Journey v1: paywall */
-"%@ / year" = "%@ / 年";
+"%@/year" = "%@/年";
 
 /* Journey v1: paywall */
 "Yearly" = "年額";
@@ -3143,3 +3143,12 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: Today */
 "Dismiss" = "閉じる";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "今すぐでも後でも、もう一度お試しいただけます。記録はそのまま残っています。";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "復元を完了できませんでした";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "接続を確認して、もう一度お試しください。記録はそのまま残っています。";

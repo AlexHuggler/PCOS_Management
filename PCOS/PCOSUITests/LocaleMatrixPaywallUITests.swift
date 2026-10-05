@@ -26,8 +26,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "Conditions d'utilisation",
                 monthlyTitle: "CycleBalance Premium Mensuel",
                 yearlyTitle: "CycleBalance Premium Annuel",
-                monthlyPeriodSuffix: "/ mois",
-                yearlyPeriodSuffix: "/ an",
+                monthlyPeriodSuffix: "/mois",
+                yearlyPeriodSuffix: "/an",
                 unavailableTitle: "Abonnements indisponibles"
             ),
             LocaleSpec(
@@ -40,8 +40,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "Nutzungsbedingungen",
                 monthlyTitle: "CycleBalance Premium Monatlich",
                 yearlyTitle: "CycleBalance Premium Jährlich",
-                monthlyPeriodSuffix: "/ Monat",
-                yearlyPeriodSuffix: "/ Jahr",
+                monthlyPeriodSuffix: "/Monat",
+                yearlyPeriodSuffix: "/Jahr",
                 unavailableTitle: "Abonnements nicht verfügbar"
             ),
             LocaleSpec(
@@ -54,8 +54,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "Gebruiksvoorwaarden",
                 monthlyTitle: "CycleBalance Premium Maandelijks",
                 yearlyTitle: "CycleBalance Premium Jaarlijks",
-                monthlyPeriodSuffix: "/ maand",
-                yearlyPeriodSuffix: "/ jaar",
+                monthlyPeriodSuffix: "/maand",
+                yearlyPeriodSuffix: "/jaar",
                 unavailableTitle: "Abonnementen niet beschikbaar"
             ),
         ]
@@ -71,8 +71,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "Condizioni d'uso",
                 monthlyTitle: "CycleBalance Premium Mensile",
                 yearlyTitle: "CycleBalance Premium Annuale",
-                monthlyPeriodSuffix: "/ mese",
-                yearlyPeriodSuffix: "/ anno",
+                monthlyPeriodSuffix: "/mese",
+                yearlyPeriodSuffix: "/anno",
                 unavailableTitle: "Abbonamenti non disponibili"
             ),
             LocaleSpec(
@@ -85,8 +85,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "利用規約",
                 monthlyTitle: "CycleBalance プレミアム 月額",
                 yearlyTitle: "CycleBalance プレミアム 年額",
-                monthlyPeriodSuffix: "/ 月",
-                yearlyPeriodSuffix: "/ 年",
+                monthlyPeriodSuffix: "/月",
+                yearlyPeriodSuffix: "/年",
                 unavailableTitle: "購読は利用できません"
             ),
             LocaleSpec(
@@ -99,8 +99,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
                 termsLabel: "이용 약관",
                 monthlyTitle: "CycleBalance 프리미엄 월간",
                 yearlyTitle: "CycleBalance 프리미엄 연간",
-                monthlyPeriodSuffix: "/ 월",
-                yearlyPeriodSuffix: "/ 년",
+                monthlyPeriodSuffix: "/월",
+                yearlyPeriodSuffix: "/년",
                 unavailableTitle: "구독을 사용할 수 없음"
             ),
         ]
@@ -109,8 +109,8 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
     private let englishHeroTitle = "Get more from every check-in"
     private let englishMonthlyTitle = "CycleBalance Premium Monthly"
     private let englishYearlyTitle = "CycleBalance Premium Yearly"
-    private let englishMonthlyPeriodSuffix = "/ month"
-    private let englishYearlyPeriodSuffix = "/ year"
+    private let englishMonthlyPeriodSuffix = "/month"
+    private let englishYearlyPeriodSuffix = "/year"
     private let englishRestoreLabel = "Restore purchases"
     private let englishPrivacyLabel = "Privacy Policy"
     private let englishTermsLabel = "Terms of Use"
@@ -250,7 +250,7 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
         assertEnglishFallbackIsHidden(in: app, file: file, line: line)
 
         // Plan cards are single buttons whose accessibility label combines the localized plan
-        // name and the "/ month" style price, so the labels are checked rather than child texts.
+        // name and the "/month" style price, so the labels are checked rather than child texts.
         let yearlyPlan = identifiedElement("paywall.plan.cyclebalance.premium.annual", in: app)
         let monthlyPlan = identifiedElement("paywall.plan.cyclebalance.premium.monthly", in: app)
 

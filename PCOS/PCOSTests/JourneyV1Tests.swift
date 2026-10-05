@@ -275,7 +275,7 @@ struct JourneyPaywallRoutingTests {
 
 @Suite("Journey v1: plan text")
 struct JourneyPlanTextTests {
-    @Test("Single-unit periods read '/ month' and '/ year'; analytics plan names are generic")
+    @Test("Single-unit periods read '/month' and '/year'; analytics plan names are generic")
     func perPeriodText() {
         let monthly = BillingProduct(
             id: SubscriptionManager.monthlyProductID,
@@ -292,8 +292,8 @@ struct JourneyPlanTextTests {
             subscriptionPeriod: BillingPeriod(unit: .year, value: 1),
             localizedPricePerMonth: "$6.66"
         )
-        #expect(monthly.displayPricePerPeriod(language: .en) == "$9.99 / month")
-        #expect(yearly.displayPricePerPeriod(language: .en) == "$79.99 / year")
+        #expect(monthly.displayPricePerPeriod(language: .en) == "$9.99/month")
+        #expect(yearly.displayPricePerPeriod(language: .en) == "$79.99/year")
         #expect(yearly.planTitle(language: .en) == "Yearly")
         #expect(monthly.analyticsPlanName == "monthly")
         #expect(yearly.analyticsPlanName == "yearly")
