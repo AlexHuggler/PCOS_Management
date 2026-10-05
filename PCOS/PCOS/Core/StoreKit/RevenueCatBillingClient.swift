@@ -57,11 +57,30 @@ final class RevenueCatBillingClient: PremiumBillingClient {
             from: offering,
             productIDs: configuration.productIDs
         )
-        packagesByProductID = resolvedPackages
+        // Merge so an optional package loaded separately (the exit offer) stays purchasable.
+        packagesByProductID.merge(resolvedPackages) { _, latest in latest }
         lastStatusMessage = nil
 
         return configuration.productIDs.compactMap { productID in
             resolvedPackages[productID].map(Self.makeBillingProduct(from:))
+        }
+    }
+
+    /// Looks for `productID` in the `offeringID` offering (falling back to the current offering).
+    /// Missing configuration is expected while the exit offer is not set up, so this never throws.
+    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct? {
+        do {
+            try configureIfNeeded()
+            let offering = try await revenueCat.loadOffering(offeringID: offeringID)
+            guard let package = offering.availablePackages.first(where: {
+                $0.storeProduct.productIdentifier == productID
+            }) else {
+                return nil
+            }
+            packagesByProductID[productID] = package
+            return Self.makeBillingProduct(from: package)
+        } catch {
+            return nil
         }
     }
 
@@ -156,7 +175,8 @@ final class RevenueCatBillingClient: PremiumBillingClient {
             displayName: product.localizedTitle,
             displayPrice: product.localizedPriceString,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod),
+            localizedPricePerMonth: product.localizedPricePerMonth
         )
     }
 
@@ -184,7 +204,8 @@ final class RevenueCatBillingClient: PremiumBillingClient {
 @MainActor
 final class LiveRevenueCatPurchasing: RevenueCatPurchasing {
     var isConfigured: Bool { Purchases.isConfigured }
-    var appUserID: String { Purchases.shared.appUserID }
+    // Purchases.shared traps when the SDK is not configured (e.g. no API key in a dev build).
+    var appUserID: String { Purchases.isConfigured ? Purchases.shared.appUserID : "" }
 
     func configure(apiKey: String) {
         if !Purchases.isConfigured {

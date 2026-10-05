@@ -20,11 +20,11 @@ final class StoreKitBillingClient: PremiumBillingClient {
 
     func currentEntitlements() async throws -> Set<String> {
         lastStatusMessage = nil
-        return try await Self.activeEntitlementProductIDs(for: configuration.productIDs)
+        return try await Self.activeEntitlementProductIDs(for: configuration.entitlementProductIDs)
     }
 
     func makeEntitlementUpdatesStream() -> AsyncStream<Set<String>> {
-        let productIDs = configuration.productIDs
+        let productIDs = configuration.entitlementProductIDs
 
         return AsyncStream { continuation in
             let updatesTask = Task {
@@ -82,6 +82,17 @@ final class StoreKitBillingClient: PremiumBillingClient {
         try await AppStore.sync()
     }
 
+    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct? {
+        if let cachedProduct = productsByID[productID] {
+            return Self.makeBillingProduct(from: cachedProduct)
+        }
+        guard let product = try? await Product.products(for: [productID]).first else {
+            return nil
+        }
+        productsByID[productID] = product
+        return Self.makeBillingProduct(from: product)
+    }
+
     private func loadProduct(productID: String) async throws -> Product {
         if let cachedProduct = productsByID[productID] {
             return cachedProduct
@@ -130,8 +141,22 @@ final class StoreKitBillingClient: PremiumBillingClient {
             displayName: product.displayName,
             displayPrice: product.displayPrice,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod),
+            localizedPricePerMonth: localizedPricePerMonth(for: product)
         )
+    }
+
+    private static func localizedPricePerMonth(for product: Product) -> String? {
+        guard let period = product.subscription?.subscriptionPeriod else { return nil }
+        let months: Int
+        switch period.unit {
+        case .month: months = period.value
+        case .year: months = period.value * 12
+        default: return nil
+        }
+        guard months > 0 else { return nil }
+        let monthly = product.price / Decimal(months)
+        return monthly.formatted(product.priceFormatStyle)
     }
 
     private static func makeBillingPeriod(from subscriptionPeriod: Product.SubscriptionPeriod?) -> BillingPeriod? {

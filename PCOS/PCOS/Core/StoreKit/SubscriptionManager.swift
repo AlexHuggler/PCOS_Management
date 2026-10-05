@@ -8,6 +8,11 @@ final class SubscriptionManager: PremiumStatusProviding {
 
     static let monthlyProductID = "cyclebalance.premium.monthly"
     static let yearlyProductID = "cyclebalance.premium.annual"
+    /// One-time "exit offer": a yearly plan at a lower price, in the same subscription group,
+    /// shown once after a paywall is closed without buying. Must be created in App Store Connect,
+    /// attached to the Premium entitlement in RevenueCat and added to the `exit_offer` offering.
+    static let exitOfferProductID = "cyclebalance.premium.annual.offer"
+    static let exitOfferOfferingID = "exit_offer"
     typealias BillingClientFactory = @MainActor (_ configuration: BillingConfiguration) -> any PremiumBillingClient
 
     var purchasedProductIDs: Set<String> = [] {
@@ -28,7 +33,8 @@ final class SubscriptionManager: PremiumStatusProviding {
 
     init(
         configuration: BillingConfiguration = BillingConfiguration.from(
-            productIDs: [SubscriptionManager.monthlyProductID, SubscriptionManager.yearlyProductID]
+            productIDs: [SubscriptionManager.monthlyProductID, SubscriptionManager.yearlyProductID],
+            additionalEntitlementProductIDs: [SubscriptionManager.exitOfferProductID]
         ),
         clientFactory: @escaping BillingClientFactory = SubscriptionManager.makeBillingClient
     ) {
@@ -95,6 +101,19 @@ final class SubscriptionManager: PremiumStatusProviding {
             statusMessage = error.localizedDescription
             throw error
         }
+    }
+
+    /// Loads the exit-offer product if it is configured; nil otherwise (never throws).
+    func loadExitOfferProduct() async -> BillingProduct? {
+        do {
+            try ensureClientConfigured()
+        } catch {
+            return nil
+        }
+        return await billingClient.loadOptionalProduct(
+            productID: Self.exitOfferProductID,
+            offeringID: Self.exitOfferOfferingID
+        )
     }
 
     func stopEntitlementListener() {

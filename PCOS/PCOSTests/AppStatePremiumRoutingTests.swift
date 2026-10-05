@@ -139,7 +139,7 @@ struct AppStatePremiumRoutingTests {
         #expect(!appState.showPremiumPaywall)
     }
 
-    @Test("TestFlight builds unlock premium access without changing real entitlement state")
+    @Test("QA-flagged TestFlight builds unlock premium access without changing real entitlement state")
     func testFlightOverrideUnlocksPremiumAccess() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -148,7 +148,8 @@ struct AppStatePremiumRoutingTests {
             defaults: defaults,
             launchArguments: [],
             appStoreReceiptURL: makeReceiptURL(named: "sandboxReceipt"),
-            isDebugBuild: false
+            isDebugBuild: false,
+            premiumQAOverrideEnabled: true
         )
 
         #expect(!appState.isPremium)
@@ -156,7 +157,7 @@ struct AppStatePremiumRoutingTests {
         #expect(!appState.showsSubscriptionUI)
     }
 
-    @Test("TestFlight builds ignore paywall presentation requests")
+    @Test("QA-flagged TestFlight builds ignore paywall presentation requests")
     func testFlightOverrideSuppressesPaywallPresentation() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -165,12 +166,33 @@ struct AppStatePremiumRoutingTests {
             defaults: defaults,
             launchArguments: [],
             appStoreReceiptURL: makeReceiptURL(named: "sandboxReceipt"),
-            isDebugBuild: false
+            isDebugBuild: false,
+            premiumQAOverrideEnabled: true
         )
 
         appState.presentPremiumPaywall()
 
         #expect(!appState.showPremiumPaywall)
+    }
+
+    @Test("App Store archives without the QA flag show subscriptions to sandbox (App Review) users")
+    func sandboxReceiptWithoutQAFlagKeepsSubscriptionUI() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let appState = AppState(
+            defaults: defaults,
+            launchArguments: [],
+            appStoreReceiptURL: makeReceiptURL(named: "sandboxReceipt"),
+            isDebugBuild: false,
+            premiumQAOverrideEnabled: false
+        )
+
+        #expect(!appState.allowsPremiumAccess)
+        #expect(appState.showsSubscriptionUI)
+        appState.hasCompletedOnboarding = true
+        appState.requestLogger(.meal)
+        #expect(appState.showPremiumPaywall)
     }
 
     @Test("Debug sandbox receipts do not trigger the TestFlight override")
