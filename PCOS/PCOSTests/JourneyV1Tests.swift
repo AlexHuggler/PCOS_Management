@@ -200,7 +200,10 @@ struct QuickCheckInTests {
 struct CheckInProgressTests {
     @Test("Progress counts distinct days and caps at seven")
     func distinctDays() {
-        let calendar = Calendar(identifier: .gregorian)
+        // Fixed time zone: the base date is 23:13 in US Pacific (PDT), so base + 1 h would fall on
+        // the next day there with the device's time zone.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
         let base = Date(timeIntervalSinceReferenceDate: 800_000_000)
         let dates = [base, base.addingTimeInterval(3600), base.addingTimeInterval(86_400 * 2)]
         #expect(CheckInProgress.distinctDays(dates, calendar: calendar) == 2)
@@ -451,10 +454,12 @@ struct JourneyAnalyticsTests {
         analytics.trackOnce(.firstCheckinSaved(source: .today), onceKey: "first")
         #expect(sink.events.filter { $0.name == "first_checkin_saved" }.count == 1)
 
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
         let day = Date(timeIntervalSinceReferenceDate: 800_000_000)
-        analytics.trackOncePerDay(.checkinSaved(source: .today), dailyKey: "daily", now: day)
-        analytics.trackOncePerDay(.checkinSaved(source: .sheet), dailyKey: "daily", now: day.addingTimeInterval(60))
-        analytics.trackOncePerDay(.checkinSaved(source: .today), dailyKey: "daily", now: day.addingTimeInterval(86_400 * 2))
+        analytics.trackOncePerDay(.checkinSaved(source: .today), dailyKey: "daily", now: day, calendar: utc)
+        analytics.trackOncePerDay(.checkinSaved(source: .sheet), dailyKey: "daily", now: day.addingTimeInterval(60), calendar: utc)
+        analytics.trackOncePerDay(.checkinSaved(source: .today), dailyKey: "daily", now: day.addingTimeInterval(86_400 * 2), calendar: utc)
         #expect(sink.events.filter { $0.name == "checkin_saved" }.count == 2)
     }
 }
