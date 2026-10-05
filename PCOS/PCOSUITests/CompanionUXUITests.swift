@@ -4,18 +4,19 @@ import XCTest
 final class CompanionUXUITests: XCTestCase {
     private func launch(theme: String = "calm", onboarding: Bool = true, largeText: Bool = false, language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["UITestMode", "-onboarding.hasCompletedOnboarding", onboarding ? "YES" : "NO", "-onboarding.startPhase", "companion_0", "-appearance.themeOption", theme, "-app.language", language, "-AppleLanguages", "(\(language))", "-AppleLocale", language]
+        app.launchArguments = ["UITestMode", "-onboarding.hasCompletedOnboarding", onboarding ? "YES" : "NO", "-onboarding.startPhase", "journey_5", "-appearance.themeOption", theme, "-app.language", language, "-AppleLanguages", "(\(language))", "-AppleLocale", language]
         app.launchArguments += ["-appearance.colorMode", theme == "lunarCalm" ? "dark" : "light"]
         if largeText { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
         return app
     }
 
-    func testExploreWithoutPermissionsAndNoInventedCheckIn() {
+    func testSkipHealthWithoutPermissionsAndNoInventedCheckIn() {
         let app = launch(onboarding: false)
-        let explore = app.buttons["onboarding.explore"]
-        XCTAssertTrue(explore.waitForExistence(timeout: 10))
-        explore.tap()
+        // A7 Apple Health is optional: Skip goes straight to Today with nothing recorded.
+        let skip = app.buttons["onboarding.finish"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 10))
+        skip.tap()
         let checkIn = app.buttons["today.checkin"]
         XCTAssertTrue(checkIn.waitForExistence(timeout: 5))
         XCTAssertEqual(app.tabBars.buttons.count, 5)

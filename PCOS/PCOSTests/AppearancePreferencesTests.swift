@@ -32,7 +32,7 @@ struct AppearancePreferencesTests {
         }
     }
 
-    @Test("Fresh installs default to Calm with system color mode")
+    @Test("Fresh installs default to Calm in light mode")
     func freshInstallDefaultsToLunarCalm() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -40,8 +40,8 @@ struct AppearancePreferencesTests {
         let preferences = AppearancePreferences(defaults: defaults)
 
         #expect(preferences.themeOption == .calm)
-        #expect(preferences.colorMode == .system)
-        #expect(preferences.preferredColorScheme == nil)
+        #expect(preferences.colorMode == .light)
+        #expect(preferences.preferredColorScheme == .light)
         #expect(preferences.fontOption == .systemDefault)
         #expect(preferences.availableThemeOptions.first == .calm)
     }

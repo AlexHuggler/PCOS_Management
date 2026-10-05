@@ -280,18 +280,18 @@ struct OnboardingProfileTests {
         profile.resetOnboarding()
     }
 
-    @Test("Four optional onboarding stages resume saved progress and migrate old phases")
+    @Test("Six onboarding steps resume saved progress and migrate old phases")
     @MainActor
     func onboardingStagesResumeAndMigrate() throws {
         let name = "CompanionOnboardingResume.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: name))
         defer { defaults.removePersistentDomain(forName: name) }
-        #expect(CompanionOnboardingStage.allCases == [.welcome, .preferences, .health, .checkIn])
+        #expect(CompanionOnboardingStage.allCases == [.welcome, .stage, .focus, .checkIn, .unlocks, .health])
         for stage in CompanionOnboardingStage.allCases {
-            defaults.set("companion_\(stage.rawValue)", forKey: "onboarding.currentPhaseRaw")
+            defaults.set(stage.persistedPhase, forKey: "onboarding.currentPhaseRaw")
             #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == stage)
         }
-        for (legacy, expected) in [("quiz", CompanionOnboardingStage.preferences), ("permissions", .health), ("meal_scan_demo", .checkIn)] {
+        for (legacy, expected) in [("quiz", CompanionOnboardingStage.stage), ("permissions", .health), ("meal_scan_demo", .checkIn), ("companion_0", .welcome), ("companion_1", .stage), ("companion_3", .checkIn)] {
             defaults.set(legacy, forKey: "onboarding.currentPhaseRaw")
             #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == expected)
         }
@@ -301,11 +301,20 @@ struct OnboardingProfileTests {
         let root = try TestHelpers.projectRoot(from: #filePath)
         let source = try String(contentsOf: root.appendingPathComponent("PCOS/PCOS/Features/Onboarding/Views/OnboardingContainerView.swift"))
         let activeFlow = source.components(separatedBy: "// MARK: - Onboarding Phase").first ?? source
-        #expect(activeFlow.contains("onboarding.explore"))
+        // A2: only "Get started" and "Restore from backup"; no Explore Today exit or language picker.
+        #expect(activeFlow.contains("onboarding.get_started"))
+        #expect(activeFlow.contains("onboarding.import_backup"))
+        #expect(!activeFlow.contains("onboarding.explore"))
+        #expect(!activeFlow.contains("Picker(L10n.string(\"Language\""))
+        // A5 is inline, not the Form sheet.
+        #expect(activeFlow.contains("OnboardingFirstCheckInStep"))
+        #expect(!activeFlow.contains("SymptomLogView()"))
         #expect(activeFlow.contains("Not now"))
-        #expect(activeFlow.contains("SymptomLogView()"))
         #expect(!activeFlow.contains("OnboardingMealScanDemoView("))
         #expect(!activeFlow.contains("requestReview"))
+        // No soft paywall at the end of onboarding (approved decision 2).
+        #expect(!activeFlow.contains("presentPremiumPaywall"))
+        #expect(CompanionOnboardingStage.allCases.map(\.stepID) == ["A2_welcome", "A3_stage", "A4_focus", "A5_first_checkin", "A6_reminder", "A7_health"])
     }
 
     @Test("dismissed log sheet without a new record stays incomplete")
@@ -416,18 +425,18 @@ struct OnboardingProfileTests {
 
 @Suite("Companion onboarding resume")
 struct CompanionOnboardingResumeTests {
-    @Test("Each companion stage resumes without repeating setup")
+    @Test("Each onboarding step resumes without repeating setup")
     func persistedStagesResume() {
         let suite = "companion-onboarding-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         for stage in CompanionOnboardingStage.allCases {
-            defaults.set("companion_\(stage.rawValue)", forKey: "onboarding.currentPhaseRaw")
+            defaults.set(stage.persistedPhase, forKey: "onboarding.currentPhaseRaw")
             #expect(CompanionOnboardingStage.resume(defaults: defaults, arguments: []) == stage)
         }
     }
 
-    @Test("Legacy scanner and social proof progress migrate to optional check-in")
+    @Test("Legacy scanner and social proof progress migrate to the first check-in")
     func legacyInterruptionsAreSkipped() {
         let suite = "companion-onboarding-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!

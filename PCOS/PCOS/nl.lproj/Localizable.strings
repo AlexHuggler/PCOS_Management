@@ -2954,3 +2954,159 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: subscription status */
 "Your purchases are up to date." = "Je aankopen zijn up-to-date.";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "Er ging iets mis";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "Terug";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "Aan de slag";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "Herstellen uit back-up";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "Check-in van vandaag opslaan";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "Later doen";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "Herinnering aanzetten";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Apple Gezondheid koppelen";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "Stap %lld van %lld";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "Begrijp je PCOS-patronen, privé.";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "Een check-in duurt ongeveer 20 seconden. Na verloop van tijd zie je wat met elkaar samen lijkt te hangen: cyclus, symptomen, slaap en meer.";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "Blijft op je iPhone";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Apple Gezondheid is optioneel";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "Geen medisch hulpmiddel";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "Onlangs gediagnosticeerd";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "Al een tijdje bezig";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "Nog niet zeker";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "Ik ontdek wat helpt";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "Ik ken de basis en wil meer detail";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "Ik merk symptomen op";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "Waar sta je met je PCOS?";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "Dit bepaalt hoeveel we uitleggen. Altijd te wijzigen.";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "Wat wil je beter begrijpen?";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "Kies wat je wilt. We zetten ze vast in je dagelijkse check-in.";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "Hoe mogen we je noemen? (optioneel)";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "Naam";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "JOUW SYMPTOMEN";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "Dag 1 opgeslagen";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "Dit ontgrendel je door te loggen";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "Na 7 check-ins";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "Je eerste symptoompatroon";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld van %lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "Na 2 menstruaties";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "De spreiding van je cycluslengte";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Met Apple Gezondheid";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "Context van slaap en activiteit";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "Een zachte herinnering?";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "Eén rustige herinnering per dag. Je symptomen verschijnen nooit op het toegangsscherm.";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "Tijd van herinnering";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "Slaap";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "Cyclus bijhouden";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Haal binnen wat je Watch al weet";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "Alleen lezen. CycleBalance schrijft nooit naar Apple Gezondheid en niets verlaat je iPhone.";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "Apple Gezondheid is niet beschikbaar op dit apparaat.";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "Altijd te wijzigen via Instellingen › Gezondheid.";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "Onregelmatige menstruatie";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "Trek & spijsvertering";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "Bloedsuiker";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "Sterk";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "Zwaar";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "Niets te melden vandaag";
+
+/* Journey v1: onboarding and check-in */
+"Clear choice" = "Keuze wissen";

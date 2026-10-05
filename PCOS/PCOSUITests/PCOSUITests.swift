@@ -976,12 +976,13 @@ final class PCOSUITests: XCTestCase {
         let app = makeApp(
             language: "en", locale: "en_US", onboardingCompleted: false,
             appLanguage: "system", themeOption: "botanicalJournal",
-            onboardingStartPhase: "companion_3",
+            onboardingStartPhase: "journey_5",
             contentSizeCategory: "UICTContentSizeCategoryAccessibilityXXXL"
         )
         app.launch()
         defer { app.terminate() }
-        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 10))
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.5").waitForExistence(timeout: 10))
+        // A7 Apple Health: Skip goes straight to Today.
         let finish = app.buttons["onboarding.finish"]
         // Onboarding has no tab bar, so the shared 80-point tab exclusion does not apply.
         scrollToElement(finish, in: app, requireSafeTapZone: false)
@@ -2011,14 +2012,14 @@ final class PCOSUITests: XCTestCase {
     func testJapaneseOnboardingAndCalendarSmoke() throws {
         let app = makeApp(
             language: "ja", locale: "ja_JP", onboardingCompleted: false,
-            appLanguage: "system", onboardingStartPhase: "companion_3"
+            appLanguage: "system", onboardingStartPhase: "journey_5"
         )
         app.launch()
         defer { app.terminate() }
-        XCTAssertTrue(app.staticTexts["今の気持ちから始めましょう"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Apple Watchのデータを取り込む"].waitForExistence(timeout: 10))
         let finish = app.buttons["onboarding.finish"]
         XCTAssertTrue(finish.waitForExistence(timeout: 5))
-        XCTAssertEqual(finish.label, "「今日」を見てみる")
+        XCTAssertEqual(finish.label, "スキップ")
         scrollToElement(finish, in: app)
         finish.tap()
         XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
@@ -2214,16 +2215,17 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testOnboardingFourStagesRenderWithRoundedFont() throws {
+    func testOnboardingSixStepsRenderWithRoundedFont() throws {
         let titles = [
-            "A little support for your everyday", "What would you like support with?",
-            "Let Apple Health help, if you like", "Start with how you feel",
+            "Understand your PCOS patterns, privately.", "Where are you in your PCOS journey?",
+            "What would you like to understand?", "How are you feeling today?",
+            "Here's what unlocks as you log", "Bring in what your Watch already knows",
         ]
         for (index, title) in titles.enumerated() {
             let app = makeApp(
                 language: "en", locale: "en_US", onboardingCompleted: false,
                 appLanguage: "system", fontOption: "rounded", themeOption: "calm",
-                onboardingStartPhase: "companion_\(index)"
+                onboardingStartPhase: "journey_\(index)"
             )
             app.launch()
             XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.\(index)").waitForExistence(timeout: 10))
@@ -2235,10 +2237,10 @@ final class PCOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testOnboardingChoicesSurviveBackAndOptionalStepsReachToday() throws {
+    func testOnboardingChoicesSurviveBackAndFirstCheckInReachesToday() throws {
         let app = makeApp(
             language: "en", locale: "en_US", onboardingCompleted: false,
-            appLanguage: "system", onboardingStartPhase: "companion_0"
+            appLanguage: "system", onboardingStartPhase: "journey_0"
         )
         // Do not pin a focus value through launch arguments while testing editing.
         if let index = app.launchArguments.firstIndex(of: "-onboarding.symptomFocusAreas") {
@@ -2252,27 +2254,35 @@ final class PCOSUITests: XCTestCase {
             XCTAssertTrue(element.isHittable)
             element.tap()
         }
-        tap(app.buttons["Make it yours"])
+        // A2: only Get started and Restore from backup.
+        XCTAssertTrue(app.buttons["onboarding.import_backup"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["onboarding.explore"].exists)
+        tap(app.buttons["onboarding.get_started"])
+        // A3: a choice survives Back.
         XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.1").waitForExistence(timeout: 5))
-        let focus = app.switches.firstMatch
-        XCTAssertTrue(focus.waitForExistence(timeout: 5))
-        let previousValue = try XCTUnwrap(focus.value as? String)
-        XCTAssertTrue(["0", "1"].contains(previousValue))
-        let selectedValue = previousValue == "1" ? "0" : "1"
-        tap(focus)
-        let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", selectedValue), object: focus)
-        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 3), .completed)
+        let stage = app.buttons["onboarding.stage.experienced"]
+        tap(stage)
+        XCTAssertTrue(stage.isSelected)
         tap(app.buttons["onboarding.back"])
         XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.0").waitForExistence(timeout: 5))
-        tap(app.buttons["Make it yours"])
-        XCTAssertTrue(focus.waitForExistence(timeout: 5))
-        XCTAssertEqual(focus.value as? String, selectedValue)
-        tap(app.buttons["Continue"])
+        tap(app.buttons["onboarding.get_started"])
+        XCTAssertTrue(app.buttons["onboarding.stage.experienced"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["onboarding.stage.experienced"].isSelected)
+        tap(app.buttons["onboarding.continue"])
+        // A4: focus chips.
         XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.2").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Review Apple Health options"].exists)
-        tap(app.buttons["Not now"])
+        tap(app.buttons["onboarding.focus.sleep"])
+        tap(app.buttons["onboarding.continue"])
+        // A5: inline first check-in in two taps.
         XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["First check-in"].exists)
+        tap(app.buttons["checkin.mood.good"])
+        tap(app.buttons["onboarding.checkin.save"])
+        // A6: Day 1 exists before onboarding ends.
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.4").waitForExistence(timeout: 5))
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.day1_saved").exists)
+        tap(app.buttons["onboarding.reminder.not_now"])
+        // A7: Skip goes straight to Today.
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.5").waitForExistence(timeout: 5))
         tap(app.buttons["onboarding.finish"])
         XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.tabBars.buttons.count, 5)
@@ -2286,14 +2296,13 @@ final class PCOSUITests: XCTestCase {
         )
         app.launch()
         defer { app.terminate() }
-        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.2").waitForExistence(timeout: 10))
-        XCTAssertTrue(app.buttons["Review Apple Health options"].exists)
-        let skip = app.buttons["Not now"]
-        scrollToElement(skip, in: app)
+        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.5").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone."].exists)
+        let skip = app.buttons["onboarding.finish"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 5))
         XCTAssertTrue(skip.isHittable)
         skip.tap()
-        XCTAssertTrue(screenElement(in: app, identifier: "onboarding.companion.3").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["onboarding.finish"].exists)
+        XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10))
     }
 
     @MainActor

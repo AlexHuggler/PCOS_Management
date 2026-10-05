@@ -2951,3 +2951,159 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: subscription status */
 "Your purchases are up to date." = "구매 정보가 최신 상태입니다.";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "문제가 발생했습니다";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "뒤로";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "시작하기";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "백업에서 복원";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "오늘의 체크인 저장";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "나중에 하기";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "알림 켜기";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Apple 건강 연결";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "%lld/%lld단계";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "나의 PCOS 패턴을 비공개로 이해하세요.";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "체크인은 약 20초면 끝나요. 시간이 지나면 주기, 증상, 수면 등 무엇이 연결되어 보이는지 확인할 수 있어요.";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "iPhone에만 보관";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Apple 건강 연결은 선택 사항";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "의료기기가 아닙니다";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "최근에 진단받음";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "관리한 지 꽤 됨";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "아직 잘 모르겠음";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "무엇이 도움이 되는지 알아가는 중";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "기본은 알고 있고 자세한 내용을 원함";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "증상을 느끼고 있음";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "PCOS와 함께한 여정은 어디쯤인가요?";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "설명의 자세한 정도가 정해집니다. 언제든지 바꿀 수 있어요.";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "무엇을 이해하고 싶으세요?";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "원하는 만큼 고르세요. 매일 체크인에 고정해 드려요.";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "어떻게 불러 드릴까요? (선택)";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "이름";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "나의 증상";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "1일차 저장됨";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "기록할수록 열리는 기능";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "체크인 7회 후";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "첫 번째 증상 패턴";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "생리 2회 후";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "주기 길이 범위";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Apple 건강과 함께";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "수면 및 활동 맥락";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "부드러운 알림을 받아 볼까요?";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "하루 한 번 조용한 알림. 잠금 화면에 증상이 표시되지 않아요.";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "알림 시간";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "수면";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "주기 추적";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Watch에 이미 있는 데이터를 가져오세요";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "읽기 전용입니다. CycleBalance는 Apple 건강에 기록하지 않으며 데이터가 iPhone 밖으로 나가지 않습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "이 기기에서는 Apple 건강을 사용할 수 없습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "설정 › 건강에서 언제든지 변경할 수 있습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "불규칙한 생리";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "식욕 및 소화";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "혈당";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "심함";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "힘듦";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "오늘은 특별한 증상 없음";
+
+/* Journey v1: onboarding and check-in */
+"Clear choice" = "선택 해제";

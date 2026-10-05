@@ -363,10 +363,11 @@ private struct AppearanceSelection: Codable, Equatable {
     var fontOption: FontOption
     var colorMode: AppearanceColorMode?
 
+    /// Fresh installs start in Calm (light), matching the App Store screenshots (approved v1 decision).
     static let `default` = AppearanceSelection(
         themeOption: .calm,
         fontOption: .systemDefault,
-        colorMode: .system
+        colorMode: .light
     )
 }
 
@@ -403,7 +404,7 @@ final class AppearancePreferences {
         } else {
             themeOption = AppearanceSelection.default.themeOption
             fontOption = AppearanceSelection.default.fontOption
-            colorMode = .system
+            colorMode = AppearanceSelection.default.colorMode ?? .light
         }
     }
 

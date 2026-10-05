@@ -2951,3 +2951,159 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: subscription status */
 "Your purchases are up to date." = "購入情報は最新です。";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "問題が発生しました";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "戻る";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "はじめる";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "バックアップから復元";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "今日のチェックインを保存";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "あとで";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "リマインダーをオンにする";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Appleヘルスに接続";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "ステップ %lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "PCOSのパターンを、プライベートに理解する。";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "チェックインは約20秒。続けるうちに、周期・症状・睡眠などのつながりが見えてきます。";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "データはiPhoneに保存";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Appleヘルスの連携は任意";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "医療機器ではありません";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "最近診断された";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "しばらく付き合っている";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "まだわからない";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "何が役立つか学んでいるところ";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "基本は知っていて、詳しく知りたい";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "症状に気づいている";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "PCOSとの付き合いはどのくらいですか？";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "説明の詳しさが変わります。いつでも変更できます。";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "どんなことを知りたいですか？";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "いくつでも選べます。毎日のチェックインに固定表示します。";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "お名前（任意）";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "名前";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "あなたの症状";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "1日目を保存しました";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "記録を続けると見えてくること";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "チェックイン7回後";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "はじめての症状パターン";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "生理2回後";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "周期の長さの範囲";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Appleヘルスと連携すると";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "睡眠と活動のデータも一緒に";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "やさしいリマインダーはいかがですか？";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "1日1回の控えめな通知です。症状がロック画面に表示されることはありません。";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "通知の時刻";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "睡眠";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "周期記録";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Apple Watchのデータを取り込む";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "読み取り専用です。CycleBalanceがAppleヘルスに書き込むことはなく、データがiPhoneの外に出ることもありません。";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "このデバイスではAppleヘルスを利用できません。";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "設定 › ヘルスからいつでも変更できます。";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "不規則な生理";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "食欲とお腹の調子";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "血糖値";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "強い";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "つらい";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "今日は特になし";
+
+/* Journey v1: onboarding and check-in */
+"Clear choice" = "選択を解除";

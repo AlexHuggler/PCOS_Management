@@ -3026,3 +3026,156 @@ Fallback debug label when the premium entitlement status is unavailable. */
 
 /* Journey v1: subscription status */
 "Your purchases are up to date." = "Deine Käufe sind auf dem neuesten Stand.";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "Etwas ist schiefgelaufen";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "Zurück";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "Los geht's";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "Aus Backup wiederherstellen";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "Heutigen Check-in speichern";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "Später";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "Erinnerung einschalten";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Mit Apple Health verbinden";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "Schritt %lld von %lld";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "Verstehe deine PCOS-Muster – ganz privat.";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "Ein Check-in dauert etwa 20 Sekunden. Mit der Zeit siehst du, was zusammenzuhängen scheint: Zyklus, Symptome, Schlaf und mehr.";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "Bleibt auf deinem iPhone";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Apple Health ist optional";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "Kein Medizinprodukt";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "Kürzlich diagnostiziert";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "Schon länger dabei";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "Noch nicht sicher";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "Ich lerne, was hilft";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "Ich kenne die Grundlagen und möchte Details";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "Mir fallen Symptome auf";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "Wo stehst du mit deinem PCOS?";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "Davon hängt ab, wie viel wir erklären. Jederzeit änderbar.";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "Was möchtest du besser verstehen?";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "Wähle beliebig viele. Wir heften sie an deinen täglichen Check-in.";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "Wie dürfen wir dich nennen? (optional)";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "Name";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "DEINE SYMPTOME";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "Tag 1 gespeichert";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "Das schaltest du mit jedem Eintrag frei";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "Nach 7 Check-ins";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "Dein erstes Symptommuster";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld von %lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "Nach 2 Perioden";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "Deine Spanne der Zykluslänge";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Mit Apple Health";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "Schlaf und Aktivität im Zusammenhang";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "Eine sanfte Erinnerung?";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "Eine leise Erinnerung pro Tag. Deine Symptome erscheinen nie auf dem Sperrbildschirm.";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "Uhrzeit der Erinnerung";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "Zyklusprotokoll";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Übernimm, was deine Watch schon weiß";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "Nur Lesen. CycleBalance schreibt nie in Apple Health, und nichts verlässt dein iPhone.";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "Apple Health ist auf diesem Gerät nicht verfügbar.";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "Jederzeit änderbar unter Einstellungen › Gesundheit.";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "Unregelmäßige Perioden";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "Heißhunger & Verdauung";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "Blutzucker";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "Stark";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "Schwer";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "Heute nichts zu berichten";
+
+/* Journey v1: onboarding and check-in */
+"Clear choice" = "Auswahl entfernen";
