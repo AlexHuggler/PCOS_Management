@@ -57,30 +57,11 @@ final class RevenueCatBillingClient: PremiumBillingClient {
             from: offering,
             productIDs: configuration.productIDs
         )
-        // Merge so an optional package loaded separately (the exit offer) stays purchasable.
-        packagesByProductID.merge(resolvedPackages) { _, latest in latest }
+        packagesByProductID = resolvedPackages
         lastStatusMessage = nil
 
         return configuration.productIDs.compactMap { productID in
             resolvedPackages[productID].map(Self.makeBillingProduct(from:))
-        }
-    }
-
-    /// Looks for `productID` in the `offeringID` offering (falling back to the current offering).
-    /// Missing configuration is expected while the exit offer is not set up, so this never throws.
-    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct? {
-        do {
-            try configureIfNeeded()
-            let offering = try await revenueCat.loadOffering(offeringID: offeringID)
-            guard let package = offering.availablePackages.first(where: {
-                $0.storeProduct.productIdentifier == productID
-            }) else {
-                return nil
-            }
-            packagesByProductID[productID] = package
-            return Self.makeBillingProduct(from: package)
-        } catch {
-            return nil
         }
     }
 

@@ -17,7 +17,6 @@ enum CheckInSource: String, Sendable {
 enum PurchaseOfferKind: String, Sendable {
     case none
     case intro
-    case exitOffer = "exit_offer"
 }
 
 enum RestoreOutcome: String, Sendable {
@@ -65,8 +64,6 @@ enum AnalyticsEvent: Equatable, Sendable {
     case restoreCompleted(result: RestoreOutcome)
     case purchaseResumedAction(action: String)
     case manageSubscriptionOpened
-    case exitOfferViewed(source: String, discountPercent: Int)
-    case exitOfferDismissed(secondsVisible: Int, attemptedPurchase: Bool)
 
     var name: String {
         switch self {
@@ -93,8 +90,6 @@ enum AnalyticsEvent: Equatable, Sendable {
         case .restoreCompleted: "restore_completed"
         case .purchaseResumedAction: "purchase_resumed_action"
         case .manageSubscriptionOpened: "manage_subscription_opened"
-        case .exitOfferViewed: "exit_offer_viewed"
-        case .exitOfferDismissed: "exit_offer_dismissed"
         }
     }
 
@@ -136,10 +131,6 @@ enum AnalyticsEvent: Equatable, Sendable {
             ["result": result.rawValue]
         case let .purchaseResumedAction(action):
             ["action": action]
-        case let .exitOfferViewed(source, discountPercent):
-            ["source": source, "discount_pct": String(discountPercent)]
-        case let .exitOfferDismissed(secondsVisible, attemptedPurchase):
-            ["seconds_visible": String(secondsVisible), "attempted_purchase": String(attemptedPurchase)]
         }
     }
 }

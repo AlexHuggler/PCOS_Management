@@ -186,63 +186,6 @@
           "winbackOffers" : [
 
           ]
-        },
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "47.99",
-          "familyShareable" : false,
-          "groupNumber" : 2,
-          "internalID" : "PCOS_PREMIUM_YEARLY_OFFER_INTERNAL",
-          "localizations" : [
-            {
-              "description" : "All CycleBalance premium features at a lower yearly price, billed annually.",
-              "displayName" : "CycleBalance Premium Yearly (Offer)",
-              "locale" : "en_US"
-            },
-            {
-              "description" : "CycleBalanceのすべてのプレミアム機能を、お得な年額料金で利用できます。",
-              "displayName" : "CycleBalance プレミアム 年額（特別価格）",
-              "locale" : "ja_JP"
-            },
-            {
-              "description" : "Tutte le funzionalità premium di CycleBalance a un prezzo annuale ridotto, con fatturazione annuale.",
-              "displayName" : "CycleBalance Premium Annuale (Offerta)",
-              "locale" : "it_IT"
-            },
-            {
-              "description" : "더 낮은 연간 요금으로 CycleBalance의 모든 프리미엄 기능을 이용하세요.",
-              "displayName" : "CycleBalance 프리미엄 연간 (특가)",
-              "locale" : "ko_KR"
-            },
-            {
-              "description" : "Toutes les fonctionnalités premium de CycleBalance à un prix annuel réduit, avec une facturation annuelle.",
-              "displayName" : "CycleBalance Premium Annuel (Offre)",
-              "locale" : "fr_FR"
-            },
-            {
-              "description" : "Alle Premium-Funktionen von CycleBalance zu einem günstigeren Jahrespreis, jährlich abgerechnet.",
-              "displayName" : "CycleBalance Premium Jährlich (Angebot)",
-              "locale" : "de_DE"
-            },
-            {
-              "description" : "Alle premiumfuncties van CycleBalance voor een lagere jaarprijs, jaarlijks gefactureerd.",
-              "displayName" : "CycleBalance Premium Jaarlijks (Aanbieding)",
-              "locale" : "nl_NL"
-            }
-          ],
-          "productID" : "cyclebalance.premium.annual.offer",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "CycleBalance Premium Yearly Exit Offer",
-          "subscriptionGroupID" : "PCOS_PREMIUM_GROUP",
-          "type" : "RecurringSubscription",
-          "winbackOffers" : [
-
-          ]
         }
       ]
     }

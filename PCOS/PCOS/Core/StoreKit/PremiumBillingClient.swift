@@ -66,18 +66,10 @@ struct BillingConfiguration: Sendable, Equatable {
     let revenueCatEntitlementID: String
     let revenueCatOfferingID: String
     let productIDs: [String]
-    /// Products that also grant Premium but are not listed on the main paywall
-    /// (the one-time exit offer). Used for local StoreKit entitlement checks.
-    var additionalEntitlementProductIDs: [String] = []
-
-    var entitlementProductIDs: [String] {
-        productIDs + additionalEntitlementProductIDs.filter { !productIDs.contains($0) }
-    }
 
     static func from(
         bundle: Bundle = .main,
         productIDs: [String],
-        additionalEntitlementProductIDs: [String] = [],
         backendMode: BillingBackendMode? = nil
     ) -> BillingConfiguration {
         BillingConfiguration(
@@ -85,8 +77,7 @@ struct BillingConfiguration: Sendable, Equatable {
             revenueCatPublicSDKKey: sanitized(bundle.object(forInfoDictionaryKey: revenueCatPublicSDKKeyKey) as? String),
             revenueCatEntitlementID: sanitized(bundle.object(forInfoDictionaryKey: revenueCatEntitlementIDKey) as? String) ?? "CycleBalance Unlimited",
             revenueCatOfferingID: sanitized(bundle.object(forInfoDictionaryKey: revenueCatOfferingIDKey) as? String) ?? "default",
-            productIDs: productIDs,
-            additionalEntitlementProductIDs: additionalEntitlementProductIDs
+            productIDs: productIDs
         )
     }
 
@@ -160,13 +151,8 @@ protocol PremiumBillingClient: AnyObject {
     func restorePurchases() async throws
     func currentEntitlements() async throws -> Set<String>
     func makeEntitlementUpdatesStream() -> AsyncStream<Set<String>>
-    /// Loads a product that may legitimately be missing (e.g. the exit offer before it is
-    /// configured in App Store Connect / RevenueCat). Returns nil instead of throwing.
-    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct?
 }
 
 extension PremiumBillingClient {
     var revenueCatAppUserID: String? { nil }
-
-    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct? { nil }
 }

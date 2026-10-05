@@ -20,11 +20,11 @@ final class StoreKitBillingClient: PremiumBillingClient {
 
     func currentEntitlements() async throws -> Set<String> {
         lastStatusMessage = nil
-        return try await Self.activeEntitlementProductIDs(for: configuration.entitlementProductIDs)
+        return try await Self.activeEntitlementProductIDs(for: configuration.productIDs)
     }
 
     func makeEntitlementUpdatesStream() -> AsyncStream<Set<String>> {
-        let productIDs = configuration.entitlementProductIDs
+        let productIDs = configuration.productIDs
 
         return AsyncStream { continuation in
             let updatesTask = Task {
@@ -80,17 +80,6 @@ final class StoreKitBillingClient: PremiumBillingClient {
 
     func restorePurchases() async throws {
         try await AppStore.sync()
-    }
-
-    func loadOptionalProduct(productID: String, offeringID: String) async -> BillingProduct? {
-        if let cachedProduct = productsByID[productID] {
-            return Self.makeBillingProduct(from: cachedProduct)
-        }
-        guard let product = try? await Product.products(for: [productID]).first else {
-            return nil
-        }
-        productsByID[productID] = product
-        return Self.makeBillingProduct(from: product)
     }
 
     private func loadProduct(productID: String) async throws -> Product {

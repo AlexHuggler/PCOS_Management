@@ -97,11 +97,6 @@ final class AppState {
     private var deferredLoggerShortcut: LoggerShortcut?
     private var deferredLoggerHost: AppTab = .track
 
-    /// Set by the paywall once the exit offer has loaded; consumed when the paywall closes.
-    var exitOfferCandidate: ExitOfferCandidate?
-    /// True when a purchase ended in "pending" (Ask to Buy); no exit offer is shown then.
-    var paywallPurchaseWasPending = false
-    var showExitOffer = false
     let launchAppLanguage: AppLanguage
     var selectedAppLanguage: AppLanguage {
         didSet {
@@ -177,11 +172,9 @@ final class AppState {
     }
 
     func presentPremiumPaywall(reason: PremiumPaywallReason = .general, source: String? = nil) {
-        guard showsSubscriptionUI, !allowsPremiumAccess, !showExitOffer else { return }
+        guard showsSubscriptionUI, !allowsPremiumAccess else { return }
         premiumPaywallReason = reason
         premiumPaywallSource = source ?? reason.rawValue
-        exitOfferCandidate = nil
-        paywallPurchaseWasPending = false
         showPremiumPaywall = true
     }
 
@@ -220,7 +213,7 @@ final class AppState {
 
     func consumePendingLogger(host: AppTab) -> LoggerShortcut? {
         guard hasCompletedOnboarding, selectedTab == host, pendingLoggerHost == host,
-              !showPremiumPaywall, !showExitOffer,
+              !showPremiumPaywall,
               let shortcut = pendingLoggerShortcut else { return nil }
         if Self.requiresPremium(shortcut), !allowsPremiumAccess {
             requestLogger(shortcut, host: host)
@@ -232,35 +225,11 @@ final class AppState {
     }
 
     /// Called after the paywall sheet has actually dismissed, so presentations never overlap.
-    /// Closing without a purchase leaves the user on the tab they started from (B1); the
-    /// one-time exit offer may follow, and the started action waits for its outcome.
+    /// After a purchase the started action continues on the tab it began on (A12); closing
+    /// without a purchase leaves the user where they were and clears the action (B1).
     func finishPremiumPaywall() {
         showPremiumPaywall = false
-        let candidate = exitOfferCandidate
-        if ExitOfferPolicy.shouldPresent(
-            candidate: candidate,
-            hasBeenShown: hasShownExitOffer,
-            hasPremiumAccess: allowsPremiumAccess,
-            showsSubscriptionUI: showsSubscriptionUI,
-            purchaseWasPending: paywallPurchaseWasPending
-        ) {
-            defaults.set(true, forKey: ExitOfferPolicy.shownDefaultsKey)
-            showExitOffer = true
-            return
-        }
-        exitOfferCandidate = nil
         resumeOrClearDeferredLogger()
-    }
-
-    /// Called after the exit-offer sheet has dismissed (purchased or not).
-    func finishExitOffer() {
-        showExitOffer = false
-        exitOfferCandidate = nil
-        resumeOrClearDeferredLogger()
-    }
-
-    var hasShownExitOffer: Bool {
-        defaults.bool(forKey: ExitOfferPolicy.shownDefaultsKey)
     }
 
     private func resumeOrClearDeferredLogger() {
