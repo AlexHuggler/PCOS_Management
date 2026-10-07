@@ -14,7 +14,7 @@ struct ActiveSubscriptionSummary: Equatable, Sendable {
 @MainActor
 enum ActiveSubscriptionLoader {
     static func load(productIDs: Set<String>) async -> ActiveSubscriptionSummary? {
-        for await result in Transaction.currentEntitlements {
+        for await result in StoreKit.Transaction.currentEntitlements {
             guard case .verified(let transaction) = result,
                   productIDs.contains(transaction.productID),
                   transaction.revocationDate == nil else { continue }
@@ -27,7 +27,7 @@ enum ActiveSubscriptionLoader {
         return nil
     }
 
-    private static func willAutoRenew(for transaction: Transaction) async -> Bool? {
+    private static func willAutoRenew(for transaction: StoreKit.Transaction) async -> Bool? {
         guard let groupID = transaction.subscriptionGroupID,
               let statuses = try? await Product.SubscriptionInfo.status(for: groupID) else { return nil }
         for status in statuses {
