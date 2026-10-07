@@ -1,123 +1,363 @@
 import SwiftUI
+import SwiftData
+import UniformTypeIdentifiers
 
-/// Four optional steps; progress and selections persist on the device.
+/// v1 onboarding (A2–A7): welcome, where you are, what to watch, an inline first check-in, what
+/// unlocks next with a reminder opt-in, then optional Apple Health. Every step after the welcome can
+/// be skipped; progress and answers persist on the device. "Restore from backup" (B3) imports a
+/// JSON backup and goes straight to Today.
 struct OnboardingContainerView: View {
     let onComplete: () -> Void
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var modelContext
     @State private var stage = CompanionOnboardingStage.resume()
-    @State private var showingHealth = false
-    @State private var showingCheckIn = false
+    @State private var experience: PCOSExperience?
+    @State private var topics: [OnboardingFocusTopic] = OnboardingFocusTopic.stored()
+    @State private var name = ""
+    @State private var checkIn = QuickCheckInInput()
+    @State private var savedFirstCheckIn = false
+    @State private var checkInDays = 0
+    @State private var reminderTime = Date()
+    @State private var notificationManager = NotificationManager()
+    @State private var isRequestingReminder = false
+    @State private var healthChoices = OnboardingHealthChoice.defaultSelection(for: OnboardingFocusTopic.stored())
+    @State private var isConnectingHealth = false
+    @State private var showingBackupImporter = false
+    @State private var alertMessage: String?
+    @State private var didLoadAnswers = false
+
+    private var pinnedSymptoms: [SymptomType] {
+        OnboardingPersonalizationPlan.make(topics: topics, experience: experience).pinnedSymptoms
+    }
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            if stage != .welcome {
+                topBar
+            }
             ScrollView {
-                VStack(alignment: .leading, spacing: AppTheme.spacing24) {
-                    Text(L10n.format("Step %lld of 4", defaultValue: "Step %lld of 4", stage.rawValue + 1))
-                        .appFont(.caption).foregroundStyle(.secondary)
-                    ProgressView(value: Double(stage.rawValue + 1), total: 4)
-                        .tint(AppTheme.accentColor)
-                    stageContent
-                }
-                .padding(AppTheme.spacing24)
-                .frame(maxWidth: 640)
-                .frame(maxWidth: .infinity)
+                stageContent
+                    .frame(maxWidth: 640, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, AppTheme.spacing24)
+                    .padding(.top, stage == .welcome ? AppTheme.spacing32 : AppTheme.spacing8)
+                    .padding(.bottom, AppTheme.spacing24)
             }
-            .background(BotanicalScreenBackground(style: .quiet))
-            .navigationTitle(L10n.string("Welcome", defaultValue: "Welcome"))
-            .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    if stage != .welcome {
-                        Button(L10n.string("Back", defaultValue: "Back")) {
-                            stage = CompanionOnboardingStage(rawValue: stage.rawValue - 1) ?? .welcome
-                        }
-                        .accessibilityIdentifier("onboarding.back")
-                    }
-                }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomActions
+                    .frame(maxWidth: 640)
+                    .padding(.horizontal, AppTheme.spacing24)
+                    .padding(.top, AppTheme.spacing12)
+                    .padding(.bottom, AppTheme.spacing8)
+                    .background(AppTheme.groupedBackground)
             }
-            .sheet(isPresented: $showingHealth) {
-                NavigationStack {
-                    HealthKitSettingsView()
-                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.string("Done", defaultValue: "Done")) { showingHealth = false } } }
-                }
-            }
-            .sheet(isPresented: $showingCheckIn) { SymptomLogView() }
-            .onChange(of: stage) { _, value in appState.onboardingProfile.currentPhaseRaw = "companion_\(value.rawValue)" }
-            .accessibilityIdentifier("onboarding.companion.\(stage.rawValue)")
         }
+        .background(AppTheme.groupedBackground.ignoresSafeArea())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("onboarding.companion.\(stage.rawValue)")
+        .onAppear(perform: loadAnswersIfNeeded)
+        .task(id: stage) { trackStepViewed() }
+        .onChange(of: stage) { _, value in appState.onboardingProfile.currentPhaseRaw = value.persistedPhase }
+        .fileImporter(isPresented: $showingBackupImporter, allowedContentTypes: [UTType.json], allowsMultipleSelection: false) { result in
+            handleBackupSelection(result)
+        }
+        .alert(
+            L10n.string("Something went wrong", defaultValue: "Something went wrong"),
+            isPresented: Binding(get: { alertMessage != nil }, set: { if !$0 { alertMessage = nil } })
+        ) {
+            Button(L10n.string("OK", defaultValue: "OK"), role: .cancel) {}
+        } message: {
+            Text(alertMessage ?? "")
+        }
+    }
+
+    // MARK: Chrome
+
+    private var topBar: some View {
+        HStack(spacing: AppTheme.spacing8) {
+            Button {
+                stage = CompanionOnboardingStage(rawValue: stage.rawValue - 1) ?? .welcome
+            } label: {
+                Image(systemName: "chevron.left")
+                    .appFont(.headline, weight: .semibold)
+                    .foregroundStyle(AppTheme.accentColor)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.string("Back", defaultValue: "Back"))
+            .accessibilityIdentifier("onboarding.back")
+
+            Spacer(minLength: 0)
+            OnboardingProgressSegments(current: stage.progressIndex ?? 0, total: CompanionOnboardingStage.progressSegments)
+            Spacer(minLength: 0)
+
+            Button(action: skipCurrentStep) {
+                Text(L10n.string("Skip", defaultValue: "Skip"))
+                    .appFont(.subheadline)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(stage == .health ? "onboarding.finish" : "onboarding.skip")
+        }
+        .padding(.horizontal, AppTheme.spacing12)
     }
 
     @ViewBuilder
     private var stageContent: some View {
         switch stage {
         case .welcome:
-            heading("A little support for your everyday", "Make room for what matters to you. Track a little, notice patterns, and build your own routine.", symbol: "leaf")
-            Label(L10n.string("Your health records stay on your device. Apple Health is optional, and you choose what to share.", defaultValue: "Your health records stay on your device. Apple Health is optional, and you choose what to share."), systemImage: "lock.shield")
-                .appFont(.subheadline)
-            Text(L10n.string("Tracking can help you prepare for a conversation with your care team. It does not diagnose PCOS.", defaultValue: "Tracking can help you prepare for a conversation with your care team. It does not diagnose PCOS."))
-                .appFont(.caption).foregroundStyle(.secondary)
-            Picker(L10n.string("Language", defaultValue: "Language"), selection: Binding(get: { appState.selectedAppLanguage }, set: { appState.selectedAppLanguage = $0 })) {
-                ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
-            }
-            primary("Make it yours") { appState.onboardingProfile.hasCompletedWelcome = true; advance() }
-            Button(L10n.string("Explore Today", defaultValue: "Explore Today"), action: finish)
-                .accessibilityIdentifier("onboarding.explore")
-        case .preferences:
-            heading("What would you like support with?", "Choose anything that feels useful. You can change or skip every choice.", symbol: "slider.horizontal.3")
-            CompanionProfileFields(profile: appState.onboardingProfile)
-            primary("Continue") { appState.onboardingProfile.hasCompletedQuestionnaire = true; advance() }
-            Button(L10n.string("Skip for now", defaultValue: "Skip for now"), action: advance)
-        case .health:
-            heading("Let Apple Health help, if you like", "Bring in supported records from Apple Health. You can review data types, connect later, or keep logging manually.", symbol: "heart")
-            primary("Review Apple Health options") { showingHealth = true }
-            Button(L10n.string("Continue", defaultValue: "Continue"), action: advance)
-            Button(L10n.string("Not now", defaultValue: "Not now"), action: advance)
+            OnboardingWelcomeStep()
+        case .stage:
+            OnboardingStageStep(selection: $experience)
+        case .focus:
+            OnboardingFocusStep(topics: $topics, name: $name)
         case .checkIn:
-            heading("Start with how you feel", "A short check-in is enough. There is no need to complete every field or track every day.", symbol: "checkmark.circle")
-            primary("First check-in") { showingCheckIn = true }
-            Button(L10n.string("Explore Today", defaultValue: "Explore Today"), action: finish)
-                .accessibilityIdentifier("onboarding.finish")
+            OnboardingFirstCheckInStep(input: $checkIn, symptoms: pinnedSymptoms)
+        case .unlocks:
+            OnboardingUnlocksStep(
+                savedFirstCheckIn: savedFirstCheckIn,
+                checkInDays: checkInDays,
+                reminderTime: $reminderTime
+            )
+        case .health:
+            OnboardingHealthStep(choices: $healthChoices, isHealthAvailable: HealthKitManager.shared.isAvailable)
         }
     }
 
-    private func heading(_ title: String, _ message: String, symbol: String) -> some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacing16) {
-            Image(systemName: symbol).font(.system(size: 42)).foregroundStyle(AppTheme.accentColor).accessibilityHidden(true)
-            Text(L10n.string(title, defaultValue: title)).appFont(.title, weight: .semibold)
-            Text(L10n.string(message, defaultValue: message)).appFont(.body).foregroundStyle(.secondary)
+    @ViewBuilder
+    private var bottomActions: some View {
+        VStack(spacing: AppTheme.spacing4) {
+            switch stage {
+            case .welcome:
+                JourneyPrimaryButton(title: L10n.string("Get started", defaultValue: "Get started"), accessibilityIdentifier: "onboarding.get_started") {
+                    completeStep(skipped: false)
+                }
+                Button {
+                    showingBackupImporter = true
+                } label: {
+                    Text(L10n.string("Restore from backup", defaultValue: "Restore from backup"))
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.accentColor)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("onboarding.import_backup")
+            case .stage, .focus:
+                JourneyPrimaryButton(title: L10n.string("Continue", defaultValue: "Continue"), accessibilityIdentifier: "onboarding.continue") {
+                    completeStep(skipped: false)
+                }
+            case .checkIn:
+                JourneyPrimaryButton(title: L10n.string("Save today's check-in", defaultValue: "Save today's check-in"), accessibilityIdentifier: "onboarding.checkin.save") {
+                    saveFirstCheckIn()
+                }
+                .disabled(checkIn.isEmpty)
+                .opacity(checkIn.isEmpty ? 0.6 : 1)
+                JourneySecondaryButton(title: L10n.string("Do this later", defaultValue: "Do this later"), accessibilityIdentifier: "onboarding.checkin.later") {
+                    skipCurrentStep()
+                }
+            case .unlocks:
+                JourneyPrimaryButton(
+                    title: L10n.string("Turn on reminder", defaultValue: "Turn on reminder"),
+                    isProcessing: isRequestingReminder,
+                    accessibilityIdentifier: "onboarding.reminder.enable"
+                ) {
+                    enableReminder()
+                }
+                JourneySecondaryButton(title: L10n.string("Not now", defaultValue: "Not now"), accessibilityIdentifier: "onboarding.reminder.not_now") {
+                    AppAnalytics.shared.track(.notificationPermission(granted: false))
+                    skipCurrentStep()
+                }
+            case .health:
+                if HealthKitManager.shared.isAvailable {
+                    JourneyPrimaryButton(
+                        title: L10n.string("Connect Apple Health", defaultValue: "Connect Apple Health"),
+                        isProcessing: isConnectingHealth,
+                        accessibilityIdentifier: "onboarding.health.connect"
+                    ) {
+                        connectHealth()
+                    }
+                } else {
+                    JourneyPrimaryButton(title: L10n.string("Continue", defaultValue: "Continue"), accessibilityIdentifier: "onboarding.health.continue") {
+                        finish(restoredFromBackup: false)
+                    }
+                }
+            }
         }
     }
 
-    private func primary(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) { Text(L10n.string(title, defaultValue: title)).frame(maxWidth: .infinity).padding(.vertical, AppTheme.spacing8) }
-            .buttonStyle(.borderedProminent).tint(AppTheme.accentColor)
-            .foregroundStyle(AppTheme.premiumEditorCTAForeground)
+    // MARK: Flow
+
+    private func loadAnswersIfNeeded() {
+        guard !didLoadAnswers else { return }
+        didLoadAnswers = true
+        let profile = appState.onboardingProfile
+        experience = profile.pcosExperience
+        name = profile.preferredName
+        reminderTime = notificationManager.symptomReminderTime
+        checkInDays = CheckInProgress.checkInDayCount(modelContext: modelContext)
+        if let loaded = try? QuickCheckInService(modelContext: modelContext).load(), !loaded.isEmpty {
+            checkIn = loaded
+            savedFirstCheckIn = true
+        }
+        OnboardingTiming.markStarted()
+        AppAnalytics.shared.trackOnce(.onboardingStarted, onceKey: "onboarding_started")
     }
 
-    private func advance() { stage = CompanionOnboardingStage(rawValue: stage.rawValue + 1) ?? .checkIn }
-    private func finish() {
-        appState.onboardingProfile.currentPhaseRaw = nil
+    private func trackStepViewed() {
+        AppAnalytics.shared.track(.onboardingStepViewed(stepID: stage.stepID, index: stage.rawValue))
+    }
+
+    private func completeStep(skipped: Bool) {
+        let profile = appState.onboardingProfile
+        switch stage {
+        case .welcome:
+            profile.hasCompletedWelcome = true
+        case .stage:
+            profile.pcosExperience = skipped ? profile.pcosExperience : experience
+            AppAnalytics.shared.track(.onboardingStage(answered: !skipped && experience != nil))
+        case .focus:
+            if !skipped {
+                profile.preferredName = name
+                OnboardingFocusTopic.store(topics)
+                AppAnalytics.shared.track(.onboardingFocus(areaCount: topics.count))
+            }
+            let appliedTopics = skipped ? OnboardingFocusTopic.stored() : topics
+            OnboardingPersonalizationPlan.make(topics: appliedTopics, experience: profile.pcosExperience)
+                .apply(to: TrackingPreferences.shared, profile: profile, topics: appliedTopics)
+            healthChoices = OnboardingHealthChoice.defaultSelection(for: appliedTopics)
+            profile.hasCompletedQuestionnaire = true
+        case .checkIn, .unlocks, .health:
+            break
+        }
+        AppAnalytics.shared.track(.onboardingStepCompleted(stepID: stage.stepID, skipped: skipped))
+        advance()
+    }
+
+    private func skipCurrentStep() {
+        if stage == .health {
+            AppAnalytics.shared.track(.onboardingStepCompleted(stepID: stage.stepID, skipped: true))
+            AppAnalytics.shared.track(.healthConnected(categoryCount: 0, completed: false))
+            finish(restoredFromBackup: false)
+        } else {
+            completeStep(skipped: true)
+        }
+    }
+
+    private func advance() {
+        guard let next = stage.next else {
+            finish(restoredFromBackup: false)
+            return
+        }
+        stage = next
+    }
+
+    private func saveFirstCheckIn() {
+        guard !checkIn.isEmpty else { return }
+        do {
+            try QuickCheckInService(modelContext: modelContext).save(checkIn)
+            savedFirstCheckIn = true
+            checkInDays = max(1, CheckInProgress.checkInDayCount(modelContext: modelContext))
+            appState.onboardingProfile.hasCompletedGuidedAction = true
+            CheckInAnalytics.recordSave(source: .onboarding)
+            completeStep(skipped: false)
+        } catch {
+            alertMessage = L10n.string(
+                "Your check-in was not saved. Please check your entries and try again.",
+                defaultValue: "Your check-in was not saved. Please check your entries and try again."
+            )
+        }
+    }
+
+    private func enableReminder() {
+        isRequestingReminder = true
+        Task {
+            await notificationManager.requestAuthorization()
+            let granted = notificationManager.isAuthorized
+            AppAnalytics.shared.track(.notificationPermission(granted: granted))
+            if granted {
+                notificationManager.symptomReminderTime = reminderTime
+                notificationManager.symptomRemindersEnabled = true
+            }
+            isRequestingReminder = false
+            completeStep(skipped: false)
+        }
+    }
+
+    private func connectHealth() {
+        let categories = OnboardingHealthChoice.categories(for: healthChoices)
+        guard !categories.isEmpty else {
+            AppAnalytics.shared.track(.healthConnected(categoryCount: 0, completed: false))
+            finish(restoredFromBackup: false)
+            return
+        }
+        isConnectingHealth = true
+        let manager = HealthKitManager.shared
+        for category in HealthKitDataTypeDescriptor.Category.allCases {
+            manager.setCategory(category, enabled: categories.contains(category))
+        }
+        let container = modelContext.container
+        Task {
+            var completed = false
+            do {
+                try await manager.requestAuthorization(categories: categories)
+                completed = true
+            } catch {
+                manager.lastError = error.localizedDescription
+            }
+            AppAnalytics.shared.track(.healthConnected(categoryCount: categories.count, completed: completed))
+            AppAnalytics.shared.track(.onboardingStepCompleted(stepID: CompanionOnboardingStage.health.stepID, skipped: false))
+            isConnectingHealth = false
+            if completed {
+                manager.startObserving(modelContainer: container)
+                Task { await manager.performFullSync(modelContext: ModelContext(container)) }
+            }
+            finish(restoredFromBackup: false)
+        }
+    }
+
+    private func handleBackupSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            let didAccess = url.startAccessingSecurityScopedResource()
+            defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
+            do {
+                let summary = try SettingsDataImportService(modelContext: modelContext).importJSONBackup(from: url)
+                if summary.changeCounts.successful > 0 || !summary.hasIssues {
+                    finish(restoredFromBackup: true)
+                } else {
+                    alertMessage = L10n.string(
+                        "No records were imported because the backup could not be validated.",
+                        defaultValue: "No records were imported because the backup could not be validated."
+                    )
+                }
+            } catch {
+                alertMessage = (error as? LocalizedError)?.errorDescription ?? L10n.string(
+                    "No records were imported because the backup could not be validated.",
+                    defaultValue: "No records were imported because the backup could not be validated."
+                )
+            }
+        case .failure(let error):
+            alertMessage = error.localizedDescription
+        }
+    }
+
+    private func finish(restoredFromBackup: Bool) {
+        AppAnalytics.shared.track(.onboardingCompleted(
+            durationSeconds: OnboardingTiming.durationSeconds(),
+            restoredFromBackup: restoredFromBackup
+        ))
+        let profile = appState.onboardingProfile
+        profile.currentPhaseRaw = nil
+        profile.hasCompletedWelcome = true
+        appState.selectTab(.today)
         appState.hasCompletedOnboarding = true
         onComplete()
-    }
-}
-
-enum CompanionOnboardingStage: Int, CaseIterable {
-    case welcome, preferences, health, checkIn
-
-    static func resume(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments) -> Self {
-        var raw = defaults.string(forKey: "onboarding.currentPhaseRaw")
-        if arguments.contains("UITestMode"), let index = arguments.firstIndex(of: "-onboarding.startPhase"), index + 1 < arguments.count {
-            raw = arguments[index + 1]
-        }
-        if let raw, raw.hasPrefix("companion_"), let number = Int(raw.dropFirst(10)), let stage = Self(rawValue: number) { return stage }
-        switch raw {
-        case "theme", "name", "personalize", "quiz", "results", "how_app_helps": return .preferences
-        case "permissions", "health_context", "aha": return .health
-        case "meal_scan_demo", "your_plan", "first_log", "guided_action", "social_proof", "all_set", "completion": return .checkIn
-        default: return .welcome
-        }
     }
 }
 
@@ -205,8 +445,7 @@ private struct OnboardingLanguageWelcomeView: View {
                                 Text(language.displayName)
                                     .appFont(.body, weight: selectedLanguage == language ? .semibold : .regular)
                                     .foregroundStyle(AppTheme.primaryText)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.82)
+                                    .fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: AppTheme.spacing12)
                                 Image(systemName: selectedLanguage == language ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(selectedLanguage == language ? AppTheme.accentColor : AppTheme.secondaryText.opacity(0.58))

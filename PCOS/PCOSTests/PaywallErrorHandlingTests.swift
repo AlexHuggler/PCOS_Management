@@ -30,7 +30,12 @@ struct PaywallErrorHandlingTests {
         #expect(source.contains("let outcome = try await subscriptionManager.purchase(productID: product.id)"))
         #expect(source.contains("try await subscriptionManager.restorePurchases()"))
         #expect(source.contains("loadErrorMessage = Self.userFacingMessage("))
-        #expect(source.contains("alertErrorMessage = Self.userFacingMessage("))
+        // Purchase and restore failures use plain notices; no alert is titled "Error" (design review 5 Oct).
+        #expect(source.contains("notice = .purchaseFailed"))
+        #expect(source.contains("notice = .restoreFailed"))
+        #expect(source.contains("notice = .nothingToRestore"))
+        #expect(!source.contains("alertErrorMessage = Self.userFacingMessage("))
+        #expect(!source.contains("\"Error\""))
         #expect(source.contains("case .pending:"))
         #expect(source.contains("case .cancelled:"))
     }

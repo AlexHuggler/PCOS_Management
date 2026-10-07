@@ -6,20 +6,19 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
         let language: String
         let locale: String
         let welcomeTitle: String
-        let choiceTitle: String
-        let personalize: String
-        let explore: String
+        let stageTitle: String
+        let getStarted: String
     }
 
     // Literal expectations intentionally verify translations rather than reading the app bundle.
     private static let locales: [LocaleSpec] = [
-        LocaleSpec(language: "en", locale: "en_US", welcomeTitle: "A little support for your everyday", choiceTitle: "What would you like support with?", personalize: "Make it yours", explore: "Explore Today"),
-        LocaleSpec(language: "fr", locale: "fr_FR", welcomeTitle: "Un peu de soutien au quotidien", choiceTitle: "Dans quel domaine aimeriez-vous du soutien ?", personalize: "À votre image", explore: "Découvrir Aujourd’hui"),
-        LocaleSpec(language: "de", locale: "de_DE", welcomeTitle: "Ein bisschen Unterstützung für deinen Alltag", choiceTitle: "Wobei möchtest du Unterstützung?", personalize: "Mach es zu deinem", explore: "„Heute“ entdecken"),
-        LocaleSpec(language: "nl", locale: "nl_NL", welcomeTitle: "Een beetje steun voor elke dag", choiceTitle: "Waar wil je ondersteuning bij?", personalize: "Maak het persoonlijk", explore: "Vandaag verkennen"),
-        LocaleSpec(language: "ja", locale: "ja_JP", welcomeTitle: "毎日に、ささやかなサポートを", choiceTitle: "どんなサポートがあるとよいですか？", personalize: "自分に合わせる", explore: "「今日」を見てみる"),
-        LocaleSpec(language: "it", locale: "it_IT", welcomeTitle: "Un piccolo sostegno per ogni giorno", choiceTitle: "In cosa vorresti un sostegno?", personalize: "A modo tuo", explore: "Esplora Oggi"),
-        LocaleSpec(language: "ko", locale: "ko_KR", welcomeTitle: "일상에 더하는 작은 도움", choiceTitle: "어떤 도움을 받고 싶으세요?", personalize: "나에게 맞추기", explore: "오늘 둘러보기"),
+        LocaleSpec(language: "en", locale: "en_US", welcomeTitle: "Understand your PCOS patterns, privately.", stageTitle: "Where are you in your PCOS journey?", getStarted: "Get started"),
+        LocaleSpec(language: "fr", locale: "fr_FR", welcomeTitle: "Comprenez vos tendances SOPK, en toute confidentialité.", stageTitle: "Où en êtes-vous avec votre SOPK ?", getStarted: "Commencer"),
+        LocaleSpec(language: "de", locale: "de_DE", welcomeTitle: "Verstehe deine PCOS-Muster – ganz privat.", stageTitle: "Wo stehst du mit deinem PCOS?", getStarted: "Los geht's"),
+        LocaleSpec(language: "nl", locale: "nl_NL", welcomeTitle: "Begrijp je PCOS-patronen, privé.", stageTitle: "Waar sta je met je PCOS?", getStarted: "Aan de slag"),
+        LocaleSpec(language: "ja", locale: "ja_JP", welcomeTitle: "PCOSのパターンを、プライベートに理解する。", stageTitle: "PCOSとの付き合いはどのくらいですか？", getStarted: "はじめる"),
+        LocaleSpec(language: "it", locale: "it_IT", welcomeTitle: "Comprendi i tuoi schemi di PCOS, in privato.", stageTitle: "A che punto sei con la tua PCOS?", getStarted: "Inizia"),
+        LocaleSpec(language: "ko", locale: "ko_KR", welcomeTitle: "나의 PCOS 패턴을 비공개로 이해하세요.", stageTitle: "PCOS와 함께한 여정은 어디쯤인가요?", getStarted: "시작하기"),
     ]
 
     override func setUpWithError() throws { continueAfterFailure = false }
@@ -34,19 +33,26 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
 
     private func runLocaleMatrix(specs: [LocaleSpec]) {
         for spec in specs {
-            XCTContext.runActivity(named: "\(spec.language): localized welcome, optional choices, Back and Explore") { _ in
+            XCTContext.runActivity(named: "\(spec.language): localized welcome, skippable steps, Back and Today") { _ in
                 let app = makeApp(language: spec.language, locale: spec.locale)
                 app.launch()
                 defer { app.terminate() }
                 assertStage(0, in: app)
-                assertLocalized(spec.welcomeTitle, fallback: "A little support for your everyday", language: spec.language, in: app)
-                XCTAssertEqual(app.buttons["onboarding.explore"].label, spec.explore)
-                tap(app.buttons[spec.personalize], in: app)
+                assertLocalized(spec.welcomeTitle, fallback: "Understand your PCOS patterns, privately.", language: spec.language, in: app)
+                XCTAssertEqual(app.buttons["onboarding.get_started"].label, spec.getStarted)
+                XCTAssertFalse(app.buttons["onboarding.explore"].exists)
+                tap(app.buttons["onboarding.get_started"], in: app)
                 assertStage(1, in: app)
-                assertLocalized(spec.choiceTitle, fallback: "What would you like support with?", language: spec.language, in: app)
+                assertLocalized(spec.stageTitle, fallback: "Where are you in your PCOS journey?", language: spec.language, in: app)
                 tap(app.buttons["onboarding.back"], in: app)
                 assertStage(0, in: app)
-                tap(app.buttons["onboarding.explore"], in: app)
+                tap(app.buttons["onboarding.get_started"], in: app)
+                for stage in 1...4 {
+                    assertStage(stage, in: app)
+                    tap(app.buttons["onboarding.skip"], in: app)
+                }
+                assertStage(5, in: app)
+                tap(app.buttons["onboarding.finish"], in: app)
                 XCTAssertTrue(app.buttons["today.checkin"].waitForExistence(timeout: 10), spec.language)
                 XCTAssertEqual(app.tabBars.buttons.count, 5, spec.language)
             }
@@ -67,7 +73,7 @@ final class LocaleMatrixOnboardingUITests: XCTestCase {
             "-app.language", "system",
             "-appearance.themeOption", "calm",
             "-appearance.colorMode", "light",
-            "-onboarding.startPhase", "companion_0",
+            "-onboarding.startPhase", "journey_0",
         ]
         return app
     }

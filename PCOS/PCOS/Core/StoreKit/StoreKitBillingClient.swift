@@ -130,8 +130,22 @@ final class StoreKitBillingClient: PremiumBillingClient {
             displayName: product.displayName,
             displayPrice: product.displayPrice,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscription?.subscriptionPeriod),
+            localizedPricePerMonth: localizedPricePerMonth(for: product)
         )
+    }
+
+    private static func localizedPricePerMonth(for product: Product) -> String? {
+        guard let period = product.subscription?.subscriptionPeriod else { return nil }
+        let months: Int
+        switch period.unit {
+        case .month: months = period.value
+        case .year: months = period.value * 12
+        default: return nil
+        }
+        guard months > 0 else { return nil }
+        let monthly = product.price / Decimal(months)
+        return monthly.formatted(product.priceFormatStyle)
     }
 
     private static func makeBillingPeriod(from subscriptionPeriod: Product.SubscriptionPeriod?) -> BillingPeriod? {

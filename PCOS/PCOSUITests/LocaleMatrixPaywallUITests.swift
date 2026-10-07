@@ -19,43 +19,43 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
             LocaleSpec(
                 appLanguage: "fr",
                 localeIdentifier: "fr_FR",
-                heroTitle: "Débloquez Premium",
+                heroTitle: "Tirez davantage de chaque bilan",
                 closeLabel: "Fermer",
                 restoreLabel: "Restaurer les achats",
                 privacyLabel: "politique de confidentialité",
                 termsLabel: "Conditions d'utilisation",
                 monthlyTitle: "CycleBalance Premium Mensuel",
                 yearlyTitle: "CycleBalance Premium Annuel",
-                monthlyPeriodSuffix: "/ 1 mois",
-                yearlyPeriodSuffix: "/ 1 an",
+                monthlyPeriodSuffix: "/mois",
+                yearlyPeriodSuffix: "/an",
                 unavailableTitle: "Abonnements indisponibles"
             ),
             LocaleSpec(
                 appLanguage: "de",
                 localeIdentifier: "de_DE",
-                heroTitle: "Premium freischalten",
+                heroTitle: "Hol mehr aus jedem Check-in heraus",
                 closeLabel: "Schließen",
-                restoreLabel: "Einkäufe wiederherstellen",
+                restoreLabel: "Käufe wiederherstellen",
                 privacyLabel: "Datenschutzrichtlinie",
                 termsLabel: "Nutzungsbedingungen",
                 monthlyTitle: "CycleBalance Premium Monatlich",
                 yearlyTitle: "CycleBalance Premium Jährlich",
-                monthlyPeriodSuffix: "/ 1 Monat",
-                yearlyPeriodSuffix: "/ 1 Jahr",
+                monthlyPeriodSuffix: "/Monat",
+                yearlyPeriodSuffix: "/Jahr",
                 unavailableTitle: "Abonnements nicht verfügbar"
             ),
             LocaleSpec(
                 appLanguage: "nl",
                 localeIdentifier: "nl_NL",
-                heroTitle: "Ontgrendel Premium",
+                heroTitle: "Haal meer uit elke check-in",
                 closeLabel: "Sluiten",
                 restoreLabel: "Aankopen herstellen",
                 privacyLabel: "Privacybeleid",
-                termsLabel: "Servicevoorwaarden",
+                termsLabel: "Gebruiksvoorwaarden",
                 monthlyTitle: "CycleBalance Premium Maandelijks",
                 yearlyTitle: "CycleBalance Premium Jaarlijks",
-                monthlyPeriodSuffix: "/ 1 maand",
-                yearlyPeriodSuffix: "/ 1 jaar",
+                monthlyPeriodSuffix: "/maand",
+                yearlyPeriodSuffix: "/jaar",
                 unavailableTitle: "Abonnementen niet beschikbaar"
             ),
         ]
@@ -64,56 +64,56 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
             LocaleSpec(
                 appLanguage: "it",
                 localeIdentifier: "it_IT",
-                heroTitle: "Sblocca Premium",
+                heroTitle: "Ottieni di più da ogni check-in",
                 closeLabel: "Chiudi",
-                restoreLabel: "Ripristina gli acquisti",
+                restoreLabel: "Ripristina acquisti",
                 privacyLabel: "politica sulla riservatezza",
-                termsLabel: "Termini di servizio",
+                termsLabel: "Condizioni d'uso",
                 monthlyTitle: "CycleBalance Premium Mensile",
                 yearlyTitle: "CycleBalance Premium Annuale",
-                monthlyPeriodSuffix: "/ 1 mese",
-                yearlyPeriodSuffix: "/ 1 anno",
+                monthlyPeriodSuffix: "/mese",
+                yearlyPeriodSuffix: "/anno",
                 unavailableTitle: "Abbonamenti non disponibili"
             ),
             LocaleSpec(
                 appLanguage: "ja",
                 localeIdentifier: "ja_JP",
-                heroTitle: "プレミアムをアンロック",
+                heroTitle: "毎日のチェックインをもっと活かす",
                 closeLabel: "閉じる",
-                restoreLabel: "購入を復元する",
+                restoreLabel: "購入を復元",
                 privacyLabel: "プライバシーポリシー",
                 termsLabel: "利用規約",
                 monthlyTitle: "CycleBalance プレミアム 月額",
                 yearlyTitle: "CycleBalance プレミアム 年額",
-                monthlyPeriodSuffix: "/ 1 か月",
-                yearlyPeriodSuffix: "/ 1 年",
+                monthlyPeriodSuffix: "/月",
+                yearlyPeriodSuffix: "/年",
                 unavailableTitle: "購読は利用できません"
             ),
             LocaleSpec(
                 appLanguage: "ko",
                 localeIdentifier: "ko_KR",
-                heroTitle: "프리미엄 잠금 해제",
+                heroTitle: "매번의 체크인을 더 알차게",
                 closeLabel: "닫기",
                 restoreLabel: "구매 복원",
                 privacyLabel: "개인 정보 보호 정책",
-                termsLabel: "서비스 약관",
+                termsLabel: "이용 약관",
                 monthlyTitle: "CycleBalance 프리미엄 월간",
                 yearlyTitle: "CycleBalance 프리미엄 연간",
-                monthlyPeriodSuffix: "/ 1개월",
-                yearlyPeriodSuffix: "/ 1년",
+                monthlyPeriodSuffix: "/월",
+                yearlyPeriodSuffix: "/년",
                 unavailableTitle: "구독을 사용할 수 없음"
             ),
         ]
     }
 
-    private let englishHeroTitle = "Unlock Premium"
+    private let englishHeroTitle = "Get more from every check-in"
     private let englishMonthlyTitle = "CycleBalance Premium Monthly"
     private let englishYearlyTitle = "CycleBalance Premium Yearly"
-    private let englishMonthlyPeriodSuffix = "/ 1 month"
-    private let englishYearlyPeriodSuffix = "/ 1 year"
-    private let englishRestoreLabel = "Restore Purchases"
+    private let englishMonthlyPeriodSuffix = "/month"
+    private let englishYearlyPeriodSuffix = "/year"
+    private let englishRestoreLabel = "Restore purchases"
     private let englishPrivacyLabel = "Privacy Policy"
-    private let englishTermsLabel = "Terms of Service"
+    private let englishTermsLabel = "Terms of Use"
     private let englishUnavailableTitle = "Subscriptions Unavailable"
 
     override func setUpWithError() throws {
@@ -249,16 +249,20 @@ final class LocaleMatrixPaywallUITests: XCTestCase {
 
         assertEnglishFallbackIsHidden(in: app, file: file, line: line)
 
-        let monthlyTitle = app.staticTexts[spec.monthlyTitle]
-        let yearlyTitle = app.staticTexts[spec.yearlyTitle]
+        // Plan cards are single buttons whose accessibility label combines the localized plan
+        // name and the "/month" style price, so the labels are checked rather than child texts.
+        let yearlyPlan = identifiedElement("paywall.plan.cyclebalance.premium.annual", in: app)
+        let monthlyPlan = identifiedElement("paywall.plan.cyclebalance.premium.monthly", in: app)
 
-        if monthlyTitle.waitForExistence(timeout: 8), yearlyTitle.waitForExistence(timeout: 5) {
-            XCTAssertTrue(monthlyTitle.exists, file: file, line: line)
-            XCTAssertTrue(yearlyTitle.exists, file: file, line: line)
-            XCTAssertTrue(staticText(endingWith: spec.monthlyPeriodSuffix, in: app).waitForExistence(timeout: 5), file: file, line: line)
-            XCTAssertTrue(staticText(endingWith: spec.yearlyPeriodSuffix, in: app).waitForExistence(timeout: 5), file: file, line: line)
-            XCTAssertFalse(staticText(endingWith: englishMonthlyPeriodSuffix, in: app).exists, file: file, line: line)
-            XCTAssertFalse(staticText(endingWith: englishYearlyPeriodSuffix, in: app).exists, file: file, line: line)
+        if yearlyPlan.waitForExistence(timeout: 8), monthlyPlan.waitForExistence(timeout: 5) {
+            XCTAssertTrue(yearlyPlan.label.contains(spec.yearlyTitle), file: file, line: line)
+            XCTAssertTrue(yearlyPlan.label.contains(spec.yearlyPeriodSuffix), file: file, line: line)
+            XCTAssertTrue(monthlyPlan.label.contains(spec.monthlyTitle), file: file, line: line)
+            XCTAssertTrue(monthlyPlan.label.contains(spec.monthlyPeriodSuffix), file: file, line: line)
+            XCTAssertFalse(monthlyPlan.label.contains(englishMonthlyPeriodSuffix), file: file, line: line)
+            XCTAssertFalse(yearlyPlan.label.contains(englishYearlyPeriodSuffix), file: file, line: line)
+            XCTAssertTrue(identifiedElement("paywall.continue", in: app).exists, file: file, line: line)
+            XCTAssertTrue(identifiedElement("paywall.renewal_terms", in: app).exists, file: file, line: line)
         } else {
             XCTAssertTrue(app.staticTexts[spec.unavailableTitle].waitForExistence(timeout: 5), file: file, line: line)
             XCTAssertFalse(app.staticTexts[englishUnavailableTitle].exists, file: file, line: line)

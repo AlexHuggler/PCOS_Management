@@ -57,7 +57,8 @@ enum ThemeOption: String, CaseIterable, Identifiable, Codable, Sendable {
         switch self {
         case .calm:
             ThemePalette(
-                accent: .init(hex: 0x236F72), sage: .init(hex: 0x778F83), coral: .init(hex: 0xB36F75),
+                // Same values as the companion Calm tokens (design-system review 5 Oct): one sage, one coral.
+                accent: .init(hex: 0x236F72), sage: .init(hex: 0x486546), coral: .init(hex: 0x9A4056),
                 warmNeutralLight: .init(hex: 0xF6F7F5), warmNeutralDark: .init(hex: 0x11191D),
                 flowSpottingLight: .init(hex: 0xF3DADD), flowLightLight: .init(hex: 0xDFB5BA),
                 flowMediumLight: .init(hex: 0xB97781), flowHeavyLight: .init(hex: 0x914A59),
@@ -363,10 +364,11 @@ private struct AppearanceSelection: Codable, Equatable {
     var fontOption: FontOption
     var colorMode: AppearanceColorMode?
 
+    /// Fresh installs start in Calm (light), matching the App Store screenshots (approved v1 decision).
     static let `default` = AppearanceSelection(
         themeOption: .calm,
         fontOption: .systemDefault,
-        colorMode: .system
+        colorMode: .light
     )
 }
 
@@ -375,6 +377,8 @@ final class AppearancePreferences {
     nonisolated(unsafe) static let shared = AppearancePreferences()
     private static let settingsKey = "appearance.preferences"
     private static let experimentalThemesKey = "appearance.enableExperimentalThemes"
+    /// Same key AppState uses for onboarding completion.
+    private static let onboardingCompletedKey = "onboarding.hasCompletedOnboarding"
 
     private let defaults: UserDefaults
 
@@ -403,7 +407,13 @@ final class AppearancePreferences {
         } else {
             themeOption = AppearanceSelection.default.themeOption
             fontOption = AppearanceSelection.default.fontOption
-            colorMode = .system
+            // Fresh installs start in light mode (approved v1 decision; matches the screenshots).
+            // Someone who finished onboarding on an earlier version and never picked a mode keeps
+            // following the phone's setting, so an update does not switch her app to light.
+            let isExistingUser = defaults.bool(forKey: Self.onboardingCompletedKey)
+            colorMode = isExistingUser ? .system : (AppearanceSelection.default.colorMode ?? .light)
+            // Store the first-launch choice so it does not change once onboarding completes.
+            persistSelection()
         }
     }
 
@@ -480,6 +490,11 @@ final class AppearancePreferences {
 
 private extension AppearancePreferences {
     func persistAndRefresh() {
+        persistSelection()
+        renderKey = UUID()
+    }
+
+    func persistSelection() {
         let selection = AppearanceSelection(
             themeOption: themeOption,
             fontOption: fontOption,
@@ -489,7 +504,5 @@ private extension AppearancePreferences {
         if let data = try? JSONEncoder().encode(selection) {
             defaults.set(data, forKey: Self.settingsKey)
         }
-
-        renderKey = UUID()
     }
 }

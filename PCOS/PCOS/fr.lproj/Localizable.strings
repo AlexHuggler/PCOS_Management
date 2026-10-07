@@ -987,7 +987,7 @@ Full severity label for level 2 symptoms. */
 
 /* Compact severity label for level 1 symptoms.
 Full severity label for level 1 symptoms. */
-"Mild" = "Bénin";
+"Mild" = "Léger";
 
 /* CSV export supplement status value. */
 "Missed" = "Oublié";
@@ -2812,3 +2812,378 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "Énergie";
 "Not selected" = "Non sélectionné";
 "Positive actions" = "Actions positives";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "En attente d'approbation";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "Rien à restaurer";
+
+/* Journey v1: paywall */
+"Almost there" = "Presque terminé";
+
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "Premium s’activera automatiquement dès que l’achat sera approuvé.";
+
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "Aucun abonnement Premium trouvé pour ce compte Apple.";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "Votre achat a bien été effectué, mais Premium n'est pas encore activé. Essayez « Restaurer les achats » dans un instant.";
+
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "L’achat n’a pas abouti";
+
+/* Journey v1: paywall */
+"Restore purchases" = "Restaurer les achats";
+
+/* Journey v1: paywall */
+"Terms of Use" = "Conditions d'utilisation";
+
+/* Journey v1: paywall */
+"Compare plans" = "Comparer les formules";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "Voyez le lien entre vos repas et votre ressenti";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "Gardez votre glycémie en contexte";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "Voyez comment les compléments s'intègrent à votre routine";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "Tenez un journal privé de la peau et des cheveux";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "Allez au-delà de l'essentiel";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "Apportez un résumé clair à chaque rendez-vous";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "Tirez davantage de chaque bilan";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "Transformez vos photos de repas en brouillons modifiables : calories, macros et nutrition liée au cycle.";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "Premium ajoute des outils que de nombreuses personnes atteintes du SOPK utilisent en complément de leur suivi médical. Vos données restent sur votre iPhone.";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "Journaux des repas, de la glycémie et des compléments, reliés aux symptômes";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "Analyses approfondies : sommeil, activité, repas";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "Rapports PDF illimités, prêts pour vos rendez-vous";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "Journal photo privé pour la peau et les cheveux";
+
+/* Journey v1: paywall */
+"Best value · %@" = "Meilleure offre · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "%@/mois, facturé annuellement";
+
+/* Journey v1: paywall */
+"Continue — %@" = "Continuer – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "Renouvellement à %@ jusqu'à résiliation. Résiliez à tout moment dans Réglages › Compte Apple › Abonnements, au moins 24 heures avant le renouvellement.";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "Pas de publicité. Aucune vente de vos données. Pas un dispositif médical.";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "Bienvenue dans Premium";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "Les journaux des repas, de la glycémie et des compléments sont activés.";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "Tout Premium est prêt pour vous.";
+
+/* Journey v1: paywall */
+"Deeper insights" = "Analyses approfondies";
+
+/* Journey v1: paywall */
+"Log your first meal" = "Enregistrer votre premier repas";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "Enregistrer votre première glycémie";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "Enregistrer votre premier complément";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "Ouvrir votre journal photo";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "Gérez votre abonnement à tout moment dans Réglages.";
+
+/* Journey v1: paywall */
+"Selected" = "Sélectionné";
+
+/* Journey v1: paywall */
+"%@/day" = "%@/jour";
+
+/* Journey v1: paywall */
+"%@/week" = "%@/semaine";
+
+/* Journey v1: paywall */
+"%@/month" = "%@/mois";
+
+/* Journey v1: paywall */
+"%@/year" = "%@/an";
+
+/* Journey v1: paywall */
+"Yearly" = "Annuel";
+
+/* Journey v1: paywall */
+"Monthly" = "Mensuel";
+
+/* Journey v1: paywall */
+"Weekly" = "Hebdomadaire";
+
+/* Journey v1: subscription status */
+"Manage subscription" = "Gérer l'abonnement";
+
+/* Journey v1: subscription status */
+"Opens your Apple Account subscriptions" = "Ouvre les abonnements de votre compte Apple";
+
+/* Journey v1: subscription status */
+"What's included" = "Ce qui est inclus";
+
+/* Journey v1: subscription status */
+"Cancel or change plans in Settings › Apple Account › Subscriptions. Your data stays on your iPhone either way." = "Résiliez ou changez de formule dans Réglages › Compte Apple › Abonnements. Vos données restent sur votre iPhone dans tous les cas.";
+
+/* Journey v1: subscription status */
+"CycleBalance Premium" = "CycleBalance Premium";
+
+/* Journey v1: subscription status */
+"%@ · %@" = "%@ · %@";
+
+/* Journey v1: subscription status */
+"Ends %@" = "Se termine le %@";
+
+/* Journey v1: subscription status */
+"Renews %@" = "Renouvellement le %@";
+
+/* Journey v1: subscription status */
+"Your purchases are up to date." = "Vos achats sont à jour.";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "Un problème est survenu";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "Retour";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "Commencer";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "Restaurer une sauvegarde";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "Enregistrer le bilan du jour";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "Plus tard";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "Activer le rappel";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Connecter Apple Santé";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "Étape %lld sur %lld";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "Comprenez vos tendances SOPK, en toute confidentialité.";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "Un bilan prend environ 20 secondes. Avec le temps, vous verrez ce qui semble lié : cycles, symptômes, sommeil, etc.";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "Reste sur votre iPhone";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Apple Santé est facultatif";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "Pas un dispositif médical";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "Diagnostic récent";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "Je gère depuis un moment";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "Pas encore sûre";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "J'apprends ce qui m'aide";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "Je connais les bases et je veux du détail";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "Je remarque des symptômes";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "Où en êtes-vous avec votre SOPK ?";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "Cela détermine le niveau d'explication. Modifiable à tout moment.";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "Que souhaitez-vous mieux comprendre ?";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "Choisissez librement. Nous les épinglons à votre bilan quotidien.";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "Comment devons-nous vous appeler ? (facultatif)";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "Prénom";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "VOS SYMPTÔMES";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "Jour 1 enregistré";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "Ce que vous débloquez au fil de vos bilans";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "Après 7 bilans";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "Votre première tendance de symptômes";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld sur %lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "Après 2 règles";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "La fourchette de durée de vos cycles";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Avec Apple Santé";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "Le contexte du sommeil et de l'activité";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "Un petit rappel en douceur ?";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "Un rappel discret par jour. Vos symptômes ne s'affichent jamais sur l'écran verrouillé.";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "Heure du rappel";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "Sommeil";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "Suivi du cycle";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Récupérez ce que votre Watch sait déjà";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "Lecture seule. CycleBalance n'écrit jamais dans Apple Santé et rien ne quitte votre iPhone.";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "Apple Santé n'est pas disponible sur cet appareil.";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "Modifiable à tout moment dans Réglages › Santé.";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "Règles irrégulières";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "Fringales et digestion";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "Glycémie";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "Fort";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "Difficile";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "Rien à signaler aujourd'hui";
+
+/* Journey v1: Today */
+"Good morning, %@" = "Bonjour, %@";
+
+/* Journey v1: Today */
+"Good afternoon, %@" = "Bon après-midi, %@";
+
+/* Journey v1: Today */
+"Good evening, %@" = "Bonsoir, %@";
+
+/* Journey v1: Today */
+"%@ · Cycle day %lld" = "%@ · Jour %lld du cycle";
+
+/* Journey v1: Today */
+"More details" = "Plus de détails";
+
+/* Journey v1: Today */
+"Your first pattern is ready" = "Votre première tendance est prête";
+
+/* Journey v1: Today */
+"See what's connected" = "Voir ce qui est lié";
+
+/* Journey v1: Today */
+"%lld of %lld toward your first pattern" = "%lld sur %lld vers votre première tendance";
+
+/* Journey v1: Today */
+"Each check-in adds to your first pattern. Missed days are fine." = "Chaque bilan contribue à votre première tendance. Les jours manqués ne posent aucun problème.";
+
+/* Journey v1: Today */
+"Curious how meals affect your energy?" = "Curieuse de voir l'effet des repas sur votre énergie ?";
+
+/* Journey v1: Today */
+"Try meal logging" = "Essayer le journal des repas";
+
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "Masquer le conseil";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "Vous pouvez réessayer maintenant ou plus tard. Vos enregistrements sont en sécurité.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "La restauration n’a pas abouti";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "Vérifiez votre connexion et réessayez. Vos enregistrements sont en sécurité.";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "Première tendance";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "%lld bilans sur %lld vers votre première tendance";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "Bon retour, %@. Vos bilans précédents comptent toujours.";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "Bon retour. Vos bilans précédents comptent toujours.";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "Progression";

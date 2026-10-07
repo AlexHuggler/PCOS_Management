@@ -92,6 +92,12 @@ struct TodayView: View {
     @State private var recentHealthLogs: [DailyLog] = []
     @State private var healthOwnership: [HealthKitFieldOwnership] = []
     @State private var healthSources: [HealthKitImportedSampleRecord] = []
+    @State private var quickCheckIn = QuickCheckInInput()
+    @State private var checkInDays = 0
+    @State private var lastCheckInBeforeToday: Date?
+    @State private var showCheckInSaved = false
+    @State private var activeLogger: LoggerShortcut?
+    @AppStorage(PremiumNudgePolicy.dismissedKey) private var premiumCardDismissed = false
 
     var body: some View {
         NavigationStack {
@@ -101,6 +107,13 @@ struct TodayView: View {
                 }
                 .sheet(isPresented: $showingLogSymptoms, onDismiss: { refreshToday() }) {
                     SymptomLogView()
+                }
+                // A8: shortcuts and resumed Premium actions open in place on Today (no tab jump).
+                .sheet(item: $activeLogger, onDismiss: {
+                    refreshToday()
+                    consumeTodayLogger()
+                }) { shortcut in
+                    todayLoggerDestination(shortcut)
                 }
                 .sheet(isPresented: $showingPeriodEndSheet, onDismiss: { refreshToday() }) {
                     if let viewModel, let state = viewModel.currentPeriodState {
@@ -117,7 +130,12 @@ struct TodayView: View {
                         Alert(title: Text(L10n.string("Log Period", defaultValue: "Log Period")), dismissButton: .cancel())
                     }
                 }
-                .onAppear { loadTodayIfNeeded() }
+                .onAppear {
+                    loadTodayIfNeeded()
+                    consumeTodayLogger()
+                }
+                .onChange(of: appState.pendingLoggerShortcut) { _, _ in consumeTodayLogger() }
+                .onChange(of: appState.selectedTab) { _, _ in consumeTodayLogger() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { refreshToday() } }
                 .onChange(of: appState.lifecycleMode) { _, _ in refreshToday() }
                 .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshToday() }
@@ -130,9 +148,10 @@ struct TodayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppTheme.spacing16) {
                 companionGreeting
-                if trackingPreferences.visibleCards.first == .cycle { companionCycleContext }
                 companionCheckIn
+                patternProgressCard
                 companionFavorites
+                if showsPremiumCard { premiumNudgeCard }
                 ForEach(orderedCompanionCards) { card in companionCard(card) }
                 NavigationLink { CycleDetailView() } label: {
                     Label(L10n.string("Your cycle history", defaultValue: "Your cycle history"), systemImage: "clock.arrow.circlepath")
@@ -145,6 +164,8 @@ struct TodayView: View {
         .background(BotanicalScreenBackground(style: .dense))
         .refreshable { refreshToday() }
         .navigationTitle(L10n.string("Today", defaultValue: "Today"))
+        // The greeting is the page heading (A8), so the bar title stays small.
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(AppTheme.preferredColorScheme, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -158,7 +179,7 @@ struct TodayView: View {
     }
 
     private var orderedCompanionCards: [TodayCard] {
-        trackingPreferences.visibleCards.filter { $0 != .cycle || trackingPreferences.visibleCards.first != .cycle }
+        trackingPreferences.visibleCards
     }
 
     private func loadTodayIfNeeded() {
@@ -173,6 +194,18 @@ struct TodayView: View {
         refreshTodaysSymptoms()
         refreshStreak()
         refreshSummaryData()
+        refreshQuickCheckIn()
+    }
+
+    private func refreshQuickCheckIn() {
+        let summary = CheckInProgress.summary(modelContext: modelContext)
+        checkInDays = summary.days
+        lastCheckInBeforeToday = summary.lastBeforeToday
+        do {
+            quickCheckIn = try QuickCheckInService(modelContext: modelContext).load()
+        } catch {
+            Logger.database.error("Failed to load today's check-in: \(error.localizedDescription)")
+        }
     }
 
     private func refreshTodaysSymptoms() {
@@ -221,16 +254,70 @@ struct TodayView: View {
         }
     }
 
+    /// A8: "Good evening, Maya" with the date and, when known, the cycle day.
     private var companionGreeting: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
-                .appFont(.subheadline)
-                .foregroundStyle(.secondary)
-            Text(L10n.string("A little space for you.", defaultValue: "A little space for you."))
-                .appHeadingFont(.title2, weight: .semibold)
+            Text(greetingTitle)
+                .appHeadingFont(.title, weight: .bold)
                 .foregroundStyle(AppTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("today.greeting")
+            Text(greetingSubtitle)
+                .appFont(.subheadline)
+                .foregroundStyle(AppTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            if isReturningAfterGap {
+                Text(welcomeBackText)
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("today.welcome_back")
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Back after a few days away: welcome her back and say nothing was reset (no streak guilt).
+    private var isReturningAfterGap: Bool {
+        CheckInProgress.isReturningAfterGap(
+            lastCheckInBeforeToday: lastCheckInBeforeToday,
+            hasCheckedInToday: hasCheckIn || showCheckInSaved
+        )
+    }
+
+    private var welcomeBackText: String {
+        if let name = appState.onboardingProfile.preferredDisplayName {
+            return L10n.format(
+                "Welcome back, %@. Your earlier check-ins still count.",
+                defaultValue: "Welcome back, %@. Your earlier check-ins still count.",
+                name
+            )
+        }
+        return L10n.string(
+            "Welcome back. Your earlier check-ins still count.",
+            defaultValue: "Welcome back. Your earlier check-ins still count."
+        )
+    }
+
+    private var greetingTitle: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let name = appState.onboardingProfile.preferredDisplayName
+        switch (hour, name) {
+        case (5..<12, let name?): return L10n.format("Good morning, %@", defaultValue: "Good morning, %@", name)
+        case (12..<17, let name?): return L10n.format("Good afternoon, %@", defaultValue: "Good afternoon, %@", name)
+        case (_, let name?): return L10n.format("Good evening, %@", defaultValue: "Good evening, %@", name)
+        case (5..<12, nil): return L10n.string("Good morning", defaultValue: "Good morning")
+        case (12..<17, nil): return L10n.string("Good afternoon", defaultValue: "Good afternoon")
+        default: return L10n.string("Good evening", defaultValue: "Good evening")
+        }
+    }
+
+    private var greetingSubtitle: String {
+        let date = Date.now.formatted(Date.FormatStyle().weekday(.wide).month(.wide).day().locale(appState.renderLocale))
+        guard appState.lifecycleMode == .cycling, let day = viewModel?.currentCycleDayCount else { return date }
+        return L10n.format("%@ · Cycle day %lld", defaultValue: "%@ · Cycle day %lld", date, Int64(day))
     }
 
     @ViewBuilder
@@ -277,65 +364,131 @@ struct TodayView: View {
         return log.moodRawValue != nil || log.symptomsReviewed || log.energyLevel != nil || log.stressLevel != nil || log.painLevel0To10 != nil || log.waterOz != nil || !(log.privateNote ?? "").isEmpty || !todaysSymptoms.isEmpty
     }
 
+    /// Up to three pinned symptoms as quick chips (from onboarding A4 or Personalization).
+    private var quickSymptoms: [SymptomType] {
+        let pinned = trackingPreferences.pinnedSymptomRawValues.compactMap(SymptomType.init(rawValue:))
+        let source = pinned.isEmpty ? OnboardingPersonalizationPlan.defaultPinnedSymptoms : pinned
+        return Array(source.prefix(3))
+    }
+
+    /// A8 inline check-in: the same component as onboarding (A5). Each tap saves straight away;
+    /// tapping a selected severity again clears it; "More details" opens the full check-in.
     private var companionCheckIn: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(hasCheckIn ? L10n.string("Your check-in", defaultValue: "Your check-in") : L10n.string("How are you feeling?", defaultValue: "How are you feeling?"))
-                        .appHeadingFont(.title2, weight: .semibold)
-                    Text(hasCheckIn ? L10n.string("Saved for today. You can change any detail.", defaultValue: "Saved for today. You can change any detail.") : L10n.string("Choose what feels useful. Every question is optional.", defaultValue: "Choose what feels useful. Every question is optional."))
-                        .appFont(.subheadline).foregroundStyle(.secondary)
-                }
+            HStack(alignment: .firstTextBaseline) {
+                Text(L10n.string("How are you feeling?", defaultValue: "How are you feeling?"))
+                    .appHeadingFont(.title3, weight: .semibold)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 4)
-                Image(systemName: hasCheckIn ? "checkmark.circle.fill" : "sun.max")
-                    .font(.title2).foregroundStyle(AppTheme.accentColor)
-                    .accessibilityHidden(true)
-            }
-            if hasCheckIn {
-                FlowLayout(spacing: 8) {
-                    if let raw = todaysDailyLog?.moodRawValue, let mood = DailyMood(rawValue: raw) {
-                        Text(mood.title).appFont(.subheadline)
-                    }
-                    if let energy = todaysDailyLog?.energyLevel {
-                        Text(L10n.format("Energy %lld/5", defaultValue: "Energy %lld/5", Int64(energy))).appFont(.subheadline)
-                    }
-                    if todaysDailyLog?.symptomsReviewed == true && todaysSymptoms.isEmpty {
-                        Text(L10n.string("No symptoms today", defaultValue: "No symptoms today")).appFont(.subheadline)
-                    }
+                if showCheckInSaved || hasCheckIn {
+                    Label(L10n.string("Saved", defaultValue: "Saved"), systemImage: "checkmark.circle.fill")
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(AppTheme.accentColor)
+                        .accessibilityIdentifier("today.checkin.saved")
                 }
             }
+            QuickCheckInPanel(
+                input: quickCheckIn,
+                symptoms: quickSymptoms,
+                moodMinHeight: 52,
+                // "Nothing to report" would clear the day's symptoms, so it is only offered while
+                // none are logged; it never deletes something she entered elsewhere.
+                showsNothingToReport: quickCheckIn.nothingToReport || todaysSymptoms.isEmpty,
+                onMood: { mood in
+                    var input = QuickCheckInInput()
+                    input.mood = mood
+                    saveQuickCheckIn(input)
+                },
+                onSeverity: { symptom, severity in
+                    if quickCheckIn.severities[symptom] == severity {
+                        clearQuickSymptom(symptom)
+                    } else {
+                        var input = QuickCheckInInput()
+                        input.severities[symptom] = severity
+                        saveQuickCheckIn(input)
+                    }
+                },
+                onNothingToReport: toggleNothingToReport
+            )
             Button { showingLogSymptoms = true } label: {
-                Text(hasCheckIn ? L10n.string("Edit check-in", defaultValue: "Edit check-in") : L10n.string("Start check-in", defaultValue: "Start check-in"))
-                    .appFont(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 36)
+                Text(L10n.string("More details", defaultValue: "More details"))
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(AppTheme.accentColor)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.borderedProminent)
-            .foregroundStyle(AppTheme.premiumEditorCTAForeground)
-            .tint(AppTheme.accentColor)
+            .buttonStyle(.plain)
             .accessibilityIdentifier("today.checkin")
         }
-        .padding(20)
+        .padding(16)
         .premiumCardDecoration()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("today.checkin_card")
+    }
+
+    /// A8: "3 of 7 toward your first pattern". Missed days are fine; there are no streaks here.
+    private var patternProgressCard: some View {
+        let target = CheckInProgress.firstPatternTarget
+        let completed = CheckInProgress.displayed(checkInDays)
+        return HStack(alignment: .center, spacing: 14) {
+            PatternProgressRing(completed: completed, target: target)
+            VStack(alignment: .leading, spacing: 4) {
+                if completed >= target {
+                    Text(L10n.string("Your first pattern is ready", defaultValue: "Your first pattern is ready"))
+                        .appFont(.headline)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button { appState.selectTab(.insights) } label: {
+                        Text(L10n.string("See what's connected", defaultValue: "See what's connected"))
+                            .appFont(.subheadline, weight: .semibold)
+                            .foregroundStyle(AppTheme.accentColor)
+                            .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("today.progress.insights")
+                } else {
+                    // The ring already reads "3 of 7 check-ins toward your first pattern" to VoiceOver.
+                    Text(L10n.format("%lld of %lld toward your first pattern", defaultValue: "%lld of %lld toward your first pattern", Int64(completed), Int64(target)))
+                        .appFont(.headline)
+                        .foregroundStyle(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityHidden(true)
+                    Text(L10n.string("Each check-in adds to your first pattern. Missed days are fine.", defaultValue: "Each check-in adds to your first pattern. Missed days are fine."))
+                        .appFont(.subheadline)
+                        .foregroundStyle(AppTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .premiumCardDecoration()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("today.pattern_progress")
     }
 
     private var companionFavorites: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(L10n.string("Your shortcuts", defaultValue: "Your shortcuts"))
-                .appFont(.headline)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { favoriteButtons }
-                VStack(spacing: 8) { favoriteButtons }
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { favoriteButtons }
+            VStack(spacing: 8) { favoriteButtons }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.string("Your shortcuts", defaultValue: "Your shortcuts"))
     }
 
     private var favoriteButtons: some View {
         ForEach(trackingPreferences.favoriteActions.filter { $0.isVisible(in: appState.lifecycleMode, showFertility: trackingPreferences.showFertility) }) { shortcut in
-            Button { appState.requestLogger(shortcut) } label: {
+            Button { openLogger(shortcut) } label: {
                 VStack(spacing: 8) {
-                    Image(systemName: shortcut.systemImage).font(.title3)
+                    Image(systemName: shortcut.systemImage)
+                        .font(.title3)
+                        .foregroundStyle(AppTheme.accentColor)
+                        .accessibilityHidden(true)
                     Text(shortcut.title).appFont(.subheadline, weight: .medium)
                         .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.center)
                     if shortcut.requiresPremium && !appState.allowsPremiumAccess {
                         Text(L10n.string("Premium", defaultValue: "Premium"))
                             .appFont(.caption2).foregroundStyle(.secondary)
@@ -343,11 +496,145 @@ struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: 64)
                 .padding(12)
-                .background(AppTheme.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                .premiumCardDecoration()
             }
             .buttonStyle(.plain)
             .foregroundStyle(AppTheme.primaryText)
             .accessibilityIdentifier("today.favorite.\(shortcut.rawValue)")
+        }
+    }
+
+    // MARK: - Premium card (after day 3, dismissible)
+
+    private var showsPremiumCard: Bool {
+        PremiumNudgePolicy.shouldShow(
+            checkInDays: checkInDays,
+            hasPremiumAccess: appState.allowsPremiumAccess,
+            showsSubscriptionUI: appState.showsSubscriptionUI,
+            dismissed: premiumCardDismissed
+        )
+    }
+
+    private var premiumNudgeCard: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "fork.knife")
+                .appFont(.subheadline, weight: .semibold)
+                .foregroundStyle(AppTheme.coralAccent)
+                .frame(width: 40, height: 40)
+                .background(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous).fill(AppTheme.cardBackground))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.string("Curious how meals affect your energy?", defaultValue: "Curious how meals affect your energy?"))
+                    .appFont(.headline)
+                    .foregroundStyle(AppTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    appState.requestLogger(.meal, host: .today, source: "today_premium_card")
+                } label: {
+                    Text(L10n.string("Try meal logging", defaultValue: "Try meal logging"))
+                        .appFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(AppTheme.coralAccent)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("today.premium_card.open")
+            }
+            Spacer(minLength: 0)
+            Button {
+                premiumCardDismissed = true
+                AppAnalytics.shared.track(.premiumCardDismissed)
+            } label: {
+                Image(systemName: "xmark")
+                    .appFont(.body, weight: .semibold)
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.string("Dismiss tip", defaultValue: "Dismiss tip"))
+            .accessibilityIdentifier("today.premium_card.dismiss")
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                .fill(AppTheme.coralAccent.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                .stroke(AppTheme.coralAccent.opacity(0.25), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("today.premium_card")
+    }
+
+    // MARK: - Inline check-in actions
+
+    private func saveQuickCheckIn(_ input: QuickCheckInInput) {
+        do {
+            try QuickCheckInService(modelContext: modelContext).save(input)
+            CheckInAnalytics.recordSave(source: .today)
+            showCheckInSaved = true
+            refreshToday()
+        } catch {
+            Logger.database.error("Failed to save inline check-in: \(error.localizedDescription)")
+            quickLogAlert = .error(L10n.string(
+                "Your check-in was not saved. Please check your entries and try again.",
+                defaultValue: "Your check-in was not saved. Please check your entries and try again."
+            ))
+        }
+    }
+
+    private func toggleNothingToReport() {
+        guard quickCheckIn.nothingToReport else {
+            var input = QuickCheckInInput()
+            input.nothingToReport = true
+            saveQuickCheckIn(input)
+            return
+        }
+        do {
+            try QuickCheckInService(modelContext: modelContext).clearNothingToReport()
+            refreshToday()
+        } catch {
+            Logger.database.error("Failed to clear Nothing to report: \(error.localizedDescription)")
+            quickLogAlert = .error(L10n.string(
+                "Your check-in was not saved. Please check your entries and try again.",
+                defaultValue: "Your check-in was not saved. Please check your entries and try again."
+            ))
+        }
+    }
+
+    private func clearQuickSymptom(_ symptom: SymptomType) {
+        do {
+            try QuickCheckInService(modelContext: modelContext).clearSymptom(symptom)
+            refreshToday()
+        } catch {
+            Logger.database.error("Failed to clear inline symptom: \(error.localizedDescription)")
+            quickLogAlert = .error(L10n.string(
+                "Your check-in was not saved. Please check your entries and try again.",
+                defaultValue: "Your check-in was not saved. Please check your entries and try again."
+            ))
+        }
+    }
+
+    // MARK: - Loggers opened in place
+
+    private func consumeTodayLogger() {
+        guard activeLogger == nil, let shortcut = appState.consumePendingLogger(host: .today) else { return }
+        UserEntryDefaultsStore.shared.lastLoggerShortcut = shortcut
+        activeLogger = shortcut
+    }
+
+    @ViewBuilder
+    private func todayLoggerDestination(_ shortcut: LoggerShortcut) -> some View {
+        switch shortcut {
+        case .period: CycleLogView()
+        case .ovulation: OvulationLogView()
+        case .symptoms: SymptomLogView()
+        case .bloodSugar: BloodSugarLogView()
+        case .supplements: SupplementLogView()
+        case .meal: MealLogView(entryPoint: .today)
+        case .photo: PhotoGalleryView()
         }
     }
 
@@ -374,6 +661,8 @@ struct TodayView: View {
                 Spacer()
                 NavigationLink { HealthKitSettingsView() } label: {
                     Image(systemName: "arrow.up.right")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .accessibilityLabel(L10n.string("Apple Health settings", defaultValue: "Apple Health settings"))
             }
@@ -526,8 +815,7 @@ struct TodayView: View {
                 Text(lunarGreetingTitle)
                     .appHeadingFont(.title2, weight: .regular)
                     .foregroundStyle(AppTheme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(L10n.string("You're not alone in this.", defaultValue: "You're not alone in this."))
                     .appFont(.subheadline)
@@ -599,8 +887,6 @@ struct TodayView: View {
                     .appHeadingFont(.largeTitle, weight: .regular)
                     .foregroundStyle(AppTheme.accentColor)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("today.hero.current_cycle_label")
 
@@ -649,8 +935,8 @@ struct TodayView: View {
                     .appFont(.caption, weight: .semibold)
                     .textCase(.uppercase)
                     .foregroundStyle(AppTheme.secondaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.86)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("\(dayCount)")
                     .appHeadingFont(.largeTitle, weight: .regular)
@@ -658,7 +944,6 @@ struct TodayView: View {
                     .scaleEffect(1.46)
                     .foregroundStyle(AppTheme.primaryText)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.62)
                     .padding(.vertical, AppTheme.spacing4)
                     .accessibilityIdentifier("today.hero.current_cycle_label")
 
@@ -673,22 +958,21 @@ struct TodayView: View {
                         .appFont(.subheadline, weight: .semibold)
                         .foregroundStyle(AppTheme.premiumEditorAccentColor)
                         .multilineTextAlignment(.center)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 VStack(spacing: AppTheme.spacing4) {
                     Text(L10n.string("Next period", defaultValue: "Next period"))
                         .appFont(.subheadline)
                         .foregroundStyle(AppTheme.primaryText)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(viewModel?.predictionCountdownText() ?? lunarPredictionHeadline)
                         .appHeadingFont(.title2, weight: .regular)
                         .foregroundStyle(AppTheme.premiumEditorAccentGradient)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.76)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if let secondary = lunarPredictionDetailText {
                         HStack(spacing: AppTheme.spacing4) {
@@ -696,8 +980,7 @@ struct TodayView: View {
                                 .appFont(.caption)
                                 .foregroundStyle(AppTheme.secondaryText)
                                 .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.82)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             if viewModel?.hasActionablePrediction == true {
                                 Button {
@@ -706,9 +989,10 @@ struct TodayView: View {
                                     Image(systemName: "info.circle")
                                         .appFont(.caption)
                                         .foregroundStyle(AppTheme.secondaryText)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .contentShape(Rectangle())
                                 .accessibilityLabel(
                                     L10n.string("About this estimate", defaultValue: "About this estimate")
                                 )
@@ -724,8 +1008,7 @@ struct TodayView: View {
                 } label: {
                     HStack(spacing: AppTheme.spacing4) {
                         Text(L10n.string("Edit period dates", defaultValue: "Edit period dates"))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.78)
+                            .fixedSize(horizontal: false, vertical: true)
                         Image(systemName: "pencil")
                             .imageScale(.small)
                     }
@@ -1109,8 +1392,6 @@ struct TodayView: View {
                         Text(intensity.displayName)
                             .appFont(.caption, weight: .medium)
                             .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -1647,8 +1928,7 @@ struct TodayView: View {
                         Text("\(Int(latest.glucoseValue)) mg/dL")
                             .appFont(.subheadline, weight: .medium)
                             .foregroundStyle(latest.glucoseValue > 140 ? .orange : AppTheme.accentColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .fixedSize()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1807,7 +2087,7 @@ struct TodayView: View {
     }
 
     private func openLogger(_ shortcut: LoggerShortcut) {
-        appState.requestLogger(shortcut)
+        appState.requestLogger(shortcut, host: .today, source: "today_\(shortcut.rawValue)")
     }
 
     private func syncHeroState(reason: String, currentCycleDayCount: Int? = nil) {
@@ -1956,14 +2236,14 @@ private struct LunarTodaySnapshotItemView: View {
             Text(item.title)
                 .appFont(.caption, weight: .semibold)
                 .foregroundStyle(AppTheme.primaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(item.value)
                 .appFont(.caption)
                 .foregroundStyle(AppTheme.secondaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
     }
@@ -2203,8 +2483,7 @@ struct QuickActionButton: View {
                 Text(title)
                     .appFont(.caption, weight: .medium)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity)
             .fixedSize(horizontal: false, vertical: true)

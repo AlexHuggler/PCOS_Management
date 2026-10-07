@@ -39,7 +39,8 @@ enum BodyMeasurementStyle: String, CaseIterable, Codable, Identifiable, Sendable
 }
 
 struct TrackingSelection: Codable, Equatable, Sendable {
-    var favoriteActions: [LoggerShortcut] = [.symptoms, .period, .meal]
+    /// Free actions only by default; Premium is offered in context after day 3 (A8).
+    var favoriteActions: [LoggerShortcut] = [.period, .symptoms]
     var visibleCards: [TodayCard] = [.cycle, .health, .observation, .symptoms]
     var pinnedSymptomRawValues: [String] = []
     var informationDetail: InformationDetail = .simple

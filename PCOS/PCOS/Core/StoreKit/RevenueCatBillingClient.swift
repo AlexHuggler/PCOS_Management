@@ -156,7 +156,8 @@ final class RevenueCatBillingClient: PremiumBillingClient {
             displayName: product.localizedTitle,
             displayPrice: product.localizedPriceString,
             price: product.price,
-            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod)
+            subscriptionPeriod: makeBillingPeriod(from: product.subscriptionPeriod),
+            localizedPricePerMonth: product.localizedPricePerMonth
         )
     }
 
@@ -184,7 +185,8 @@ final class RevenueCatBillingClient: PremiumBillingClient {
 @MainActor
 final class LiveRevenueCatPurchasing: RevenueCatPurchasing {
     var isConfigured: Bool { Purchases.isConfigured }
-    var appUserID: String { Purchases.shared.appUserID }
+    // Purchases.shared traps when the SDK is not configured (e.g. no API key in a dev build).
+    var appUserID: String { Purchases.isConfigured ? Purchases.shared.appUserID : "" }
 
     func configure(apiKey: String) {
         if !Purchases.isConfigured {

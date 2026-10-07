@@ -993,7 +993,7 @@ Full severity label for level 1 symptoms. */
 "Missed" = "미복용";
 
 /* Full severity label for level 3 symptoms. */
-"Moderate" = "보통의";
+"Moderate" = "보통";
 
 /* Symptom focus area description in onboarding. */
 "Monitor acne, hair changes, and skin patterns." = "여드름, 모발 변화 및 피부 패턴을 모니터링하십시오.";
@@ -2789,3 +2789,378 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "활력";
 "Not selected" = "선택 안 함";
 "Positive actions" = "나를 위한 행동";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "승인 대기 중";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "복원할 구매 없음";
+
+/* Journey v1: paywall */
+"Almost there" = "거의 다 됐어요";
+
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "승인되면 프리미엄이 자동으로 켜져요.";
+
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "이 Apple 계정에서 프리미엄 구독을 찾을 수 없어요.";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "구매는 완료되었지만 프리미엄이 아직 활성화되지 않았습니다. 잠시 후 ‘구매 복원’을 눌러 주세요.";
+
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "구매가 완료되지 않았어요";
+
+/* Journey v1: paywall */
+"Restore purchases" = "구매 복원";
+
+/* Journey v1: paywall */
+"Terms of Use" = "이용 약관";
+
+/* Journey v1: paywall */
+"Compare plans" = "플랜 비교";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "식사와 컨디션의 관계를 살펴보세요";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "혈당을 맥락과 함께 기록하세요";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "영양제가 일상에 어떻게 맞는지 확인하세요";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "피부와 모발을 비공개로 기록하세요";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "기본을 넘어 더 깊이 살펴보세요";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "진료 때마다 명확한 요약을 가져가세요";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "매번의 체크인을 더 알차게";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "식사 사진을 칼로리, 영양소, 주기를 고려한 편집 가능한 영양 기록 초안으로 바꿔 보세요.";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "프리미엄은 PCOS가 있는 많은 사람들이 진료와 함께 사용하는 도구를 더해 줍니다. 데이터는 iPhone에만 보관됩니다.";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "식사, 혈당, 영양제 기록을 증상과 연결";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "더 깊은 인사이트: 수면, 활동, 식사";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "진료용 PDF 보고서 무제한";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "피부와 모발을 위한 비공개 사진 일지";
+
+/* Journey v1: paywall */
+"Best value · %@" = "최고 가치 · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "월 %@, 연간 결제";
+
+/* Journey v1: paywall */
+"Continue — %@" = "계속 – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "해지할 때까지 %@에 자동 갱신됩니다. 갱신 24시간 전까지 설정 › Apple 계정 › 구독에서 언제든지 해지할 수 있습니다.";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "광고 없음. 데이터 판매 없음. 의료기기가 아닙니다.";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "프리미엄에 오신 것을 환영합니다";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "식사, 혈당, 영양제 기록이 켜졌습니다.";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "프리미엄의 모든 기능을 사용할 수 있습니다.";
+
+/* Journey v1: paywall */
+"Deeper insights" = "더 깊은 인사이트";
+
+/* Journey v1: paywall */
+"Log your first meal" = "첫 식사 기록하기";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "첫 혈당 기록하기";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "첫 영양제 기록하기";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "사진 일지 열기";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "구독은 언제든지 설정에서 관리할 수 있습니다.";
+
+/* Journey v1: paywall */
+"Selected" = "선택됨";
+
+/* Journey v1: paywall */
+"%@/day" = "%@/일";
+
+/* Journey v1: paywall */
+"%@/week" = "%@/주";
+
+/* Journey v1: paywall */
+"%@/month" = "%@/월";
+
+/* Journey v1: paywall */
+"%@/year" = "%@/년";
+
+/* Journey v1: paywall */
+"Yearly" = "연간";
+
+/* Journey v1: paywall */
+"Monthly" = "월간";
+
+/* Journey v1: paywall */
+"Weekly" = "주간";
+
+/* Journey v1: subscription status */
+"Manage subscription" = "구독 관리";
+
+/* Journey v1: subscription status */
+"Opens your Apple Account subscriptions" = "Apple 계정의 구독 화면을 엽니다";
+
+/* Journey v1: subscription status */
+"What's included" = "포함된 기능";
+
+/* Journey v1: subscription status */
+"Cancel or change plans in Settings › Apple Account › Subscriptions. Your data stays on your iPhone either way." = "해지 또는 플랜 변경은 설정 › Apple 계정 › 구독에서 할 수 있습니다. 어떤 경우에도 데이터는 iPhone에 남아 있습니다.";
+
+/* Journey v1: subscription status */
+"CycleBalance Premium" = "CycleBalance 프리미엄";
+
+/* Journey v1: subscription status */
+"%@ · %@" = "%@ · %@";
+
+/* Journey v1: subscription status */
+"Ends %@" = "%@에 종료";
+
+/* Journey v1: subscription status */
+"Renews %@" = "%@에 갱신";
+
+/* Journey v1: subscription status */
+"Your purchases are up to date." = "구매 정보가 최신 상태입니다.";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "문제가 발생했습니다";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "뒤로";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "시작하기";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "백업에서 복원";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "오늘의 체크인 저장";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "나중에 하기";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "알림 켜기";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Apple 건강 연결";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "%lld/%lld단계";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "나의 PCOS 패턴을 비공개로 이해하세요.";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "체크인은 약 20초면 끝나요. 시간이 지나면 주기, 증상, 수면 등 무엇이 연결되어 보이는지 확인할 수 있어요.";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "iPhone에만 보관";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Apple 건강 연결은 선택 사항";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "의료기기가 아닙니다";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "최근에 진단받음";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "관리한 지 꽤 됨";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "아직 잘 모르겠음";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "무엇이 도움이 되는지 알아가는 중";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "기본은 알고 있고 자세한 내용을 원함";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "증상을 느끼고 있음";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "PCOS와 함께한 여정은 어디쯤인가요?";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "설명의 자세한 정도가 정해집니다. 언제든지 바꿀 수 있어요.";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "무엇을 이해하고 싶으세요?";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "원하는 만큼 고르세요. 매일 체크인에 고정해 드려요.";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "어떻게 불러 드릴까요? (선택)";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "이름";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "나의 증상";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "1일차 저장됨";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "기록할수록 열리는 기능";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "체크인 7회 후";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "첫 번째 증상 패턴";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "생리 2회 후";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "주기 길이 범위";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Apple 건강과 함께";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "수면 및 활동 맥락";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "부드러운 알림을 받아 볼까요?";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "하루 한 번 조용한 알림. 잠금 화면에 증상이 표시되지 않아요.";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "알림 시간";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "수면";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "주기 추적";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Watch에 이미 있는 데이터를 가져오세요";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "읽기 전용입니다. CycleBalance는 Apple 건강에 기록하지 않으며 데이터가 iPhone 밖으로 나가지 않습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "이 기기에서는 Apple 건강을 사용할 수 없습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "설정 › 건강에서 언제든지 변경할 수 있습니다.";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "불규칙한 생리";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "식욕 및 소화";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "혈당";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "심함";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "힘듦";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "오늘은 특별한 증상 없음";
+
+/* Journey v1: Today */
+"Good morning, %@" = "좋은 아침이에요, %@ 님";
+
+/* Journey v1: Today */
+"Good afternoon, %@" = "좋은 오후예요, %@ 님";
+
+/* Journey v1: Today */
+"Good evening, %@" = "좋은 저녁이에요, %@ 님";
+
+/* Journey v1: Today */
+"%@ · Cycle day %lld" = "%@ · 주기 %lld일째";
+
+/* Journey v1: Today */
+"More details" = "자세히 기록";
+
+/* Journey v1: Today */
+"Your first pattern is ready" = "첫 번째 패턴을 볼 수 있어요";
+
+/* Journey v1: Today */
+"See what's connected" = "연결된 내용 보기";
+
+/* Journey v1: Today */
+"%lld of %lld toward your first pattern" = "첫 번째 패턴까지 %lld/%lld";
+
+/* Journey v1: Today */
+"Each check-in adds to your first pattern. Missed days are fine." = "체크인할 때마다 첫 번째 패턴에 가까워져요. 빠진 날이 있어도 괜찮아요.";
+
+/* Journey v1: Today */
+"Curious how meals affect your energy?" = "식사가 에너지에 어떤 영향을 주는지 궁금하세요?";
+
+/* Journey v1: Today */
+"Try meal logging" = "식사 기록 사용해 보기";
+
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "팁 닫기";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "지금이나 나중에 다시 시도할 수 있어요. 기록은 안전하게 보관되어 있어요.";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "복원이 완료되지 않았어요";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "연결을 확인하고 다시 시도해 주세요. 기록은 안전하게 보관되어 있어요.";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "첫 번째 패턴";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "첫 번째 패턴까지 체크인 %lld/%lld회";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "다시 오셨네요, %@ 님. 이전 체크인도 그대로 반영돼요.";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "다시 오셨네요. 이전 체크인도 그대로 반영돼요.";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "진행 상황";

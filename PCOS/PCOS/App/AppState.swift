@@ -1,8 +1,26 @@
 import SwiftUI
 
+/// Why the paywall opened. Drives the contextual headline and the analytics `source`.
 enum PremiumPaywallReason: String {
     case general
     case mealScan
+    case meal
+    case glucose
+    case supplements
+    case photo
+    case insights
+    case report
+    case settings
+
+    static func forLogger(_ shortcut: LoggerShortcut) -> PremiumPaywallReason {
+        switch shortcut {
+        case .meal: .meal
+        case .bloodSugar: .glucose
+        case .supplements: .supplements
+        case .photo: .photo
+        case .period, .ovulation, .symptoms: .general
+        }
+    }
 }
 
 enum AppTab: String, CaseIterable, Identifiable {
@@ -51,6 +69,17 @@ final class AppState {
 #endif
     }
 
+    /// The sandbox Premium override is compiled in only for internal QA builds that set the
+    /// `PREMIUM_QA_OVERRIDE` Swift compilation condition. App Store archives never include it,
+    /// so App Review and TestFlight testers see the real paywall and sandbox purchases.
+    static var compiledWithPremiumQAOverride: Bool {
+#if PREMIUM_QA_OVERRIDE
+        true
+#else
+        false
+#endif
+    }
+
     private let defaults: UserDefaults
     private let uiTestDemoScenarioActive: Bool
     private let testFlightOverrideActive: Bool
@@ -59,9 +88,15 @@ final class AppState {
     var isPremium: Bool = false
     var showPremiumPaywall = false
     var premiumPaywallReason: PremiumPaywallReason = .general
+    /// Analytics `source` for the current paywall (the real trigger, e.g. `today_premium_card`).
+    private(set) var premiumPaywallSource = PremiumPaywallReason.general.rawValue
     var pendingNotificationRoute: AppNotificationRoute?
     private(set) var pendingLoggerShortcut: LoggerShortcut?
+    /// The tab whose sheet should open `pendingLoggerShortcut` (Today opens loggers in place).
+    private(set) var pendingLoggerHost: AppTab = .track
     private var deferredLoggerShortcut: LoggerShortcut?
+    private var deferredLoggerHost: AppTab = .track
+
     let launchAppLanguage: AppLanguage
     var selectedAppLanguage: AppLanguage {
         didSet {
@@ -90,13 +125,15 @@ final class AppState {
         defaults: UserDefaults = .standard,
         launchArguments: [String] = ProcessInfo.processInfo.arguments,
         appStoreReceiptURL: URL? = Bundle.main.appStoreReceiptURL,
-        isDebugBuild: Bool = AppState.compiledInDebugBuild
+        isDebugBuild: Bool = AppState.compiledInDebugBuild,
+        premiumQAOverrideEnabled: Bool = AppState.compiledWithPremiumQAOverride
     ) {
         self.defaults = defaults
         uiTestDemoScenarioActive = launchArguments.contains("-uiTest.demoScenario")
         testFlightOverrideActive = Self.isTestFlightOverrideActive(
             appStoreReceiptURL: appStoreReceiptURL,
-            isDebugBuild: isDebugBuild
+            isDebugBuild: isDebugBuild,
+            premiumQAOverrideEnabled: premiumQAOverrideEnabled
         )
         let storedAppLanguage = AppLanguage.stored(defaults: defaults)
         launchAppLanguage = AppLanguage.launchSnapshot(
@@ -134,23 +171,34 @@ final class AppState {
         selectedTab = requestedTab
     }
 
-    func presentPremiumPaywall(reason: PremiumPaywallReason = .general) {
+    func presentPremiumPaywall(reason: PremiumPaywallReason = .general, source: String? = nil) {
         guard showsSubscriptionUI, !allowsPremiumAccess else { return }
         premiumPaywallReason = reason
+        premiumPaywallSource = source ?? reason.rawValue
         showPremiumPaywall = true
     }
 
     /// The only entry point for presenting a logger from Today, Track, or notifications.
-    func requestLogger(_ shortcut: LoggerShortcut) {
-        selectedTab = .track
+    /// `host` is the tab that presents the logger: Today opens loggers in place (no tab jump);
+    /// Track and notification routes use the Track tab.
+    func requestLogger(_ shortcut: LoggerShortcut, host: AppTab = .track, source: String? = nil) {
+        if host == .track { selectedTab = .track }
         pendingLoggerShortcut = shortcut
+        pendingLoggerHost = host
         guard hasCompletedOnboarding else { return }
         if Self.requiresPremium(shortcut), !allowsPremiumAccess {
             deferredLoggerShortcut = shortcut
+            deferredLoggerHost = host
             pendingLoggerShortcut = nil
-            presentPremiumPaywall()
+            presentPremiumPaywall(
+                reason: .forLogger(shortcut),
+                source: source ?? "\(host.rawValue)_\(shortcut.rawValue)"
+            )
         }
     }
+
+    /// The logger the paywall will continue to after a purchase (for the success screen CTA).
+    var deferredLogger: LoggerShortcut? { deferredLoggerShortcut }
 
     static func requiresPremium(_ shortcut: LoggerShortcut) -> Bool {
         switch shortcut {
@@ -160,10 +208,15 @@ final class AppState {
     }
 
     func consumePendingLogger() -> LoggerShortcut? {
-        guard hasCompletedOnboarding, selectedTab == .track, !showPremiumPaywall,
+        consumePendingLogger(host: .track)
+    }
+
+    func consumePendingLogger(host: AppTab) -> LoggerShortcut? {
+        guard hasCompletedOnboarding, selectedTab == host, pendingLoggerHost == host,
+              !showPremiumPaywall,
               let shortcut = pendingLoggerShortcut else { return nil }
         if Self.requiresPremium(shortcut), !allowsPremiumAccess {
-            requestLogger(shortcut)
+            requestLogger(shortcut, host: host)
             return nil
         }
         pendingLoggerShortcut = nil
@@ -172,13 +225,22 @@ final class AppState {
     }
 
     /// Called after the paywall sheet has actually dismissed, so presentations never overlap.
+    /// After a purchase the started action continues on the tab it began on (A12); closing
+    /// without a purchase leaves the user where they were and clears the action (B1).
     func finishPremiumPaywall() {
         showPremiumPaywall = false
+        resumeOrClearDeferredLogger()
+    }
+
+    private func resumeOrClearDeferredLogger() {
         guard let shortcut = deferredLoggerShortcut else { return }
+        let host = deferredLoggerHost
         deferredLoggerShortcut = nil
         if allowsPremiumAccess {
             pendingLoggerShortcut = shortcut
-            selectedTab = .track
+            pendingLoggerHost = host
+            selectedTab = host
+            AppAnalytics.shared.track(.purchaseResumedAction(action: shortcut.rawValue))
         } else {
             pendingLoggerShortcut = nil
             if let route = pendingNotificationRoute { consumeNotificationRoute(route) }
@@ -204,9 +266,10 @@ final class AppState {
 
     private static func isTestFlightOverrideActive(
         appStoreReceiptURL: URL?,
-        isDebugBuild: Bool
+        isDebugBuild: Bool,
+        premiumQAOverrideEnabled: Bool
     ) -> Bool {
-        guard !isDebugBuild else { return false }
+        guard !isDebugBuild, premiumQAOverrideEnabled else { return false }
         return appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
     }
 }

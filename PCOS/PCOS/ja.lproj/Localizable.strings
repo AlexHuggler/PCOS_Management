@@ -993,7 +993,7 @@ Full severity label for level 1 symptoms. */
 "Missed" = "未服用";
 
 /* Full severity label for level 3 symptoms. */
-"Moderate" = "適度";
+"Moderate" = "中程度";
 
 /* Symptom focus area description in onboarding. */
 "Monitor acne, hair changes, and skin patterns." = "ニキビ、毛髪の変化、皮膚のパターンを監視します。";
@@ -2789,3 +2789,378 @@ Fallback debug label when the premium entitlement status is unavailable. */
 "Energy" = "活力";
 "Not selected" = "未選択";
 "Positive actions" = "自分のための行動";
+
+/* Journey v1: paywall */
+"Waiting for approval" = "承認待ち";
+
+/* Journey v1: paywall */
+"Nothing to restore" = "復元できる購入はありません";
+
+/* Journey v1: paywall */
+"Almost there" = "もう少しです";
+
+/* Design review 5 Oct: needs_review */
+"Premium turns on by itself once it's approved." = "承認されると、プレミアムは自動的に有効になります。";
+
+/* Design review 5 Oct: needs_review */
+"No Premium subscription found for this Apple Account." = "このApple Accountでプレミアムのサブスクリプションは見つかりませんでした。";
+
+/* Journey v1: paywall */
+"Your purchase went through, but Premium hasn't switched on yet. Try Restore purchases in a moment." = "購入は完了しましたが、プレミアムがまだ有効になっていません。少し待ってから「購入を復元」をお試しください。";
+
+/* Design review 5 Oct: needs_review */
+"Purchase didn't go through" = "購入を完了できませんでした";
+
+/* Journey v1: paywall */
+"Restore purchases" = "購入を復元";
+
+/* Journey v1: paywall */
+"Terms of Use" = "利用規約";
+
+/* Journey v1: paywall */
+"Compare plans" = "プランを比較";
+
+/* Journey v1: paywall */
+"See how meals relate to how you feel" = "食事と体調の関係を見てみましょう";
+
+/* Journey v1: paywall */
+"Keep glucose in context" = "血糖値を前後の状況と一緒に記録";
+
+/* Journey v1: paywall */
+"See how supplements fit your routine" = "サプリメントが毎日の習慣にどう合うかを確認";
+
+/* Journey v1: paywall */
+"Keep a private skin & hair journal" = "肌と髪のプライベート記録をつける";
+
+/* Journey v1: paywall */
+"Go deeper than the basics" = "基本の一歩先へ";
+
+/* Journey v1: paywall */
+"Bring every visit a clear summary" = "毎回の受診にわかりやすいまとめを";
+
+/* Journey v1: paywall */
+"Get more from every check-in" = "毎日のチェックインをもっと活かす";
+
+/* Journey v1: paywall */
+"Turn meal photos into editable calorie, macro, and cycle-aware nutrition drafts." = "食事の写真から、カロリー・栄養素・周期を考慮した栄養メモの下書きを作成できます（編集可能）。";
+
+/* Journey v1: paywall */
+"Premium adds the tools many people with PCOS use alongside their care. Your data stays on your iPhone." = "プレミアムでは、PCOSのある多くの人が日々のケアと並行して使っているツールが加わります。データはお使いのiPhoneに保存されたままです。";
+
+/* Journey v1: paywall */
+"Meal, glucose & supplement logs, linked to symptoms" = "食事・血糖値・サプリの記録を症状と関連づけて";
+
+/* Journey v1: paywall */
+"Deeper insights: sleep, activity, meals" = "さらに詳しいインサイト：睡眠・活動・食事";
+
+/* Journey v1: paywall */
+"Unlimited appointment-ready PDF reports" = "受診に使えるPDFレポートを無制限に";
+
+/* Journey v1: paywall */
+"Private photo journal for skin & hair" = "肌と髪のプライベート写真記録";
+
+/* Journey v1: paywall */
+"Best value · %@" = "いちばんお得 · %@";
+
+/* Journey v1: paywall */
+"%@/month, billed yearly" = "月あたり%@（年払い）";
+
+/* Journey v1: paywall */
+"Continue — %@" = "続ける – %@";
+
+/* Journey v1: paywall */
+"Renews at %@ until you cancel. Cancel anytime in Settings › Apple Account › Subscriptions, at least 24 hours before renewal." = "解約するまで%@で自動更新されます。更新の24時間前までに、設定 › Apple Account › サブスクリプションからいつでも解約できます。";
+
+/* Journey v1: paywall */
+"No ads. No selling your data. Not a medical device." = "広告なし。データの販売なし。医療機器ではありません。";
+
+/* Journey v1: paywall */
+"Welcome to Premium" = "プレミアムへようこそ";
+
+/* Journey v1: paywall */
+"Meal, glucose and supplement logs are on." = "食事・血糖値・サプリの記録が使えるようになりました。";
+
+/* Journey v1: paywall */
+"Everything in Premium is ready for you." = "プレミアムのすべての機能が使えます。";
+
+/* Journey v1: paywall */
+"Deeper insights" = "さらに詳しいインサイト";
+
+/* Journey v1: paywall */
+"Log your first meal" = "最初の食事を記録する";
+
+/* Journey v1: paywall */
+"Log your first glucose reading" = "最初の血糖値を記録する";
+
+/* Journey v1: paywall */
+"Log your first supplement" = "最初のサプリを記録する";
+
+/* Journey v1: paywall */
+"Open your photo journal" = "写真記録を開く";
+
+/* Journey v1: paywall */
+"Manage your subscription anytime in Settings." = "サブスクリプションはいつでも設定から管理できます。";
+
+/* Journey v1: paywall */
+"Selected" = "選択済み";
+
+/* Journey v1: paywall */
+"%@/day" = "%@/日";
+
+/* Journey v1: paywall */
+"%@/week" = "%@/週";
+
+/* Journey v1: paywall */
+"%@/month" = "%@/月";
+
+/* Journey v1: paywall */
+"%@/year" = "%@/年";
+
+/* Journey v1: paywall */
+"Yearly" = "年額";
+
+/* Journey v1: paywall */
+"Monthly" = "月額";
+
+/* Journey v1: paywall */
+"Weekly" = "週額";
+
+/* Journey v1: subscription status */
+"Manage subscription" = "サブスクリプションを管理";
+
+/* Journey v1: subscription status */
+"Opens your Apple Account subscriptions" = "Apple Accountのサブスクリプションを開きます";
+
+/* Journey v1: subscription status */
+"What's included" = "含まれる機能";
+
+/* Journey v1: subscription status */
+"Cancel or change plans in Settings › Apple Account › Subscriptions. Your data stays on your iPhone either way." = "解約やプランの変更は、設定 › Apple Account › サブスクリプションから行えます。どちらの場合も、データはお使いのiPhoneに残ります。";
+
+/* Journey v1: subscription status */
+"CycleBalance Premium" = "CycleBalance プレミアム";
+
+/* Journey v1: subscription status */
+"%@ · %@" = "%@ · %@";
+
+/* Journey v1: subscription status */
+"Ends %@" = "%@に終了";
+
+/* Journey v1: subscription status */
+"Renews %@" = "%@に更新";
+
+/* Journey v1: subscription status */
+"Your purchases are up to date." = "購入情報は最新です。";
+
+/* Journey v1: onboarding and check-in */
+"Something went wrong" = "問題が発生しました";
+
+/* Journey v1: onboarding and check-in */
+"Back" = "戻る";
+
+/* Journey v1: onboarding and check-in */
+"Get started" = "はじめる";
+
+/* Journey v1: onboarding and check-in */
+"Restore from backup" = "バックアップから復元";
+
+/* Journey v1: onboarding and check-in */
+"Save today's check-in" = "今日のチェックインを保存";
+
+/* Journey v1: onboarding and check-in */
+"Do this later" = "あとで";
+
+/* Journey v1: onboarding and check-in */
+"Turn on reminder" = "リマインダーをオンにする";
+
+/* Journey v1: onboarding and check-in */
+"Connect Apple Health" = "Appleヘルスに接続";
+
+/* Journey v1: onboarding and check-in */
+"Step %lld of %lld" = "ステップ %lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"Understand your PCOS patterns, privately." = "PCOSのパターンを、プライベートに理解する。";
+
+/* Journey v1: onboarding and check-in */
+"A check-in takes about 20 seconds. Over time, you'll see what seems connected: cycles, symptoms, sleep and more." = "チェックインは約20秒。続けるうちに、周期・症状・睡眠などのつながりが見えてきます。";
+
+/* Journey v1: onboarding and check-in */
+"Stays on your iPhone" = "データはiPhoneに保存";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health is optional" = "Appleヘルスの連携は任意";
+
+/* Journey v1: onboarding and check-in */
+"Not a medical device" = "医療機器ではありません";
+
+/* Journey v1: onboarding and check-in */
+"Recently diagnosed" = "最近診断された";
+
+/* Journey v1: onboarding and check-in */
+"Managing for a while" = "しばらく付き合っている";
+
+/* Journey v1: onboarding and check-in */
+"Not sure yet" = "まだわからない";
+
+/* Journey v1: onboarding and check-in */
+"Learning what helps" = "何が役立つか学んでいるところ";
+
+/* Journey v1: onboarding and check-in */
+"I know the basics and want detail" = "基本は知っていて、詳しく知りたい";
+
+/* Journey v1: onboarding and check-in */
+"Noticing symptoms" = "症状に気づいている";
+
+/* Journey v1: onboarding and check-in */
+"Where are you in your PCOS journey?" = "PCOSとの付き合いはどのくらいですか？";
+
+/* Journey v1: onboarding and check-in */
+"This sets how much we explain. Change it anytime." = "説明の詳しさが変わります。いつでも変更できます。";
+
+/* Journey v1: onboarding and check-in */
+"What would you like to understand?" = "どんなことを知りたいですか？";
+
+/* Journey v1: onboarding and check-in */
+"Pick any. We pin these to your daily check-in." = "いくつでも選べます。毎日のチェックインに固定表示します。";
+
+/* Journey v1: onboarding and check-in */
+"What should we call you? (optional)" = "お名前（任意）";
+
+/* Journey v1: onboarding and check-in */
+"Name" = "名前";
+
+/* Journey v1: onboarding and check-in */
+"YOUR SYMPTOMS" = "あなたの症状";
+
+/* Journey v1: onboarding and check-in */
+"Day 1 saved" = "1日目を保存しました";
+
+/* Journey v1: onboarding and check-in */
+"Here's what unlocks as you log" = "記録を続けると見えてくること";
+
+/* Journey v1: onboarding and check-in */
+"After 7 check-ins" = "チェックイン7回後";
+
+/* Journey v1: onboarding and check-in */
+"Your first symptom pattern" = "はじめての症状パターン";
+
+/* Journey v1: onboarding and check-in */
+"%lld of %lld" = "%lld/%lld";
+
+/* Journey v1: onboarding and check-in */
+"After 2 periods" = "生理2回後";
+
+/* Journey v1: onboarding and check-in */
+"Your cycle-length range" = "周期の長さの範囲";
+
+/* Journey v1: onboarding and check-in */
+"With Apple Health" = "Appleヘルスと連携すると";
+
+/* Journey v1: onboarding and check-in */
+"Sleep and activity context" = "睡眠と活動のデータも一緒に";
+
+/* Journey v1: onboarding and check-in */
+"Get a gentle nudge?" = "やさしいリマインダーはいかがですか？";
+
+/* Journey v1: onboarding and check-in */
+"One quiet reminder a day. It never shows your symptoms on the lock screen." = "1日1回の控えめな通知です。症状がロック画面に表示されることはありません。";
+
+/* Journey v1: onboarding and check-in */
+"Reminder time" = "通知の時刻";
+
+/* Journey v1: onboarding and check-in */
+"Sleep" = "睡眠";
+
+/* Journey v1: onboarding and check-in */
+"Cycle tracking" = "周期記録";
+
+/* Journey v1: onboarding and check-in */
+"Bring in what your Watch already knows" = "Apple Watchのデータを取り込む";
+
+/* Journey v1: onboarding and check-in */
+"Read-only. CycleBalance never writes to Apple Health, and nothing leaves your iPhone." = "読み取り専用です。CycleBalanceがAppleヘルスに書き込むことはなく、データがiPhoneの外に出ることもありません。";
+
+/* Journey v1: onboarding and check-in */
+"Apple Health isn't available on this device." = "このデバイスではAppleヘルスを利用できません。";
+
+/* Journey v1: onboarding and check-in */
+"Change this anytime in Settings › Health." = "設定 › ヘルスからいつでも変更できます。";
+
+/* Journey v1: onboarding and check-in */
+"Irregular periods" = "不規則な生理";
+
+/* Journey v1: onboarding and check-in */
+"Cravings & digestion" = "食欲とお腹の調子";
+
+/* Journey v1: onboarding and check-in */
+"Blood sugar" = "血糖値";
+
+/* Journey v1: onboarding and check-in */
+"Strong" = "強い";
+
+/* Journey v1: onboarding and check-in */
+"Tough" = "つらい";
+
+/* Journey v1: onboarding and check-in */
+"Nothing to report today" = "今日は特になし";
+
+/* Journey v1: Today */
+"Good morning, %@" = "おはようございます、%@さん";
+
+/* Journey v1: Today */
+"Good afternoon, %@" = "こんにちは、%@さん";
+
+/* Journey v1: Today */
+"Good evening, %@" = "こんばんは、%@さん";
+
+/* Journey v1: Today */
+"%@ · Cycle day %lld" = "%@ · 周期%lld日目";
+
+/* Journey v1: Today */
+"More details" = "詳しく記録";
+
+/* Journey v1: Today */
+"Your first pattern is ready" = "はじめてのパターンが見られます";
+
+/* Journey v1: Today */
+"See what's connected" = "つながりを見る";
+
+/* Journey v1: Today */
+"%lld of %lld toward your first pattern" = "はじめてのパターンまで %lld/%lld";
+
+/* Journey v1: Today */
+"Each check-in adds to your first pattern. Missed days are fine." = "チェックインのたびにパターンに近づきます。記録しない日があっても大丈夫です。";
+
+/* Journey v1: Today */
+"Curious how meals affect your energy?" = "食事とエネルギーの関係が気になりますか？";
+
+/* Journey v1: Today */
+"Try meal logging" = "食事記録を試す";
+
+/* Design review 5 Oct: needs_review */
+"Dismiss tip" = "ヒントを閉じる";
+
+/* Design review 5 Oct: needs_review */
+"You can try again now or later — your logs are safe." = "今すぐでも後でも、もう一度お試しいただけます。記録はそのまま残っています。";
+
+/* Design review 5 Oct: needs_review */
+"Restore didn't go through" = "復元を完了できませんでした";
+
+/* Design review 5 Oct: needs_review */
+"Check your connection and try again — your logs are safe." = "接続を確認して、もう一度お試しください。記録はそのまま残っています。";
+
+/* Design review 5 Oct: needs_review */
+"First pattern" = "はじめてのパターン";
+
+/* Design review 5 Oct: needs_review */
+"%lld of %lld check-ins toward your first pattern" = "はじめてのパターンまで、チェックイン %lld/%lld 回";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back, %@. Your earlier check-ins still count." = "おかえりなさい、%@さん。これまでのチェックインもそのまま数えられています。";
+
+/* Design review 5 Oct: needs_review */
+"Welcome back. Your earlier check-ins still count." = "おかえりなさい。これまでのチェックインもそのまま数えられています。";
+
+/* Design review 5 Oct: needs_review */
+"Progress" = "進捗";

@@ -912,7 +912,8 @@ struct ReportConfigView: View {
         }
 
         guard reportAccessPolicy.canGenerateReport(isPremium: appState.allowsPremiumAccess) else {
-            appState.presentPremiumPaywall()
+            AppAnalytics.shared.track(.limitReached(feature: "pdf_report", count: 1))
+            appState.presentPremiumPaywall(reason: .report, source: "pdf_report_limit")
             return
         }
 
@@ -944,7 +945,8 @@ struct ReportConfigView: View {
         }
 
         guard reportAccessPolicy.canGenerateReport(isPremium: appState.allowsPremiumAccess) else {
-            appState.presentPremiumPaywall()
+            AppAnalytics.shared.track(.limitReached(feature: "pdf_report", count: 1))
+            appState.presentPremiumPaywall(reason: .report, source: "pdf_report_limit")
             return
         }
 
